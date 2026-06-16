@@ -1096,8 +1096,8 @@ download() {                    # download file at URL $1 and store it in file $
   [ "${1:-}" ]      || return 0 # true
   #
   case "$Downloader" in
-    wget) wget    "${1:-}"        -O       "${2:-}" || return 1;;
-    curl) curl -L "${1:-}" --fail --output "${2:-}" || return 1;;
+    wget) wget    "${1:-}"        -O       "${2:-}" || return 1 ;;
+    curl) curl -L "${1:-}" --fail --output "${2:-}" || return 1 ;;
   esac
   return $?
 }
