@@ -1147,7 +1147,32 @@ isnum() {                       # check if $1 is a number (according to awk)
 # function makecookie()
 #
 makecookie() {                  # bake a cookie
-  mcookie 2>/dev/null || echo $RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM | cut -b1-32
+    #
+    # /usr/bin/mcookie : mcookie generates a 128-bit random
+    #                    hexadecimal number for use with the X
+    #                    authority system.
+    #
+    #  $RANDOM : Bash has a built-in variable called $RANDOM that
+    #            generates a pseudorandom integer between 0 and 32767
+    #            each time it is called.
+    #
+    #            That is 15 random bits. We need 32*4 = 16*2*4
+    #
+    # TODO: The command
+    #       echo $RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM | cut -b1-32
+    #       only generates decimal digits.
+    #       Use "%02x" to generate 8 random bits per use of $RANDOM
+    #
+    #
+    # mcookie 2>/dev/null || echo $RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM | cut -b1-32
+    mcookie 2>/dev/null || {
+        printf "%02x" $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256))
+        printf "%02x" $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256))
+        printf "%02x" $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256))
+        printf "%02x" $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256))
+        printf "\n"
+        true
+    }
 }
 
 #
