@@ -20,6 +20,8 @@ grep -q -- "--enforce-i" <<< "$*" && case $- in
   *)   exec bash --noprofile --norc --noediting -i -- "$0" "$@" ;;
 esac
 
+
+## function usage()
 usage() {                       # --help: show usage information
   echo "
 x11docker: Run GUI applications and desktop environments in containers.
@@ -417,6 +419,8 @@ x11docker version: $Version
 Please report issues and get help at: https://github.com/mviereck/x11docker
 "
 }
+
+## function license()
 license() {                     # --license: show license (MIT)
 echo '
 MIT License
@@ -443,12 +447,14 @@ SOFTWARE.'
 }
 
 #### messages
+## function alertbox()
 alertbox() {                    # X alert box with title $1 and message $2
   local Title Message
   Title="${1:-}"
   Message="${2:-}"
 
-  Message="$(echo "$Message" | LANG=C sed "s/[\x80-\xFF]//g" | fold -w120 )" # remove UTF-8 special chars; line folding at 120 chars
+  # Remove UTF-8 special chars; line folding at 120 chars
+  Message="$(echo "$Message" | LANG=C sed "s/[\x80-\xFF]//g" | fold -w120 )"
 
   # try some tools to show alert message. If all tools fail, return 1
   command -v   xmessage     >/dev/null && [ -n "${DISPLAY:-}" ] && {
@@ -488,11 +494,15 @@ $Message"
   }
   return 0
 }
+
+# function debugnote()
 debugnote() {                   # show debug output $*
   [ "$Debugmode" = "yes" ] && [ "$Verbose" != "yes" ] && echo "${Colblue}DEBUGNOTE[$(timestamp)]:${Colnorm} $*" >&${FDstderr}
   logentry "DEBUGNOTE[$(timestamp)]: $*"
   return 0
 }
+
+# function error()
 error() {                       # show error message and exit
   local Message
 
@@ -524,6 +534,8 @@ ${Colredbg}x11docker ERROR:${Colnorm} $Message
 
   finish
 }
+
+# function logentry()
 logentry() {                    # write into logfile
   [ -e "$Logfile" ] && {
     [ -n "$Logmessages" ] && echo "$Logmessages" >> "$Messagelogfile" 2>/dev/null && Logmessages=""
@@ -532,12 +544,16 @@ logentry() {                    # write into logfile
   } || Logmessages="$Logmessages
 $*"
 }
+
+# function note()
 note() {                        # show notice messages
   [ "$Verbose" = "yes" ] || echo "${Colgreen}x11docker note:${Colnorm} $*
 " >&${FDstderr}
   logentry "x11docker note: $*
 "
 }
+
+# function traperror()
 traperror() {                   # trap ERR: --debug: Output for 'set -o errtrace'
   debugnote "traperror: Command at Line ${2:-} returned with error code ${1:-}:
   ${4:-}
@@ -545,17 +561,25 @@ traperror() {                   # trap ERR: --debug: Output for 'set -o errtrace
   storeinfo error=64
   saygoodbye traperror
 }
+
+# function verbose()
 verbose() {                     # show verbose messages
   # only logfile notes here, terminal output is done with tail in setup_verbosity()
   logentry "x11docker[$(timestamp)]: $*
 "
 }
+
+# function warning()
 warning() {                     # show warning messages
   [ "$Verbose" = "yes" ] || echo "${Colyellow}x11docker WARNING:${Colnorm} $*
 " >&${FDstderr}
   logentry "x11docker WARNING: $*
 "
 }
+
+#
+# function watchmessagefifo()
+#
 watchmessagefifo() {            # watch for messages coming from inside of container
   # message in fifo must end with :$Messagetype
   local Line= Message= Messagetype=
@@ -584,7 +608,11 @@ $Line"
 }
 
 #### exit
+#
+# function finish()
+#
 finish() {                      # trap EXIT routine to clean up background processes and cache
+    #
   local Pid Name Zeit Exitcode Pid1pid= Watchmessagefifopid= Count Xpid1pid
 
   # do not finish() in subshell, just give signal to all other processes and terminate subshell
@@ -595,6 +623,8 @@ finish() {                      # trap EXIT routine to clean up background proce
 
   debugnote "Terminating x11docker."
   saygoodbye "finish"
+
+  # reset signal handlers
   trap - EXIT
   trap - ERR
   trap - SIGINT
@@ -732,6 +762,10 @@ finish() {                      # trap EXIT routine to clean up background proce
     *)   exit   "$Exitcode" ;;
   esac
 }
+
+#
+# function finish_sigint()
+#
 finish_sigint() {               # trap SIGINT to activate debug mode on finish()
   local Pid1pid  X11dockerpid
   X11dockerpid="$(storeinfo dump x11dockerpid)"
@@ -748,6 +782,8 @@ finish_sigint() {               # trap SIGINT to activate debug mode on finish()
     exit 130
   }
 }
+
+# function saygoodbye()
 saygoodbye() {                  # create file signaling watching processes to terminate
   debugnote "time to say goodbye ($*)"
   [ -e "$Timetosaygoodbyefile" ] && echo timetosaygoodbye >> "$Timetosaygoodbyefile"
@@ -756,9 +792,16 @@ saygoodbye() {                  # create file signaling watching processes to te
 }
 
 #### watching processes
+#
+# function checkpid()
+#
 checkpid() {                    # check if PID $1 is active
   [ -e "/proc/${1:-NONSENSE}" ]
 }
+
+#
+# function containerisrunning()
+#
 containerisrunning() {          # check if container is running
   storeinfo test containerid || return 1
   case "$Dockervm" in
@@ -766,20 +809,37 @@ containerisrunning() {          # check if container is running
     moby|desktop) unpriv_backend "$Backendbin inspect '$(storeinfo dump containerid)'" >/dev/null 2>&1 ;;
   esac
 }
+
+#
+# function pspid()
+#
 pspid() {                       # Return some info to pid $1
   LC_ALL=C $Myps ax -o user,pid,comm | grep " ${1:-} "
 }
+
+
+#
+# function rocknroll()
+#
 rocknroll() {                   # check whether x11docker session is still running
   [ -s "$Timetosaygoodbyefile" ]   && return 1
   [ -e "$Timetosaygoodbyefile" ]   || return 1
   return 0
 }
+
+#
+# function setonwatchpidlist()
+#
 setonwatchpidlist() {           # add PID $1 to watchpidlist()
   debugnote "watchpidlist(): Setting pid ${1:-} on watchlist: ${2:-}"
   echo "${1:-}" >> "$Watchpidfifo"
   # add to list of background processes
   grep -q CONTAINER <<<  "${1:-}" || storepid "${1:-}" "${2:-}"
 }
+
+#
+# function storepid()
+#
 storepid() {                    # store pid $1 and name $2 of process in file $Storepidfile.
   # Store pid and process name of background processes in a file
   # Used in finish() to clean up background processes
@@ -792,7 +852,7 @@ storepid() {                    # store pid $1 and name $2 of process in file $S
   # Dump stored pid:
   #  $1 dump
   #  $2 codename
-
+  #
   case "${1:-}" in
     dump) grep    -w "${2:-}" "$Storepidfile" | cut -d' ' -f1 ;;
     test) grep -q -w "${2:-}" "$Storepidfile" ;;
@@ -802,6 +862,10 @@ storepid() {                    # store pid $1 and name $2 of process in file $S
     ;;
   esac
 }
+
+#
+# function termpid()
+#
 termpid() {                     # kill PID $1 with codename $2
   # TERM
   debugnote "termpid(): Terminating ${1:-} (${2:-}): $(pspid "${1:-}" ||:)"
@@ -811,7 +875,7 @@ termpid() {                     # kill PID $1 with codename $2
   } || return 0
   mysleep 0.1
   checkpid "${1:-}" && mysleep 0.4 || return 0
-
+  #
   # KILL
   debugnote "termpid(): Killing ${1:-} (${2:-}): $(pspid "${1:-}" ||:)"
   checkpid "${1:-}" && kill -s KILL "${1:-}" 2>/dev/null
@@ -820,9 +884,13 @@ termpid() {                     # kill PID $1 with codename $2
     note "Failed to terminate ${1:-} (${2:-}): $(pspid "${1:-}" ||:)"
     return 1
   }
-
+  #
   return 0
 }
+
+#
+# function waitfortheend()
+#
 waitfortheend() {               # wait for end of x11docker session
   # signal is byte in $Timetosaygoodbyefifo
   # decent read to wait for signal to terminate
@@ -840,6 +908,10 @@ waitfortheend() {               # wait for end of x11docker session
   esac
   return 0
 }
+
+#
+# function watchpidlist()
+#
 watchpidlist() {                # watch list of important pids
   # terminate x11docker if a PID in $Watchpidlist terminates
   # serves mainly watching X server, Wayland compositor, container and hostexe
@@ -882,6 +954,9 @@ $(for Line in $Watchpidlist; do pspid "$Line" || echo "(pid $Line not found)" ; 
 }
 
 #### more or less general routines
+#
+# function askyesno() 
+#
 askyesno() {                    # ask Yes/no question. Default 'yes' for ENTER, timeout with 'no' after 60s
   local Choice
   read -t60 -n1 -p "(timeout after 60s assuming no) [Y|n]" Choice
@@ -890,6 +965,10 @@ askyesno() {                    # ask Yes/no question. Default 'yes' for ENTER, 
   }
   return 1
 }
+
+#
+# function check_envvar()
+#
 check_envvar() {                # allow only chars in string $1 that can be expected in environment variables
   # Allows only chars in "a-zA-Z0-9_:/.,@=-"
   # Option -w allows whitespace, too. Can be needed for PATH.
@@ -914,12 +993,24 @@ check_envvar() {                # allow only chars in string $1 that can be expe
   $Newvar"
   return 1
 }
+
+#
+# function get_ppid()
+#
 get_ppid() {                    # get ppid of pid $1
   $Myps ax -o pid,ppid | awk '$1 ~ /'${1:-}'/ { SUM += $2 } END { print SUM } '
 }
+
+#
+# function check_parent_sshd()
+#
 check_parent_sshd() {           # check whether pid $1 runs in SSH session
   $Myps ax -o pid,comm | awk '$1 ~ /'$(get_ppid "${1:-}")'/ { SUM += $2 } END { print SUM } ' | grep -q "sshd"
 }
+
+#
+# function cookiebaker()
+#
 cookiebaker() {                 # create an X cookie without xauth
   # $1  DISPLAY
   # Write directly to file, bash cannot store nullbytes in a string.
@@ -975,27 +1066,45 @@ cookiebaker() {                 # create an X cookie without xauth
     printf \"${Code}\"
   }"
 }
+
+#
+# function devicelist_gpu()
+#
 devicelist_gpu() {              # print list of GPU devices
   find /dev/dri/* /dev/nvidia* /dev/vga_arbiter /dev/nvhost* /dev/nvmap -maxdepth 0 -type c 2>/dev/null ||:
 }
+
+#
+# function devicelist_input()
+#
 devicelist_input() {            # print list of input devices
   find /dev/input/* -maxdepth 0 -type c 2>/dev/null ||:
 }
+
+#
+# function download()
+#
 download() {                    # download file at URL $1 and store it in file $2
   # Uses wget or curl. If both are missing, returns 1.
   # With no arguments it checks for curl/wget without downloading.
   # Download follows redirects.
+  #
   local Downloader=
   command -v wget >/dev/null && Downloader="wget"
   command -v curl >/dev/null && Downloader="curl"
-  [ "$Downloader" ] || return 1
-  [ "${1:-}" ]      || return 0
+  [ "$Downloader" ] || return 1 # false (Downloader is "" --> Failure)
+  [ "${1:-}" ]      || return 0 # true
+  #
   case "$Downloader" in
     wget) wget    "${1:-}"        -O       "${2:-}" || return 1;;
     curl) curl -L "${1:-}" --fail --output "${2:-}" || return 1;;
   esac
   return $?
 }
+
+#
+# function escapestring()
+#
 escapestring() {                # escape special chars of $1
   # escape all characters except those described in [^a-zA-Z0-9,._+@=:/-]
   grep -q "'" <<< "${1:-}" && {
@@ -1005,32 +1114,85 @@ escapestring() {                # escape special chars of $1
   }
   echo "${1:-}" | LC_ALL=C sed -e 's/[^a-zA-Z0-9,._+@=:/-]/\\&/g; '
 }
+
+#
+# function getrandomnumber()
+#
 getrandomnumber() {             # get random number
   # chosen by fair dice roll
   # guaranteed to be random
   echo "4"
 }
+
+#
+# function isint()
+#
 isint() {                       # check if $1 is a positive integer
   #[[ $var =~ ^-?[0-9]+$ ]]
   [[ "${1:-EMPTY}" =~ ^[0-9]+$ ]]
 }
-isnum() {                       # check if $1 is a number
+
+#
+# function isnum()
+#
+#  For example `isnum -2.1e-3` returns true
+#              `isnum 0xff`    is false
+#
+isnum() {                       # check if $1 is a number (according to awk)
   [ "1" = "$(awk -v a="${1:-}" 'BEGIN {print (a == a + 0)}')" ]
 }
+
+
+#
+# function makecookie()
+#
 makecookie() {                  # bake a cookie
   mcookie 2>/dev/null || echo $RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM | cut -b1-32
 }
+
+#
+# function mygetent()
+#    /usr/bin/getent with a fallback implementation
+#    "$1" is "group" or "passwd"
+#
+# Used as:
+#    `mygetent group video`
+#    `mygetent group input`
+#    `mygetent group render`
+#    `mygetent group weston-launch`
+#
+#    `mygetent passwd "$Containeruser"`
+#
+# Print the line corresponding to "$2" from "/etc/$1", or print nothing
+# Return true on success (found line), false on failure (no corresponding line)
+#
 mygetent() {                    # custom getent command
   # fixes #477 #496
   command -v getent >/dev/null 2>&1 && getent "$1" "$2" || \
   grep "^${2:-NOENTRY}:" < "/etc/${1:-NOFILESPECIFIED}"
 }
+
+#
+# function mysleep()
+#
+#   Called with "$1" in 0.1 0.2 1.4 or `$Count * 0.1` or "$Schlaf"
+#
 mysleep() {                     # catch cases where sleep only supports integer
   sleep "${1:-1}" 2>/dev/null || sleep 1
 }
+
+#
+# function oneline()
+#
+#  Note: backslash and newline are removed, no space is inserted in their place.
+#
 oneline() {                     # remove \\ and newline from string
   echo "${1:-}" | tr -d '\\\n'
 }
+
+#
+# function parse_inspect()
+#
 parse_inspect() {               # parse json of inspect output using python
   # parse for keys in output of docker|podman|nerdctl inspect.
   # Uses python json parser.
@@ -1111,6 +1273,9 @@ parse_inspect(*sys.argv)
   echo "$Parserscript" | $Pythonbin - "$@" || warning "parse_inspect(): Error while parsing json for
   ${2:-} ${3:-} ${4:-} ${5:-} ${6:-} (Line $BASH_LINENO)"
 }
+
+
+
 storeinfo() {                   # store some information for later use
   # store and provide pieces of information
   # replace entry if codeword is already present
