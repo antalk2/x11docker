@@ -1226,28 +1226,60 @@ parse_inspect() {               # parse json of inspect output using python
 
   local Parserscript
   local Jsonstring Keystring Output
+  local EXPR
 
   [[ "$Jqbin" ]] && {
-    Jsonstring="${1:-}" ; shift
-    # If we have an array, get the first item
-    [[ $("$Jqbin" -r 'type' <<< "$Jsonstring" 2>/dev/null) == array ]] && Keystring=".[0]" || Keystring=""
-    # Recursively find key using the sequence of keys
-    while [ $# -gt 0 ]; do
-      Keystring="$Keystring.${1:-}"
-      shift
-    done
-    Output="$("$Jqbin" "$Keystring" <<< "$Jsonstring")"
-    # If we have an array, single-quote each item and join with spaces
-    if [[ $("$Jqbin" -r 'type' <<< "$Output" 2>/dev/null) == array ]]; then
-      Output="$("$Jqbin" -r $'map(tostring | "\'" + . + "\'") | join(" ")' <<< "$Output" )"
-    fi
-    # If we have a string, output the raw contents without quotes
-    if [[ $("$Jqbin" -r 'type' <<< "$Output" 2>/dev/null) == string ]]; then
-        Output="$("$Jqbin" -r '.' <<< "$Output")"
-    fi
-    [ "$Output" = "null" ] && Output=""
-    echo "$Output"
-    return
+      # we have jq (e.g. /usr/bin/jq)
+      Jsonstring="${1:-}" ; shift
+      # If we have an array, get the first item
+      [[ $("$Jqbin" -r 'type' <<< "$Jsonstring" 2>/dev/null) == array ]] && Keystring=".[0]" || Keystring=""
+      # Recursively find key using the sequence of keys
+      while [ $# -gt 0 ]; do
+          Keystring="$Keystring.${1:-}"
+          shift
+      done
+      ##
+      Output="$("$Jqbin" "$Keystring" <<< "$Jsonstring")"
+      #
+      # If we have an array in Output, single-quote each item and join with spaces
+      if [[ $("$Jqbin" -r 'type' <<< "$Output" 2>/dev/null) == array ]]; then
+          ## Why $' here?
+          # Output1="$("$Jqbin" -r $'map(tostring | "\'" + . + "\'") | join(" ")' <<< "$Output" )"
+          #
+          ## https://www.gnu.org/software/bash/manual/html_node/ANSI_002dC-Quoting.html#:~:text=3%2E1%2E2%2E4,standard%2E
+          # 3.1.2.4 ANSI-C Quoting
+          #
+          # Character sequences of the form $'string' are treated as a
+          # special kind of single quotes. The sequence expands to
+          # string, with backslash-escaped characters in string
+          # replaced as specified by the ANSI C standard.
+          #
+          # https://www.gnu.org/software/bash/manual/html_node/Single-Quotes.html
+          # A single quote may not occur between single quotes, even
+          # when preceded by a backslash.
+          #
+          #
+          #
+          ## Jqbin=jq; Output='[1,"a"]';
+          ## x="$("$Jqbin" -r $'map(tostring | "\'" + . + "\'") | join(" ")' <<< "$Output" )"; echo $x
+          ##
+          ### The following works, but $'xxx' confuses emacs
+          ## EXPR=$'map(tostring | "\'" + . + "\'") | join(" ")'
+          ## Output="$("$Jqbin" -r "$EXPR" <<< "$Output" )"
+          #
+          # So, we want a string containing both single and double quotes.
+          # The solution below is less elegant, but seems to work.
+          #
+          EXPR="map(tostring | \"'\" + . + \"'\") | join(\" \")"
+          Output="$("$Jqbin" -r "$EXPR" <<< "$Output" )"
+      fi
+      # If we have a string, output the raw contents without quotes
+      if [[ $("$Jqbin" -r 'type' <<< "$Output" 2>/dev/null) == string ]]; then
+          Output="$("$Jqbin" -r '.' <<< "$Output")"
+      fi
+      [ "$Output" = "null" ] && Output=""
+      echo "$Output"
+      return
   }
 
   Parserscript="#! $Pythonbin"$'
