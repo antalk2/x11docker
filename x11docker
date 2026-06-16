@@ -460,20 +460,20 @@ alertbox() {                    # X alert box with title $1 and message $2
   command -v   xmessage     >/dev/null && [ -n "${DISPLAY:-}" ] && {
     echo "$Title
 
-$Message" | xmessage  -file - -default okay ||:
+$Message" | xmessage  -file - -default okay || true
   } || {
     command -v gxmessage    >/dev/null && [ -n "${DISPLAY:-}" ] && {
       echo "$Title
 
-$Message" | gxmessage -file - -default okay ||:
+$Message" | gxmessage -file - -default okay || true
     }
   } || {
     command -v zenity       >/dev/null && [ -n "${DISPLAY:-}" ] && {
-      zenity --error --no-markup --ellipsize --title="$Title" --text="$Message" 2>/dev/null ||:
+      zenity --error --no-markup --ellipsize --title="$Title" --text="$Message" 2>/dev/null || true
     }
   } || {
     command -v yad          >/dev/null && [ -n "${DISPLAY:-}" ] && {
-      yad  --image "dialog-error" --title "$Title" --button=gtk-ok:0 --text "$(echo "$Message" | sed 's/\\/\\\\/g')" --fixed 2>/dev/null ||:
+      yad  --image "dialog-error" --title "$Title" --button=gtk-ok:0 --text "$(echo "$Message" | sed 's/\\/\\\\/g')" --fixed 2>/dev/null || true
     }
   } || {
     command -v kdialog      >/dev/null && [ -n "${DISPLAY:-}" ] && {
@@ -540,7 +540,7 @@ logentry() {                    # write into logfile
   [ -e "$Logfile" ] && {
     [ -n "$Logmessages" ] && echo "$Logmessages" >> "$Messagelogfile" 2>/dev/null && Logmessages=""
     echo "$*" >> "$Messagelogfile" 2>/dev/null
-    :
+    true
   } || Logmessages="$Logmessages
 $*"
 }
@@ -858,7 +858,7 @@ storepid() {                    # store pid $1 and name $2 of process in file $S
     test) grep -q -w "${2:-}" "$Storepidfile" ;;
     *)
       echo "${1:-NOPID}" "${2:-NONAME}" >> "$Storepidfile"
-      debugnote "storepid(): Stored pid '${1:-}' of '${2:-}': $(pspid "${1:-}" ||:)"
+      debugnote "storepid(): Stored pid '${1:-}' of '${2:-}': $(pspid "${1:-}" || true)"
     ;;
   esac
 }
@@ -871,7 +871,7 @@ termpid() {                     # kill PID $1 with codename $2
   debugnote "termpid(): Terminating ${1:-} (${2:-}): $(pspid "${1:-}" ||:)"
   checkpid "${1:-}" && {
     kill "${1:-}" 2>/dev/null
-    :
+    true
   } || return 0
   mysleep 0.1
   checkpid "${1:-}" && mysleep 0.4 || return 0
@@ -921,7 +921,7 @@ watchpidlist() {                # watch list of important pids
 
   while rocknroll; do
     # check for new Pid once a second
-    read -t1 Pid <&${FDwatchpid} ||:
+    read -t1 Pid <&${FDwatchpid} || true
     [ "$Usemkfifo" = "no" ] && sleep 2  # read does not wait if not a fifo
     # Got new pid
     [ "$Pid" ] && {
@@ -1071,14 +1071,14 @@ cookiebaker() {                 # create an X cookie without xauth
 # function devicelist_gpu()
 #
 devicelist_gpu() {              # print list of GPU devices
-  find /dev/dri/* /dev/nvidia* /dev/vga_arbiter /dev/nvhost* /dev/nvmap -maxdepth 0 -type c 2>/dev/null ||:
+  find /dev/dri/* /dev/nvidia* /dev/vga_arbiter /dev/nvhost* /dev/nvmap -maxdepth 0 -type c 2>/dev/null || true
 }
 
 #
 # function devicelist_input()
 #
 devicelist_input() {            # print list of input devices
-  find /dev/input/* -maxdepth 0 -type c 2>/dev/null ||:
+  find /dev/input/* -maxdepth 0 -type c 2>/dev/null || true
 }
 
 #
