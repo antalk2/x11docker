@@ -1476,16 +1476,18 @@ timestamp() {                   # print HH:MM:SS,NNN
 }
 
 #
-# function unspecialstring()
+# function unspecialstring(s,extra_allowed_chars)
 #
 unspecialstring() {             # replace special chars of $1 with -
-  # Replace all characters except those described in "a-zA-Z0-9_" with a '-'.
-  # Replace newlines, too.
-  # Allow additional chars in $2
-  # Remove leading and trailing '-'
-  # Avoid double '--'
-  # Return empty string if only special chars are given.
-  printf %s "${1:-}" | LC_ALL=C tr -cs "a-zA-Z${2:-}0-9_" "-" | sed -e 's/^-// ; s/-$//'
+    # Replace all characters except those described in "a-zA-Z0-9_" with a '-'.
+    # Replace newlines, too.
+    # Allow additional chars in $2
+    # Remove leading and trailing '-'
+    # Avoid double '--'
+    # Return empty string if only special chars are given.
+    local s="${1:-}"
+    local extra_allowed_chars="${2:-}"
+    printf %s "${s}" | LC_ALL=C tr -cs "a-zA-Z${extra_allowed_chars}0-9_" "-" | sed -e 's/^-// ; s/-$//'
 }
 
 #
