@@ -1914,6 +1914,14 @@ myrealpath() {                  # real path of possible symlink
 #
 # function waitforlogentry( application, logfile, keyword, error_keywords, time_to_wait=60 )
 #
+# Examples:
+#  waitforlogentry "start_xcontainer()" "$Xinitlogfile"      "X server container is ready"
+#  waitforlogentry containerrc          \$Storeinfofile      containerrootrc=ready  ''                       infinity
+#  waitforlogentry "start_compositor()" "$Compositorlogfile" "$Compositorkeyword"   "$Compositorerrorcodes"
+#  waitforlogentry tailstdout "$Storeinfofile"                "x11docker=ready"      ""                       infinity
+#  waitforlogentry 'start_container()'   $Xinitlogfile        'xinitrc is ready'     "$Xiniterrorcodes"
+#  waitforlogentry xpra                  $Xinitlogfile        "xinitrc is ready"     ""                       infinity
+#
 waitforlogentry() {             # wait for entry $3 in logfile $2 of application $1
   # $1 is the application we are waiting for to be ready
   # $2 points to logfile
