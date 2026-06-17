@@ -2218,45 +2218,58 @@ writeaccess() {                 # check if useruid $1 has write access to folder
 
 #### special jobs of x11docker
 #
-# function buildimage()
+# function buildimage( Imagename )
 #
 buildimage() {                  # --build: build image from x11docker repository Dockerfile
-  # Build image $1 from x11docker repository
-
-  local Wwwpath Buildpath Imagename
-
-  # check image name, should have leading 'x11docker/'
-  Imagename="${1:-}"
-  grep -q "x11docker" <<< "$Imagename" || Imagename="x11docker/$Imagename"
-
-  # remote and local paths
-  Wwwpath="https://raw.githubusercontent.com/mviereck/dockerfile-$(tr / - <<< "$Imagename")/master"
-  Buildpath="${HOME:-/tmp}/x11docker-build-$(unspecialstring "$Imagename")"
-
-  grep -q "dockerfile-x11docker-" <<< "$Wwwpath"             || error "Option --build: x11docker only supports building of
+    # Build image $1 from x11docker repository
+    #
+    local Wwwpath Buildpath Imagename  flat_Imagename
+    #
+    # Check image name, prepend 'x11docker/' is missing
+    Imagename="${1:-}"
+    grep -q "x11docker" <<< "$Imagename" || Imagename="x11docker/$Imagename"
+    flat_Imagename="$(tr / - <<< "$Imagename")"
+    #
+    # remote and local paths
+    #
+    Wwwpath="https://raw.githubusercontent.com/mviereck/dockerfile-${flat_Imagename}/master"
+    Buildpath="${HOME:-/tmp}/x11docker-build-$(unspecialstring "$Imagename")"
+    #
+    # How could this fail? We have just injected "dockerfile-" and "x11docker-".
+    # Well, assume "$1" was "xxx-x11docker". Then we did not prepend "x11docker/",
+    # and ended up with "[...]dockerfile-xxx-x11docker[...]"
+    #
+    grep -q "dockerfile-x11docker-" <<< "$Wwwpath"   \
+        || error "Option --build: x11docker only supports building of
   images provided at x11docker repository https://github.com/mviereck"
-
-  mkdir -p "$Buildpath"
-  cd "$Buildpath"
-  download || error "Option --build: Please install 'curl' or 'wget' to allow a download"
-
-  note "Download of $Wwwpath/Dockerfile"
-  download "$Wwwpath/Dockerfile" "$Buildpath/Dockerfile"      || error "Option --build: Did not find a Dockerfile for $Imagename
+    #
+    mkdir -p "$Buildpath"
+    cd "$Buildpath"
+    download || error "Option --build: Please install 'curl' or 'wget' to allow a download"
+    #
+    note "Download of $Wwwpath/Dockerfile"
+    download "$Wwwpath/Dockerfile" "$Buildpath/Dockerfile"   \
+        || error "Option --build: Did not find a Dockerfile for $Imagename
   at $Wwwpath
   Option --build only supports Dockerfiles from https://github.com/mviereck.
   For other sources please download Dockerfile and use 'docker build'."
-  [ "$Imagename" = "x11docker/xserver" ] && {
-    note "Download of $Wwwpath/XlibNoSHM.c"
-    download "$Wwwpath/XlibNoSHM.c" "$Buildpath/XlibNoSHM.c"  || error "Option --build: Downloading XlibNoSHM.c failed."
-  }
-
-  note "Building $Imagename"
-  unpriv_backend "$Backendbin build -t $Imagename $Buildpath" || error "Option --build: Building image '$Imagename' failed."
-
-  cd "${HOME:-/tmp}"
-  rm -rf "$Buildpath"
-  return 0
+    #
+    [ "$Imagename" = "x11docker/xserver" ] && {
+        note "Download of $Wwwpath/XlibNoSHM.c"
+        download "$Wwwpath/XlibNoSHM.c" "$Buildpath/XlibNoSHM.c"  \
+            || error "Option --build: Downloading XlibNoSHM.c failed."
+    }
+    #
+    note "Building $Imagename"
+    unpriv_backend "$Backendbin build -t $Imagename $Buildpath" \
+        || error "Option --build: Building image '$Imagename' failed."
+    #
+    cd "${HOME:-/tmp}"
+    rm -rf "$Buildpath"
+    return 0
 }
+
+
 cleanup() {                     # --cleanup : check for non-removed containers and left cache files
   # Cleans x11docker cache and removes running and stopped x11docker containers.
   # Does not change --home folders.
