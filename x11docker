@@ -1921,40 +1921,46 @@ waitforlogentry() {             # wait for entry $3 in logfile $2 of application
   # $4 possible error keywords
   # $5 time to wait in seconds or infinity. default: 60
 
-  local Startzeit Uhrzeit Dauer Count=0 Schlaf
+  local StartTime CurrentTime ElapsedTime Count=0 SleepTime
   local Errorkeys="${4:-}" Errorkey
-  local Warten="${5:-60}"
+  local TimeToWait="${5:-60}"
   local Error=
 
-  Startzeit="$(date +%s ||:)"
-  Startzeit="${Startzeit:-0}"
-  [ "$Warten" = "infinity" ] && Warten=32000
+  StartTime="$(date +%s || true)"
+  StartTime="${StartTime:-0}"
+  
+  [ "$TimeToWait" = "infinity" ] && TimeToWait=32000
 
   debugnote "waitforlogentry(): ${1:-}: Waiting for logentry \"${3:-}\" in $(basename "${2:-}")"
 
   while ! grep -q "${3:-}" <"${2:-}" ; do
     Count="$(( Count + 1 ))"
-    Uhrzeit="$(date +%s ||:)"
-    Uhrzeit="${Uhrzeit:-0}"
-    Dauer="$(( Uhrzeit - Startzeit ))"
-    Schlaf="$(( Count / 10 ))"
-    [ "$Schlaf" = "0" ] && Schlaf="0.5"
-    mysleep "$Schlaf"
+    CurrentTime="$(date +%s ||:)"
+    CurrentTime="${CurrentTime:-0}"
+    ElapsedTime="$(( CurrentTime - StartTime ))"
+    SleepTime="$(( Count / 10 ))"
+    [ "$SleepTime" = "0" ] && SleepTime="0.5"
+    mysleep "$SleepTime"
 
-    [ "$Dauer" -gt "10" ] && debugnote "waitforlogentry(): ${1:-}: Waiting since ${Dauer}s for log entry \"${3:-}\" in $(basename "${2:-}")"
+    [ "$ElapsedTime" -gt "10" ] \
+        && debugnote "waitforlogentry(): ${1:-}: Waiting since ${ElapsedTime}s for log entry \"${3:-}\" in $(basename "${2:-}")"
 
-    [ "$Dauer" -gt "$Warten" ] && error "waitforlogentry(): ${1:-}: Timeout waiting for entry \"${3:-}\" in $(basename "${2:-}")
+    [ "$ElapsedTime" -gt "$TimeToWait" ] \
+        && error "waitforlogentry(): ${1:-}: Timeout waiting for entry \"${3:-}\" in $(basename "${2:-}")
   Last lines of $(basename "${2:-}"):
 $(tail -n15 "${2:-}")"
 
-#    grep -i -q -E 'xinit: giving up|unable to connect to X server|Connection refused|server error|Only console users are allowed|Failed to process Wayland|failed to create display|] fatal:' <"${2:-}" && \
+    #    grep -i -q -E 'xinit: giving up|unable to connect to X server|Connection refused|server error|Only console users are allowed|Failed to process Wayland|failed to create display|] fatal:' <"${2:-}" &&
+    
     [ "$Errorkeys" ] && {
-      Errorkey="$(grep -i -E "$Errorkeys" <"${2:-}")" ||:
-      [ -n "$Errorkey" ] && error "waitforlogentry(): ${1:-}: Found error message in logfile:
+        Errorkey="$(grep -i -E "$Errorkeys" <"${2:-}")" || true
+        #
+        [ -n "$Errorkey" ] && error "waitforlogentry(): ${1:-}: Found error message in logfile:
   <'$Errorkey'>
 
   Context in logfile $(basename "${2:-}"):
 $(grep -C7 "$Errorkey" "${2:-}")"
+        # ---
     }
 
     rocknroll || {
@@ -1963,8 +1969,9 @@ $(grep -C7 "$Errorkey" "${2:-}")"
       break
     }
   done
+  #
   [ "$Error" ] && return 1
-
+  #
   debugnote "waitforlogentry(): ${1:-}: Found log entry \"${3:-}\" in $(basename "${2:-}")."
   return 0
 }
