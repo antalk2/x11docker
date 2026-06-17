@@ -1991,6 +1991,8 @@ $(grep -C7 "$Errorkey" "${2:-}")"
 #   writeaccess "$Containeruseruid" "$Persistanthomevolume"
 #   writeaccess "$Hostuseruid"      "$Cachebasefolder"
 #
+# writeaccess 1000 test1 ; echo $?
+#
 #
 # https://linux.die.net/man/5/acl
 #
@@ -2043,8 +2045,6 @@ $(grep -C7 "$Errorkey" "${2:-}")"
 #
 #
 #
-
-
 writeaccess() {                 # check if useruid $1 has write access to folder $2
     local userid="${1:-}"
     local dirpath="${2:-}"
@@ -2206,7 +2206,6 @@ writeaccess() {                 # check if useruid $1 has write access to folder
         fi
     fi
     #
-
     #
     # (4) writable by others?
     [ "${dir_is_other_writable}" = "yes" ]       && return 0
@@ -2215,12 +2214,10 @@ writeaccess() {                 # check if useruid $1 has write access to folder
     return 1
 }
 
-# set +x
-# writeaccess 1000 test1 ; echo $?
-# writeaccess 1000 test2 ; echo $?
-# writeaccess 1000 test3 ; echo $?
-
 #### special jobs of x11docker
+#
+# function buildimage()
+#
 buildimage() {                  # --build: build image from x11docker repository Dockerfile
   # Build image $1 from x11docker repository
 
