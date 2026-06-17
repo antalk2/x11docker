@@ -1983,17 +1983,242 @@ $(grep -C7 "$Errorkey" "${2:-}")"
   debugnote "waitforlogentry(): ${1:-}: Found log entry \"${3:-}\" in $(basename "${2:-}")."
   return 0
 }
+
+#
+# function writeaccess( useruid, folderPath )
+#
+# Examples:
+#   writeaccess "$Containeruseruid" "$Persistanthomevolume"
+#   writeaccess "$Hostuseruid"      "$Cachebasefolder"
+#
+#
+# https://linux.die.net/man/5/acl
+#
+# ACCESS CHECK ALGORITHM
+#
+#        A process may request read, write, or execute/search
+#        access to a file object protected by an ACL. The access
+#        check algorithm determines whether access to the object
+#        will be granted.
+#
+#        1.  If the effective user ID of the process matches the
+#            user ID of the file object owner, then
+#
+#                   if the ACL_USER_OBJ entry contains the
+#                   requested permissions, access is granted, else
+#                   access is denied.
+#
+#        2.  else if the effective user ID of the process matches
+#            the qualifier of any entry of type ACL_USER, then
+#
+#                   if the matching ACL_USER entry and the
+#                   ACL_MASK entry contain the requested
+#                   permissions, access is granted, else access is
+#                   denied.
+#
+#        3.  else if the effective group ID or any of the
+#            supplementary group IDs of the process match the file
+#            group or the qualifier of any entry of type ACL_GROUP,
+#            then
+#
+#                   if the ACL contains an ACL_MASK entry, then
+#
+#                         if the ACL_MASK entry and any of the
+#                         matching ACL_GROUP_OBJ or ACL_GROUP
+#                         entries contain the requested
+#                         permissions, access is granted,
+#                         else access is denied.
+#
+#                   else (note that there can be no ACL_GROUP
+#                         entries without an ACL_MASK entry)
+#
+#                         if the ACL_GROUP_OBJ entry contains the
+#                         requested permissions, access is
+#                         granted, else access is denied.
+#
+#        4.  else if the ACL_OTHER entry contains the requested
+#            permissions, access is granted.
+#
+#        5.   else access is denied.
+#
+#
+#
+
+
 writeaccess() {                 # check if useruid $1 has write access to folder $2
-  local dirVals= gMember= IFS=
-  IFS=$'\t' read -a dirVals < <(stat -Lc "%U	%G	%A" "${2:-}")
-  [ "$(id -u "$dirVals")" == "${1:-}" ] && [ "${dirVals[2]:2:1}" == "w" ]   && return 0
-  [ "${dirVals[2]:8:1}" == "w" ]                                          && return 0
-  [ "${dirVals[2]:5:1}" == "w" ] && {
-    gMember="$(groups "${1:-}" 2>/dev/null)"
-    [[ "${gMember[*]:2}" =~ ^(.* |)${dirVals[1]}( .*|)$ ]]                && return 0
-  }
-  [ "w" = "$(getfacl -pn "${2:-}" | grep "user:${1:-}:" | rev | cut -c2)" ] && return 0 || return 1
+    local userid="${1:-}"
+    local dirpath="${2:-}"
+    local dirVals=
+    local dir_owner_name=
+    local dir_group_name=
+    local dir_perm_flags=
+    local dir_owner_uid=
+    local dir_is_user_writable=
+    local dir_is_group_writable=
+    local dir_is_other_writable=
+    local IFS=
+    local acl_user_entry=
+    local acl_mask_entry=
+    #
+    local userid_group_names=
+    local userid_has_dirs_group=
+    #
+    local userid_group_id_re=
+    local userid_acl_group_id_entries=
+    #
+    local userid_has_acl_groups=
+    local n_permits=
+    #
+    #
+    # verbose true or false
+    local verbose=false
+    #
+    #
+    #
+    # %U     user name of owner
+    # %G     group name of owner
+    # %A     permission bits and file type in human readable form
+    #
+    # Example: stat -Lc "%U      %G      %A"  /tmp
+    #     prints "root	root	drwxrwxrwt"
+    #
+    IFS=$'\t' read -r -a dirVals < <(stat -Lc "%U	%G	%A" "${dirpath}")
+    dir_owner_name="${dirVals[0]}"
+    dir_group_name="${dirVals[1]}"
+    dir_perm_flags="${dirVals[2]}"
+    dir_owner_uid="$(id -u "$dir_owner_name")"
+    #
+    if [ "${dir_perm_flags:2:1}" == "w" ] ; then
+        dir_is_user_writable=yes
+    else
+        dir_is_user_writable=no
+    fi
+    if [ "${dir_perm_flags:5:1}" == "w" ] ; then
+        dir_is_group_writable=yes
+    else
+        dir_is_group_writable=no
+    fi
+    if [ "${dir_perm_flags:8:1}" == "w" ] ; then
+        dir_is_other_writable=yes
+    else
+        dir_is_other_writable=no
+    fi
+    #
+    if $verbose ; then
+        echo "dir_owner_name='$dir_owner_name' dir_owner_uid='$dir_owner_uid'"
+        echo "dir_group_name='$dir_group_name'"
+        echo "dir_perm_flags='$dir_perm_flags'"
+        echo "dir_is_user_writable='$dir_is_user_writable'"
+        echo "dir_is_group_writable='$dir_is_group_writable'"
+        echo "dir_is_other_writable='$dir_is_other_writable'"
+    fi
+    #
+    # (1) If user matches, return owner-has-write-permission
+    if [ "${dir_owner_uid}" = "${userid}" ] ; then
+        if $verbose; then echo "user-matches"; fi
+        [ "${dir_is_user_writable}" == "yes" ] && return 0 || return 1
+    fi
+    #
+    # (2) If userid "$1" has ACL entry, use the effective permission from that.
+    acl_user_entry="$(getfacl -pn "${dirpath}" | grep "user:${userid}:")"
+    if [ -n "$acl_user_entry" ] ; then
+        if $verbose ; then
+            echo "ACL user_entry='$acl_user_entry'";
+        fi
+        [ "w" = "$(echo "$acl_user_entry" | rev | cut -c2)" ] && return 0 || return 1
+    fi
+    #
+    acl_mask_entry="$(getfacl -pn "${dirpath}" | grep "mask::")"
+    if $verbose ; then
+        if [ -n "$acl_mask_entry" ] ; then
+            echo "ACL mask entry: '$acl_mask_entry'"
+        else
+            echo "ACL mask entry: NA"
+        fi
+    fi
+    #
+    # (3) If any group of the user matches the group of the directory or
+    #     a group-ACL
+    #
+    #     (3a) If ACL has MASK: return (allowed-by-MASK && (allowed by
+    #             matching ACL_GROUP_OBJ or any matching ACL_GROUP)
+    #     (3b) or (no MASK) return (allowed by matching ACL_GROUP_OBJ)
+    #
+    # If user has group membership, return group-has-write-permission
+    #    - This ignores ACL_MASK and ACL group permissions
+    #
+    # userid_group_names : group names surrounded and separated with ':'
+    userid_group_names=":$(id -Gn "${userid}" 2>/dev/null | sed -e 's| |:|g' ):"
+    ##
+    if [[ "${userid_group_names[*]}" =~ :${dir_group_name}: ]] ; then
+        userid_has_dirs_group=yes
+    else
+        userid_has_dirs_group=no
+    fi
+    if $verbose; then echo "userid_has_dirs_group=$userid_has_dirs_group"; fi
+    #
+    #
+    # ACL group:GID: entries for userid
+    userid_group_id_re="^group:\\($(  id -G  "${userid}" 2>/dev/null | sed -e 's/ /\\|/g' )\\):"
+    userid_acl_group_id_entries="$(getfacl -pn "${dirpath}" | grep -e "${userid_group_id_re}")"
+    if $verbose; then
+        echo "userid_group_id_re='$userid_group_id_re'"
+        echo "userid_acl_group_id_entries=$userid_acl_group_id_entries"
+    fi
+    #
+    if [ -n "${userid_acl_group_id_entries}" ] ; then
+        userid_has_acl_groups=yes
+    else
+        userid_has_acl_groups=no
+    fi
+    #
+    if [ "${userid_has_dirs_group}" = "yes" ] || [ "${userid_has_acl_groups}" = "yes" ] ; then
+        if $verbose; then echo "Have matching group"; fi
+        if [ -n "$acl_mask_entry" ] ; then
+            if $verbose; then echo "Have acl_mask_entry=$acl_mask_entry"; fi
+            if [ "w" = "$(echo "$acl_mask_entry" | rev | cut -c2)" ] ; then
+                if $verbose; then echo "acl_mask_entry allows 'w'"; fi
+                #
+                if [ "${userid_has_dirs_group}" = "yes"  ]; then
+                    [[ "${dir_is_group_writable}" = "yes" ]]  && return 0
+                fi
+                #
+                if [ "${userid_has_acl_groups}" = "yes" ] ; then
+                    if $verbose; then echo "Does any group ACL permit w?"; fi
+                    n_permits="$(echo "${userid_acl_group_id_entries}" | rev | cut -c2 | grep -c w)"
+                    if $verbose; then echo "n_permits=$n_permits"; fi
+                    if [ "${n_permits}" != "0" ] ; then
+                        return 0
+                    fi
+                fi
+                #
+                return 1
+                #
+            else
+                if $verbose; then echo "acl_mask_entry disallows 'w'"; fi
+                return 1
+            fi
+        else
+            if $verbose; then echo "No acl_mask_entry (and thus no group ACLs)"; fi
+            if [ "${userid_has_dirs_group}" = "yes"  ]; then
+                [[ "${dir_is_group_writable}" = "yes" ]]  && return 0 || return 1
+            fi
+        fi
+    fi
+    #
+
+    #
+    # (4) writable by others?
+    [ "${dir_is_other_writable}" = "yes" ]       && return 0
+    #
+    # (5)  else access is denied.
+    return 1
 }
+
+# set +x
+# writeaccess 1000 test1 ; echo $?
+# writeaccess 1000 test2 ; echo $?
+# writeaccess 1000 test3 ; echo $?
 
 #### special jobs of x11docker
 buildimage() {                  # --build: build image from x11docker repository Dockerfile
