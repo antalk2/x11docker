@@ -755,7 +755,11 @@ finish() {                      # trap EXIT routine to clean up background proce
   done
 
   # remove cache files
-  [ "$Preservecachefiles" = "no" ] && grep -q cache <<< "$Cachefolder" && grep -q x11docker <<< "$Cachefolder" && [ "x11docker" != "$(basename "$Cachefolder")" ] && unpriv "rm -f -R '$Cachefolder'"
+  [ "$Preservecachefiles" = "no" ]                       \
+      && grep -q cache     <<< "$Cachefolder"            \
+      && grep -q x11docker <<< "$Cachefolder"            \
+      && [ "x11docker" != "$(basename "$Cachefolder")" ] \
+      && unpriv "rm -f -R '$Cachefolder'"
 
   case "$Runssourced" in
     yes) return "$Exitcode" ;;
@@ -805,8 +809,12 @@ checkpid() {                    # check if PID $1 is active
 containerisrunning() {          # check if container is running
   storeinfo test containerid || return 1
   case "$Dockervm" in
-    no)   checkpid      "$(storeinfo dump pid1pid)" ;;
-    moby|desktop) unpriv_backend "$Backendbin inspect '$(storeinfo dump containerid)'" >/dev/null 2>&1 ;;
+      no)
+          checkpid      "$(storeinfo dump pid1pid)"
+          ;;
+      moby|desktop)
+          unpriv_backend "$Backendbin inspect '$(storeinfo dump containerid)'" >/dev/null 2>&1
+          ;;
   esac
 }
 
@@ -1216,7 +1224,7 @@ oneline() {                     # remove \\ and newline from string
 }
 
 #
-# function parse_inspect()
+# function parse_inspect( json_string, key1, ..., keyn )
 #
 parse_inspect() {               # parse json of inspect output using python
   # parse for keys in output of docker|podman|nerdctl inspect.
@@ -1339,7 +1347,7 @@ parse_inspect() {               # parse json of inspect output using python
   # Replacement using heredoc.
   #
   {
-      echo "#! $Pythonbin"
+      echo "#! $Pythonbin";
       cat <<"END"
 import json,sys
 
@@ -1391,7 +1399,13 @@ END
 }
 
 
-
+#
+# function storeinfo()
+#
+#   Uses file `"$Storeinfofile"`
+#
+#   Used a lot.
+#
 storeinfo() {                   # store some information for later use
   # store and provide pieces of information
   # replace entry if codeword is already present
@@ -1424,20 +1438,46 @@ storeinfo() {                   # store some information for later use
     ;;
   esac
 }
+
+#
+# function rmcr( filepath )
+#
+#  Usage1: cat $filepath | rmcr # result on stdout
+#  Usage2: rmcr $filepath       # inplace edit $filepath Never used in this way
+#
 rmcr() {                        # remove carriage return to translate DOS/Windows newlines into UNIX newlines
   # convert stdin if $1 is empty. Otherwise convert file $1.
   case "${1:-}" in
-    "") sed    "s/$(printf "\r")//g" ;;
-    *)  sed -i "s/$(printf "\r")//g"  "${1:-}" ;;
+    "") sed    "s/$(printf "\r")//g"           ;;
+    *)
+        # Inplace edit $filepath. This branch is not actually used.
+        sed -i "s/$(printf "\r")//g"  "${1:-}"
+        ;;
   esac
 }
+
+#
+# function strlenhex()
+#
+#  Only use in cookiebaker()
+#
 strlenhex() {                   # print byte length of string $1 as hex value
   printf '%x' "$(printf "%s" "${1:-}" | wc -c)"
 }
+
+#
+# function timestamp()
+#
 timestamp() {                   # print HH:MM:SS,NNN
-  date +%T,%N | cut -c1-12
-  return 0
+    # %N prints nanoseconds. cut truncates it to millisecods
+    # Output seems to contain decimal comma in the seconds part.
+    date +%T,%N | cut -c1-12
+    return 0
 }
+
+#
+# function unspecialstring()
+#
 unspecialstring() {             # replace special chars of $1 with -
   # Replace all characters except those described in "a-zA-Z0-9_" with a '-'.
   # Replace newlines, too.
@@ -1447,20 +1487,44 @@ unspecialstring() {             # replace special chars of $1 with -
   # Return empty string if only special chars are given.
   printf %s "${1:-}" | LC_ALL=C tr -cs "a-zA-Z${2:-}0-9_" "-" | sed -e 's/^-// ; s/-$//'
 }
+
+#
+# function verlt()
+#
 verlt() {                       # version number check $1 less than $2
   [ "${1:-}" = "${2:-}" ] && return 1 || { verlte "${1:-}" "${2:-}" && return 0 || return 1 ; }
 }
+
+#
+# function verlte()
+#
 verlte() {                      # version number check $1 less than or equal $2
-  [  "${1:-}" = "$(echo -e "${1:-}\n${2:-}" | sort -V | head -n1)" ] && return 0 || return 1
+    # sort -V : natural sort of (version) numbers within text
+    [  "${1:-}" = "$(echo -e "${1:-}\n${2:-}" | sort -V | head -n1)" ] && return 0 || return 1
 }
+
+#
+# function wincmd()
+#
+#  USed as:   "$(wincmd "echo %userprofile%")"
+#
 wincmd() {                      # execute a command on MS Windows with cmd.exe
   MSYS2_ARG_CONV_EXCL='*' cmd.exe /C "${@//&/^&}" | rmcr
 }
+
+#
+# function mswindowsipcheck()
+#
+#  return 1 (false) on failure
+#
+# Set global Hostip and Hostipwindows
+#  based on output from "ip -4 addr" and "ipconfig.exe"
+#
 mswindowsipcheck() {            # get WSL host IP and Windows host ip
   # thanks to @eyespore in https://github.com/mviereck/x11docker/issues/557
 
   local Hostips Mswindowsips Hostcidr Hostprefix Mswindowsnetwork Hostnetwork
-  #global: Hostip Hostipwindows
+  # global: Hostip Hostipwindows
 
   Hostips=$(ip -4 addr show scope global | awk '/inet / { if ($0 !~ /(docker|br-|veth|cni|podman)/) print $2 }')
   if [[ -z "$Hostips" ]]; then 
@@ -1480,8 +1544,12 @@ mswindowsipcheck() {            # get WSL host IP and Windows host ip
     return 1
   }
 
+  # https://tldp.org/LDP/abs/html/refcards.html#AEN22664
+  # https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
+  # ${string%substring}	Strip shortest match of $substring from back of $string
+  # ${string#substring}	Strip shortest match of $substring from front of $string
   for Hostcidr in $Hostips; do
-    Hostip="${Hostcidr%/*}"
+    Hostip="${Hostcidr%/*}"      # set global Hostip
     Hostprefix="${Hostcidr#*/}"
 
     for Winip in $Mswindowsips; do
@@ -1489,25 +1557,31 @@ mswindowsipcheck() {            # get WSL host IP and Windows host ip
       Hostnetwork=$(ipcalc -n "$Hostip/$Hostprefix" | grep Network | awk '{print $2}')
 
       if [[ "$Mswindowsnetwork" == "$Hostnetwork" ]]; then
-        Hostipwindows=$Winip
-        break 2
+        Hostipwindows=$Winip      # set global Hostipwindows
+        break 2 # break 2 loops
       fi
     done
   done
 }
 
 #### file routines
+#
+# function convertpath()
+#
 convertpath() {                 # convert unix and windows paths
-  # $1: Mode:
-  #     windows   echo Windows path                            - result: c:/path
-  #     unix      echo unix path                               - result: /c/path
-  #     subsystem echo path within subsystem                   - result: /cygdrive/c/path  or  /path  or /mnt/c/path
-  #     volume    echo --volume compatible syntax              - result: 'unixpath':'containerpath':rw  (or ":ro")
-  #     container echo path of volume in container             - result: /path
-  #     share     echo path of $Sharefolder/file in container  - result: /containerpath
-  # $2: Path to convert. Arbitrary syntax, can be C:/path, /c/path, /cygdrive/c/path, /path
-  #     Can have suffix :rw or :ro. If none is given, return with :rw
-  # $3: Optional for mode volume: containerpath
+    # $1: Mode:
+    #     windows   echo Windows path                            - result: c:/path
+    #     unix      echo unix path                               - result: /c/path
+    #     subsystem echo path within subsystem                   - result: /cygdrive/c/path  or  /path  or /mnt/c/path
+    #     volume    echo --volume compatible syntax              - result: 'unixpath':'containerpath':rw  (or ":ro")
+    #     container echo path of volume in container             - result: /path
+    #     share     echo path of $Sharefolder/file in container  - result: /containerpath
+    #     mount     ???
+    #
+    # $2: Path to convert. Arbitrary syntax, can be C:/path, /c/path, /cygdrive/c/path, /path
+    #     Can have suffix :rw or :ro. If none is given, return with :rw
+    #
+    # $3: Optional for mode volume: containerpath
 
   local Mode Path Drive= Readwritemode Readwritemode_mount
 
@@ -1515,30 +1589,38 @@ convertpath() {                 # convert unix and windows paths
   Path="${2:-}"
 
   # check path for suffix :rw or :ro
+  #
+  # Let Readwritemode = last 3 characters of Path
   Readwritemode="$(echo "$Path" | rev | cut -c1-3 | rev)"
+  #
+  # If Readwritemode starts with ":", then
+  #    Drop last 3 characters from Path.
+  # else Readwritemode=":rw"
   [ "$(cut -c1 <<< "$Readwritemode")" = ":" ] && {
     Path="$(echo "$Path" | rev | cut -c4- | rev)"
   } || Readwritemode=":rw"
+  #
+  # Set Readwritemode_mount based on Readwritemode
   [ "$Readwritemode" = ":ro" ] && Readwritemode_mount=",readonly" || Readwritemode_mount=""
 
-  # replace ~ with HOME
+  # Replace ~ with HOME in Path
   Path="$(sed "s%~%${Hostuserhome:-${HOME:-}}%" <<< "$Path")"
 
-  # share: Replace $Sharefolder with $Sharefoldercontainer
+  # case Mode in share: Replace $Sharefolder with $Sharefoldercontainer
   [ "$Mode" = "share" ] && {
     [ -z "$Path" ] && {
       echo ""
       return 0
     }
-    echo "${Sharefoldercontainer}${Path#$Sharefolder}"
+    echo "${Sharefoldercontainer}${Path#$Sharefolder}" # Using global Sharefoldercontainer and Sharefolder
     return 0
   }
 
-  # replace \ with / and // with /
+  # Replace \ with / and // with /   in Path
   Path="$(sed 's%//%/%g ; s%\\%/%g' <<< "$Path")"
 
-  # remove possible already given mountpoint
-  Path="${Path#$Winsubmount}"
+  # Remove possible already given mountpoint
+  Path="${Path#$Winsubmount}"                  # Using global Winsubmount
 
   # Given format is /c/
   [ "$(cut -c1,3 <<< "${Path}/")" = "//" ] && {
@@ -1554,28 +1636,42 @@ convertpath() {                 # convert unix and windows paths
   }
 
   # change C to c
+  # https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
+  # ${parameter,pattern} Lowercase matching characters
   Drive="${Drive,}"
 
   # docker volume (same for Windows and Unix)
   [ "${Path:0:1}" = "/" ] || {
-    case "$Mode" in
-      unix|subsystem|windows) echo "$Path" ; debugnote "convertpath() $Mode: Docker volumes do not have a specified path on host: $Path" ;;
-      volume)         echo "'$Path':'${3:-/$Path}'${Readwritemode}" ;;
-      mount)          echo "type=volume,source='$Path',target='${3:-/$Path}'${Readwritemode_mount}" ;;
-      container)      echo "${3:-/$Path}" ;;
-    esac
-    return 0
+      # Path does not start with "/"
+      case "$Mode" in
+          unix|subsystem|windows)
+              echo "$Path" ;
+              debugnote "convertpath() $Mode: Docker volumes do not have a specified path on host: $Path"
+              ;;
+          volume)         echo "'$Path':'${3:-/$Path}'${Readwritemode}" ;;
+          mount)          echo "type=volume,source='$Path',target='${3:-/$Path}'${Readwritemode_mount}" ;;
+          container)      echo "${3:-/$Path}" ;;
+      esac
+      return 0
   }
 
-  Containerpath="$Path"
-  [ "$Createcontaineruser" = "no" ] || {
-    [ "$Sharehome" = "host" ] || {
-      [ -n "$Containeruserhome" ] && grep -q "^$Containeruserhome" <<< "$Path" && Containerpath="$(sed "s%^$Containeruserhome%/home.host%" <<< "$Containerpath")"
+  Containerpath="$Path"                                  # global Containerpath
+  [ "$Createcontaineruser" = "no" ] || {                 # global Createcontaineruser
+    [ "$Sharehome" = "host" ] || {                       # global Sharehome Containeruserhome Containerpath
+        [ -n "$Containeruserhome" ]                      \
+            && grep -q "^$Containeruserhome" <<< "$Path" \
+            && Containerpath="$(sed "s%^$Containeruserhome%/home.host%" <<< "$Containerpath")"
     }
-    [ "$Containerpath" = "$Containeruserhosthome" ] && [ "$Persistanthomevolume" != "$Containeruserhosthome" ] && Containerpath="/home.host/$Containeruser"
+    #
+    # global Persistanthomevolume
+    # global Containeruser
+    [ "$Containerpath" = "$Containeruserhosthome" ]                \
+        && [ "$Persistanthomevolume" != "$Containeruserhosthome" ] \
+        && Containerpath="/home.host/$Containeruser"
   }
 
   # not on Windows
+  # global Winsubsystem
   [ -z "$Winsubsystem" ] && {
     case "$Mode" in
       unix|subsystem) echo "$Path" ;;
@@ -1589,6 +1685,7 @@ convertpath() {                 # convert unix and windows paths
     return 0
   }
 
+  # global Cachefolder
   case "$Winsubsystem" in
     WSL1)
       [ -z "$Drive" ] && case "$Mode" in
@@ -1608,44 +1705,51 @@ convertpath() {                 # convert unix and windows paths
   esac
 
   case "$Drive" in
-    "") # Path points into subsystem
-      Path="${Path#"$Winsubpath"}"
-      Drive="$(cut -c2 <<<"$Winsubpath")"
-      case "$Mode" in
-        windows)      echo "${Drive^}:$(cut -c3- <<< "$Winsubpath")$Path" ;;
-        unix)         echo "$Winsubpath$Path" ;;
-        subsystem)    echo "$Path" ;;
-        volume)
-          case "$Dockervm" in
-            no|desktop) echo "'$Path':'${3:-$Path}'$Readwritemode" ;;
-            moby)       echo "'$Winsubpath$Path':'${3:-$Path}'$Readwritemode" ;;
+      "") # Path points into subsystem
+          # global Winsubpath
+          Path="${Path#"$Winsubpath"}"
+          Drive="$(cut -c2 <<<"$Winsubpath")"
+          case "$Mode" in
+              windows)      echo "${Drive^}:$(cut -c3- <<< "$Winsubpath")$Path" ;;
+              unix)         echo "$Winsubpath$Path" ;;
+              subsystem)    echo "$Path" ;;
+              volume)
+                  # global Dockervm
+                  case "$Dockervm" in
+                      no|desktop) echo "'$Path':'${3:-$Path}'$Readwritemode" ;;
+                      moby)       echo "'$Winsubpath$Path':'${3:-$Path}'$Readwritemode" ;;
+                  esac
+                  ;;
+              mount)
+                  case "$Dockervm" in
+                      no|desktop)  echo "type=bind,source='$Path',target='${3:-$Path}'$Readwritemode_mount" ;;
+                      moby)        echo "type=bind,source='$Winsubpath$Path',target='${3:-$Path}'$Readwritemode_mount" ;;
+                  esac
+                  ;;
+              container)    echo "${3:-$Path}" ;;
           esac
-        ;;
-        mount)
-          case "$Dockervm" in
-            no|desktop)  echo "type=bind,source='$Path',target='${3:-$Path}'$Readwritemode_mount" ;;
-            moby)        echo "type=bind,source='$Winsubpath$Path',target='${3:-$Path}'$Readwritemode_mount" ;;
+          ;;
+      *) # Path outside of subsystem
+          # global Winsubmount
+          case "$Mode" in
+              windows)      echo "${Drive^}:$Path" ;;
+              unix)         echo "/$Drive$Path" ;;
+              subsystem)    echo "$Winsubmount/$Drive$Path" ;;
+              volume)       echo "'/$Drive$Path':'${3:-/$Drive$Path}'$Readwritemode" ;;
+              mount)        echo "type=bind,source='/$Drive$Path',target='${3:-/$Drive$Path}'$Readwritemode_mount" ;;
+              container)    echo "${3:-/$Drive$Path}" ;;
           esac
-        ;;
-        container)    echo "${3:-$Path}" ;;
-      esac
-    ;;
-    *) # Path outside of subsystem
-      case "$Mode" in
-        windows)      echo "${Drive^}:$Path" ;;
-        unix)         echo "/$Drive$Path" ;;
-        subsystem)    echo "$Winsubmount/$Drive$Path" ;;
-        volume)       echo "'/$Drive$Path':'${3:-/$Drive$Path}'$Readwritemode" ;;
-        mount)        echo "type=bind,source='/$Drive$Path',target='${3:-/$Drive$Path}'$Readwritemode_mount" ;;
-        container)    echo "${3:-/$Drive$Path}" ;;
-      esac
-    ;;
+          ;;
   esac
 
   return 0
 }
+
+#
+# function createmountopt()
+#
 createmountopt(){               # create option to mount file or device, check if file exists
-  # $1  Modus:  one of mount, devixe, volume
+  # $1  Modus:  one of mount, device, volume
   # $2  File:   file or device to share
   # $3  Rw:     ro, readonly (optional)
   local Modus File Rw
@@ -1657,15 +1761,17 @@ createmountopt(){               # create option to mount file or device, check i
     debugnote "createmountopt(): ERROR: File not found: $File"
     return 1
   }
+  #
   case "$Rw" in
-    "ro"|"readonly")
-      case "$Modus" in
-        mount)         Rw=",readonly" ;;
-        volume|device) Rw=":ro" ;;
-      esac
-    ;;
-    *)                 Rw="" ;;
+      "ro"|"readonly")
+          case "$Modus" in
+              mount)         Rw=",readonly" ;;
+              volume|device) Rw=":ro" ;;
+          esac
+          ;;
+      *)                 Rw="" ;;
   esac
+  #
   case "$Modus" in
     mount) 
       echo "--mount type=bind,source=$(escapestring "$File"),target=$(escapestring "$File")$Rw"
@@ -1678,6 +1784,10 @@ createmountopt(){               # create option to mount file or device, check i
     ;;
   esac
 }
+
+#
+# function getwslpath()
+#
 getwslpath() {                  # get path to currently running WSL system
 
   # Fork from https://github.com/Microsoft/WSL/issues/2578#issuecomment-354010141
@@ -1713,12 +1823,32 @@ getwslpath() {                  # get path to currently running WSL system
   rm "${RUN_ID}"
   return 0
 }
+
+#
+# function get_xpath()
+#
+#  $1 can be: Xorg Xvfb Xephyr Xwayland xwayland-satellite nxagent
+#
 get_xpath() {                   # --xc: path to X server
+    #
+    # global Xcontainer
+    #
   case "$Xcontainer" in
     yes) echo "/usr/bin/${1:-}" ;;
-    no)  command -v "${1:-}" ;;
+    no)  command -v "${1:-}"    ;;
   esac
 }
+
+#
+# function mkfile()
+#
+#  mkfile path [mode]
+#      mode defaults to 644
+#
+#  mkfile $path
+#  mkfile $path 666
+#
+#
 mkfile() {                      # create file $1 owned by $Hostuser
   :> "${1:-}"                   || return 1
   chown "$Hostuser"    "${1:-}" || return 1
@@ -1729,32 +1859,61 @@ mkfile() {                      # create file $1 owned by $Hostuser
   }
   return 0
 }
+
+#
+# function mkfolder(  path, mode=755 )
+#
+#  examples:
+#
+#  mkfolder "$Hostuserhome/.config/compiz-1/compizconfig"
+#  mkfolder "$Persistanthomevolume"
+#  mkfolder "$Hostuserhome"
+#  mkfolder "$Localsharedir"
+#  mkfolder "$XDG_RUNTIME_DIR" 0700
+#  ...
+#
 mkfolder() {                    # create folder $1 owned by $Hostuser
-  local Step Path= Return=
-  for Step in $(tr '/' '\n' <<< "${1:-}" | grep .) ; do
-    Path="$Path/$Step"
-    [ -d "$Path" ] || {
-      unpriv "mkdir -p  '$Path'"  || Return=1
-      chmod "${2:-755}" "$Path"   || Return=1
-    }
-    [ "$Return" ] && break
-  done
-  return ${Return:-0}
-  #unpriv "mkdir -p  '${1:-}'"   || return 1
+    local Step Path= Return=
+    #
+    # Work recursively
+    #
+    for Step in $(tr '/' '\n' <<< "${1:-}" | grep .) ; do
+        Path="$Path/$Step"
+        [ -d "$Path" ] || {
+            unpriv "mkdir -p  '$Path'"  || Return=1
+            chmod "${2:-755}" "$Path"   || Return=1
+        }
+        [ "$Return" ] && break
+    done
+    return ${Return:-0}
+    #unpriv "mkdir -p  '${1:-}'"   || return 1
 }
+
+#
+# function myrealpath( path )
+#
 myrealpath() {                  # real path of possible symlink
-  [ -z "$*" ] && return 1
-  command -v realpath >/dev/null && {
-    realpath "$*"
-  } || {
-    [ -h "$*" ] && warning "Could not check for symbolic links.
+    # No args is a failure
+    [ -z "$*" ] && return 1
+    # If have realpath, use that.
+    command -v realpath >/dev/null && {
+        realpath "$*"
+    } || {
+        # Otherwise complain if it is a symlink
+        [ -h "$*" ] && warning "Could not check for symbolic links.
   Please install 'realpath' (package 'coreutils'),
   or provide real file path instead of symbolic link path.
   Possible symbolic link: $*"
-    echo "$*"   ### FIXME: Maybe workaround with ls
-    return 1
-  }
+        #
+        # and emit the path unmodified
+        echo "$*"   ### FIXME: Maybe workaround with ls
+        return 1
+    }
 }
+
+#
+# function waitforlogentry( application, logfile, keyword, error_keywords, time_to_wait=60 )
+#
 waitforlogentry() {             # wait for entry $3 in logfile $2 of application $1
   # $1 is the application we are waiting for to be ready
   # $2 points to logfile
@@ -12603,6 +12762,7 @@ mytest() {                      # --experimental
   }
   return 1
 }
+
 unpriv() {                      # run a command as unprivileged user. Needed if x11docker was started by root or with sudo.
   # $Unpriv is declared in check_hostuser: 'eval' or 'su $Hostuser -c'
   local Command
@@ -12610,19 +12770,21 @@ unpriv() {                      # run a command as unprivileged user. Needed if 
   $Unpriv "$Command"
   return $?
 }
+
 unpriv_backend() {              # run container backend rootful or rootless
-  local Command
-  Command="$(oneline "${1:-}")"
-  [ -z "$Backendbin" ] && {
-    warning "Binary path for backend $Backend not set."
-    return 1
-  }
-  case "$Backendrootless" in
-    yes)   unpriv                  "$Command" ;;
-    no|"") eval   "env DOCKER_HOST= $Command" ;;
-  esac
-  return $?
+    local Command
+    Command="$(oneline "${1:-}")"
+    [ -z "$Backendbin" ] && {
+        warning "Binary path for backend $Backend not set."
+        return 1
+    }
+    case "$Backendrootless" in
+        yes)   unpriv                  "$Command" ;;
+        no|"") eval   "env DOCKER_HOST= $Command" ;;
+    esac
+    return $?
 }
+
 unpriv_xcbackend() {            # run X container backend rootful or rootless
   local Command
   Command="$(oneline "${1:-}")"
@@ -12632,6 +12794,7 @@ unpriv_xcbackend() {            # run X container backend rootful or rootless
   esac
   return $?
 }
+
 main() {
   [ "$(uname -s)" = "Darwin" ] && echo "Error: x11docker does not run on MacOS. Please use Linux." >&2 && exit 64
 
