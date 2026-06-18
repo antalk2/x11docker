@@ -459,18 +459,21 @@ alertbox() {                    # X alert box with title $1 and message $2
   # try some tools to show alert message. If all tools fail, return 1
   command -v   xmessage     >/dev/null && [ -n "${DISPLAY:-}" ] && {
       printf "%s\n\n%s" "${Title}" "${Message}"  \
-          | xmessage  -file - -default okay || true
+          | xmessage  -file - -default okay      \
+          || true
   } || {
       command -v gxmessage    >/dev/null && [ -n "${DISPLAY:-}" ] && {
           printf "%s\n\n%s" "${Title}" "${Message}"  \
-              | gxmessage -file - -default okay || true
+              | gxmessage -file - -default okay      \
+              || true
       }
   } || {
       command -v zenity       >/dev/null && [ -n "${DISPLAY:-}" ] && {
           zenity --error --no-markup --ellipsize \
                  --title="$Title"                \
                  --text="$Message"               \
-                 2>/dev/null || true
+                 2>/dev/null                     \
+              || true
       }
   } || {
       command -v yad          >/dev/null && [ -n "${DISPLAY:-}" ] && {
