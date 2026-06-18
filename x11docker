@@ -2269,42 +2269,66 @@ buildimage() {                  # --build: build image from x11docker repository
     return 0
 }
 
-
+#
+# function cleanup()
+#
 cleanup() {                     # --cleanup : check for non-removed containers and left cache files
-  # Cleans x11docker cache and removes running and stopped x11docker containers.
-  # Does not change --home folders.
-  local Orphanedcontainers= Orphanedfolders= Line= Containerinspect Containerid
+    # Cleans x11docker cache and removes running and stopped x11docker containers.
+    # Does not change --home folders.
+    local Orphanedcontainers=
+    local Orphanedfolders=
+    local Line=
+    local Containerinspect Containerid
 
-  note "x11docker will check for orphaned containers from earlier sessions
+    # global Backend
+    note "x11docker will check for orphaned containers from earlier sessions
   for current --backend=$Backend
   This can happen if docker was not closed successfully.
   x11docker will look for those containers and will clean up x11docker cache.
   Caution: any currently running x11docker sessions will be terminated, too."
 
-  cd "$Cachebasefolder" || error "Could not cd to cache folder '$Cachebasefolder'."
+    # global Cachebasefolder
+    cd "$Cachebasefolder" || error "Could not cd to cache folder '$Cachebasefolder'."
 
-  grep -q -- "\.cache/x11docker" <<< "$Cachebasefolder" && Orphanedfolders="$(find "$Cachebasefolder" -mindepth 1 -maxdepth 1 -type d | sed "s%$Cachebasefolder/%%" )"
+    if grep -q -- "\.cache/x11docker" <<< "$Cachebasefolder" ; then
+        Orphanedfolders="$(find "$Cachebasefolder" -mindepth 1 -maxdepth 1 -type d | sed "s%$Cachebasefolder/%%" )"
+    fi
 
-  case "$Backend" in
-    docker|podman|nerdctl)
-      Orphanedcontainers="$(unpriv_backend "$Backendbin ps -a" | grep x11docker_X | rev | cut -d' ' -f1 | rev)"
-      Orphanedcontainers="$Orphanedcontainers $(find "$Cachebasefolder" -mindepth 2 -maxdepth 2 -type f -name 'container.id' -exec cat {} \;)"
-      Orphanedcontainers="$(env IFS='' echo $Orphanedcontainers)"
+    case "$Backend" in
+        docker|podman|nerdctl)
+            #
+            # Container names from "docker ps -a"
+            Orphanedcontainers="$(unpriv_backend "$Backendbin ps -a" | grep x11docker_X | rev | cut -d' ' -f1 | rev)"
+            #
+            # $Cachebasefolder/*/container.id : None found under docker. Maybe podman or nerdctl ?
+            # In https://github.com/mviereck/x11docker/blob/v4.0.0/x11docker 'container.id' was the name
+            # of a file where x11docker saved $Containerid
+            # https://github.com/mviereck/x11docker/blob/bf35c6e972b4a14efb40084b6bf7ba2fffb1804a/x11docker#L3903
+            #
+            # Orphanedcontainers="$Orphanedcontainers $(find "$Cachebasefolder" -mindepth 2 -maxdepth 2 -type f -name 'container.id' -exec cat {} \;)"
+            #
+            # Make Orphanedcontainers  space-separated
+            Orphanedcontainers="$(env IFS='' echo $Orphanedcontainers)"
 
-      # check for double entries name/id, check for already non-existing containers
-      for Line in $Orphanedcontainers; do
-        Containerinspect="$(unpriv_backend "$Backendbin inspect '$Line'" 2>/dev/null)"
-        [ -n "$Containerinspect" ] && {
-          Containerid="$(parse_inspect "$Containerinspect" "Id")"
-          Orphanedcontainers="$(sed "s%$Line%$Containerid%" <<< "$Orphanedcontainers")"
-          :
-        } || {
-          Orphanedcontainers="$(sed s/$Line// <<< "$Orphanedcontainers")"
-        }
-      done
-      Orphanedcontainers="$(sort <<< "$Orphanedcontainers" | uniq)"
-    ;;
-  esac
+            # check for double entries name/id, check for already non-existing containers
+            for Line in $Orphanedcontainers; do
+                #
+                Containerinspect="$(unpriv_backend "$Backendbin inspect '$Line'" 2>/dev/null)"
+                [ -n "$Containerinspect" ] && {
+                    # Get longHexId
+                    Containerid="$(parse_inspect "$Containerinspect" "Id")"
+                    #
+                    # Replace the original identifier with the longHexId in Orphanedcontainers
+                    Orphanedcontainers="$(sed "s%$Line%$Containerid%" <<< "$Orphanedcontainers")"
+                    true
+                } || {
+                    # Remove original identifier from Orphanedcontainers
+                    Orphanedcontainers="$(sed s/$Line// <<< "$Orphanedcontainers")"
+                }
+            done
+            Orphanedcontainers="$(sort <<< "$Orphanedcontainers" | uniq)"
+            ;;
+    esac
 
   [ -z "$Orphanedcontainers$Orphanedfolders" ] && {
     note "No orphaned containers or cache files found. good luck!"
@@ -2315,12 +2339,16 @@ $Orphanedcontainers"
 $Orphanedfolders"
 
     for Line in $Orphanedfolders ; do
-      [ -d "$Cachebasefolder/$Line/share" ] && [ ! -s "$Cachebasefolder/$Line/share/timetosaygoodbye" ] && {
-        note "Found possibly active container for cache dir $Line.
+        [ -d "$Cachebasefolder/$Line/share" ] \
+            && [ ! -s "$Cachebasefolder/$Line/share/timetosaygoodbye" ] \
+            && {
+            note "Found possibly active container for cache dir $Line.
   Will summon it to terminate itself."
-        echo timetosaygoodbye >> "$Cachebasefolder/$Line/share/timetosaygoodbye"
-      }
+            #
+            echo timetosaygoodbye >> "$Cachebasefolder/$Line/share/timetosaygoodbye"
+        }
     done
+
     [ -n "$Orphanedfolders" ] && sleep 3
 
     [ -n "$Orphanedcontainers" ] && {
@@ -2349,14 +2377,18 @@ $Orphanedfolders"
   rm -Rf -v "${Cachebasefolder:-NONSENSE}"/*
 
   note "Removing cache base folder with: rmdir -v \"$Cachebasefolder\""
-  cd
-  [ "$(basename "$Cachebasefolder")" = x11docker ] && rmdir -v "$Cachebasefolder"  || warning "Did not succeed in removing cache folder
+  cd # Leave Cachebasefolder
+
+  [ "$(basename "$Cachebasefolder")" = x11docker ] \
+      && rmdir -v "$Cachebasefolder"  \
+          || warning "Did not succeed in removing cache folder
   '$Cachebasefolder'
   Please run 'x11docker --cleanup' as root."
 
   case "$Backend" in
     docker)
-      unpriv_backend "$Backendbin info" >/dev/null 2>/dev/null || warning "Could not check for $Backend containers.
+        unpriv_backend "$Backendbin info" >/dev/null 2>/dev/null \
+            || warning "Could not check for $Backend containers.
   Please run 'x11docker --cleanup' as root
   to make sure that no orphaned containers are left."
     ;;
@@ -2364,6 +2396,9 @@ $Orphanedfolders"
 
   note "Cleanup ready."
 }
+
+
+
 create_launcher() {             # --launcher: create application launcher on desktop
   local Name=
 
