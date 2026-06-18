@@ -506,9 +506,12 @@ alertbox() {                    # X alert box with title $1 and message $2
 
 # function debugnote()
 debugnote() {                   # show debug output $*
-  [ "$Debugmode" = "yes" ] && [ "$Verbose" != "yes" ] && echo "${Colblue}DEBUGNOTE[$(timestamp)]:${Colnorm} $*" >&${FDstderr}
-  logentry "DEBUGNOTE[$(timestamp)]: $*"
-  return 0
+    [ "$Debugmode" = "yes" ] \
+        && [ "$Verbose" != "yes" ] \
+        && echo "${Colblue}DEBUGNOTE[$(timestamp)]:${Colnorm} $*" >&${FDstderr}
+    #
+    logentry "DEBUGNOTE[$(timestamp)]: $*"
+    return 0
 }
 
 # function error()
