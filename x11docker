@@ -596,10 +596,9 @@ logentry() {                    # write into logfile
 
 # function note()
 note() {                        # show notice messages
-  [ "$Verbose" = "yes" ] || echo "${Colgreen}x11docker note:${Colnorm} $*
-" >&${FDstderr}
-  logentry "x11docker note: $*
-"
+    [ "$Verbose" = "yes" ] \
+        || echo "${Colgreen}x11docker note:${Colnorm} $*${NEWLINE}" >&${FDstderr}
+    logentry  "x11docker note: $*${NEWLINE}"
 }
 
 # function traperror()
