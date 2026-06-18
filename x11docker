@@ -629,29 +629,46 @@ warning() {                     # show warning messages
 # function watchmessagefifo()
 #
 watchmessagefifo() {            # watch for messages coming from inside of container
-  # message in fifo must end with :$Messagetype
-  local Line= Message= Messagetype=
-  trap '' SIGINT
-  while [ -e "$Cachefolder" ]; do
-    IFS= read -r Line <&${FDmessage} ||:
-    [ "$Line" ] || sleep 2  # sleep for MSYS2/CYGWIN workaround
-    [ "$Line" ] && Message="$Message
-$Line"
-    grep -q -E ":WARNING|:NOTE|:DEBUGNOTE|:VERBOSE|:ERROR|:STDOUT" <<< "$Line" && {
-      Messagetype=":$(echo "$Line" | rev | cut -d: -f1  | rev | tr -d ' ')"
-      Message="${Message%$Messagetype}"
-      Message="$(tail -n +2 <<< "$Message")" # remove leading newline
-      case "$Messagetype" in
-        :WARNING)   warning   "$Message" ;;
-        :NOTE)      note      "$Message" ;;
-        :DEBUGNOTE) debugnote "$Message" ;;
-        :ERROR)     error     "$Message" ;;
-        :VERBOSE)   [ "-d " = "$(cut -c1-3 <<<"$Message" | head -n1)" ] && debugnote "$(tail -c +4 <<< "$Message")" || verbose "$Message" ;;
-        :STDOUT)    echo "$Message" ;;
-      esac
-      Message=
-      Messagetype=
-    }
+    # message in fifo must end with :$Messagetype
+    local Line='' Message='' Messagetype=''
+    #
+    trap '' SIGINT
+    #
+    while [ -e "$Cachefolder" ]; do
+        IFS= read -r Line <&${FDmessage} || true
+        [ "$Line" ] || sleep 2  # sleep for MSYS2/CYGWIN workaround
+        [ "$Line" ] && Message="${Message}${NEWLINE}${Line}"
+        #
+        if grep -q -E ":WARNING|:NOTE|:DEBUGNOTE|:VERBOSE|:ERROR|:STDOUT" <<< "$Line" ; then
+            #
+            # Messagetype is the text in `Line` after the last colon,
+            #             without spaces.
+            #
+            Messagetype=":$(echo "$Line" | rev | cut -d: -f1  | rev | tr -d ' ')"
+            #
+            # If `Message`  ends with `Messagetype`, remove the suffix `Messagetype`.
+            #
+            # https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
+            # ${parameter%word}
+            #
+            # Probably same as ${parameter/%pattern/string} where
+            # string is empty, i.e. ${parameter/%pattern/} and
+            # can be written as     ${parameter/%pattern}
+            #
+            # shellcheck disable=SC2295
+            Message="${Message%$Messagetype}"
+            Message="$(tail -n +2 <<< "$Message")" # remove leading newline
+            case "$Messagetype" in
+                :WARNING)   warning   "$Message" ;;
+                :NOTE)      note      "$Message" ;;
+                :DEBUGNOTE) debugnote "$Message" ;;
+                :ERROR)     error     "$Message" ;;
+                :VERBOSE)   [ "-d " = "$(cut -c1-3 <<<"$Message" | head -n1)" ] && debugnote "$(tail -c +4 <<< "$Message")" || verbose "$Message" ;;
+                :STDOUT)    echo "$Message" ;;
+            esac
+            Message=
+            Messagetype=
+        fi
   done
 }
 
