@@ -590,7 +590,7 @@ logentry() {                    # write into logfile
         true
     } || {
         # No Logfile, collect in Logmessages
-        Logmessages=$(printf "%s\n%s" "$Logmessages" "$*")
+        Logmessages="${Logmessages}${NEWLINE}$*"
     }
 }
 
