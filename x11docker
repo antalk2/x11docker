@@ -2290,10 +2290,12 @@ cleanup() {                     # --cleanup : check for non-removed containers a
     # global Cachebasefolder
     cd "$Cachebasefolder" || error "Could not cd to cache folder '$Cachebasefolder'."
 
+    # get Orphanedfolders
     if grep -q -- "\.cache/x11docker" <<< "$Cachebasefolder" ; then
         Orphanedfolders="$(find "$Cachebasefolder" -mindepth 1 -maxdepth 1 -type d | sed "s%$Cachebasefolder/%%" )"
     fi
 
+    # get Orphanedcontainers
     case "$Backend" in
         docker|podman|nerdctl)
             #
