@@ -512,7 +512,7 @@ alertbox() {                    # X alert box with title $1 and message $2
 
 # function debugnote()
 debugnote() {                   # show debug output $*
-    [ "$Debugmode" = "yes" ] \
+    [ "$Debugmode" = "yes" ]       \
         && [ "$Verbose" != "yes" ] \
         && echo "${Colblue}DEBUGNOTE[$(timestamp)]:${Colnorm} $*" >&${FDstderr}
     #
@@ -565,7 +565,10 @@ error() {                       # show error message and exit
   storeinfo error=64
 
   # output to X dialogbox if not running in terminal
-  [ "$Runsinterminal" = "no" ] && [ "$Silent" = "no" ] && export ${Hostxenv:-DISPLAY} && alertbox "x11docker ERROR" "$Message" &
+  [ "$Runsinterminal" = "no" ]       \
+      && [ "$Silent" = "no" ]        \
+      && export ${Hostxenv:-DISPLAY} \
+      && alertbox "x11docker ERROR" "$Message" &
 
   finish
 }
@@ -573,11 +576,19 @@ error() {                       # show error message and exit
 # function logentry()
 logentry() {                    # write into logfile
     [ -e "$Logfile" ] && {
-        [ -n "$Logmessages" ] && echo "$Logmessages" >> "$Messagelogfile" 2>/dev/null && Logmessages=""
+        #
+        # Emit earlier messages
+        [ -n "$Logmessages" ]                                       \
+            && echo "$Logmessages" >> "$Messagelogfile" 2>/dev/null \
+            && Logmessages=""
+        #
+        # Emit current message
         echo "$*" >> "$Messagelogfile" 2>/dev/null
         true
-    } || Logmessages="$Logmessages
-$*"
+    } || {
+        # No Logfile, collect in Logmessages
+        Logmessages=$(printf "%s\n%s" "$Logmessages" "$*")
+    }
 }
 
 # function note()
