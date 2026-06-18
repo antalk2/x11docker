@@ -578,7 +578,7 @@ error() {                       # show error message and exit
 
 # function logentry()
 logentry() {                    # write into logfile
-    [ -e "$Logfile" ] && {
+    if [ -e "$Logfile" ] ; then
         #
         # Emit earlier messages
         [ -n "$Logmessages" ]                                       \
@@ -588,10 +588,10 @@ logentry() {                    # write into logfile
         # Emit current message
         echo "$*" >> "$Messagelogfile" 2>/dev/null
         true
-    } || {
+    else
         # No Logfile, collect in Logmessages
         Logmessages="${Logmessages}${NEWLINE}$*"
-    }
+    fi
 }
 
 # function note()
