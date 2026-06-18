@@ -556,9 +556,7 @@ error() {                       # show error message and exit
   Message="$(rmcr <<< "$Message")"
 
   # output to terminal
-  echo -e "
-${Colredbg}x11docker ERROR:${Colnorm} $Message
-" >&2
+  echo -e "\n${Colredbg}x11docker ERROR:${Colnorm} $Message\n" >&2
 
   # output to logfile
   logentry "x11docker ERROR: $Message
