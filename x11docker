@@ -562,7 +562,7 @@ error() {                       # show error message and exit
   echo -e "\n${Colredbg}x11docker ERROR:${Colnorm} $Message\n" >&2
 
   # output to logfile
-  logentry $(printf "%s\n" "x11docker ERROR: $Message")
+  logentry "$(printf "%s\n" "x11docker ERROR: $Message")"
   saygoodbye error
   storeinfo test error && waitfortheend
   storeinfo error=64
