@@ -532,7 +532,7 @@ trim_to_bar(){
 }
 
 if false; then
-    x=$(trim_to_bar
+    x=$(trim_to_bar \
         "|aa
          |bb
          |")
