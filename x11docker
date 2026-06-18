@@ -2300,13 +2300,6 @@ cleanup() {                     # --cleanup : check for non-removed containers a
             # Container names from "docker ps -a"
             Orphanedcontainers="$(unpriv_backend "$Backendbin ps -a" | grep x11docker_X | rev | cut -d' ' -f1 | rev)"
             #
-            # $Cachebasefolder/*/container.id : None found under docker. Maybe podman or nerdctl ?
-            # In https://github.com/mviereck/x11docker/blob/v4.0.0/x11docker 'container.id' was the name
-            # of a file where x11docker saved $Containerid
-            # https://github.com/mviereck/x11docker/blob/bf35c6e972b4a14efb40084b6bf7ba2fffb1804a/x11docker#L3903
-            #
-            # Orphanedcontainers="$Orphanedcontainers $(find "$Cachebasefolder" -mindepth 2 -maxdepth 2 -type f -name 'container.id' -exec cat {} \;)"
-            #
             # Make Orphanedcontainers  space-separated
             Orphanedcontainers="$(env IFS='' echo $Orphanedcontainers)"
 
