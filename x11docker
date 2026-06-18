@@ -458,38 +458,47 @@ alertbox() {                    # X alert box with title $1 and message $2
 
   # try some tools to show alert message. If all tools fail, return 1
   command -v   xmessage     >/dev/null && [ -n "${DISPLAY:-}" ] && {
-    echo "$Title
-
-$Message" | xmessage  -file - -default okay || true
+      printf "%s\n\n%s" "${Title}" "${Message}"  \
+          | xmessage  -file - -default okay || true
   } || {
-    command -v gxmessage    >/dev/null && [ -n "${DISPLAY:-}" ] && {
-      echo "$Title
-
-$Message" | gxmessage -file - -default okay || true
+      command -v gxmessage    >/dev/null && [ -n "${DISPLAY:-}" ] && {
+          printf "%s\n\n%s" "${Title}" "${Message}"  \
+              | gxmessage -file - -default okay || true
+      }
+  } || {
+      command -v zenity       >/dev/null && [ -n "${DISPLAY:-}" ] && {
+          zenity --error --no-markup --ellipsize \
+                 --title="$Title"                \
+                 --text="$Message"               \
+                 2>/dev/null || true
+      }
+  } || {
+      command -v yad          >/dev/null && [ -n "${DISPLAY:-}" ] && {
+          yad  --image "dialog-error" \
+               --title "$Title"       \
+               --button=gtk-ok:0      \
+               --text "$(echo "$Message" | sed 's/\\/\\\\/g')" \
+               --fixed                \
+               2>/dev/null || true
+      }
+  } || {
+      command -v kdialog      >/dev/null && [ -n "${DISPLAY:-}" ] && {
+          kdialog                                               \
+              --title "$Title"                                  \
+              --error "$(echo "$Message" | sed 's/\\/\\\\/g' )" \
+              2>/dev/null || true
     }
   } || {
-    command -v zenity       >/dev/null && [ -n "${DISPLAY:-}" ] && {
-      zenity --error --no-markup --ellipsize --title="$Title" --text="$Message" 2>/dev/null || true
-    }
+      command -v xterm        >/dev/null && [ -n "${DISPLAY:-}" ] && {
+          xterm                             \
+              -title "$Title"               \
+              -e "echo '$(echo "$Message" | sed "s/'/\"/g")' ; read -n1" \
+              || true
+      }
   } || {
-    command -v yad          >/dev/null && [ -n "${DISPLAY:-}" ] && {
-      yad  --image "dialog-error" --title "$Title" --button=gtk-ok:0 --text "$(echo "$Message" | sed 's/\\/\\\\/g')" --fixed 2>/dev/null || true
-    }
+      notify-send "$(printf "%s\n\n%s" "${Title}" "${Message}" )"  2>/dev/null
   } || {
-    command -v kdialog      >/dev/null && [ -n "${DISPLAY:-}" ] && {
-      kdialog --title "$Title" --error "$(echo "$Message" | sed 's/\\/\\\\/g' )" 2>/dev/null ||:
-    }
-  } || {
-    command -v xterm        >/dev/null && [ -n "${DISPLAY:-}" ] && {
-      xterm -title "$Title" -e "echo '$(echo "$Message" | sed "s/'/\"/g")' ; read -n1" ||:
-    }
-  } || {
-    notify-send "$Title:
-
-$Message" 2>/dev/null
-  } || {
-    warning "Could not display message on X:
-$Message"
+    warning "$(printf "Could not display message on X:\n%s" "$Message" )"
     return 1
   }
   return 0
