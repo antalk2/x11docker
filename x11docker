@@ -448,6 +448,9 @@ SOFTWARE.'
 
 #### messages
 
+# NEWLINE contains a newline character
+printf -v NEWLINE "\n"
+
 ## function alertbox()
 alertbox() {                    # X alert box with title $1 and message $2
   local Title Message
