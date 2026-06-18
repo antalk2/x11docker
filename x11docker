@@ -447,6 +447,7 @@ SOFTWARE.'
 }
 
 #### messages
+
 ## function alertbox()
 alertbox() {                    # X alert box with title $1 and message $2
   local Title Message
@@ -482,14 +483,16 @@ alertbox() {                    # X alert box with title $1 and message $2
                --button=gtk-ok:0      \
                --text "$(echo "$Message" | sed 's/\\/\\\\/g')" \
                --fixed                \
-               2>/dev/null || true
+               2>/dev/null            \
+              || true
       }
   } || {
       command -v kdialog      >/dev/null && [ -n "${DISPLAY:-}" ] && {
           kdialog                                               \
               --title "$Title"                                  \
               --error "$(echo "$Message" | sed 's/\\/\\\\/g' )" \
-              2>/dev/null || true
+              2>/dev/null                                       \
+              || true
     }
   } || {
       command -v xterm        >/dev/null && [ -n "${DISPLAY:-}" ] && {
