@@ -520,6 +520,22 @@ debugnote() {                   # show debug output $*
     return 0
 }
 
+#
+# function trim_to_bar()
+#  Remove indentation marked with "|"
+#
+trim_to_bar(){
+    echo "${1}" | sed -e 's/^[ ]*|//'
+}
+
+if false; then
+    x=$(trim_to_bar
+        "|aa
+         |bb
+         |")
+    echo "$x"
+fi
+
 # function error()
 error() {                       # show error message and exit
   local Message
