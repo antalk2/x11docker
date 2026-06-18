@@ -480,6 +480,7 @@ alertbox() {                    # X alert box with title $1 and message $2
               || true
       }
   } || {
+      # shellcheck disable=SC2001
       command -v yad          >/dev/null && [ -n "${DISPLAY:-}" ] && {
           yad  --image "dialog-error" \
                --title "$Title"       \
@@ -491,6 +492,7 @@ alertbox() {                    # X alert box with title $1 and message $2
       }
   } || {
       command -v kdialog      >/dev/null && [ -n "${DISPLAY:-}" ] && {
+          # shellcheck disable=SC2001
           kdialog                                               \
               --title "$Title"                                  \
               --error "$(echo "$Message" | sed 's/\\/\\\\/g' )" \
@@ -499,6 +501,7 @@ alertbox() {                    # X alert box with title $1 and message $2
     }
   } || {
       command -v xterm        >/dev/null && [ -n "${DISPLAY:-}" ] && {
+          # shellcheck disable=SC2001
           xterm                             \
               -title "$Title"               \
               -e "echo '$(echo "$Message" | sed "s/'/\"/g")' ; read -n1" \
@@ -524,10 +527,11 @@ debugnote() {                   # show debug output $*
 }
 
 #
-# function trim_to_bar()
-#  Remove indentation marked with "|"
+# function trim_to_bar( s )
+#  Remove indentation in `s` up to and including the marker `|`
 #
 trim_to_bar(){
+    # shellcheck disable=SC2001
     echo "${1}" | sed -e 's/^[ ]*|//'
 }
 
@@ -543,6 +547,7 @@ fi
 error() {                       # show error message and exit
   local Message
 
+  # shellcheck disable=SC2104
   break >/dev/null 2>&1 # just in case error occurred in a loop
 
   Message="$(printf \
@@ -556,6 +561,7 @@ error() {                       # show error message and exit
                 )"
          )"
 
+  # shellcheck disable=SC2119
   Message="$(rmcr <<< "$Message")"
 
   # output to terminal
@@ -568,6 +574,7 @@ error() {                       # show error message and exit
   storeinfo error=64
 
   # output to X dialogbox if not running in terminal
+  # shellcheck disable=SC2086
   [ "$Runsinterminal" = "no" ]       \
       && [ "$Silent" = "no" ]        \
       && export ${Hostxenv:-DISPLAY} \
