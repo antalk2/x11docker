@@ -1415,42 +1415,42 @@ oneline() {                     # remove \\ and newline from string
 # function parse_inspect( json_string, key1, ..., keyn )
 #
 parse_inspect() {               # parse json of inspect output using python
-  # parse for keys in output of docker|podman|nerdctl inspect.
-  # Uses python json parser.
-  # $1 String containing inspect output
-  # $2...$n Key. For second level keys provide e.g. "jsonstring" "Config" "Cmd"
+    # parse for keys in output of docker|podman|nerdctl inspect.
+    # Uses python json parser.
+    # $1 String containing inspect output
+    # $2...$n Key. For second level keys provide e.g. "jsonstring" "Config" "Cmd"
 
-  local Parserscript
-  local Jsonstring Keystring Output
-  local EXPR
-  local SINGLE_QUOTE="'"
+    local Parserscript
+    local Jsonstring Keystring Output
+    local EXPR
+    local SINGLE_QUOTE="'"
 
-  [[ "$Jqbin" ]] && {
-      # we have jq (e.g. /usr/bin/jq)
-      Jsonstring="${1:-}" ; shift
-      # If we have an array, get the first item
-      [[ $("$Jqbin" -r 'type' <<< "$Jsonstring" 2>/dev/null) == array ]] && Keystring=".[0]" || Keystring=""
-      # Recursively find key using the sequence of keys
-      while [ $# -gt 0 ]; do
-          Keystring="$Keystring.${1:-}"
-          shift
-      done
-      ##
-      Output="$("$Jqbin" "$Keystring" <<< "$Jsonstring")"
-      #
-      # If we have an array in Output, single-quote each item and join with spaces
-      if [[ $("$Jqbin" -r 'type' <<< "$Output" 2>/dev/null) == array ]]; then
-          EXPR="map(tostring | \"'\" + . + \"'\") | join(\" \")"
-          Output="$("$Jqbin" -r "$EXPR" <<< "$Output" )"
-      fi
-      # If we have a string, output the raw contents without quotes
-      if [[ $("$Jqbin" -r 'type' <<< "$Output" 2>/dev/null) == string ]]; then
-          Output="$("$Jqbin" -r '.' <<< "$Output")"
-      fi
-      [ "$Output" = "null" ] && Output=""
-      echo "$Output"
-      return
-  }
+    [[ "$Jqbin" ]] && {
+        # we have jq (e.g. /usr/bin/jq)
+        Jsonstring="${1:-}" ; shift
+        # If we have an array, get the first item
+        [[ $("$Jqbin" -r 'type' <<< "$Jsonstring" 2>/dev/null) == array ]] && Keystring=".[0]" || Keystring=""
+        # Recursively find key using the sequence of keys
+        while [ $# -gt 0 ]; do
+            Keystring="$Keystring.${1:-}"
+            shift
+        done
+        ##
+        Output="$("$Jqbin" "$Keystring" <<< "$Jsonstring")"
+        #
+        # If we have an array in Output, single-quote each item and join with spaces
+        if [[ $("$Jqbin" -r 'type' <<< "$Output" 2>/dev/null) == array ]]; then
+            EXPR="map(tostring | \"'\" + . + \"'\") | join(\" \")"
+            Output="$("$Jqbin" -r "$EXPR" <<< "$Output" )"
+        fi
+        # If we have a string, output the raw contents without quotes
+        if [[ $("$Jqbin" -r 'type' <<< "$Output" 2>/dev/null) == string ]]; then
+            Output="$("$Jqbin" -r '.' <<< "$Output")"
+        fi
+        [ "$Output" = "null" ] && Output=""
+        echo "$Output"
+        return
+    }
 
   ##
   ## Replacement using trim_to_bar(), intercepted single quotes and ${SINGLE_QUOTE}
