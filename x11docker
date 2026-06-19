@@ -1169,37 +1169,67 @@ check_parent_sshd() {           # check whether pid $1 runs in SSH session
 #
 # function cookiebaker()
 #
+# Usage: cookiebaker( Display )
+#
+#  Display defaults to $DISPLAY
+#
+#     Examples:
+#        :0.0
+#        paxbox1.paxco.com:0.2
+#        192.168.1.100:0.0
+#
 cookiebaker() {                 # create an X cookie without xauth
-  # $1  DISPLAY
-  # Write directly to file, bash cannot store nullbytes in a string.
-  # Based on https://stackoverflow.com/questions/70932880/what-is-the-internal-format-of-xauthority-file
-  # and chapter 6.2.5 in https://refspecs.linuxfoundation.org/LSB_5.0.0/LSB-Desktop-generic/LSB-Desktop-generic/libx11-ddefs.html
+    # $1  DISPLAY
+    # Write directly to file, bash cannot store nullbytes in a string.
+    # Based on https://stackoverflow.com/questions/70932880/what-is-the-internal-format-of-xauthority-file
+    # and chapter 6.2.5 in
+    # https://refspecs.linuxfoundation.org/LSB_5.0.0/LSB-Desktop-generic/LSB-Desktop-generic/libx11-ddefs.html
 
-  local Display
-  local Address Addresslength Displaynumber Displaynumberlength Data Part Code
+    local Display
+    local Address Addresslength Displaynumber Displaynumberlength Data Part Code
 
-  Display="${1:-$DISPLAY}"
-
-  Address="$(printf "%s" "$Display" | cut -d: -f1)"
-  case "$Address" in
-    "")
-      Address="$(hostname)/unix"
-      Addresslength="$(strlenhex "$Address")"
-    ;;
-    *.*.*.*)
-      Data="$Address"
-      Address=""
-      while [ "$(printf "%s" "$Data" | wc -c)" -gt 0 ]; do
-        Part="$( printf "%s" "$Data" | cut -d. -f1)"
-        Address="${Address}\x$(printf "%x" "$Part")"
-        Data="$( printf "%s" "$Data" | cut -s -d. -f2-)"
-      done
-      Addresslength="4"
-    ;;
-    *)
-      Addresslength="$(strlenhex "$Address")"
-    ;;
-  esac
+    Display="${1:-$DISPLAY}"
+    #
+    # The part of Display before the first colon.
+    # Same as $DISPLAY if there is no colon.
+    Address="$(printf "%s" "$Display" | cut -d: -f 1)"
+    #
+    case "$Address" in
+        "")
+            # If empty, use "$(hostname)/unix" instead
+            Address="$(hostname)/unix"
+            Addresslength="$(strlenhex "$Address")"
+            ;;
+        *.*.*.*)
+            ##
+            ## Recode decimal IPv4 to 4 hex bytes.
+            ##
+            ## 111.222.333.444
+            ## Q: Could it happen to be a four part domain name?
+            ##
+            ## Save Address
+            Data="$Address"
+            ##
+            ## Init Address to empty.
+            Address=""
+            while [ "$(printf "%s" "$Data" | wc -c)" -gt 0 ]; do
+                # Part is the text before the first dot.
+                Part="$( printf "%s" "$Data" | cut -d. -f1)"
+                # Add part as hex
+                Address="${Address}\x$(printf "%x" "$Part")"
+                # Drop Part from Data
+                # -f 2- : Keep fields 2 ... last
+                # -s    : Do not print lines not containing delimiters.
+                #         Needed to drop the last part here.
+                Data="$( printf "%s" "$Data" | cut -d . -f 2- -s )"
+            done
+            Addresslength="4"
+            ;;
+        *)
+            # Otherwise. Probably domain name, e.g. "localhost"
+            Addresslength="$(strlenhex "$Address")"
+            ;;
+    esac
 
   Displaynumber="$(printf "%s" "$Display" | cut -d: -f2)"
   Displaynumber="$(printf "%s" "$Displaynumber" | cut -d. -f1)"
@@ -1244,58 +1274,57 @@ devicelist_gpu() {              # print list of GPU devices
 # function devicelist_input()
 #
 devicelist_input() {            # print list of input devices
-  find /dev/input/* -maxdepth 0 -type c 2>/dev/null || true
+    find /dev/input/* -maxdepth 0 -type c 2>/dev/null || true
 }
 
 #
 # function download()
 #
 download() {                    # download file at URL $1 and store it in file $2
-  # Uses wget or curl. If both are missing, returns 1.
-  # With no arguments it checks for curl/wget without downloading.
-  # Download follows redirects.
-  #
-  local Downloader=
-  command -v wget >/dev/null && Downloader="wget"
-  command -v curl >/dev/null && Downloader="curl"
-  [ "$Downloader" ] || return 1 # false (Downloader is "" --> Failure)
-  [ "${1:-}" ]      || return 0 # true
-  #
-  case "$Downloader" in
-    wget) wget    "${1:-}"        -O       "${2:-}" || return 1 ;;
-    curl) curl -L "${1:-}" --fail --output "${2:-}" || return 1 ;;
-  esac
-  return $?
+    # Uses wget or curl. If both are missing, returns 1.
+    # With no arguments it checks for curl/wget without downloading.
+    # Download follows redirects.
+    #
+    local Downloader=
+    command -v wget >/dev/null && Downloader="wget"
+    command -v curl >/dev/null && Downloader="curl"
+    [ "$Downloader" ] || return 1 # false (Downloader is "" --> Failure)
+    [ "${1:-}" ]      || return 0 # true
+    #
+    case "$Downloader" in
+        wget) wget    "${1:-}"        -O       "${2:-}" || return 1 ;;
+        curl) curl -L "${1:-}" --fail --output "${2:-}" || return 1 ;;
+    esac
+    return $?
 }
 
 #
 # function escapestring()
 #
 escapestring() {                # escape special chars of $1
-  # escape all characters except those described in [^a-zA-Z0-9,._+@=:/-]
-  grep -q "'" <<< "${1:-}" && {
-    error "escapestring(): x11docker cannot escape char ' in :
+    # escape all characters except those described in [^a-zA-Z0-9,._+@=:/-]
+    grep -q "'" <<< "${1:-}" && {
+        error "escapestring(): x11docker cannot escape char ' in :
   ${1:-}"
-    return 1
-  }
-  echo "${1:-}" | LC_ALL=C sed -e 's/[^a-zA-Z0-9,._+@=:/-]/\\&/g; '
+        return 1
+    }
+    echo "${1:-}" | LC_ALL=C sed -e 's/[^a-zA-Z0-9,._+@=:/-]/\\&/g; '
 }
 
 #
 # function getrandomnumber()
 #
 getrandomnumber() {             # get random number
-  # chosen by fair dice roll
-  # guaranteed to be random
-  echo "4"
+    # chosen by fair dice roll
+    # guaranteed to be random
+    echo "4"
 }
 
 #
 # function isint()
 #
-isint() {                       # check if $1 is a positive integer
-  #[[ $var =~ ^-?[0-9]+$ ]]
-  [[ "${1:-EMPTY}" =~ ^[0-9]+$ ]]
+isint() {             # check if $1 is a positive integer
+    [[ "${1:-EMPTY}" =~ ^[0-9]+$ ]]
 }
 
 #
@@ -1304,8 +1333,8 @@ isint() {                       # check if $1 is a positive integer
 #  For example `isnum -2.1e-3` returns true
 #              `isnum 0xff`    is false
 #
-isnum() {                       # check if $1 is a number (according to awk)
-  [ "1" = "$(awk -v a="${1:-}" 'BEGIN {print (a == a + 0)}')" ]
+isnum() {               # check if $1 is a number (according to awk)
+    [ "1" = "$(awk -v a="${1:-}" 'BEGIN {print (a == a + 0)}')" ]
 }
 
 
@@ -1358,9 +1387,9 @@ makecookie() {                  # bake a cookie
 # Return true on success (found line), false on failure (no corresponding line)
 #
 mygetent() {                    # custom getent command
-  # fixes #477 #496
-  command -v getent >/dev/null 2>&1 && getent "$1" "$2" || \
-  grep "^${2:-NOENTRY}:" < "/etc/${1:-NOFILESPECIFIED}"
+    # fixes #477 #496
+    command -v getent >/dev/null 2>&1 && getent "$1" "$2" || \
+            grep "^${2:-NOENTRY}:" < "/etc/${1:-NOFILESPECIFIED}"
 }
 
 #
@@ -1369,7 +1398,7 @@ mygetent() {                    # custom getent command
 #   Called with "$1" in 0.1 0.2 1.4 or `$Count * 0.1` or "$Schlaf"
 #
 mysleep() {                     # catch cases where sleep only supports integer
-  sleep "${1:-1}" 2>/dev/null || sleep 1
+    sleep "${1:-1}" 2>/dev/null || sleep 1
 }
 
 #
@@ -1378,7 +1407,7 @@ mysleep() {                     # catch cases where sleep only supports integer
 #  Note: backslash and newline are removed, no space is inserted in their place.
 #
 oneline() {                     # remove \\ and newline from string
-  echo "${1:-}" | tr -d '\\\n'
+    echo "${1:-}" | tr -d '\\\n'
 }
 
 #
@@ -1542,7 +1571,7 @@ rmcr() {                        # remove carriage return to translate DOS/Window
 #  Only use in cookiebaker()
 #
 strlenhex() {                   # print byte length of string $1 as hex value
-  printf '%x' "$(printf "%s" "${1:-}" | wc -c)"
+    printf '%x' "$(printf "%s" "${1:-}" | wc -c)"
 }
 
 #
