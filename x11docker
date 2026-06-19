@@ -1113,7 +1113,7 @@ $(for Line in $Watchpidlist; do pspid "$Line" || echo "(pid $Line not found)" ; 
       }
     }
   done
-  saygoodbye "watchpidlist"
+    saygoodbye "watchpidlist"
 }
 
 #### more or less general routines
