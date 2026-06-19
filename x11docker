@@ -25,6 +25,28 @@ grep -q -- "--enforce-i" <<< "$*" && case $- in
 esac
 
 
+#
+# function trim_to_bar( s )
+#
+#  Remove indentation in `s` up to and including the marker `|`
+#
+#  Purpose: Allow lines of multi-line strings to be indented in the
+#           source without affecting the value.
+#
+trim_to_bar(){
+    # shellcheck disable=SC2001
+    echo "${1}" | sed -e 's/^[ ]*|//'
+}
+
+if false; then
+    x="$(trim_to_bar \
+        "|aa'a
+         |bb
+         |")"
+    echo "$x"
+fi
+
+
 ## function usage()
 usage() {                       # --help: show usage information
   echo "
@@ -530,22 +552,6 @@ debugnote() {                   # show debug output $*
     return 0
 }
 
-#
-# function trim_to_bar( s )
-#  Remove indentation in `s` up to and including the marker `|`
-#
-trim_to_bar(){
-    # shellcheck disable=SC2001
-    echo "${1}" | sed -e 's/^[ ]*|//'
-}
-
-if false; then
-    x=$(trim_to_bar \
-        "|aa
-         |bb
-         |")
-    echo "$x"
-fi
 
 # function error()
 error() {                       # show error message and exit
