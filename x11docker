@@ -1242,17 +1242,18 @@ cookiebaker() {                 # create an X cookie without xauth
     Data="$( printf "%s" "$Data" | cut -c3-)"
   done
 
-  awk "BEGIN{
-    printf \"\xFF\xFF\"
-    printf \"\x00\x${Addresslength}\" 
-    printf \"${Address}\"
-    printf \"\x00\x${Displaynumberlength}\" 
-    printf \"${Displaynumber}\"
-    printf \"\x00\x12\"
-    printf \"MIT-MAGIC-COOKIE-1\"
-    printf \"\x00\x10\"
-    printf \"${Code}\"
-  }"
+  awk "$(trim_to_bar \
+     "|BEGIN{
+      |    printf \"\xFF\xFF\"
+      |    printf \"\x00\x${Addresslength}\"
+      |    printf \"${Address}\"
+      |    printf \"\x00\x${Displaynumberlength}\"
+      |    printf \"${Displaynumber}\"
+      |    printf \"\x00\x12\"
+      |    printf \"MIT-MAGIC-COOKIE-1\"
+      |    printf \"\x00\x10\"
+      |    printf \"${Code}\"
+      |  }" )"
 }
 
 #
