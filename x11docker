@@ -1094,7 +1094,11 @@ watchpidlist() {                # watch list of important pids
                 debugnote "watchpidlist(): Watching Container: $Containername"
             else
                 Watchpidlist="$Watchpidlist $Pid"
-                ListOfLines="$(for Line in $Watchpidlist; do pspid "$Line" || echo "(pid $Line not found)" ; done)"
+                #
+                ListOfLines=""
+                for Line in $Watchpidlist; do
+                    ListOfLines="${ListOfLines}$(pspid "$Line" || echo "(pid $Line not found)")" ;
+                done
                 debugnote "watchpidlist(): Watching pids:${NEWLINE}${ListOfLines}"
             fi
         fi
