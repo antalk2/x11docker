@@ -1082,28 +1082,30 @@ watchpidlist() {                # watch list of important pids
     local ListOfLines
     trap '' SIGINT
 
-    [ "$Pid" ] && {
-      [ "${Pid:0:9}" = "CONTAINER" ] && {
-        # Workaround for MS Windows where the pid cannot be watched
-        Containername="${Pid#CONTAINER}"
-        debugnote "watchpidlist(): Watching Container: $Containername"
-      } || {
-        Watchpidlist="$Watchpidlist $Pid"
-        debugnote "watchpidlist(): Watching pids:
-$(for Line in $Watchpidlist; do pspid "$Line" || echo "(pid $Line not found)" ; done)"
-      }
-    }
-    # check all stored pids
-    for Pid in $Watchpidlist; do
-      [ -e "/proc/$Pid" ] || {
-        debugnote  "watchpidlist(): PID $Pid has terminated"
-        saygoodbye "watchpidlist $Pid"
-      }
     while rocknroll; do
         # check for new Pid once a second
         read -t1 Pid <&${FDwatchpid} || true
         [ "$Usemkfifo" = "no" ] && sleep 2  # read does not wait if not a fifo
         # Got new pid
+        if [ "$Pid" ] ; then
+            [ "${Pid:0:9}" = "CONTAINER" ] && {
+                # Workaround for MS Windows where the pid cannot be watched
+                Containername="${Pid#CONTAINER}"
+                debugnote "watchpidlist(): Watching Container: $Containername"
+            } || {
+                Watchpidlist="$Watchpidlist $Pid"
+                ListOfLines="$(for Line in $Watchpidlist; do pspid "$Line" || echo "(pid $Line not found)" ; done)"
+                debugnote "watchpidlist(): Watching pids:${NEWLINE}${ListOfLines}"
+            }
+        fi
+        #
+        # check all stored pids
+        for Pid in $Watchpidlist; do
+            [ -e "/proc/$Pid" ] || {
+                debugnote  "watchpidlist(): PID $Pid has terminated"
+                saygoodbye "watchpidlist $Pid"
+            }
+        done
         # Container PID not watchable in MSYS2/Cygwin/WSL1.
         [ "$Containername" ] && {
             unpriv_backend "$Backendbin inspect '$Containername'" >/dev/null || {
