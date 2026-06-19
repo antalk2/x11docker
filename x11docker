@@ -668,7 +668,10 @@ watchmessagefifo() {            # watch for messages coming from inside of conta
                 :NOTE)      note      "$Message" ;;
                 :DEBUGNOTE) debugnote "$Message" ;;
                 :ERROR)     error     "$Message" ;;
-                :VERBOSE)   [ "-d " = "$(cut -c1-3 <<<"$Message" | head -n1)" ] && debugnote "$(tail -c +4 <<< "$Message")" || verbose "$Message" ;;
+                :VERBOSE)   [ "-d " = "$(cut -c1-3 <<<"$Message" | head -n1)" ] \
+                                && debugnote "$(tail -c +4 <<< "$Message")"     \
+                               || verbose "$Message"
+                            ;;
                 :STDOUT)    echo "$Message" ;;
             esac
             Message=
