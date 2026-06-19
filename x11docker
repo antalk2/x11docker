@@ -754,8 +754,9 @@ finish() {            # trap EXIT routine to clean up background processes and c
     docker|podman|nerdctl)
       containerisrunning && {
         Debugmode="yes"
-        debugnote "finish(): Container still running. Executing 'docker stop'.
-  Will wait up to 15 seconds for docker to finish."
+        debugnote  "$(trim_to_bar \
+                   "|finish(): Container still running. Executing 'docker stop'.
+                    |  Will wait up to 15 seconds for docker to finish." )"
         unpriv_backend "$Backendbin stop $Containername" >> "$Containerlogfile" 2>&1
 
         Zeit="$(date +%s)"
@@ -768,14 +769,15 @@ finish() {            # trap EXIT routine to clean up background processes and c
 
         containerisrunning && {
           Exitcode="64"
-          debugnote "finish(): Container did not terminate as it should.
-  Will not clean cache to avoid file permission issues.
-  You can remove the new container with command:
-    docker rm -f $Containername
-  Afterwards, remove cache files with:
-    rm -R $Cachefolder
-  or let x11docker do the cleanup work for you:
-    x11docker --cleanup"
+          debugnote "$(trim_to_bar \
+              "|finish(): Container did not terminate as it should.
+               |  Will not clean cache to avoid file permission issues.
+               |  You can remove the new container with command:
+               |    docker rm -f $Containername
+               |  Afterwards, remove cache files with:
+               |    rm -R $Cachefolder
+               |  or let x11docker do the cleanup work for you:
+               |    x11docker --cleanup" )"
         } || debugnote "finish(): Container terminated successfully"
       }
     ;;
