@@ -1121,54 +1121,54 @@ $(for Line in $Watchpidlist; do pspid "$Line" || echo "(pid $Line not found)" ; 
 # function askyesno() 
 #
 askyesno() {                    # ask Yes/no question. Default 'yes' for ENTER, timeout with 'no' after 60s
-  local Choice
-  read -t60 -n1 -p "(timeout after 60s assuming no) [Y|n]" Choice
-  [ "$?" = '0' ] && {
-    [[ "$Choice" == [YyJj]* ]] || [ -z "$Choice" ] && return 0
-  }
-  return 1
+    local Choice
+    read -t60 -n1 -p "(timeout after 60s assuming no) [Y|n]" Choice
+    [ "$?" = '0' ] && {
+        [[ "$Choice" == [YyJj]* ]] || [ -z "$Choice" ] && return 0
+    }
+    return 1
 }
 
 #
 # function check_envvar()
 #
 check_envvar() {                # allow only chars in string $1 that can be expected in environment variables
-  # Allows only chars in "a-zA-Z0-9_:/.,@=-"
-  # Option -w allows whitespace, too. Can be needed for PATH.
-  # Char * as in LS_COLORS is not allowed to avoid abuse.
-  # Replaces forbidden chars with X and returns 1
-  # Returns 0 if no change occurred.
-  # Echoes result.
-  local Newvar Space=
+    # Allows only chars in "a-zA-Z0-9_:/.,@=-"
+    # Option -w allows whitespace, too. Can be needed for PATH.
+    # Char * as in LS_COLORS is not allowed to avoid abuse.
+    # Replaces forbidden chars with X and returns 1
+    # Returns 0 if no change occurred.
+    # Echoes result.
+    local Newvar Space=
 
-  case "${1:-}" in
-    -w) Space=" " ; shift ;;
-  esac
+    case "${1:-}" in
+        -w) Space=" " ; shift ;;
+    esac
 
-  Newvar="$(printf %s "${1:-}" | LC_ALL=C tr -c "a-zA-Z0-9_:/.,@=${Space}-" "X" )"
+    Newvar="$(printf %s "${1:-}" | LC_ALL=C tr -c "a-zA-Z0-9_:/.,@=${Space}-" "X" )"
 
-  printf %s "$Newvar"
-  printf "\n"
+    printf %s "$Newvar"
+    printf "\n"
 
-  [ "$Newvar" = "${1:-}" ] && return 0
+    [ "$Newvar" = "${1:-}" ] && return 0
 
-  debugnote "check_envvar(): Input string has been changed. Result:
+    debugnote "check_envvar(): Input string has been changed. Result:
   $Newvar"
-  return 1
+    return 1
 }
 
 #
 # function get_ppid()
 #
 get_ppid() {                    # get ppid of pid $1
-  $Myps ax -o pid,ppid | awk '$1 ~ /'${1:-}'/ { SUM += $2 } END { print SUM } '
+    $Myps ax -o pid,ppid | awk '$1 ~ /'${1:-}'/ { SUM += $2 } END { print SUM } '
 }
 
 #
 # function check_parent_sshd()
 #
 check_parent_sshd() {           # check whether pid $1 runs in SSH session
-  $Myps ax -o pid,comm | awk '$1 ~ /'$(get_ppid "${1:-}")'/ { SUM += $2 } END { print SUM } ' | grep -q "sshd"
+    $Myps ax -o pid,comm | awk '$1 ~ /'$(get_ppid "${1:-}")'/ { SUM += $2 } END { print SUM } ' | grep -q "sshd"
 }
 
 #
