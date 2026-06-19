@@ -1620,7 +1620,7 @@ unspecialstring() {             # replace special chars of $1 with -
 # function verlt()
 #
 verlt() {                       # version number check $1 less than $2
-  [ "${1:-}" = "${2:-}" ] && return 1 || { verlte "${1:-}" "${2:-}" && return 0 || return 1 ; }
+    [ "${1:-}" = "${2:-}" ] && return 1 || { verlte "${1:-}" "${2:-}" && return 0 || return 1 ; }
 }
 
 #
@@ -1634,10 +1634,10 @@ verlte() {                      # version number check $1 less than or equal $2
 #
 # function wincmd()
 #
-#  USed as:   "$(wincmd "echo %userprofile%")"
+#  Used as:   "$(wincmd "echo %userprofile%")"
 #
 wincmd() {                      # execute a command on MS Windows with cmd.exe
-  MSYS2_ARG_CONV_EXCL='*' cmd.exe /C "${@//&/^&}" | rmcr
+    MSYS2_ARG_CONV_EXCL='*' cmd.exe /C "${@//&/^&}" | rmcr
 }
 
 #
@@ -1649,22 +1649,22 @@ wincmd() {                      # execute a command on MS Windows with cmd.exe
 #  based on output from "ip -4 addr" and "ipconfig.exe"
 #
 mswindowsipcheck() {            # get WSL host IP and Windows host ip
-  # thanks to @eyespore in https://github.com/mviereck/x11docker/issues/557
+    # thanks to @eyespore in https://github.com/mviereck/x11docker/issues/557
 
-  local Hostips Mswindowsips Hostcidr Hostprefix Mswindowsnetwork Hostnetwork
-  # global: Hostip Hostipwindows
+    local Hostips Mswindowsips Hostcidr Hostprefix Mswindowsnetwork Hostnetwork
+    # global: Hostip Hostipwindows
 
-  Hostips=$(ip -4 addr show scope global | awk '/inet / { if ($0 !~ /(docker|br-|veth|cni|podman)/) print $2 }')
-  if [[ -z "$Hostips" ]]; then 
-    note "mswindowsipcheck(): Failed to check Linux host IPs"
-    return 1
-  fi
+    Hostips=$(ip -4 addr show scope global | awk '/inet / { if ($0 !~ /(docker|br-|veth|cni|podman)/) print $2 }')
+    if [[ -z "$Hostips" ]]; then 
+        note "mswindowsipcheck(): Failed to check Linux host IPs"
+        return 1
+    fi
 
-  Mswindowsips=$(ipconfig.exe | grep -i 'IPv4' | awk '{print $NF}' | tr -d '\r')
-  if [[ -z "$Mswindowsips" ]]; then 
-    note "mswindowsipcheck(): Failed to check Windows host IPs"
-    return 1
-  fi
+    Mswindowsips=$(ipconfig.exe | grep -i 'IPv4' | awk '{print $NF}' | tr -d '\r')
+    if [[ -z "$Mswindowsips" ]]; then 
+        note "mswindowsipcheck(): Failed to check Windows host IPs"
+        return 1
+    fi
 
     command -v ipcalc >/dev/null || {
         note "$(trim_to_bar \
@@ -1673,24 +1673,24 @@ mswindowsipcheck() {            # get WSL host IP and Windows host ip
         return 1
     }
 
-  # https://tldp.org/LDP/abs/html/refcards.html#AEN22664
-  # https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
-  # ${string%substring}	Strip shortest match of $substring from back of $string
-  # ${string#substring}	Strip shortest match of $substring from front of $string
-  for Hostcidr in $Hostips; do
-    Hostip="${Hostcidr%/*}"      # set global Hostip
-    Hostprefix="${Hostcidr#*/}"
+    # https://tldp.org/LDP/abs/html/refcards.html#AEN22664
+    # https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
+    # ${string%substring}	Strip shortest match of $substring from back of $string
+    # ${string#substring}	Strip shortest match of $substring from front of $string
+    for Hostcidr in $Hostips; do
+        Hostip="${Hostcidr%/*}"      # set global Hostip
+        Hostprefix="${Hostcidr#*/}"
 
-    for Winip in $Mswindowsips; do
-      Mswindowsnetwork=$(ipcalc -n "$Winip/$Hostprefix" | grep Network | awk '{print $2}')
-      Hostnetwork=$(ipcalc -n "$Hostip/$Hostprefix" | grep Network | awk '{print $2}')
+        for Winip in $Mswindowsips; do
+            Mswindowsnetwork=$(ipcalc -n "$Winip/$Hostprefix" | grep Network | awk '{print $2}')
+            Hostnetwork=$(ipcalc -n "$Hostip/$Hostprefix" | grep Network | awk '{print $2}')
 
-      if [[ "$Mswindowsnetwork" == "$Hostnetwork" ]]; then
-        Hostipwindows=$Winip      # set global Hostipwindows
-        break 2 # break 2 loops
-      fi
+            if [[ "$Mswindowsnetwork" == "$Hostnetwork" ]]; then
+                Hostipwindows=$Winip      # set global Hostipwindows
+                break 2 # break 2 loops
+            fi
+        done
     done
-  done
 }
 
 #### file routines
