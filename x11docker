@@ -696,6 +696,10 @@ watchmessagefifo() {            # watch for messages coming from inside of conta
   done
 }
 
+#
+# global Storepidfile
+#
+
 #### exit
 #
 # function finish()
