@@ -49,401 +49,404 @@ fi
 
 ## function usage()
 usage() {                       # --help: show usage information
-  echo "
-x11docker: Run GUI applications and desktop environments in containers.
-           Supports docker and podman, rootful or rootless.
-           Can run X servers from host or in containers of x11docker/xserver.
-           Can also provide X servers to host applications.
-Usage:
-To run a container on a new X server:
-  x11docker IMAGE
-  x11docker [OPTIONS] IMAGE [COMMAND]
-  x11docker [OPTIONS] -- IMAGE [COMMAND [ARG1 ARG2 ...]]
-  x11docker [OPTIONS] -- CUSTOM_RUN_OPTIONS -- IMAGE [COMMAND [ARG1 ARG2 ...]]
-To run a host application on a new X server:
-  x11docker [OPTIONS] --backend=host COMMAND
-  x11docker [OPTIONS] --backend=host -- COMMAND [ARG1 ARG2 ...]
-  x11docker [OPTIONS] --backend=host -- -- COMMAND [ARG1 ARG2 ...] -- [ARG3]
-To run only an empty new X server:
-  x11docker [OPTIONS] --xonly
+    echo "$(trim_to_bar \
+     "|
+      |x11docker: Run GUI applications and desktop environments in containers.
+      |           Supports docker and podman, rootful or rootless.
+      |           Can run X servers from host or in containers of x11docker/xserver.
+      |           Can also provide X servers to host applications.
+      |Usage:
+      |To run a container on a new X server:
+      |  x11docker IMAGE
+      |  x11docker [OPTIONS] IMAGE [COMMAND]
+      |  x11docker [OPTIONS] -- IMAGE [COMMAND [ARG1 ARG2 ...]]
+      |  x11docker [OPTIONS] -- CUSTOM_RUN_OPTIONS -- IMAGE [COMMAND [ARG1 ARG2 ...]]
+      |To run a host application on a new X server:
+      |  x11docker [OPTIONS] --backend=host COMMAND
+      |  x11docker [OPTIONS] --backend=host -- COMMAND [ARG1 ARG2 ...]
+      |  x11docker [OPTIONS] --backend=host -- -- COMMAND [ARG1 ARG2 ...] -- [ARG3]
+      |To run only an empty new X server:
+      |  x11docker [OPTIONS] --xonly
+      |
+      |x11docker always runs a fresh container from image and discards it afterwards.
+      |Runs on Linux and (with some restrictions) on MS Windows. Not adapted for macOS.
+      |
+      |Optional features:
+      |  * GPU hardware acceleration
+      |  * Sound with PipeWire, Pulseaudio or ALSA
+      |  * Clipboard sharing
+      |  * Printer access
+      |  * Webcam access
+      |  * Persistent home folder
+      |  * Wayland support
+      |  * Language locale creation
+      |  * Several init systems and DBus in container
+      |  * Support of several container runtimes and backends
+      |Focus on security:
+      |  * Avoids X security leaks using additional X servers.
+      |  * Container user is same as host user to avoid root in container.
+      |  * Restricts container capabilities to bare minimum.
+      |To switch between docker and podman use option --backend.
+      |
+      |x11docker sets up an unprivileged container user with password 'x11docker'
+      |and restricts container capabilities. Some applications might behave different
+      |than with a regular 'docker run' command due to these security restrictions.
+      |Achieve a less restricted setup with --cap-default or --sudouser.
+      |
+      |Dependencies on host:
+      |  For core functionality x11docker only needs bash, an X server and one of
+      |  docker or podman.
+      |  Depending on chosen options x11docker might need some additional tools.
+      |  It checks for them on startup and shows messages if some are missing.
+      |   * Most recommended: Provide image x11docker/xserver to run X or Wayland
+      |     in container. The image contains all X related dependencies.
+      |  Otherwise provide on host:
+      |   * Recommended to allow security and convenience:
+      |       X servers: xpra Xephyr nxagent Xorg
+      |       X tools:   xauth xclip xrandr xhost xinit
+      |   * Additional for advanced GPU support: weston Xwayland xpra xdotool
+      |  See also: https://github.com/mviereck/x11docker/wiki/Dependencies
+      |
+      |Dependencies in image:
+      |  No dependencies in image except for some feature options.
+      |  Most noteable, check option descriptions for
+      |  --gpu, --pipewire, --pulseaudio, --printer.
+      |
+      |Options: (short options do not accept arguments)
+      |     --help            Display this message and exit.
+      |     --license         Show license of x11docker (MIT) and exit.
+      |     --version         Show x11docker version and exit.
+      |
+      |Basic settings:
+      | -d, --desktop         Indicate a desktop environment in image.
+      | -i, --interactive     Run with an interactive tty to allow shell commands.
+      |                       Useful with commands like bash.
+      |     --backend=BACKEND  Container backend to use. BACKEND can be:
+      |                         docker  (recommended for rootful) (default)
+      |                         podman  (recommended for rootless and rootful)
+      |                         host    Run a host application, no container.
+      |     --rootless [=yes|no]  Use (or disallow) rootless backend.
+      |                       Default behaviour without option --rootless:
+      |                       --backend=docker: rootful unless DOCKER_HOST is set.
+      |                       --backend=podman: rootless except started as root.
+      |     --xc [=yes|no|BACKEND]  Run X server in container of x11docker/xserver.
+      |                       BACKEND can specify one of docker|podman.
+      |                       Enabled by default if x11docker/xserver is available.
+      |     --xonly           Only start empty X server.
+      |     --xw              Run X and Wayland applications side by side.
+      |                       Compare --weston and --hostwayland.
+      | -W, --wayland         Set up a Wayland environment.
+      |
+      |Host integration:
+      |     --alsa [=ALSA_CARD]  Sound with ALSA. You can define a desired sound card
+      |                       with ALSA_CARD. List of available sound cards: aplay -l
+      | -c, --clipboard [=yes|no|c2h|h2c] Share clipboard with host.
+      |                       Possible arguments:
+      |                         yes: Share clipboard in both directions.
+      |                         no:  Do not share clipboard. (default)
+      |                         c2h: Copy clipboard from container to host only.
+      |                         h2c: Copy clipboard from host to container only.
+      |                         cmv: Keys [CTRL] + [SUPER] + [v] copy clipboard
+      |                              from host to container. Otherwise same as 'yes'.
+      |                              Needs a focused X window of container.
+      |                              In Wayland+X11 containers options --xeyes or
+      |                              --xlogo can help. Or provide image
+      |                              x11docker/xserver (option --xc) for a bindkey
+      |                              helper tool that sets up a Wayland key binding.
+      | -g, --gpu [=yes|no|iglx] GPU access for hardware accelerated OpenGL.
+      |                       Works best with open source drivers on host and in image.
+      |                       For closed source nvidia drivers regard terminal output.
+      |                       Direct rendering supported by few X server options only.
+      |                       Arg 'iglx' enables indirect rendering (--xorg only).
+      | -I, --network [=NET]  Allow internet access. (i.e. allow Docker default.)
+      |                       For optional argument NET see Docker documentation of
+      |                       docker run option --network. Docker default is bridge.
+      | -l, --lang [=LOCALE]  Set language variable LANG=LOCALE in container.
+      |                       Without arg LOCALE host variable --lang=\$LANG is used.
+      |                       If LOCALE is missing in image, x11docker generates it
+      |                       with 'localedef' in container (needs 'locales' package).
+      |                       Examples for LOCALE: ru, en, de, zh_CN, cz, fr, fr_BE.
+      |     --pipewire        Sound with pipewire. Needs 'pipwire', 'pipewire-pulse'
+      |                       and 'pipewire-alsa'on host and in image.
+      | -P, --printer [=MODE] Share host printers through CUPS server.
+      |                       Optional MODE can be 'socket' or 'tcp'. Default: socket
+      |                       Needs cups on host and cups client libs in image.
+      | -p, --pulseaudio [=MODE]  Sound with pulseaudio. Needs 'pulseaudio' on host
+      |                       and in image. Optional arg MODE can be 'socket', 'tcp'
+      |                       or 'host'. tcp mode needs network access with --network.
+      |     --webcam          Share host webcam device files.
+      |
+      |Shared host folders or volumes:
+      | -m, --home [=ARG]     Create a persistent HOME folder for data storage.
+      |                       Default: Uses ~/.local/share/x11docker/IMAGENAME.
+      |                       ARG can be another host folder or a volume.
+      |                       (~/.local/share/x11docker has a softlink to ~/x11docker.)
+      |                       (Use --homebasedir to change this base storage folder.)
+      |     --share=ARG       Share host file or folder ARG. Read-only with ARG:ro
+      |                       Device files in /dev can be shared, too.
+      |                       ARG can also be a volume instead of a host folder.
+      |
+      |X server options:
+      |     --auto            Automatically choose X server (default). Influenced
+      |                       by options --desktop, --gpu, --wayland, --wm, --xw
+      | -h, --hostdisplay     Share host display :0. Quite bad container isolation!
+      |                       Least overhead of all X server options.
+      | -a, --xpra            Nested X server supporting seamless and --desktop mode.
+      |                       Can run on X and on Wayland compositors even 
+      |                       without Xwayland support.
+      |     --xpra2           Like --xpra --xc, but runs xpra client on host.
+      | -A, --xpra-xwayland   Like --xpra, but supports option --gpu.
+      |     --xpra2-xwayland  Like --xpra2, but supports option --gpu.
+      | -n, --nxagent         Nested X server supporting seamless and --desktop mode.
+      |                       Faster than --xpra, but can have compositing issues.
+      | -y, --xephyr          Nested X server for --desktop mode. Without --desktop
+      |                       a host window manager will be provided (option --wm).
+      | -Y, --weston-xwayland Opens a weston window with Xwayland.
+      |                       Supports option --gpu in many environments.
+      |                       Needs --gpu in some environments to start up at all.
+      |                       Without further options it provides Westons built-in
+      |                       window manager and X access only.
+      |                       With option --wayland X11 and Wayland apps can run
+      |                       side by side. Compare option --weston.
+      | -x, --xorg            Core Xorg server. Runs ootb from console.
+      |                       Switch tty with <CTRL><ALT><F1>....<F12>. Always switch
+      |                       to a black tty before switching to X to avoid crashes.
+      |     --satellite       Rootless Xwayland running Xwayland-satellite.
+      |                       Needs a running Wayland compositor.
+      | -X, --xwayland        Rootfull Xwayland. Needs a running Wayland
+      |                       compositor.
+      |
+      |Wayland compositor options:
+      | -T, --weston [=ARG]   Weston compositor for Wayland applications.
+      |                       Runs in X, in Wayland or from console.
+      |                       Optional argument ARG can be:
+      |                         x: sets '--weston-xwayland --wayland'
+      |                         X: sets '--weston-xwayland --wayland --desktop'
+      |                       The arguments allow to run X and Wayland side by side.
+      | -H, --hostwayland     Share host Wayland socket. Can be used along with other
+      |                       X server options to run X and Wayland apps side by side.
+      |
+      |Special X server options:
+      | -t, --tty             Terminal only mode. Does not run an X or Wayland server.
+      |     --xvfb            Invisible X server using Xvfb.
+      |                       Can be used for custom access with xpra or VNC.
+      |     --xwin            X server Xwin. Works in Cygwin/X only.
+      |     --runx            X server wrapper for VcXsrv and Xwin on MS Windows.
+      |
+      |X and Wayland appearance options:
+      |     --border [=COLOR] Draw a colored border in windows of --xpra[-xwayland].
+      |                       Argument COLOR can be e.g. 'orange' or '#F00'. Thickness
+      |                       can be specified, too, e.g. 'red,3'. Default: 'blue,1'
+      |     --dpi=N           dpi value (dots per inch) to submit to X clients.
+      |                       Influences font size of some applications.
+      | -f, --fullscreen      Run in fullscreen mode.
+      |     --output-count=N  Multiple virtual monitors for Weston or KWin.
+      |     --rotate=N        Rotate display (--xorg, --weston and --weston-xwayland)
+      |                       Allowed values: 0, 90, 180, 270, flipped, flipped-90,
+      |                       flipped-180, flipped-270.  (flipped means mirrored)
+      |     --scale=N         Scale/zoom factor N for xpra, Xorg or Weston.
+      |                       Allowed for --xpra* and --xorg: 0.25...8.0.
+      |                       Allowed for --weston and --weston-xwayland: 1...9.
+      |     --size=WxH        Screen size of new X server (e.g. 800x600).
+      | -w, --wm [=ARG]       Provide a host window manager to container applications.
+      |                       Possible ARG:
+      |                         host: autodetection of a host window manager.
+      |                         COMMAND: command of a desired host window manager.
+      |                         none: Run without a window manager. Same as --desktop.
+      |     --xeyes [=ARG]    Run xeyes. Can help with --clipboard=cmv
+      |                       to provide an X window that accepts keycodes.
+      |                       Optional argument ARG can be an xeyes option, see
+      |                       'man xeyes'. Remove window decoration: '--xeyes=-shape'
+      | -F, --xfishtank       Show fish tank on new X server.
+      |     --xlogo           Simlilar to --xeyes, helper for --clipboard=cmv.
+      |
+      |X and Wayland special configuration:
+      |     --checkwindow [=ARG]  Run container until all X windows are closed.
+      |                       If ARG is provided, run container as long as 'grep' can
+      |                       find ARG in output of 'xwininfo -root -children'.
+      |                       This option helps to keep alive containers with
+      |                       self-forking applications like gnome-terminal
+      |                       or to stop endless running ones like chromium.
+      |     --clean-xhost     Disable xhost access policies on host display.
+      |     --composite [=yes|no]  Enable or disable X extension Composite.
+      |                       Default is yes except for --nxagent. Can cause or
+      |                       fix issues with some applications on nxagent.
+      |     --display=N       Use display number N for new X server.
+      |     --keymap=LAYOUT   Set keyboard layout for new X server, e.g. de, us, ru.
+      |                       For possible LAYOUT look at /usr/share/X11/xkb/symbols.
+      |     --vt [=N]         Use vt / tty N. Without N search an unused tty.
+      |     --westonini=FILE  Custom weston.ini for --weston and --weston-xwayland.
+      |     --xhost [=STR]    Set \"xhost STR\" on new X server (see 'man xhost').
+      |                       Without STR will set:  +SI:localuser:\$USER
+      |                       (Use with care. '--xhost=+' allows access for everyone).
+      |     --xoverip [=yes|no|listentcp|socat] Connect to X over TCP network. Special
+      |                       setups only, usually only enabled by x11docker itself.
+      |                         yes:       Use listentcp if possible, otherwise socat.
+      |                         no:        Use shared unix socket (default).
+      |                         listentcp: Use X option '-listen tcp'.
+      |                         socat:     Use socat to create a fake TCP connection.
+      |     --xauth [=yes|trusted|untrusted|no] Configure X cookie authentication.
+      |                       Possible arguments:
+      |                         yes|trusted: Enable cookie authentication with trusted
+      |                                    cookies. (General x11docker default.)
+      |                         untrusted: Untrusted cookie for untrusted apps
+      |                                    limiting access to X resources.
+      |                                    Useful to avoid MIT-SHM with --hostdisplay.
+      |                         no:        Disable cookie authentication.
+      |                         -ac:       Disable X access control. Undesired access
+      |                                    from other networks might occur. Dangerous!
+      |     --xopt=ARG        Custom argument to be added to the X server command.
+      |     --xtest [=yes|no] Enable or disable X extension XTEST. Default is yes for
+      |                       --xpra and --xvfb, no for other X servers.
+      |                       Needed to allow keyboard and mouse control with xpra.
+      |
+      |Container user settings:
+      |     --group-add=GROUP Add container user to group GROUP.
+      |     --hostuser=USER   Run X (and container user) as user USER. Default is
+      |                       result of \$(logname). (x11docker must run as root).
+      |     --password [=WORD]   Change container user password and exit.
+      |                       Interactive input if argument WORD is not provided.
+      |                       Stored encrypted in ~/.config/x11docker/passwd.
+      |     --sudouser [=nopasswd] Allow su and sudo for container user. Use with care,
+      |                       severe reduction of default x11docker security!
+      |                       Optionally passwordless sudo with argument nopasswd.
+      |                       Default password is 'x11docker'.
+      |     --user=N          Create container user N (N=name or N=uid). Default:
+      |                       same as host user. N can also be an unknown user id.
+      |                       You can specify a group id with N being 'user:gid'.
+      |                       Special case: --user=RETAIN keeps image user settings.
+      |
+      |Container capabilities:
+      |  In most setups x11docker sets --cap-drop=ALL --security-opt=no-new-privileges
+      |  and shows warnings if doing otherwise.
+      |  Custom capabilities can be added with --cap-add=CAP after  --
+      |     --cap-default     Allow default container capabilities.
+      |                       Includes --newprivileges=yes.
+      |     --ipc [=ARG]      Without ARG sets run option --ipc=host. (Discouraged)
+      |                       For other possible ARG see docker run reference.
+      |     --limit [=FACTOR] Limit CPU and RAM usage of container to
+      |                       currently free RAM x FACTOR and available CPUs x FACTOR.
+      |                       Allowed range is 0 < FACTOR <= 1.
+      |                       Default for --limit without argument FACTOR: 0.5
+      |     --newprivileges [=yes|no|auto]  Set or unset run option
+      |                       --security-opt=no-new-privileges. Default with no
+      |                       argument is 'yes'. Default for most cases is 'no'.
+      |
+      |Container init system, elogind and DBus daemon:
+      |     --dbus [=system]  Run DBus user session daemon for container command.
+      |                       With argument 'system' also run a DBus system daemon.
+      |                       (To run a DBus system daemon rather use one of
+      |                        --init=systemd|openrc|runit|sysvinit )
+      |     --hostdbus        Connect to DBus user session from host.
+      |     --init [=INITSYSTEM] Run an init system as PID 1 in container. Solves the
+      |                       zombie reaping issue. INITSYSTEM can be:
+      |                         tini:       Default. Mostly present as docker-init
+      |                                     on host. x11docker might as well use
+      |                                     catatonit provided by podman.
+      |                         systemd:    systemd in container.
+      |                         sysvinit:   sysvinit in container.
+      |                         runit:      runit in container
+      |                         openrc:     openrc in container
+      |                         s6-overlay: s6-overlay in container.
+      |                         none:       No init system, CMD will be PID 1.
+      |     --sharecgroup     Share /sys/fs/cgroup. Allows elogind in container if
+      |                       used with one of --init=openrc|runit|sysvinit
+      |
+      |Container special configuration:
+      |     --env VAR=value   Set custom environment variable VAR=value
+      |     --name=NAME       Specify container name NAME.
+      |     --no-entrypoint   Disable ENTRYPOINT in image to allow other commands, too
+      |     --no-setup        No x11docker setup in running container. Disallows
+      |                       several other options. See also --user=RETAIN.
+      |     --runtime=RUNTIME  Specify container runtime. Known by x11docker:
+      |                         runc:         Docker default runtime.
+      |                         crun:         Fast replacement for runc written in C.
+      |                         nvidia:       Runtime for nvidia/nvidia-docker images.
+      |                         sysbox-runc:  Runtime for powerful root in container.
+      |     --shell=SHELL     Set preferred user shell. Example: --shell=/bin/zsh
+      |     --snap            Enable support for Docker in snap.
+      |     --stdin           Forward stdin of x11docker to container command.
+      |     --workdir=DIR     Set working directory DIR.
+      |
+      |Additional commands: (You might need to move them to background with 'CMD &'.)
+      |     --runasroot=CMD   Run command CMD as root in container.
+      |     --runasuser=CMD   Run command CMD with user privileges in container
+      |                       before running image command.
+      |     --runfromhost=CMD Run host command CMD on new X server.
+      |
+      |Miscellaneous:
+      |     --cachebasedir=DIR  Custom base folder for cache files.
+      |     --homebasedir=DIR   Custom base folder for option --home.
+      |     --fallback [=yes|no]  Allow or deny fallbacks if a chosen option cannot
+      |                       be fulfilled. By default fallbacks are allowed.
+      |     --launcher        Create application launcher with current options
+      |                       on desktop and exit. You can get a menu entry moving
+      |                       the created .desktop file to ~/.local/share/applications
+      |     --mobyvm          Use MobyVM (for WSL2 only that defaults to Linux Docker).
+      |     --preset=FILE     Read a set of predefined options stored in file FILE.
+      |                       Useful to shortcut often used option combinations.
+      |                       FILE is searched in directory /etc/x11docker/preset,
+      |                       or in directory ~/.config/x11docker/preset.
+      |                        - Multiple lines in FILE are allowed.
+      |                        - Comment lines must begin with #
+      |                        - Local presets supersede global ones in /etc
+      |                       Special case: A preset file with file name 'default'
+      |                       will be applied automatically for all x11docker sessions.
+      |
+      |Output of parseable information on stdout:
+      |  Get output e.g. with: read xenv < <(x11docker --printenv x11docker/check)
+      |  Optional argument FILE allows to print the information into a file.
+      |     --printenv [=FILE]        Print variables to access new display.
+      |     --printid [=FILE]         Print container ID.
+      |     --printinfofile [=FILE]   Print path to internal x11docker info storage.
+      |     --printpid1 [=FILE]       Print host PID of container PID 1.
+      |
+      |Verbosity options:
+      | -D, --debug           Debug mode: Show some less verbose debug output
+      |                       and enable rigorous error control.
+      |     --printcheck      Show dependency check messages.
+      | -q, --quiet           Suppress x11docker terminal messages.
+      | -v, --verbose         Be verbose. Output of x11docker.log on stderr.
+      | -V                    Be verbose with colored output.
+      |
+      |Cleanup options (might need root permissions):
+      |     --cleanup         Clean up orphaned containers and cache files. Those
+      |                       can remain if x11docker still runs on system shutdown.
+      |                       Terminates currently running x11docker containers, too.
+      |                       Regards (only) option --backend=BACKEND.")"
 
-x11docker always runs a fresh container from image and discards it afterwards.
-Runs on Linux and (with some restrictions) on MS Windows. Not adapted for macOS.
-
-Optional features:
-  * GPU hardware acceleration
-  * Sound with PipeWire, Pulseaudio or ALSA
-  * Clipboard sharing
-  * Printer access
-  * Webcam access
-  * Persistent home folder
-  * Wayland support
-  * Language locale creation
-  * Several init systems and DBus in container
-  * Support of several container runtimes and backends
-Focus on security:
-  * Avoids X security leaks using additional X servers.
-  * Container user is same as host user to avoid root in container.
-  * Restricts container capabilities to bare minimum.
-To switch between docker and podman use option --backend.
-
-x11docker sets up an unprivileged container user with password 'x11docker'
-and restricts container capabilities. Some applications might behave different
-than with a regular 'docker run' command due to these security restrictions.
-Achieve a less restricted setup with --cap-default or --sudouser.
-
-Dependencies on host:
-  For core functionality x11docker only needs bash, an X server and one of
-  docker or podman.
-  Depending on chosen options x11docker might need some additional tools.
-  It checks for them on startup and shows messages if some are missing.
-   * Most recommended: Provide image x11docker/xserver to run X or Wayland
-     in container. The image contains all X related dependencies.
-  Otherwise provide on host:
-   * Recommended to allow security and convenience:
-       X servers: xpra Xephyr nxagent Xorg
-       X tools:   xauth xclip xrandr xhost xinit
-   * Additional for advanced GPU support: weston Xwayland xpra xdotool
-  See also: https://github.com/mviereck/x11docker/wiki/Dependencies
-
-Dependencies in image:
-  No dependencies in image except for some feature options.
-  Most noteable, check option descriptions for
-  --gpu, --pipewire, --pulseaudio, --printer.
-
-Options: (short options do not accept arguments)
-     --help            Display this message and exit.
-     --license         Show license of x11docker (MIT) and exit.
-     --version         Show x11docker version and exit.
-
-Basic settings:
- -d, --desktop         Indicate a desktop environment in image.
- -i, --interactive     Run with an interactive tty to allow shell commands.
-                       Useful with commands like bash.
-     --backend=BACKEND  Container backend to use. BACKEND can be:
-                         docker  (recommended for rootful) (default)
-                         podman  (recommended for rootless and rootful)
-                         host    Run a host application, no container.
-     --rootless [=yes|no]  Use (or disallow) rootless backend.
-                       Default behaviour without option --rootless:
-                       --backend=docker: rootful unless DOCKER_HOST is set.
-                       --backend=podman: rootless except started as root.
-     --xc [=yes|no|BACKEND]  Run X server in container of x11docker/xserver.
-                       BACKEND can specify one of docker|podman.
-                       Enabled by default if x11docker/xserver is available.
-     --xonly           Only start empty X server.
-     --xw              Run X and Wayland applications side by side.
-                       Compare --weston and --hostwayland.
- -W, --wayland         Set up a Wayland environment.
-
-Host integration:
-     --alsa [=ALSA_CARD]  Sound with ALSA. You can define a desired sound card
-                       with ALSA_CARD. List of available sound cards: aplay -l
- -c, --clipboard [=yes|no|c2h|h2c] Share clipboard with host.
-                       Possible arguments:
-                         yes: Share clipboard in both directions.
-                         no:  Do not share clipboard. (default)
-                         c2h: Copy clipboard from container to host only.
-                         h2c: Copy clipboard from host to container only.
-                         cmv: Keys [CTRL] + [SUPER] + [v] copy clipboard
-                              from host to container. Otherwise same as 'yes'.
-                              Needs a focused X window of container.
-                              In Wayland+X11 containers options --xeyes or
-                              --xlogo can help. Or provide image
-                              x11docker/xserver (option --xc) for a bindkey
-                              helper tool that sets up a Wayland key binding.
- -g, --gpu [=yes|no|iglx] GPU access for hardware accelerated OpenGL.
-                       Works best with open source drivers on host and in image.
-                       For closed source nvidia drivers regard terminal output.
-                       Direct rendering supported by few X server options only.
-                       Arg 'iglx' enables indirect rendering (--xorg only).
- -I, --network [=NET]  Allow internet access. (i.e. allow Docker default.)
-                       For optional argument NET see Docker documentation of
-                       docker run option --network. Docker default is bridge.
- -l, --lang [=LOCALE]  Set language variable LANG=LOCALE in container.
-                       Without arg LOCALE host variable --lang=\$LANG is used.
-                       If LOCALE is missing in image, x11docker generates it
-                       with 'localedef' in container (needs 'locales' package).
-                       Examples for LOCALE: ru, en, de, zh_CN, cz, fr, fr_BE.
-     --pipewire        Sound with pipewire. Needs 'pipwire', 'pipewire-pulse'
-                       and 'pipewire-alsa'on host and in image.
- -P, --printer [=MODE] Share host printers through CUPS server.
-                       Optional MODE can be 'socket' or 'tcp'. Default: socket
-                       Needs cups on host and cups client libs in image.
- -p, --pulseaudio [=MODE]  Sound with pulseaudio. Needs 'pulseaudio' on host
-                       and in image. Optional arg MODE can be 'socket', 'tcp'
-                       or 'host'. tcp mode needs network access with --network.
-     --webcam          Share host webcam device files.
-
-Shared host folders or volumes:
- -m, --home [=ARG]     Create a persistent HOME folder for data storage.
-                       Default: Uses ~/.local/share/x11docker/IMAGENAME.
-                       ARG can be another host folder or a volume.
-                       (~/.local/share/x11docker has a softlink to ~/x11docker.)
-                       (Use --homebasedir to change this base storage folder.)
-     --share=ARG       Share host file or folder ARG. Read-only with ARG:ro
-                       Device files in /dev can be shared, too.
-                       ARG can also be a volume instead of a host folder.
-
-X server options:
-     --auto            Automatically choose X server (default). Influenced
-                       by options --desktop, --gpu, --wayland, --wm, --xw
- -h, --hostdisplay     Share host display :0. Quite bad container isolation!
-                       Least overhead of all X server options.
- -a, --xpra            Nested X server supporting seamless and --desktop mode.
-                       Can run on X and on Wayland compositors even 
-                       without Xwayland support.
-     --xpra2           Like --xpra --xc, but runs xpra client on host.
- -A, --xpra-xwayland   Like --xpra, but supports option --gpu.
-     --xpra2-xwayland  Like --xpra2, but supports option --gpu.
- -n, --nxagent         Nested X server supporting seamless and --desktop mode.
-                       Faster than --xpra, but can have compositing issues.
- -y, --xephyr          Nested X server for --desktop mode. Without --desktop
-                       a host window manager will be provided (option --wm).
- -Y, --weston-xwayland Opens a weston window with Xwayland.
-                       Supports option --gpu in many environments.
-                       Needs --gpu in some environments to start up at all.
-                       Without further options it provides Westons built-in
-                       window manager and X access only.
-                       With option --wayland X11 and Wayland apps can run
-                       side by side. Compare option --weston.
- -x, --xorg            Core Xorg server. Runs ootb from console.
-                       Switch tty with <CTRL><ALT><F1>....<F12>. Always switch
-                       to a black tty before switching to X to avoid crashes.
-     --satellite       Rootless Xwayland running Xwayland-satellite.
-                       Needs a running Wayland compositor.
- -X, --xwayland        Rootfull Xwayland. Needs a running Wayland
-                       compositor.
-
-Wayland compositor options:
- -T, --weston [=ARG]   Weston compositor for Wayland applications.
-                       Runs in X, in Wayland or from console.
-                       Optional argument ARG can be:
-                         x: sets '--weston-xwayland --wayland'
-                         X: sets '--weston-xwayland --wayland --desktop'
-                       The arguments allow to run X and Wayland side by side.
- -H, --hostwayland     Share host Wayland socket. Can be used along with other
-                       X server options to run X and Wayland apps side by side.
-
-Special X server options:
- -t, --tty             Terminal only mode. Does not run an X or Wayland server.
-     --xvfb            Invisible X server using Xvfb.
-                       Can be used for custom access with xpra or VNC.
-     --xwin            X server Xwin. Works in Cygwin/X only.
-     --runx            X server wrapper for VcXsrv and Xwin on MS Windows.
-
-X and Wayland appearance options:
-     --border [=COLOR] Draw a colored border in windows of --xpra[-xwayland].
-                       Argument COLOR can be e.g. 'orange' or '#F00'. Thickness
-                       can be specified, too, e.g. 'red,3'. Default: 'blue,1'
-     --dpi=N           dpi value (dots per inch) to submit to X clients.
-                       Influences font size of some applications.
- -f, --fullscreen      Run in fullscreen mode.
-     --output-count=N  Multiple virtual monitors for Weston or KWin.
-     --rotate=N        Rotate display (--xorg, --weston and --weston-xwayland)
-                       Allowed values: 0, 90, 180, 270, flipped, flipped-90,
-                       flipped-180, flipped-270.  (flipped means mirrored)
-     --scale=N         Scale/zoom factor N for xpra, Xorg or Weston.
-                       Allowed for --xpra* and --xorg: 0.25...8.0.
-                       Allowed for --weston and --weston-xwayland: 1...9.
-     --size=WxH        Screen size of new X server (e.g. 800x600).
- -w, --wm [=ARG]       Provide a host window manager to container applications.
-                       Possible ARG:
-                         host: autodetection of a host window manager.
-                         COMMAND: command of a desired host window manager.
-                         none: Run without a window manager. Same as --desktop.
-     --xeyes [=ARG]    Run xeyes. Can help with --clipboard=cmv
-                       to provide an X window that accepts keycodes.
-                       Optional argument ARG can be an xeyes option, see
-                       'man xeyes'. Remove window decoration: '--xeyes=-shape'
- -F, --xfishtank       Show fish tank on new X server.
-     --xlogo           Simlilar to --xeyes, helper for --clipboard=cmv.
-
-X and Wayland special configuration:
-     --checkwindow [=ARG]  Run container until all X windows are closed.
-                       If ARG is provided, run container as long as 'grep' can
-                       find ARG in output of 'xwininfo -root -children'.
-                       This option helps to keep alive containers with
-                       self-forking applications like gnome-terminal
-                       or to stop endless running ones like chromium.
-     --clean-xhost     Disable xhost access policies on host display.
-     --composite [=yes|no]  Enable or disable X extension Composite.
-                       Default is yes except for --nxagent. Can cause or
-                       fix issues with some applications on nxagent.
-     --display=N       Use display number N for new X server.
-     --keymap=LAYOUT   Set keyboard layout for new X server, e.g. de, us, ru.
-                       For possible LAYOUT look at /usr/share/X11/xkb/symbols.
-     --vt [=N]         Use vt / tty N. Without N search an unused tty.
-     --westonini=FILE  Custom weston.ini for --weston and --weston-xwayland.
-     --xhost [=STR]    Set \"xhost STR\" on new X server (see 'man xhost').
-                       Without STR will set:  +SI:localuser:\$USER
-                       (Use with care. '--xhost=+' allows access for everyone).
-     --xoverip [=yes|no|listentcp|socat] Connect to X over TCP network. Special
-                       setups only, usually only enabled by x11docker itself.
-                         yes:       Use listentcp if possible, otherwise socat.
-                         no:        Use shared unix socket (default).
-                         listentcp: Use X option '-listen tcp'.
-                         socat:     Use socat to create a fake TCP connection.
-     --xauth [=yes|trusted|untrusted|no] Configure X cookie authentication.
-                       Possible arguments:
-                         yes|trusted: Enable cookie authentication with trusted
-                                    cookies. (General x11docker default.)
-                         untrusted: Untrusted cookie for untrusted apps
-                                    limiting access to X resources.
-                                    Useful to avoid MIT-SHM with --hostdisplay.
-                         no:        Disable cookie authentication.
-                         -ac:       Disable X access control. Undesired access
-                                    from other networks might occur. Dangerous!
-     --xopt=ARG        Custom argument to be added to the X server command.
-     --xtest [=yes|no] Enable or disable X extension XTEST. Default is yes for
-                       --xpra and --xvfb, no for other X servers.
-                       Needed to allow keyboard and mouse control with xpra.
-
-Container user settings:
-     --group-add=GROUP Add container user to group GROUP.
-     --hostuser=USER   Run X (and container user) as user USER. Default is
-                       result of \$(logname). (x11docker must run as root).
-     --password [=WORD]   Change container user password and exit.
-                       Interactive input if argument WORD is not provided.
-                       Stored encrypted in ~/.config/x11docker/passwd.
-     --sudouser [=nopasswd] Allow su and sudo for container user. Use with care,
-                       severe reduction of default x11docker security!
-                       Optionally passwordless sudo with argument nopasswd.
-                       Default password is 'x11docker'.
-     --user=N          Create container user N (N=name or N=uid). Default:
-                       same as host user. N can also be an unknown user id.
-                       You can specify a group id with N being 'user:gid'.
-                       Special case: --user=RETAIN keeps image user settings.
-
-Container capabilities:
-  In most setups x11docker sets --cap-drop=ALL --security-opt=no-new-privileges
-  and shows warnings if doing otherwise.
-  Custom capabilities can be added with --cap-add=CAP after  --
-     --cap-default     Allow default container capabilities.
-                       Includes --newprivileges=yes.
-     --ipc [=ARG]      Without ARG sets run option --ipc=host. (Discouraged)
-                       For other possible ARG see docker run reference.
-     --limit [=FACTOR] Limit CPU and RAM usage of container to
-                       currently free RAM x FACTOR and available CPUs x FACTOR.
-                       Allowed range is 0 < FACTOR <= 1.
-                       Default for --limit without argument FACTOR: 0.5
-     --newprivileges [=yes|no|auto]  Set or unset run option
-                       --security-opt=no-new-privileges. Default with no
-                       argument is 'yes'. Default for most cases is 'no'.
-
-Container init system, elogind and DBus daemon:
-     --dbus [=system]  Run DBus user session daemon for container command.
-                       With argument 'system' also run a DBus system daemon.
-                       (To run a DBus system daemon rather use one of
-                        --init=systemd|openrc|runit|sysvinit )
-     --hostdbus        Connect to DBus user session from host.
-     --init [=INITSYSTEM] Run an init system as PID 1 in container. Solves the
-                       zombie reaping issue. INITSYSTEM can be:
-                         tini:       Default. Mostly present as docker-init
-                                     on host. x11docker might as well use
-                                     catatonit provided by podman.
-                         systemd:    systemd in container.
-                         sysvinit:   sysvinit in container.
-                         runit:      runit in container
-                         openrc:     openrc in container
-                         s6-overlay: s6-overlay in container.
-                         none:       No init system, CMD will be PID 1.
-     --sharecgroup     Share /sys/fs/cgroup. Allows elogind in container if
-                       used with one of --init=openrc|runit|sysvinit
-
-Container special configuration:
-     --env VAR=value   Set custom environment variable VAR=value
-     --name=NAME       Specify container name NAME.
-     --no-entrypoint   Disable ENTRYPOINT in image to allow other commands, too
-     --no-setup        No x11docker setup in running container. Disallows
-                       several other options. See also --user=RETAIN.
-     --runtime=RUNTIME  Specify container runtime. Known by x11docker:
-                         runc:         Docker default runtime.
-                         crun:         Fast replacement for runc written in C.
-                         nvidia:       Runtime for nvidia/nvidia-docker images.
-                         sysbox-runc:  Runtime for powerful root in container.
-     --shell=SHELL     Set preferred user shell. Example: --shell=/bin/zsh
-     --snap            Enable support for Docker in snap.
-     --stdin           Forward stdin of x11docker to container command.
-     --workdir=DIR     Set working directory DIR.
-
-Additional commands: (You might need to move them to background with 'CMD &'.)
-     --runasroot=CMD   Run command CMD as root in container.
-     --runasuser=CMD   Run command CMD with user privileges in container
-                       before running image command.
-     --runfromhost=CMD Run host command CMD on new X server.
-
-Miscellaneous:
-     --cachebasedir=DIR  Custom base folder for cache files.
-     --homebasedir=DIR   Custom base folder for option --home.
-     --fallback [=yes|no]  Allow or deny fallbacks if a chosen option cannot
-                       be fulfilled. By default fallbacks are allowed.
-     --launcher        Create application launcher with current options
-                       on desktop and exit. You can get a menu entry moving
-                       the created .desktop file to ~/.local/share/applications
-     --mobyvm          Use MobyVM (for WSL2 only that defaults to Linux Docker).
-     --preset=FILE     Read a set of predefined options stored in file FILE.
-                       Useful to shortcut often used option combinations.
-                       FILE is searched in directory /etc/x11docker/preset,
-                       or in directory ~/.config/x11docker/preset.
-                        - Multiple lines in FILE are allowed.
-                        - Comment lines must begin with #
-                        - Local presets supersede global ones in /etc
-                       Special case: A preset file with file name 'default'
-                       will be applied automatically for all x11docker sessions.
-
-Output of parseable information on stdout:
-  Get output e.g. with: read xenv < <(x11docker --printenv x11docker/check)
-  Optional argument FILE allows to print the information into a file.
-     --printenv [=FILE]        Print variables to access new display.
-     --printid [=FILE]         Print container ID.
-     --printinfofile [=FILE]   Print path to internal x11docker info storage.
-     --printpid1 [=FILE]       Print host PID of container PID 1.
-
-Verbosity options:
- -D, --debug           Debug mode: Show some less verbose debug output
-                       and enable rigorous error control.
-     --printcheck      Show dependency check messages.
- -q, --quiet           Suppress x11docker terminal messages.
- -v, --verbose         Be verbose. Output of x11docker.log on stderr.
- -V                    Be verbose with colored output.
-
-Cleanup options (might need root permissions):
-     --cleanup         Clean up orphaned containers and cache files. Those
-                       can remain if x11docker still runs on system shutdown.
-                       Terminates currently running x11docker containers, too.
-                       Regards (only) option --backend=BACKEND."
-
-  case "$Packagedversion" in
+    case "$Packagedversion" in
     yes) ;;
     *) 
-      echo "
-Installation options (need root permissions):
-     --install         Install x11docker from current folder.
-                       Useful to install from an extracted zip file
-                       or a cloned git repository.
-     --update [=diff]  Download and install latest release from github.
-     --update-master [=diff]  Download and install latest master version.
-                       Optional argument 'diff' shows the difference between
-                       installed and new version without installing it.
-     --remove          Remove x11docker from your system. Includes --cleanup.
-                       Preserves ~/.local/share/x11docker from option --home.
-     --remove-oldprefix   Before version 7.6.0 x11docker installed itself
-                       into /usr/bin. Now it installs into /usr/local/bin.
-                       Use --remove-oldprefix to remove /usr/bin installations."
-    ;;
-  esac
+        echo "$(trim_to_bar \
+          "|
+           |Installation options (need root permissions):
+           |     --install         Install x11docker from current folder.
+           |                       Useful to install from an extracted zip file
+           |                       or a cloned git repository.
+           |     --update [=diff]  Download and install latest release from github.
+           |     --update-master [=diff]  Download and install latest master version.
+           |                       Optional argument 'diff' shows the difference between
+           |                       installed and new version without installing it.
+           |     --remove          Remove x11docker from your system. Includes --cleanup.
+           |                       Preserves ~/.local/share/x11docker from option --home.
+           |     --remove-oldprefix   Before version 7.6.0 x11docker installed itself
+           |                       into /usr/bin. Now it installs into /usr/local/bin.
+           |                       Use --remove-oldprefix to remove /usr/bin installations.")"
+        ;;
+    esac
 
-  echo "
-Exit codes:
-  0:     Success
-  64:    x11docker error
-  130:   Terminated by ctrl-c
-  other: Exit code of command in container
-
-x11docker version: $Version
-Please report issues and get help at: https://github.com/mviereck/x11docker
-"
+    echo "$(trim_to_bar \
+      "|
+       |Exit codes:
+       |  0:     Success
+       |  64:    x11docker error
+       |  130:   Terminated by ctrl-c
+       |  other: Exit code of command in container
+       |
+       |x11docker version: $Version
+       |Please report issues and get help at: https://github.com/mviereck/x11docker
+       |")"
 }
 
 ## function license()
