@@ -1682,8 +1682,8 @@ mswindowsipcheck() {            # get WSL host IP and Windows host ip
         Hostprefix="${Hostcidr#*/}"
 
         for Winip in $Mswindowsips; do
-            Mswindowsnetwork=$(ipcalc -n "$Winip/$Hostprefix" | grep Network | awk '{print $2}')
-            Hostnetwork=$(ipcalc -n "$Hostip/$Hostprefix" | grep Network | awk '{print $2}')
+            Mswindowsnetwork=$(ipcalc -n "$Winip/$Hostprefix"  | grep Network | awk '{print $2}')
+            Hostnetwork=$(ipcalc      -n "$Hostip/$Hostprefix" | grep Network | awk '{print $2}')
 
             if [[ "$Mswindowsnetwork" == "$Hostnetwork" ]]; then
                 Hostipwindows=$Winip      # set global Hostipwindows
