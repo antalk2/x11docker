@@ -547,6 +547,9 @@ alertbox() {                    # X alert box with title $1 and message $2
 
 
 # function debugnote()
+#
+# return 0
+#
 debugnote() {                   # show debug output $*
     [ "$Debugmode" = "yes" ]       \
         && [ "$Verbose" != "yes" ] \
