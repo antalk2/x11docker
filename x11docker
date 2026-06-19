@@ -1088,15 +1088,15 @@ watchpidlist() {                # watch list of important pids
         [ "$Usemkfifo" = "no" ] && sleep 2  # read does not wait if not a fifo
         # Got new pid
         if [ "$Pid" ] ; then
-            [ "${Pid:0:9}" = "CONTAINER" ] && {
+            if [ "${Pid:0:9}" = "CONTAINER" ] ; then
                 # Workaround for MS Windows where the pid cannot be watched
                 Containername="${Pid#CONTAINER}"
                 debugnote "watchpidlist(): Watching Container: $Containername"
-            } || {
+            else
                 Watchpidlist="$Watchpidlist $Pid"
                 ListOfLines="$(for Line in $Watchpidlist; do pspid "$Line" || echo "(pid $Line not found)" ; done)"
                 debugnote "watchpidlist(): Watching pids:${NEWLINE}${ListOfLines}"
-            }
+            fi
         fi
         #
         # check all stored pids
@@ -1106,13 +1106,14 @@ watchpidlist() {                # watch list of important pids
                 saygoodbye "watchpidlist $Pid"
             }
         done
+        #
         # Container PID not watchable in MSYS2/Cygwin/WSL1.
-        [ "$Containername" ] && {
+        if [ "$Containername" ] ; then
             unpriv_backend "$Backendbin inspect '$Containername'" >/dev/null || {
-                debugnote "watchpidlist(): Container $Containername has terminated"
+                debugnote  "watchpidlist(): Container $Containername has terminated"
                 saygoodbye "watchpidlist $Containername"
             }
-        }
+        fi
     done
     saygoodbye "watchpidlist"
 }
