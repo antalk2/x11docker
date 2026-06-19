@@ -1200,7 +1200,7 @@ cookiebaker() {                 # create an X cookie without xauth
             Address="$(hostname)/unix"
             Addresslength="$(strlenhex "$Address")"
             ;;
-        *.*.*.*)
+        [0-9]*.*.*.*)
             ##
             ## Recode decimal IPv4 to 4 hex bytes.
             ##
