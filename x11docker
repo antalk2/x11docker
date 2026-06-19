@@ -684,7 +684,7 @@ watchmessagefifo() {            # watch for messages coming from inside of conta
 #
 # function finish()
 #
-finish() {                      # trap EXIT routine to clean up background processes and cache
+finish() {            # trap EXIT routine to clean up background processes and cache
     #
   local Pid Name Zeit Exitcode Pid1pid= Watchmessagefifopid= Count Xpid1pid
 
