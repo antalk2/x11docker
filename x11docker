@@ -495,11 +495,7 @@ alertbox() {                    # X alert box with title $1 and message $2
 
   # try some tools to show alert message. If all tools fail, return 1
   if [ -n "${DISPLAY:-}" ] ; then
-      if command -v   xmessage     >/dev/null ; then
-          printf "%s\n\n%s" "${Title}" "${Message}"  \
-              | xmessage  -file - -default okay      \
-              || true
-      elif command -v gxmessage    >/dev/null ; then
+      if command -v gxmessage    >/dev/null ; then
           printf "%s\n\n%s" "${Title}" "${Message}"  \
               | gxmessage -file - -default okay      \
               || true
@@ -524,6 +520,10 @@ alertbox() {                    # X alert box with title $1 and message $2
               --title "$Title"                                  \
               --error "$(echo "$Message" | sed 's/\\/\\\\/g' )" \
               2>/dev/null                                       \
+              || true
+      elif command -v   xmessage     >/dev/null ; then
+          printf "%s\n\n%s" "${Title}" "${Message}"  \
+              | xmessage  -file - -default okay      \
               || true
       elif command -v xterm        >/dev/null ; then
           # shellcheck disable=SC2001
