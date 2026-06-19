@@ -702,90 +702,92 @@ watchmessagefifo() {            # watch for messages coming from inside of conta
 #
 finish() {            # trap EXIT routine to clean up background processes and cache
     #
-  local Pid Name Zeit Exitcode Pid1pid= Watchmessagefifopid= Count Xpid1pid
+    local Pid Name Zeit Exitcode Pid1pid= Watchmessagefifopid= Count Xpid1pid
 
-  # do not finish() in subshell, just give signal to all other processes and terminate subshell
-  [ "$$" = "$BASHPID" ] || {
-    saygoodbye finish-subshell
-    exit 0
-  }
-
-  debugnote "Terminating x11docker."
-  saygoodbye "finish"
-
-  # reset signal handlers
-  trap - EXIT
-  trap - ERR
-  trap - SIGINT
-
-  while read -r Line ; do
-
-    Pid="$(echo "$Line"  | awk '{print $1}')"
-    Name="$(echo "$Line" | awk '{print $2}')"
-    debugnote "finish(): Checking pid $Pid ($Name): $(pspid "$Pid" || echo '(already gone)')"
-
-    checkpid "$Pid" && {
-      case "$Name" in
-        watchmessagefifo) ;;
-        containerpid1)
-          Pid1pid="$Pid"
-          #[ "$Winsubsystem" ] && Pid1pid=""
-          termpid "$Pid1pid" "$Name" || Debugmode="yes"
-          # Give container time for graceful shutdown
-          for Count in 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0; do
-            checkpid "$Pid1pid" || break
-            mysleep "$(awk "BEGIN { print $Count * 0.1 }")"
-            debugnote "finish(): Waiting for container PID 1: $Pid1pid to terminate."
-          done
-          checkpid "$Pid1pid" && unpriv_backend "$Backendbin stop $Containername"
-        ;;
-        Xcontainerpid1)
-          Xpid1pid="$Pid"
-          #[ "$Winsubsystem" ] && Pid1pid=""
-          termpid "$Xpid1pid" "$Name" || Debugmode="yes"
-          # Give container time for graceful shutdown
-          for Count in 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0; do
-            checkpid "$Xpid1pid" || break
-            mysleep "$(awk "BEGIN { print $Count * 0.1 }")"
-            debugnote "finish(): Waiting for X container PID 1: $Xpid1pid to terminate."
-          done
-          checkpid "$Xpid1pid" && unpriv_xcbackend "$Xcontainerbackend stop $Xcontainername"
-        ;;
-        *)
-          termpid "$Pid" "$Name"
-        ;;
-      esac
+    # do not finish() in subshell, just give signal to all other processes and terminate subshell
+    [ "$$" = "$BASHPID" ] || {
+        saygoodbye finish-subshell
+        exit 0
     }
-  done < <(tac "$Storepidfile" 2>/dev/null)
 
-  # --pulseaudio: unload module
-  Pulseaudiomoduleid="$(storeinfo dump pulseaudiomoduleid)"
-  [ "$Pulseaudiomoduleid" ] && unpriv "pactl unload-module '$Pulseaudiomoduleid'"
+    debugnote "Terminating x11docker."
+    saygoodbye "finish"
 
-  # --xc --xoverip: remove possible internal network
-  setup_xcnetwork remove
+    # reset signal handlers
+    trap - EXIT
+    trap - ERR
+    trap - SIGINT
 
-  # Check if container is still running -> docker stop
-  case "$Backend" in
-    docker|podman|nerdctl)
-      containerisrunning && {
-        Debugmode="yes"
-        debugnote  "$(trim_to_bar \
-                   "|finish(): Container still running. Executing 'docker stop'.
-                    |  Will wait up to 15 seconds for docker to finish." )"
-        unpriv_backend "$Backendbin stop $Containername" >> "$Containerlogfile" 2>&1
+    while read -r Line ; do
 
-        Zeit="$(date +%s)"
-        while :; do
-          containerisrunning || break
-          debugnote "finish(): Waiting for container to terminate ..."
-          sleep 1
-          [ 15 -lt $(($(date +%s) - $Zeit)) ] && break
-        done
+        Pid="$(echo "$Line"  | awk '{print $1}')"
+        Name="$(echo "$Line" | awk '{print $2}')"
+        debugnote "finish(): Checking pid $Pid ($Name): $(pspid "$Pid" || echo '(already gone)')"
 
-        containerisrunning && {
-          Exitcode="64"
-          debugnote "$(trim_to_bar \
+        checkpid "$Pid" && {
+            case "$Name" in
+                watchmessagefifo) ;;
+                containerpid1)
+                    Pid1pid="$Pid"
+                    #[ "$Winsubsystem" ] && Pid1pid=""
+                    termpid "$Pid1pid" "$Name" || Debugmode="yes"
+                    # Give container time for graceful shutdown
+                    for Count in 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0; do
+                        checkpid "$Pid1pid" || break
+                        mysleep "$(awk "BEGIN { print $Count * 0.1 }")"
+                        debugnote "finish(): Waiting for container PID 1: $Pid1pid to terminate."
+                    done
+                    checkpid "$Pid1pid" && unpriv_backend "$Backendbin stop $Containername"
+                    ;;
+                Xcontainerpid1)
+                    Xpid1pid="$Pid"
+                    #[ "$Winsubsystem" ] && Pid1pid=""
+                    termpid "$Xpid1pid" "$Name" || Debugmode="yes"
+                    # Give container time for graceful shutdown
+                    for Count in 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0; do
+                        checkpid "$Xpid1pid" || break
+                        mysleep "$(awk "BEGIN { print $Count * 0.1 }")"
+                        debugnote "finish(): Waiting for X container PID 1: $Xpid1pid to terminate."
+                    done
+                    checkpid "$Xpid1pid" && unpriv_xcbackend "$Xcontainerbackend stop $Xcontainername"
+                    ;;
+                #
+                *)
+                    termpid "$Pid" "$Name"
+                    ;;
+            esac
+        }
+    done < <(tac "$Storepidfile" 2>/dev/null)
+
+    # --pulseaudio: unload module
+    Pulseaudiomoduleid="$(storeinfo dump pulseaudiomoduleid)"
+    [ "$Pulseaudiomoduleid" ] && unpriv "pactl unload-module '$Pulseaudiomoduleid'"
+
+    # --xc --xoverip: remove possible internal network
+    setup_xcnetwork remove
+
+    # Check if container is still running -> docker stop
+    case "$Backend" in
+        docker|podman|nerdctl)
+            containerisrunning && {
+                Debugmode="yes"
+                debugnote  "$(trim_to_bar \
+             "|finish(): Container still running. Executing 'docker stop'.
+              |  Will wait up to 15 seconds for docker to finish." )"
+                #
+                unpriv_backend "$Backendbin stop $Containername" >> "$Containerlogfile" 2>&1
+
+                Zeit="$(date +%s)"
+                while true; do
+                    containerisrunning || break
+                    debugnote "finish(): Waiting for container to terminate ..."
+                    sleep 1
+                    [ 15 -lt $(($(date +%s) - $Zeit)) ] && break
+                done
+
+                containerisrunning && {
+                    Exitcode="64"
+                    debugnote "$(trim_to_bar \
               "|finish(): Container did not terminate as it should.
                |  Will not clean cache to avoid file permission issues.
                |  You can remove the new container with command:
@@ -794,68 +796,68 @@ finish() {            # trap EXIT routine to clean up background processes and c
                |    rm -R $Cachefolder
                |  or let x11docker do the cleanup work for you:
                |    x11docker --cleanup" )"
-        } || debugnote "finish(): Container terminated successfully"
-      }
-    ;;
-  esac
-
-  # Stop watching for messages, check others again
-  while read -r Line ; do
-    Pid="$(echo "$Line"  | awk '{print $1}')"
-    Name="$(echo "$Line" | awk '{print $2}')"
-    checkpid "$Pid" && termpid "$Pid" "$Name"
-    checkpid "$Pid" && {
-      # should never happen
-      warning "Failed to terminate pid $Pid ($Name): $(pspid "$Pid" ||:)"
-      storeinfo error=64
-    }
-  done < <(tac "$Storepidfile" 2>/dev/null)
-
-  Exitcode=$(storeinfo dump error)
-  Exitcode="${Exitcode:-0}"
-  debugnote "x11docker exit code: $Exitcode"
-  storeinfo test cmdexitcode && {
-    Exitcode=$(storeinfo dump cmdexitcode)
-    debugnote "CMD exit code: $Exitcode"
-  }
-
-  # backup of logfile in $Cachebasefolder
-  [ -e "$Logfile" ] && {
-    [ "$Verbose" ] && sleep 1
-    unpriv "cp '$Logfile' '$Logfilebackup'"
-    case "$Winsubsystem" in
-      WSL1|WSL2)
-        [ "$Dockervm" = "moby" ] && unpriv "cp -T '$Logfilebackup' '$Hostuserhome/.cache/x11docker/x11docker.log'"
-      ;;
+                } || debugnote "finish(): Container terminated successfully"
+            }
+            ;;
     esac
-    #unpriv "rmcr '$Logfilebackup'"
-  }
 
-  # softlink to X unix socket in container
-  case "$Xcontainer" in
-    yes)
-      [ -L "/tmp/.X11-unix/X$Newdisplaynumber" ]          && rm "/tmp/.X11-unix/X$Newdisplaynumber"
-      [ -L "$XDG_RUNTIME_DIR/wayland-$Newdisplaynumber" ] && rm "$XDG_RUNTIME_DIR/wayland-$Newdisplaynumber"
-    ;;
-  esac
-  
-  # close file descriptors
-  mysleep 0.2
-  for Descriptor in ${FDcmdstdin} ${FDmessage} ${FDstderr} ${FDtimetosaygoodbye} ${FDwatchpid} ; do
-    exec {Descriptor}>&-
-  done
+    # Stop watching for messages, check others again
+    while read -r Line ; do
+        Pid="$(echo "$Line"  | awk '{print $1}')"
+        Name="$(echo "$Line" | awk '{print $2}')"
+        checkpid "$Pid" && termpid "$Pid" "$Name"
+        checkpid "$Pid" && {
+            # should never happen
+            warning "Failed to terminate pid $Pid ($Name): $(pspid "$Pid" || true)"
+            storeinfo error=64
+        }
+    done < <(tac "$Storepidfile" 2>/dev/null)
 
-  # remove cache files
-  [ "$Preservecachefiles" = "no" ]                       \
-      && grep -q cache     <<< "$Cachefolder"            \
-      && grep -q x11docker <<< "$Cachefolder"            \
-      && [ "x11docker" != "$(basename "$Cachefolder")" ] \
-      && unpriv "rm -f -R '$Cachefolder'"
+    Exitcode=$(storeinfo dump error)
+    Exitcode="${Exitcode:-0}"
+    debugnote "x11docker exit code: $Exitcode"
+    storeinfo test cmdexitcode && {
+        Exitcode=$(storeinfo dump cmdexitcode)
+        debugnote "CMD exit code: $Exitcode"
+    }
 
-  case "$Runssourced" in
-    yes) return "$Exitcode" ;;
-    *)   exit   "$Exitcode" ;;
-  esac
+    # backup of logfile in $Cachebasefolder
+    [ -e "$Logfile" ] && {
+        [ "$Verbose" ] && sleep 1
+        unpriv "cp '$Logfile' '$Logfilebackup'"
+        case "$Winsubsystem" in
+            WSL1|WSL2)
+                [ "$Dockervm" = "moby" ] && unpriv "cp -T '$Logfilebackup' '$Hostuserhome/.cache/x11docker/x11docker.log'"
+                ;;
+        esac
+        #unpriv "rmcr '$Logfilebackup'"
+    }
+
+    # softlink to X unix socket in container
+    case "$Xcontainer" in
+        yes)
+            [ -L "/tmp/.X11-unix/X$Newdisplaynumber" ]          && rm "/tmp/.X11-unix/X$Newdisplaynumber"
+            [ -L "$XDG_RUNTIME_DIR/wayland-$Newdisplaynumber" ] && rm "$XDG_RUNTIME_DIR/wayland-$Newdisplaynumber"
+            ;;
+    esac
+
+    # close file descriptors
+    mysleep 0.2
+    for Descriptor in ${FDcmdstdin} ${FDmessage} ${FDstderr} ${FDtimetosaygoodbye} ${FDwatchpid} ; do
+        exec {Descriptor}>&-
+    done
+
+    # remove cache files
+    [ "$Preservecachefiles" = "no" ]                       \
+        && grep -q cache     <<< "$Cachefolder"            \
+        && grep -q x11docker <<< "$Cachefolder"            \
+        && [ "x11docker" != "$(basename "$Cachefolder")" ] \
+        && unpriv "rm -f -R '$Cachefolder'"
+
+    case "$Runssourced" in
+        yes) return "$Exitcode" ;;
+        *)   exit   "$Exitcode" ;;
+    esac
 }
 
 #
