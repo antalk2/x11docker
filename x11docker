@@ -1104,15 +1104,14 @@ $(for Line in $Watchpidlist; do pspid "$Line" || echo "(pid $Line not found)" ; 
         debugnote  "watchpidlist(): PID $Pid has terminated"
         saygoodbye "watchpidlist $Pid"
       }
+        # Container PID not watchable in MSYS2/Cygwin/WSL1.
+        [ "$Containername" ] && {
+            unpriv_backend "$Backendbin inspect '$Containername'" >/dev/null || {
+                debugnote "watchpidlist(): Container $Containername has terminated"
+                saygoodbye "watchpidlist $Containername"
+            }
+        }
     done
-    # Container PID not watchable in MSYS2/Cygwin/WSL1.
-    [ "$Containername" ] && {
-      unpriv_backend "$Backendbin inspect '$Containername'" >/dev/null || {
-        debugnote "watchpidlist(): Container $Containername has terminated"
-        saygoodbye "watchpidlist $Containername"
-      }
-    }
-  done
     saygoodbye "watchpidlist"
 }
 
