@@ -545,6 +545,7 @@ alertbox() {                    # X alert box with title $1 and message $2
   return 0
 }
 
+
 # function debugnote()
 debugnote() {                   # show debug output $*
     [ "$Debugmode" = "yes" ]       \
@@ -1384,6 +1385,7 @@ parse_inspect() {               # parse json of inspect output using python
   local Parserscript
   local Jsonstring Keystring Output
   local EXPR
+  local SINGLE_QUOTE="'"
 
   [[ "$Jqbin" ]] && {
       # we have jq (e.g. /usr/bin/jq)
@@ -1465,59 +1467,61 @@ parse_inspect() {               # parse json of inspect output using python
   ##   echo "$Parserscript" | $Pythonbin - "$@" || warning "parse_inspect(): Error while parsing json for
   ##   ${2:-} ${3:-} ${4:-} ${5:-} ${6:-} (Line $BASH_LINENO)"
   ##
-  #
-  # Replacement using heredoc.
-  #
-  {
-      echo "#! $Pythonbin";
-      cat <<"END"
-import json,sys
 
-def parse_inspect(*args):
-    """
-    parse output of docker|podman|nerdctl inspect
-    args:
-     0: ignored
-     1: string containing inspect output
-     2..n: json keys. For second level keys provide e.g. "Config","Cmd"
-    Prints key value as a string.
-    Prints empty string if key not found.
-    A list is printed as a string with '' around each element.
-    """
-
-    output=""
-    inspect=args[1]
-    inspect=inspect.strip()
-
-    obj=json.loads(inspect)
-
-    if "'list'" in str(type(obj)):
-        obj = obj[0]
-
-    for arg in args[2:]: # recursively find the desired object. Command.Cmd is found with args "Command" , "Cmd"
-        try:
-            obj=obj[arg]
-        except:
-            obj=""
-
-    objtype=str(type(obj))
-    if "'list'" in objtype:
-        for i in obj:
-            output += "'" + str(i) + "' "
-        output = output.strip()
-    else:
-        output = str(obj)
-
-    if output == "None":
-        output=""
-
-    print(output)
-
-parse_inspect(*sys.argv)
-END
-  } | $Pythonbin - "$@" || warning "parse_inspect(): Error while parsing json for
+  ##
+  ## Replacement using trim_to_bar(), intercepted single quotes and ${SINGLE_QUOTE}
+  ##
+  Parserscript="#! $Pythonbin$(trim_to_bar \
+      '|
+       |import json,sys
+       |
+       |def parse_inspect(*args):
+       |    """
+       |    parse output of docker|podman|nerdctl inspect
+       |    args:
+       |     0: ignored
+       |     1: string containing inspect output
+       |     2..n: json keys. For second level keys provide e.g. "Config","Cmd"
+       |    Prints key value as a string.
+       |    Prints empty string if key not found.
+       |    A list is printed as a string with '${SINGLE_QUOTE}${SINGLE_QUOTE}' around each element.
+       |    """
+       |
+       |    output=""
+       |    inspect=args[1]
+       |    inspect=inspect.strip()
+       |
+       |    obj=json.loads(inspect)
+       |
+       |    if "'${SINGLE_QUOTE}'list'${SINGLE_QUOTE}'" in str(type(obj)):
+       |        obj = obj[0]
+       |
+       |    for arg in args[2:]: # recursively find the desired object. Command.Cmd is found with args "Command" , "Cmd"
+       |        try:
+       |            obj=obj[arg]
+       |        except:
+       |            obj=""
+       |
+       |    objtype=str(type(obj))
+       |    if "'${SINGLE_QUOTE}'list'${SINGLE_QUOTE}'" in objtype:
+       |        for i in obj:
+       |            output += "'${SINGLE_QUOTE}'" + str(i) + "'${SINGLE_QUOTE}' "
+       |        output = output.strip()
+       |    else:
+       |        output = str(obj)
+       |
+       |    if output == "None":
+       |        output=""
+       |
+       |    print(output)
+       |
+       |parse_inspect(*sys.argv)
+       |')"
+  ## end of $'string' here
+  ##
+  echo "$Parserscript" | $Pythonbin - "$@" || warning "parse_inspect(): Error while parsing json for
   ${2:-} ${3:-} ${4:-} ${5:-} ${6:-} (Line $BASH_LINENO)"
-
+  #
 }
 
 
