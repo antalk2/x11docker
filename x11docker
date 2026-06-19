@@ -1503,8 +1503,11 @@ parse_inspect() {               # parse json of inspect output using python
        |')"
   ## end of $'string' here
   ##
-  echo "$Parserscript" | $Pythonbin - "$@" || warning "parse_inspect(): Error while parsing json for
-  ${2:-} ${3:-} ${4:-} ${5:-} ${6:-} (Line $BASH_LINENO)"
+  echo "$Parserscript" \
+      | $Pythonbin - "$@" \
+      || warning "$(trim_to_bar \
+             "|parse_inspect(): Error while parsing json for
+              |  ${2:-} ${3:-} ${4:-} ${5:-} ${6:-} (Line $BASH_LINENO)" )"
   #
 }
 
