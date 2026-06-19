@@ -1229,7 +1229,15 @@ cookiebaker() {                 # create an X cookie without xauth
 # function devicelist_gpu()
 #
 devicelist_gpu() {              # print list of GPU devices
-  find /dev/dri/* /dev/nvidia* /dev/vga_arbiter /dev/nvhost* /dev/nvmap -maxdepth 0 -type c 2>/dev/null || true
+    find                 \
+        /dev/dri/*       \
+        /dev/nvidia*     \
+        /dev/vga_arbiter \
+        /dev/nvhost*     \
+        /dev/nvmap       \
+        -maxdepth 0      \
+        -type c          \
+        2>/dev/null || true
 }
 
 #
