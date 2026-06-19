@@ -1400,33 +1400,6 @@ parse_inspect() {               # parse json of inspect output using python
       #
       # If we have an array in Output, single-quote each item and join with spaces
       if [[ $("$Jqbin" -r 'type' <<< "$Output" 2>/dev/null) == array ]]; then
-          ## Why $' here?
-          # Output1="$("$Jqbin" -r $'map(tostring | "\'" + . + "\'") | join(" ")' <<< "$Output" )"
-          #
-          ## https://www.gnu.org/software/bash/manual/html_node/ANSI_002dC-Quoting.html#:~:text=3%2E1%2E2%2E4,standard%2E
-          # 3.1.2.4 ANSI-C Quoting
-          #
-          # Character sequences of the form $'string' are treated as a
-          # special kind of single quotes. The sequence expands to
-          # string, with backslash-escaped characters in string
-          # replaced as specified by the ANSI C standard.
-          #
-          # https://www.gnu.org/software/bash/manual/html_node/Single-Quotes.html
-          # A single quote may not occur between single quotes, even
-          # when preceded by a backslash.
-          #
-          #
-          #
-          ## Jqbin=jq; Output='[1,"a"]';
-          ## x="$("$Jqbin" -r $'map(tostring | "\'" + . + "\'") | join(" ")' <<< "$Output" )"; echo $x
-          ##
-          ### The following works, but $'xxx' confuses emacs
-          ## EXPR=$'map(tostring | "\'" + . + "\'") | join(" ")'
-          ## Output="$("$Jqbin" -r "$EXPR" <<< "$Output" )"
-          #
-          # So, we want a string containing both single and double quotes.
-          # The solution below is less elegant, but seems to work.
-          #
           EXPR="map(tostring | \"'\" + . + \"'\") | join(\" \")"
           Output="$("$Jqbin" -r "$EXPR" <<< "$Output" )"
       fi
