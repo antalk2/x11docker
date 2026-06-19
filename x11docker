@@ -700,17 +700,21 @@ watchmessagefifo() {            # watch for messages coming from inside of conta
 #
 # function finish()
 #
-finish() {            # trap EXIT routine to clean up background processes and cache
+finish() {      # trap EXIT routine to clean up background processes and cache
     #
     local Pid Name Zeit Exitcode Pid1pid= Watchmessagefifopid= Count Xpid1pid
 
-    # do not finish() in subshell, just give signal to all other processes and terminate subshell
-    [ "$$" = "$BASHPID" ] || {
+    # Do not finish() in subshell, just give signal to all other
+    # processes and terminate subshell.
+    #
+    # Note: BASHPID varies with subshell, $$ does not.
+    if [ "$$" != "$BASHPID" ] ; then
+        # We are in a subshell
         saygoodbye finish-subshell
         exit 0
-    }
+    fi
 
-    debugnote "Terminating x11docker."
+    debugnote  "Terminating x11docker."
     saygoodbye "finish"
 
     # reset signal handlers
@@ -906,16 +910,44 @@ containerisrunning() {          # check if container is running
           checkpid      "$(storeinfo dump pid1pid)"
           ;;
       moby|desktop)
-          unpriv_backend "$Backendbin inspect '$(storeinfo dump containerid)'" >/dev/null 2>&1
+          unpriv_backend "$Backendbin inspect '$(storeinfo dump containerid)'" \
+                         >/dev/null 2>&1
           ;;
   esac
 }
 
 #
-# function pspid()
+# global Myps can be:
+#            Initially:           ""
+#            On Cygwin and MSYS2: "procps"
+#            Elsewhere:           "ps"
 #
-pspid() {                       # Return some info to pid $1
-  LC_ALL=C $Myps ax -o user,pid,comm | grep " ${1:-} "
+
+#
+# function pspid( pid )
+#   Get USER and COMMAND for PID=pid (using ps)
+#
+# stdout: Line containing
+#             USER PID COMMAND
+#         for pid==PID
+#
+# return: 0 (true)  if found line matching pid
+#         1 (false) if found no process with pid
+#
+#         Inherited from grep: 0 if a line is selected,
+#                              1 if no lines were selected, and
+#                              2 if an error occurred.
+#
+#
+pspid() {                     # Return some info to pid $1
+    #
+    # Three columns: USER PID COMMAND
+    # Only the middle column (PID) has space on both sides
+    #
+    # man 1 ps
+    # ps ax : To see every process on the system using BSD syntax
+    #
+    LC_ALL=C $Myps ax -o user,pid,comm | grep " ${1:-} "
 }
 
 
