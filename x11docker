@@ -1054,32 +1054,33 @@ termpid() {                     # kill PID $1 with codename $2
 # function waitfortheend()
 #
 waitfortheend() {               # wait for end of x11docker session
-  # signal is byte in $Timetosaygoodbyefifo
-  # decent read to wait for signal to terminate
-  case "$Usemkfifo" in
-    yes)
-      while rocknroll; do
-        bash -c "read -n1 <${FDtimetosaygoodbye}" && saygoodbye timetosaygoodbyefifo || sleep 1
-      done
-    ;;
-    no|"") # Reading from fifo fails on Windows, workaround
-      while rocknroll; do
-        sleep 2
-      done
-    ;;
-  esac
-  return 0
+    # signal is byte in $Timetosaygoodbyefifo
+    # decent read to wait for signal to terminate
+    case "$Usemkfifo" in
+        yes)
+            while rocknroll; do
+                bash -c "read -n1 <${FDtimetosaygoodbye}" && saygoodbye timetosaygoodbyefifo || sleep 1
+            done
+            ;;
+        no|"") # Reading from fifo fails on Windows, workaround
+            while rocknroll; do
+                sleep 2
+            done
+            ;;
+    esac
+    return 0
 }
 
 #
 # function watchpidlist()
 #
 watchpidlist() {                # watch list of important pids
-  # terminate x11docker if a PID in $Watchpidlist terminates
-  # serves mainly watching X server, Wayland compositor, container and hostexe
-  # echo PIDs to watch into >{FDwatchpid} (setonwatchpidlist())
-  local Pid= Containername= Line= Watchpidlist=
-  trap '' SIGINT
+    # terminate x11docker if a PID in $Watchpidlist terminates
+    # serves mainly watching X server, Wayland compositor, container and hostexe
+    # echo PIDs to watch into >{FDwatchpid} (setonwatchpidlist())
+    local Pid= Containername= Line= Watchpidlist=
+    local ListOfLines
+    trap '' SIGINT
 
   while rocknroll; do
     # check for new Pid once a second
