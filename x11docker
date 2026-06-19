@@ -1666,11 +1666,12 @@ mswindowsipcheck() {            # get WSL host IP and Windows host ip
     return 1
   fi
 
-  command -v ipcalc >/dev/null || {
-    note "mswindowsipcheck(): command ipcalc not found.
-  Please install ipcalc"
-    return 1
-  }
+    command -v ipcalc >/dev/null || {
+        note "$(trim_to_bar \
+         "|mswindowsipcheck(): command ipcalc not found.
+          |  Please install ipcalc" )"
+        return 1
+    }
 
   # https://tldp.org/LDP/abs/html/refcards.html#AEN22664
   # https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
