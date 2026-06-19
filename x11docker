@@ -887,28 +887,28 @@ finish() {      # trap EXIT routine to clean up background processes and cache
 # function finish_sigint()
 #
 finish_sigint() {               # trap SIGINT to activate debug mode on finish()
-  local Pid1pid  X11dockerpid
-  X11dockerpid="$(storeinfo dump x11dockerpid)"
-  Debugmode="yes"
-  [ "$$" = "$X11dockerpid" ] && {
-    debugnote "Received SIGINT"
-    storeinfo error=130
-    finish
-    :
-  } || {
-    debugnote "Received SIGINT in subshell $SHLVL: $$"
-    kill -s SIGINT "$X11dockerpid"
-    trap - EXIT
-    exit 130
-  }
+    local Pid1pid  X11dockerpid
+    X11dockerpid="$(storeinfo dump x11dockerpid)"
+    Debugmode="yes"
+    [ "$$" = "$X11dockerpid" ] && {
+        debugnote "Received SIGINT"
+        storeinfo error=130
+        finish
+        :
+    } || {
+        debugnote "Received SIGINT in subshell $SHLVL: $$"
+        kill -s SIGINT "$X11dockerpid"
+        trap - EXIT
+        exit 130
+    }
 }
 
 # function saygoodbye()
 saygoodbye() {                  # create file signaling watching processes to terminate
-  debugnote "time to say goodbye ($*)"
-  [ -e "$Timetosaygoodbyefile" ] && echo timetosaygoodbye >> "$Timetosaygoodbyefile"
-  [ -e "$Timetosaygoodbyefifo" ] && echo timetosaygoodbye >> "$Timetosaygoodbyefifo"
-  return 0
+    debugnote "time to say goodbye ($*)"
+    [ -e "$Timetosaygoodbyefile" ] && echo timetosaygoodbye >> "$Timetosaygoodbyefile"
+    [ -e "$Timetosaygoodbyefifo" ] && echo timetosaygoodbye >> "$Timetosaygoodbyefifo"
+    return 0
 }
 
 #### watching processes
@@ -916,23 +916,23 @@ saygoodbye() {                  # create file signaling watching processes to te
 # function checkpid()
 #
 checkpid() {                    # check if PID $1 is active
-  [ -e "/proc/${1:-NONSENSE}" ]
+    [ -e "/proc/${1:-NONSENSE}" ]
 }
 
 #
 # function containerisrunning()
 #
 containerisrunning() {          # check if container is running
-  storeinfo test containerid || return 1
-  case "$Dockervm" in
-      no)
-          checkpid      "$(storeinfo dump pid1pid)"
-          ;;
-      moby|desktop)
-          unpriv_backend "$Backendbin inspect '$(storeinfo dump containerid)'" \
-                         >/dev/null 2>&1
-          ;;
-  esac
+    storeinfo test containerid || return 1
+    case "$Dockervm" in
+        no)
+            checkpid      "$(storeinfo dump pid1pid)"
+            ;;
+        moby|desktop)
+            unpriv_backend "$Backendbin inspect '$(storeinfo dump containerid)'" \
+                           >/dev/null 2>&1
+            ;;
+    esac
 }
 
 #
