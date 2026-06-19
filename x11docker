@@ -1559,14 +1559,16 @@ storeinfo() {                   # store some information for later use
 #  Usage2: rmcr $filepath       # inplace edit $filepath Never used in this way
 #
 rmcr() {                        # remove carriage return to translate DOS/Windows newlines into UNIX newlines
-  # convert stdin if $1 is empty. Otherwise convert file $1.
-  case "${1:-}" in
-    "") sed    "s/$(printf "\r")//g"           ;;
-    *)
-        # Inplace edit $filepath. This branch is not actually used.
-        sed -i "s/$(printf "\r")//g"  "${1:-}"
-        ;;
-  esac
+    # convert stdin if $1 is empty. Otherwise convert file $1.
+    case "${1:-}" in
+        "")
+            sed    "s/$(printf "\r")//g"
+            ;;
+        *)
+            # Inplace edit $filepath. This branch is not actually used.
+            sed -i "s/$(printf "\r")//g"  "${1:-}"
+            ;;
+    esac
 }
 
 #
