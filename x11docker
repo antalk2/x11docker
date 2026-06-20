@@ -1740,7 +1740,8 @@ convertpath() {                 # convert unix and windows paths
     fi
 
     # Replace ~ with Hostuserhome or HOME in Path
-    Path="$(sed "s%~%${Hostuserhome:-${HOME:-}}%" <<< "$Path")"
+    # was: Path="$(sed "s%~%${Hostuserhome:-${HOME:-}}%" <<< "$Path")"
+    Path="${Path/[~]/${Hostuserhome:-${HOME:-}}}"
 
     # case Mode in share: Replace $Sharefolder with $Sharefoldercontainer
     if [ "$Mode" = "share" ] ; then
