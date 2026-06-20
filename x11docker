@@ -1817,19 +1817,25 @@ convertpath() {                 # convert unix and windows paths
   # global Cachefolder
   case "$Winsubsystem" in
     WSL1)
-      [ -z "$Drive" ] && case "$Mode" in
-        windows|unix|volume)
-          debugnote "convertpath(): Request of WSL path: $Path"
-          grep -q "$Cachefolder" <<< "$Path" || {
-            [ "$Readwritemode" = ":rw" ] && warning "Request of Windows path to path within WSL:
-  $Path
-  Write access from Windows host to WSL files can damage the WSL file system.
-  Read-only access is ok.
-  Option --share: You can add :ro to the path to allow read-only access.
-  Example: --share='$Path:ro'"
-          }
-        ;;
-      esac
+        if [ -z "$Drive" ] ; then
+            case "$Mode" in
+                windows|unix|volume)
+                    debugnote "convertpath(): Request of WSL path: $Path"
+                    #
+                    grep -q "$Cachefolder" <<< "$Path" || {
+                        if  [ "$Readwritemode" = ":rw" ] ; then
+                            warning "$(trim_to_bar \
+                            "|Request of Windows path to path within WSL:
+                             |  $Path
+                             |  Write access from Windows host to WSL files can damage the WSL file system.
+                             |  Read-only access is ok.
+                             |  Option --share: You can add :ro to the path to allow read-only access.
+                             |  Example: --share='$Path:ro'" )"
+                        fi
+                    }
+                    ;;
+            esac
+      fi
     ;;
   esac
 
