@@ -1702,67 +1702,84 @@ convertpath() {                 # convert unix and windows paths
     #     windows   echo Windows path                            - result: c:/path
     #     unix      echo unix path                               - result: /c/path
     #     subsystem echo path within subsystem                   - result: /cygdrive/c/path  or  /path  or /mnt/c/path
-    #     volume    echo --volume compatible syntax              - result: 'unixpath':'containerpath':rw  (or ":ro")
+    #     volume    echo --volume compatible syntax              - result: 'unixpath':'containerpath_arg':rw  (or ":ro")
     #     container echo path of volume in container             - result: /path
-    #     share     echo path of $Sharefolder/file in container  - result: /containerpath
+    #     share     echo path of $Sharefolder/file in container  - result: /containerpath_arg
     #     mount     ???
     #
     # $2: Path to convert. Arbitrary syntax, can be C:/path, /c/path, /cygdrive/c/path, /path
     #     Can have suffix :rw or :ro. If none is given, return with :rw
     #
-    # $3: Optional for mode volume: containerpath
-
-    local Mode Path Drive= Readwritemode Readwritemode_mount
+    # $3: Optional for mode volume: containerpath_arg
+    #
+    local Mode Path Drive= Readwritemode Readwritemode_mount containerpath_arg
 
     Mode="${1:-}"
     Path="${2:-}"
+    containerpath_arg="${3:-}"
 
     # check path for suffix :rw or :ro
     #
     # Let Readwritemode = last 3 characters of Path
-    Readwritemode="$(echo "$Path" | rev | cut -c1-3 | rev)"
+    # Readwritemode="$(echo "$Path" | rev | cut -c1-3 | rev)"
+    Readwritemode="${Path: -3}"
     #
     # If Readwritemode starts with ":", then
     #    Drop last 3 characters from Path.
     # else Readwritemode=":rw"
-    [ "$(cut -c1 <<< "$Readwritemode")" = ":" ] && {
-        Path="$(echo "$Path" | rev | cut -c4- | rev)"
-    } || Readwritemode=":rw"
+    ## if [ "$(cut -c1 <<< "$Readwritemode")" = ":" ] ; then
+    if [ "${Readwritemode:0:1}" = ":" ] ; then
+        ## Path="$(echo "$Path" | rev | cut -c4- | rev)"
+        Path="${Path:0:-3}"
+    else
+        Readwritemode=":rw"
+    fi
     #
     # Set Readwritemode_mount based on Readwritemode
-    [ "$Readwritemode" = ":ro" ] && Readwritemode_mount=",readonly" || Readwritemode_mount=""
+    if [ "$Readwritemode" = ":ro" ] ; then
+        Readwritemode_mount=",readonly"
+    else
+        Readwritemode_mount=""
+    fi
 
     # Replace ~ with HOME in Path
     Path="$(sed "s%~%${Hostuserhome:-${HOME:-}}%" <<< "$Path")"
 
     # case Mode in share: Replace $Sharefolder with $Sharefoldercontainer
-    [ "$Mode" = "share" ] && {
-        [ -z "$Path" ] && {
+    if [ "$Mode" = "share" ] ; then
+        if [ -z "$Path" ] ; then
             echo ""
             return 0
-        }
-        echo "${Sharefoldercontainer}${Path#$Sharefolder}" # Using global Sharefoldercontainer and Sharefolder
-        return 0
-    }
+        else
+            # Using global Sharefoldercontainer and Sharefolder
+            #
+            # Note: ${parameter#pattern} removes prefix of parameter
+            #       matching pattern
+            #
+            echo "${Sharefoldercontainer}${Path#$Sharefolder}"
+            return 0
+        fi
+    fi
 
     # Replace \ with / and // with /   in Path
     Path="$(sed 's%//%/%g ; s%\\%/%g' <<< "$Path")"
 
     # Remove possible already given mountpoint
-    Path="${Path#$Winsubmount}"                  # Using global Winsubmount
+    # using global Winsubmount
+    Path="${Path#$Winsubmount}"
 
     # Given format is /c/
-    [ "$(cut -c1,3 <<< "${Path}/")" = "//" ] && {
+    if [ "$(cut -c1,3 <<< "${Path}/")" = "//" ] ; then
         Drive="$(cut -c2 <<< "$Path")"
         Path="$(cut -c3- <<< "$Path")"
         Path="${Path:-"/"}"
-    }
+    fi
 
     # Given format is C:/
-    [ "$(cut -c2 <<< "$Path")" = ":" ] && {
+    if [ "$(cut -c2 <<< "$Path")" = ":" ] ; then
         Drive="$(cut -c1 <<< "$Path")"
         Path="$(cut -c3- <<< "$Path")"
-    }
+    fi
 
     # change C to c
     # https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
@@ -1770,19 +1787,19 @@ convertpath() {                 # convert unix and windows paths
     Drive="${Drive,}"
 
     # docker volume (same for Windows and Unix)
-    [ "${Path:0:1}" = "/" ] || {
+    if [ "${Path:0:1}" != "/" ] ; then
         # Path does not start with "/"
         case "$Mode" in
             unix|subsystem|windows)
                 echo "$Path" ;
                 debugnote "convertpath() $Mode: Docker volumes do not have a specified path on host: $Path"
                 ;;
-            volume)         echo "'$Path':'${3:-/$Path}'${Readwritemode}" ;;
-            mount)          echo "type=volume,source='$Path',target='${3:-/$Path}'${Readwritemode_mount}" ;;
-            container)      echo "${3:-/$Path}" ;;
+            volume)         echo "'$Path':'${containerpath_arg:-/$Path}'${Readwritemode}" ;;
+            mount)          echo "type=volume,source='$Path',target='${containerpath_arg:-/$Path}'${Readwritemode_mount}" ;;
+            container)      echo "${containerpath_arg:-/$Path}" ;;
         esac
         return 0
-    }
+    fi
 
     Containerpath="$Path"                                  # global Containerpath
     [ "$Createcontaineruser" = "no" ] || {                 # global Createcontaineruser
@@ -1805,11 +1822,11 @@ convertpath() {                 # convert unix and windows paths
         case "$Mode" in
             unix|subsystem) echo "$Path" ;;
             windows)        warning "convertpath(): Nonsense path conversion $Mode: $Path" ; return 1 ;;
-            #volume)         echo "'$Path':'${3:-$Path}'$Readwritemode" ;;
-            #container)      echo "${3:-$Path}" ;;
-            volume)         echo "'$Path':'${3:-$Containerpath}'${Readwritemode}" ;;
-            mount)          echo "type=bind,source='$Path',target='${3:-/$Containerpath}'${Readwritemode_mount}" ;;
-            container)      echo "${3:-$Containerpath}" ;;
+            #volume)         echo "'$Path':'${containerpath_arg:-$Path}'$Readwritemode" ;;
+            #container)      echo "${containerpath_arg:-$Path}" ;;
+            volume)         echo "'$Path':'${containerpath_arg:-$Containerpath}'${Readwritemode}" ;;
+            mount)          echo "type=bind,source='$Path',target='${containerpath_arg:-/$Containerpath}'${Readwritemode_mount}" ;;
+            container)      echo "${containerpath_arg:-$Containerpath}" ;;
         esac
         return 0
     }
@@ -1851,17 +1868,17 @@ convertpath() {                 # convert unix and windows paths
               volume)
                   # global Dockervm
                   case "$Dockervm" in
-                      no|desktop) echo "'$Path':'${3:-$Path}'$Readwritemode" ;;
-                      moby)       echo "'$Winsubpath$Path':'${3:-$Path}'$Readwritemode" ;;
+                      no|desktop) echo "'$Path':'${containerpath_arg:-$Path}'$Readwritemode" ;;
+                      moby)       echo "'$Winsubpath$Path':'${containerpath_arg:-$Path}'$Readwritemode" ;;
                   esac
                   ;;
               mount)
                   case "$Dockervm" in
-                      no|desktop)  echo "type=bind,source='$Path',target='${3:-$Path}'$Readwritemode_mount" ;;
-                      moby)        echo "type=bind,source='$Winsubpath$Path',target='${3:-$Path}'$Readwritemode_mount" ;;
+                      no|desktop)  echo "type=bind,source='$Path',target='${containerpath_arg:-$Path}'$Readwritemode_mount" ;;
+                      moby)        echo "type=bind,source='$Winsubpath$Path',target='${containerpath_arg:-$Path}'$Readwritemode_mount" ;;
                   esac
                   ;;
-              container)    echo "${3:-$Path}" ;;
+              container)    echo "${containerpath_arg:-$Path}" ;;
           esac
           ;;
       *) # Path outside of subsystem
@@ -1870,9 +1887,9 @@ convertpath() {                 # convert unix and windows paths
               windows)      echo "${Drive^}:$Path" ;;
               unix)         echo "/$Drive$Path" ;;
               subsystem)    echo "$Winsubmount/$Drive$Path" ;;
-              volume)       echo "'/$Drive$Path':'${3:-/$Drive$Path}'$Readwritemode" ;;
-              mount)        echo "type=bind,source='/$Drive$Path',target='${3:-/$Drive$Path}'$Readwritemode_mount" ;;
-              container)    echo "${3:-/$Drive$Path}" ;;
+              volume)       echo "'/$Drive$Path':'${containerpath_arg:-/$Drive$Path}'$Readwritemode" ;;
+              mount)        echo "type=bind,source='/$Drive$Path',target='${containerpath_arg:-/$Drive$Path}'$Readwritemode_mount" ;;
+              container)    echo "${containerpath_arg:-/$Drive$Path}" ;;
           esac
           ;;
   esac
