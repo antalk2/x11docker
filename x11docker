@@ -1759,23 +1759,24 @@ convertpath() {                 # convert unix and windows paths
         fi
     fi
 
-    # Replace \ with / and // with /   in Path
+    # Replace // with / and  \ with /   in Path
     Path="$(sed 's%//%/%g ; s%\\%/%g' <<< "$Path")"
+
+
 
     # Remove possible already given mountpoint
     # using global Winsubmount
-    Path="${Path#$Winsubmount}"
+    Path="${Path#$Winsubmount}" # removes prefix Winsubmount from Path
 
+    ## Separate drive prefix,  '/c/'  or 'C:/' .
     local Drive=
-    # Given format is /c/
     if [ "$(cut -c1,3 <<< "${Path}/")" = "//" ] ; then
+        # Given format is /c/
         Drive="$(cut -c2 <<< "$Path")"
         Path="$(cut -c3- <<< "$Path")"
         Path="${Path:-"/"}"
-    fi
-
-    # Given format is C:/
-    if [ "$(cut -c2 <<< "$Path")" = ":" ] ; then
+    elif [ "$(cut -c2 <<< "$Path")" = ":" ] ; then
+        # Given format is C:/
         Drive="$(cut -c1 <<< "$Path")"
         Path="$(cut -c3- <<< "$Path")"
     fi
