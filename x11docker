@@ -1712,37 +1712,34 @@ convertpath() {                 # convert unix and windows paths
     #
     # $3: Optional for mode volume: containerpath_arg
     #
-    local Mode Path Drive= Readwritemode Readwritemode_mount containerpath_arg
+    local Mode="${1:-}"
+    local Path="${2:-}"
+    local containerpath_arg="${3:-}"
 
-    Mode="${1:-}"
-    Path="${2:-}"
-    containerpath_arg="${3:-}"
-
-    # check path for suffix :rw or :ro
+    # Check path for suffix :rw or :ro
+    local Readwritemode
     #
-    # Let Readwritemode = last 3 characters of Path
-    # Readwritemode="$(echo "$Path" | rev | cut -c1-3 | rev)"
-    Readwritemode="${Path: -3}"
+    # If the last 3 characters of Path starts with ":",
+    # then Readwritemode is these 3 characters,
+    #      and these are removed from Path.
+    # otherwise Readwritemode=":rw"
     #
-    # If Readwritemode starts with ":", then
-    #    Drop last 3 characters from Path.
-    # else Readwritemode=":rw"
-    ## if [ "$(cut -c1 <<< "$Readwritemode")" = ":" ] ; then
-    if [ "${Readwritemode:0:1}" = ":" ] ; then
-        ## Path="$(echo "$Path" | rev | cut -c4- | rev)"
+    if [ "${Path: -3:1}" = ":" ] ; then
+        Readwritemode="${Path: -3}"
         Path="${Path:0:-3}"
     else
         Readwritemode=":rw"
     fi
-    #
+
     # Set Readwritemode_mount based on Readwritemode
+    local Readwritemode_mount
     if [ "$Readwritemode" = ":ro" ] ; then
         Readwritemode_mount=",readonly"
     else
         Readwritemode_mount=""
     fi
 
-    # Replace ~ with HOME in Path
+    # Replace ~ with Hostuserhome or HOME in Path
     Path="$(sed "s%~%${Hostuserhome:-${HOME:-}}%" <<< "$Path")"
 
     # case Mode in share: Replace $Sharefolder with $Sharefoldercontainer
@@ -1768,6 +1765,7 @@ convertpath() {                 # convert unix and windows paths
     # using global Winsubmount
     Path="${Path#$Winsubmount}"
 
+    local Drive=
     # Given format is /c/
     if [ "$(cut -c1,3 <<< "${Path}/")" = "//" ] ; then
         Drive="$(cut -c2 <<< "$Path")"
