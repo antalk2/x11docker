@@ -2085,7 +2085,7 @@ createmountopt(){               # create option to mount file or device, check i
   esac
   #
   case "$Modus" in
-    mount) 
+    mount)
       echo "--mount type=bind,source=$(escapestring "$File"),target=$(escapestring "$File")$Rw"
     ;;
     device)
