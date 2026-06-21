@@ -1954,10 +1954,19 @@ convertpath() {                 # convert unix and windows paths
         Readwritemode_mount=""
     fi
 
+    #
+    # convertpath_expand_tilde
+    #
+    # used_global: Hostuserhome
+    # used_global: HOME
+    #
     # Replace ~ with Hostuserhome or HOME in Path
     # was: Path="$(sed "s%~%${Hostuserhome:-${HOME:-}}%" <<< "$Path")"
     Path="${Path/[~]/${Hostuserhome:-${HOME:-}}}"
 
+    #
+    # convertpath_handle_Mode_share
+    #
     # case Mode in share: Replace $Sharefolder with $Sharefoldercontainer
     if [ "$Mode" = "share" ] ; then
         if [ -z "$Path" ] ; then
@@ -1965,6 +1974,8 @@ convertpath() {                 # convert unix and windows paths
             return 0
         else
             # Using global Sharefoldercontainer and Sharefolder
+            #
+            # Replace prefix Sharefolder with Sharefoldercontainer
             #
             # Note: ${parameter#pattern} removes prefix of parameter
             #       matching pattern
