@@ -12958,8 +12958,11 @@ check_optionset() {             # check if unallowed options in $2 are set for o
 }
 
 #### main
+#
+#
+#
 declare_variables() {           # declare global variables
-  export IFS=$' \n\t'                             # set IFS to default
+  export IFS=$' \n\t'           # set IFS to default
 
   # Global environment variables used in x11docker
   ALSA_CARD="$(check_envvar "${ALSA_CARD:-}")"
@@ -12983,7 +12986,7 @@ declare_variables() {           # declare global variables
   __GLX_VENDOR_LIBRARY_NAME="$(check_envvar "${__GLX_VENDOR_LIBRARY_NAME:-}")"
   __NV_PRIME_RENDER_OFFLOAD="$(check_envvar "${__NV_PRIME_RENDER_OFFLOAD:-}")"
   __VK_LAYER_NV_optimus="$(check_envvar "${__VK_LAYER_NV_optimus:-}")"
-
+  #
   # Add possibly missing PATH entries
   PATH="${PATH:-"/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/games:/usr/games"}"
   grep -q ':/sbin:'            <<< ":$PATH:" || PATH="$PATH:/sbin"
@@ -13036,155 +13039,481 @@ declare_variables() {           # declare global variables
   Coluline="${Esc}[4m"
   Colnorm="${Esc}[0m"
 
-  # x11docker startup environment
-  Runsinsnap=""                                   # docker runs in Ubuntu snap yes/no
-  Runsinteractive=""                              # --enforce-i: Script runs in bash interactive mode (bash -i) yes/no.
-  Runsinterminal=""                               # x11docker runs in a terminal yes/no
-  Runsonconsole=""                                # x11docker runs on tty yes/no
-  Runsoverssh=""                                  # x11docker runs over SSH yes/no. Makes a difference for --hostdisplay
-  Runssourced=""                                  # x11docker has been sourced yes/no
+  # --- x11docker startup environment ---
+  
+  # Runsinsnap : docker runs in Ubuntu snap yes/no
+  Runsinsnap=""
+  
+  # Runsinteractive : --enforce-i: Script runs in bash interactive
+  #                   mode (bash -i) yes/no.
+  Runsinteractive=""
+  
+  # Runsinterminal : x11docker runs in a terminal yes/no
+  Runsinterminal=""
+  
+  # Runsonconsole : x11docker runs on tty yes/no
+  Runsonconsole=""
+  
+  # Runsoverssh : x11docker runs over SSH yes/no. Makes a difference
+  #               for --hostdisplay
+  Runsoverssh=""
+  
+  # Runssourced : x11docker has been sourced yes/no
+  Runssourced=""
 
-  # Generated scripts
-  Clipboardrc="clipboardrc"                       # --clipboard: Generated script for text clipboard sharing
-  Cmdrc="cmdrc"                                   # Generated script starting container command
-  Containerrc="containerrc"                       # Generated script starting cmdrc
-  Containerrootrc="containerrootrc"               # Generated script to set up container, e.g. user creation. Runs as root in container.
-  Sshenvscript="sshenv"                           # Generated script to manually set environment variables for ssh -X
-  Xinitrc="xinitrc"                               # Generated script to set up X, e.g. cookie and xrandr
-  Xtermrc="xtermrc"                               # Generated script for password prompt
+  # --- Generated scripts ---
+  
+  # Clipboardrc : --clipboard: Generated script for text clipboard sharing
+  Clipboardrc="clipboardrc"
+  
+  # Cmdrc : Generated script starting container command
+  Cmdrc="cmdrc"
 
-  # Internal messages
-  Logmessages=""                                  # Stores messages until logfile is available, needed by logentry()
-  Messagefifo="message.fifo"                      # Message channel for warning/verbose/debugnote/note/error within container,, containerrootrc and others
-  Storeinfofile="store.info"                      # File to store some info like id, pid, name, exit code
-  Storepidfile="store.pids"                       # File to store pids and names of background processes that should be terminated on exit
-  Timetosaygoodbyefile="timetosaygoodbye"         # File giving term signal to all parties
-  Timetosaygoodbyefifo="timetosaygoodbye.fifo"    # Message channel for --init=openrc|runit|sysvinit to shut down on x11docker signal
-  Usemkfifo=""                                    # Not on Windows nor with kata-runtime
-  Watchpidfifo="watchpid.fifo"                    # Message channel to transfer pids to watchpidlist()
+  # Containerrc : Generated script starting cmdrc
+  Containerrc="containerrc"
+  
+  # Containerrootrc : Generated script to set up container, e.g. user
+  #                   creation. Runs as root in container.
+  Containerrootrc="containerrootrc"
 
-  # Logfiles
-  Backendcommandfile="docker.command"             # File to store generated docker command, needed for --interactive
-  Compositorlogfile="compositor.log"              # Logfile for weston or kwin_wayland
-  Containerlogfile="container.log"                # Logfile for container output other than container command output
-  Logfile=""                                      # $Cachefolder/x11docker.log (current log)
-  Logfilebackup=""                                # $Cachebasefolder/x11docker.log (latest terminated log)
-  Messagelogfile="message.log"                    # Logfile for warning/verbose/debugnote/note/error
-  Xinitlogfile="xinit.log"                        # Logfile for xinit/X server
-  Xpraclientlogfile="xpra.client.log"             # Logfile for xpra client
-  Xpraserverlogfile="xpra.server.log"             # Logfile for xpra server
+  # Sshenvscript : Generated script to manually set environment
+  #                variables for ssh -X
+  Sshenvscript="sshenv"
+  
+  # Xinitrc : Generated script to set up X, e.g. cookie and xrandr
+  Xinitrc="xinitrc"
+  
+  # Xtermrc : Generated script for password prompt
+  Xtermrc="xtermrc"
 
-  # Generated commands
-  Compositorcommand=""                            # Command to start Weston or KWin
-  Backendcommand=""                               # Command to run docker
-  Xcommand=""                                     # Command to start X server
-  Xpraclientcommand=""                            # xpra client command
-  Xpraservercommand=""                            # xpra server command
+  # --- Internal messages ---
+  
+  # Logmessages : Stores messages until logfile is available, needed
+  #               by logentry()
+  Logmessages=""
+  
+  # Messagefifo : Message channel for
+  #               warning/verbose/debugnote/note/error within
+  #               container,, containerrootrc and others
+  #
+  Messagefifo="message.fifo"
+  
+  # Storeinfofile : File to store some info like id, pid, name, exit
+  #                 code
+  #
+  Storeinfofile="store.info"
 
-  # Users
-  Hostuser=""                                     # $Lognameuser or --hostuser. Unprivileged user for non-root commands. Compare unpriv()
+  # Storepidfile : File to store pids and names of background
+  #                processes that should be terminated on exit
+  Storepidfile="store.pids"
+  
+  # Timetosaygoodbyefile : File giving term signal to all parties
+  Timetosaygoodbyefile="timetosaygoodbye"
+
+  # Timetosaygoodbyefifo : Message channel for
+  #                       --init=openrc|runit|sysvinit
+  #                       to shut down on x11docker signal
+  #
+  Timetosaygoodbyefifo="timetosaygoodbye.fifo"
+  
+  # Usemkfifo : Not on Windows nor with kata-runtime
+  Usemkfifo=""
+
+  # Watchpidfifo : Message channel to transfer pids to watchpidlist()
+  Watchpidfifo="watchpid.fifo"
+
+  # --- Logfiles ---
+
+  # Backendcommandfile : File to store generated docker command,
+  #                      needed for --interactive
+  Backendcommandfile="docker.command"
+
+  # Compositorlogfile : Logfile for weston or kwin_wayland
+  Compositorlogfile="compositor.log"
+  
+  # Containerlogfile : Logfile for container output other than
+  #                    container command output
+  #
+  Containerlogfile="container.log"
+
+  # Logfile : $Cachefolder/x11docker.log (current log)
+  Logfile=""
+
+  # Logfilebackup : $Cachebasefolder/x11docker.log (latest terminated
+  #                 log)
+  #
+  Logfilebackup=""
+
+  # Messagelogfile : Logfile for warning/verbose/debugnote/note/error
+  Messagelogfile="message.log"
+  
+  # Xinitlogfile : Logfile for xinit/X server
+  Xinitlogfile="xinit.log"
+
+  # Xpraclientlogfile : Logfile for xpra client
+  Xpraclientlogfile="xpra.client.log"
+  
+  # Xpraserverlogfile : Logfile for xpra server
+  Xpraserverlogfile="xpra.server.log"
+
+  # --- Generated commands ---
+
+  # Compositorcommand : Command to start Weston or KWin
+  Compositorcommand=""
+
+  # Backendcommand : Command to run docker
+  Backendcommand=""
+
+  # Xcommand : Command to start X server
+  Xcommand=""
+
+  # Xpraclientcommand : xpra client command
+  Xpraclientcommand=""
+
+  # Xpraservercommand : xpra server command
+  Xpraservercommand=""
+
+  # --- Users ---
+
+  # Hostuser : $Lognameuser or --hostuser. Unprivileged user for
+  #            non-root commands. Compare unpriv()
+  #
+  Hostuser=""
   Hostusergid=""
   Hostuserhome=""
   Hostuseruid=""
-  Containeruser=""                                # --user: Container user. Default: same as $Hostuser.
+
+  
+  # Containeruser : --user: Container user. Default: same as
+  #                 $Hostuser.
+  #
+  Containeruser=""
   Containeruseruid=""
   Containerusergid=""
   Containerusergroup=""
-  Containerusergroups=""                          # --group-add: Additional groups for container user
-  Containeruserhome=""                            # HOME path within container
-  Containeruserhosthome=""                        # HOME path of container user on host
+
+  # Containerusergroups : --group-add: Additional groups for container
+  #                       user
+  #
+  Containerusergroups=""
+  
+  # Containeruserhome : HOME path within container
+  Containeruserhome=""
+  
+  # Containeruserhosthome : HOME path of container user on host
+  Containeruserhosthome=""
+  
   Containeruserpassword=''
-  Createcontaineruser="yes"                       # exception: --user=RETAIN
-  Lognameuser=""                                  # $(logname) or $SUDO_USER or $PKEXEC_USER
+  
+  # Createcontaineruser : exception: --user=RETAIN
+  Createcontaineruser="yes"
+  
+  # Lognameuser :  $(logname) or $SUDO_USER or $PKEXEC_USER
+  Lognameuser=""
+
+  # Passwordfile : 
   Passwordfile="$HOME/.config/x11docker/passwd"
-  Persistanthomevolume=""                         # --home: Path to shared host folder or docker volume used as HOME in container.
-  Startuser=""                                    # User who started x11docker
-  Unpriv=""                                       # Command to run commands as unprivileged user
-  Containerusershell="auto"                       # --shell: Preferred user shell
+  
+  # Persistanthomevolume : --home: Path to shared host folder or
+  #                        docker volume used as HOME in container.
+  #
+  Persistanthomevolume=""
+  
+  # Startuser : User who started x11docker
+  Startuser=""
 
-  # Hostsystem
-  Cgroupversion=""                                # Needed for --init=systemd
-  Hostarchitecture=""                             # uname -m, checked
-  Hostcanwatchroot=""                             # x11docker can watch root processes yes/no. Related to $Hosthidepid
-  Hostdisplay=""                                  # Environment variable DISPLAY
-  Hostdisplaynumber=""                            # DISPLAY without : (and without possible IP)
-  Hosthidepid=""                                  # /proc is mounted with hidepid=2 yes/no. Seen on NixOS.
-  Hostip=""                                       # An IP address to access host. Preferred: IP of docker daemon
-  Hostipwindows=""                                # IP address of Windows host
-  Hostlibc=""                                     # glibc or musl. Can be important for locale and timezone.
-  Hostlocaltimefile=""                            # Time zone from host, myrealpath /etc/localtime
-  Hostmitshm=""                                   # X on host has extension MIT-SHM enabled yes/no. Assume yes, check later
-  Hostsystem=""                                   # $ID from /etc/os-release
-  Hostutctime=""                                  # Time zone from host as offset to UTC
-  Hostwaylandsocket="$WAYLAND_DISPLAY"            # Store host wayland socket name
-  Hostxauthority="Xauthority.host.$(unspecialstring "${DISPLAY:-unknown}")"   # File to store copy of $XAUTHORITY
-  Hostxenv=""                                     # Collection of host X environment variables
-  Hostxoverip=""                                  # Host X uses X over IP/TCP
-  Hostxsocket=""                                  # Socket of DISPLAY in /tmp/.X11-unix
-  Jqbin=""                                        # path to jq binary
-  Myps=""                                         # Command ps or procps
-  Nvidiacontainerfile="/usr/local/bin/NVIDIA-installer.run"  # --gpu: Path to nvidia installer in container
-  Nvidiaversion=""                                # --gpu: Proprietary nvidia driver version on host
-  Nvidiainstallerfile=""                          # --gpu: Proprietary nvidia driver installer for container in [...]local/share/x11docker
-  Pythonbin=""                                    # path to python binary
-  X11unixrw=""                                    # r/w permissions on /tmp/.X11-unix
+  # Unpriv : Command to run commands as unprivileged user
+  Unpriv=""
+  
+  # Containerusershell : --shell: Preferred user shell
+  Containerusershell="auto"
 
-  # MS Windows
-  Winpty=""                                       # Path to winpty for --interactive on MS Windows
-  Winsubmount=""                                  # Path within subsystem to mounted MS Windows drives
-  Winsubpath=""                                   # Path within MS Windows to subsystem files
-  Winsubsystem=""                                 # MS Windows subsystem WSL1, WSL2, MSYS2 or CYGWIN
-  Dockervm=""                                       # MS Windows: Use MobyVM yes/no (No only for WSL2 possible)
+  # --- Hostsystem ---
 
-  # Cache folders
-  Cachebasefolder=""                              # --cachebasedir Base cache folder
-  Cachefolder=""                                  # Subfolder of $Cachebasefolder for current container
+  # Cgroupversion : Needed for --init=systemd
+  Cgroupversion=""
+  
+  # Hostarchitecture : uname -m, checked
+  Hostarchitecture=""
+  
+  # Hostcanwatchroot : x11docker can watch root processes
+  #                   yes/no. Related to $Hosthidepid
+  #
+  Hostcanwatchroot=""
+  
+  # Hostdisplay : Environment variable DISPLAY
+  Hostdisplay=""
+  
+  # Hostdisplaynumber : DISPLAY without : (and without possible IP)
+  Hostdisplaynumber=""
+  
+  # Hosthidepid : /proc is mounted with hidepid=2 yes/no. Seen on NixOS.
+  #               https://linux-audit.com/linux-system-hardening-adding-hidepid-to-proc/
+  #
+  Hosthidepid=""
+
+  # Hostip : An IP address to access host. Preferred: IP of docker
+  #          daemon
+  #
+  Hostip=""
+
+  # Hostipwindows : IP address of Windows host
+  Hostipwindows=""
+
+  # Hostlibc : glibc or musl. Can be important for locale and timezone.
+  Hostlibc=""
+
+  # Hostlocaltimefile : Time zone from host, myrealpath /etc/localtime
+  Hostlocaltimefile=""
+
+  # Hostmitshm : X on host has extension MIT-SHM enabled
+  #              yes/no. Assume yes, check later
+  Hostmitshm=""
+
+  # Hostsystem : $ID from /etc/os-release
+  Hostsystem=""
+
+  # Hostutctime : Time zone from host as offset to UTC
+  Hostutctime=""
+
+  # Hostwaylandsocket : Store host wayland socket name
+  Hostwaylandsocket="$WAYLAND_DISPLAY"
+  
+  # Hostxauthority : File to store copy of $XAUTHORITY
+  Hostxauthority="Xauthority.host.$(unspecialstring "${DISPLAY:-unknown}")"
+  
+  # Hostxenv : Collection of host X environment variables
+  Hostxenv=""
+  
+  # Hostxoverip : Host X uses X over IP/TCP
+  Hostxoverip=""
+
+  # Hostxsocket : Socket of DISPLAY in /tmp/.X11-unix
+  Hostxsocket=""
+
+  # Jqbin : path to jq binary
+  Jqbin=""
+
+  # Myps : Command ps or procps
+  Myps=""
+  
+  # Nvidiacontainerfile : --gpu: Path to nvidia installer in container
+  Nvidiacontainerfile="/usr/local/bin/NVIDIA-installer.run"
+  
+  # Nvidiaversion : --gpu: Proprietary nvidia driver version on host
+  Nvidiaversion=""
+  
+  # Nvidiainstallerfile : --gpu: Proprietary nvidia driver installer
+  #                       for container in [...]local/share/x11docker
+  #
+  Nvidiainstallerfile=""
+  
+  # Pythonbin : path to python binary
+  Pythonbin=""
+
+  # X11unixrw : r/w permissions on /tmp/.X11-unix
+  #             yes/no
+  #
+  X11unixrw=""
+
+  # -- MS Windows ---
+
+  # Winpty : Path to winpty for --interactive on MS Windows
+  #          Note: https://github.com/rprichard/winpty
+  #
+  Winpty=""
+
+  # Winsubmount : Path within subsystem to mounted MS Windows drives
+  #               Can be: "/mnt" "".
+  #               The DIRECTORY where DIRECTORY/c/Windows/System32/cmd.exe can be found.
+  #
+  Winsubmount=""
+
+  # Winsubpath : Path within MS Windows to subsystem files
+  #
+  Winsubpath=""
+
+  # Winsubsystem : MS Windows subsystem WSL1, WSL2, MSYS2 or CYGWIN
+  Winsubsystem=""
+
+  # Dockervm : MS Windows: Use MobyVM yes/no (No only for WSL2 possible)
+  #
+  #            Note: MobiVM is an ahead-of-time compiler for Java
+  #            bytecode, targeting iOS, macOS and Linux.
+  #
+  Dockervm=""
+
+  # --- Cache folders ---
+
+  # Cachebasefolder : --cachebasedir Base cache folder
+  Cachebasefolder=""
+
+  # Cachefolder : Subfolder of $Cachebasefolder for current container
+  Cachefolder=""
+
+  # Localsharedir : For example: "$Hostuserhome/.local/share/x11docker"
   Localsharedir=""
-  Sharefolder="share"                             # Subfolder of $Cachefolder for cache files shared with container
-  Sharefoldercontainer="/x11docker"               # Mountpoint of $Sharefolder in container
 
-  # stdin stdout stderr
-  Cmdstdinfifo="stdin"                            # stdin for container command. fifo/named pipe to forward stdin of x11docker to container command
-  Cmdstderrlogfile="stderr"                       # stderr for container command
-  Cmdstdoutlogfile="stdout"                       # stdout for container command
-  Forwardstdin="no"                               # --stdin: forward stdin to container command yes/no
+  # Sharefolder : Subfolder of $Cachefolder for cache files shared
+  #               with container
+  #
+  Sharefolder="share"
+  
+  # Sharefoldercontainer : Mountpoint of $Sharefolder in container
+  Sharefoldercontainer="/x11docker"
 
-  # X and Wayland configuration
-  Autochooseserver="yes"                          # --auto: automatic choice of X server (default)
-  Checkforopenwindow=""                           # --checkwindow
-  Cleanxhost="no"                                 # --clean-xhost: remove xhost access policies on host X
+  # --- stdin stdout stderr ---
+
+  # Cmdstdinfifo : stdin for container command. fifo/named pipe to
+  #                forward stdin of x11docker to container command
+  #
+  Cmdstdinfifo="stdin"
+  
+  # Cmdstderrlogfile : stderr for container command
+  Cmdstderrlogfile="stderr"
+
+  # Cmdstdoutlogfile : stdout for container command
+  Cmdstdoutlogfile="stdout"
+
+  # Forwardstdin : --stdin: forward stdin to container command yes/no
+  Forwardstdin="no"
+
+  # --- X and Wayland configuration ---
+
+  # Autochooseserver : --auto: automatic choice of X server (default)
+  Autochooseserver="yes"
+
+  # Checkforopenwindow : --checkwindow  yes/no
+  Checkforopenwindow=""
+
+  # Cleanxhost : --clean-xhost: remove xhost access policies on host X
+  Cleanxhost="no"
+
+  # Compositorerrorcodes : pattern used in waitforlogentry start_compositor() ...
+  #
   Compositorerrorcodes="Failed to process Wayland|failed to create display|] fatal:"
-  Desktopmode="no"                                # --desktop: image contains a desktop environment.
-  Dpi=""                                          # --dpi: dots per inch. Influences font size
-  Fullscreen="no"                                 # --fullscreen: Fullscreen mode
-  Lastcheckedxserver=""                           # check_xdepends(): Last X server option that was checked
-  Lastcheckedxserverresult=""                     # check_xdepends(): Result of last check. Avoids double-checking.
-  Libdlsofile=""                                  # --hostdisplay: needed for XlibNoSHM
-  Maxxaxis=""                                     # Maximal X screen size of display
-  Maxyaxis=""                                     # Maximal Y screen size of display
+
+  # Desktopmode : --desktop: image contains a desktop environment.
+  Desktopmode="no"
+
+  
+  # Dpi : --dpi: dots per inch. Influences font size
+  Dpi=""
+
+  # Fullscreen : --fullscreen: Fullscreen mode
+  Fullscreen="no"
+  
+  # Lastcheckedxserver : check_xdepends(): Last X server option that
+  #                      was checked
+  #
+  Lastcheckedxserver=""
+  
+  # Lastcheckedxserverresult : check_xdepends(): Result of last
+  #                            check. Avoids double-checking.
+  #
+  Lastcheckedxserverresult=""
+
+  # Libdlsofile : --hostdisplay: needed for XlibNoSHM
+  Libdlsofile=""
+  
+  # Maximal X screen size of display
+  Maxxaxis=""
+
+  # Maxyaxis : Maximal Y screen size of display
+  Maxyaxis=""
+
+  # Modelinefilebasepath :
   Modelinefilebasepath="modelines"
-  Newdisplay=""                                   # --display: New DISPLAY for new X server
-  Newdisplaynumber=""                             # --display: New display number for new X server.
-  Newwaylandsocket=""                             # Wayland socket of $Compositorcommand
-  Newxenv=""                                      # Environment variables for new X server: DISPLAY XAUTHORITY XSOCKET WAYLAND_DISPLAY XDG_RUNTIME_DIR
-  Newxenv_cr=""                                   # Like Newxenv, but with newlines
-  Newxlock=""                                     # .Xn-lock - exists for running X server with socket n
-  Newxsocket=""                                   # New X unix socket
-  Newxvt=""                                       # --vt: number of virtual console to use for --xorg
-  Numbersinusefile="displaynumbers.$(date +%y_%m_%d)" # File to store display numbers used today. Helps to avoid race conditions on simultaneous startups
-  Nxagentclientrc="nxagent.nxclientrc"            # --nxagent NX_CLIENT script to catch nxagent messages
-  Nxagentkeysfile="nxagent.keys"                  # --nxagent keyboard shortcut config
-  Nxagentoptionsfile="nxagent.options"            # --nxagent options not available on cli, but possible in config file
-  Modeline=""                                     # Screen modeline describing display size, see "man cvt".
-  Outputcount="1"                                 # --output-count: quantum of virtual screens for Weston or Xephyr
-  Rotation=""                                     # --rotate: Rotation for --weston, --weston-xwayland or --xorg: 0/90/180/270/flipped/flipped-90/..
-  Satelliteversion=""                             # --satellite: version of xwayland-satellite
-  Scaling=""                                      # --scale: Scaling factor for xpra and weston
-  Screensize=""                                   # --size XxY: Display size
-  Setupwayland="no"                               # --wayland, --kwin, --weston --hostwayland: Provide a Wayland environment
-  Sharehostwayland="no"                           # --hostwayland, --wayland
-  Waylandtoolkitenv="XDG_SESSION_TYPE=wayland GDK_BACKEND=wayland QT_QPA_PLATFORM=wayland CLUTTER_BACKEND=wayland SDL_VIDEODRIVER=wayland ELM_DISPLAY=wl ELM_ACCEL=opengl ECORE_EVAS_ENGINE=wayland_egl"
-  Westonarg=""                                    # --weston=ARG
+
+  # Newdisplay : --display: New DISPLAY for new X server
+  Newdisplay=""
+
+  # Newdisplaynumber : --display: New display number for new X server.
+  Newdisplaynumber=""
+
+  # Newwaylandsocket : Wayland socket of $Compositorcommand
+  Newwaylandsocket=""
+  
+  # Newxenv : Environment variables for new X server: DISPLAY
+  #           XAUTHORITY XSOCKET WAYLAND_DISPLAY XDG_RUNTIME_DIR
+  #
+  Newxenv=""
+  
+  # Newxenv_cr : Like Newxenv, but with newlines
+  Newxenv_cr=""
+
+  # Newxlock : .Xn-lock - exists for running X server with socket n
+  Newxlock=""
+
+  # Newxsocket New X unix socket
+  Newxsocket=""
+
+  # Newxvt : --vt: number of virtual console to use for --xorg
+  #
+  Newxvt=""
+
+  # Numbersinusefile : File to store display numbers used today. Helps
+  #                    to avoid race conditions on simultaneous
+  #                    startups
+  #
+  Numbersinusefile="displaynumbers.$(date +%y_%m_%d)"
+
+  # Nxagentclientrc : --nxagent NX_CLIENT script to catch nxagent
+  #                   messages
+  #
+  Nxagentclientrc="nxagent.nxclientrc"
+
+  # Nxagentkeysfile : --nxagent keyboard shortcut config
+  Nxagentkeysfile="nxagent.keys"
+  
+  # Nxagentoptionsfile : --nxagent options not available on cli, but
+  #                      possible in config file
+  Nxagentoptionsfile="nxagent.options"
+
+  # Modeline : Screen modeline describing display size, see "man cvt".
+  Modeline=""
+
+  # Outputcount : --output-count: quantum of virtual screens for
+  #               Weston or Xephyr
+  #
+  Outputcount="1"
+
+  # Rotation : --rotate: Rotation for --weston, --weston-xwayland or
+  #                      --xorg: 0/90/180/270/flipped/flipped-90/..
+  #
+  Rotation=""
+
+  # Satelliteversion : --satellite: version of xwayland-satellite
+  Satelliteversion=""
+
+  # Scaling : --scale: Scaling factor for xpra and weston
+  Scaling=""
+
+  # Screensize : --size XxY: Display size
+  Screensize=""
+
+  # Setupwayland : --wayland, --kwin, --weston --hostwayland: Provide
+  #                a Wayland environment
+  Setupwayland="no"
+
+  # Sharehostwayland : --hostwayland, --wayland
+  Sharehostwayland="no"
+
+  # Waylandtoolkitenv : 
+  Waylandtoolkitenv="$(echo \
+                            " XDG_SESSION_TYPE=wayland" \
+                            " GDK_BACKEND=wayland"      \
+                            " QT_QPA_PLATFORM=wayland"  \
+                            " CLUTTER_BACKEND=wayland"  \
+                            " SDL_VIDEODRIVER=wayland"  \
+                            " ELM_DISPLAY=wl"           \
+                            " ELM_ACCEL=opengl"         \
+                            " ECORE_EVAS_ENGINE=wayland_egl" )"
+
+  
+  # Westonarg : --weston=ARG
+  Westonarg=""
+
   Xauthentication="yes"                           # --xauth: cookie authentication
   Xaxis=""                                        # Virtual screen width
   Xcomposite=""                                   # --xcomposite: +extension COMPOSITE yes/no
