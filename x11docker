@@ -10883,6 +10883,7 @@ parse_options() {               # parse cli options
   local Shortoptions Longoptions Parsedoptions Presetoptions Presetfile
   Shortoptions="aAcdDfFghHiIKlmnpPqtTvVwWxXyY"
   Shortoptions="${Shortoptions}e"                                                                                             # deprecated
+  Longoptions=""
   Longoptions="$Longoptions,auto,desktop,tty,wayland,wm::,xc::,xonly,xw"                                                      # Influencing auto-setup of X/Wayland/x11docker
   Longoptions="$Longoptions,hostdisplay,nxagent,runx,xephyr,xpra,xpra2,xorg,xvfb"                                             # X servers
   Longoptions="$Longoptions,weston-xwayland,xpra-xwayland,xpra2-xwayland,xwayland,satellite"                                  # X servers depending on a Wayland compositor
