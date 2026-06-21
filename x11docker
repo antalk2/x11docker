@@ -46,6 +46,37 @@ if false; then
     echo "$x"
 fi
 
+#
+# Debug stuff
+#
+
+# https://gitlab.com/kyb/autorsync/-/blob/master/utils.bash#L84
+
+set -eETuo errexit -o nounset -o pipefail #-o errtrace -o functrace
+shopt -s expand_aliases lastpipe #gnu_errfmt globstar huponexit inherit_errexit localvar_inherit
+
+
+
+function echodbg  { >/dev/stderr echo $'\e[0;36m'"DBG  $@"$'\e[0m'; }
+
+stacktrace() {
+    local i=1 line file func
+    while read -r line func file < <(caller $i); do
+        echo >&2 "[$i] $file:$line $func(): $(sed -n ${line}p $file)"
+        ((i++))
+    done
+}
+
+function stacktrace2 {
+   local i=${1:-1} size=${#BASH_SOURCE[@]}
+   ((i<size)) && echodbg "STACKTRACE"
+   for ((; i < size-1; i++)) ;do  ## -1 to exclude main()
+      ((frame=${#BASH_SOURCE[@]}-i-2 ))
+      echodbg "[$frame] ${BASH_SOURCE[$i]:-}:${BASH_LINENO[$i]} ${FUNCNAME[$i+1]}()"
+   done
+}
+
+
 
 ## function usage()
 usage() {                       # --help: show usage information
