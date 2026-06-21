@@ -71,7 +71,7 @@ stacktrace() {
     echo >&2 "--- stacktrace end ---"
 }
 
-function stacktrace2 {
+stacktrace2() {
    local i=${1:-1} size=${#BASH_SOURCE[@]}
    ((i<size)) && echodbg "STACKTRACE"
    for ((; i < size-1; i++)) ;do  ## -1 to exclude main()
