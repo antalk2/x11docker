@@ -2021,8 +2021,23 @@ convertpath() {                 # convert unix and windows paths
                 echo "$Path" ;
                 debugnote "convertpath() $Mode: Docker volumes do not have a specified path on host: $Path"
                 ;;
-            volume)         echo "'$Path':'${containerpath_arg:-/$Path}'${Readwritemode}" ;;
-            mount)          echo "type=volume,source='$Path',target='${containerpath_arg:-/$Path}'${Readwritemode_mount}" ;;
+            volume)
+                ## docker volume to volume?
+                ## "'$Path':'${containerpath_arg}'${Readwritemode}"
+                ## Looks like:  "'/path1':'/path2':ro"
+                ##
+                ## Examples: grep 'convertpath volume'
+                ## docker   --volume $(convertpath volume "$Persistanthomevolume" "$Containeruserhomebasefolder")"
+                ## docker   --device $(convertpath volume "$Line")"
+                ##
+                echo "'$Path':'${containerpath_arg:-/$Path}'${Readwritemode}"
+                ;;
+            mount)
+                ##
+                ## 
+                ##
+                echo "type=volume,source='$Path',target='${containerpath_arg:-/$Path}'${Readwritemode_mount}"
+                ;;
             container)      echo "${containerpath_arg:-/$Path}" ;;
         esac
         return 0
