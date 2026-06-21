@@ -1771,14 +1771,21 @@ convertpath() {                 # convert unix and windows paths
     ## Separate drive prefix,  '/c/'  or 'C:/' .
     local Drive=
     if [ "$(cut -c1,3 <<< "${Path}/")" = "//" ] ; then
-        # Given format is /c/
-        Drive="$(cut -c2 <<< "$Path")"
-        Path="$(cut -c3- <<< "$Path")"
-        Path="${Path:-"/"}"
+        # Given format is /c/xxx
+        # Drive="$(cut -c2  <<< "$Path")" # c
+        Drive="${Path:1:1}"               # c
+        # Path="$(cut  -c3- <<< "$Path")" # /xxx
+        Path="${Path:2}"                  # /xxx
+        # Path="${Path:-"/"}" # << we already had "/" at (1-based) character 3
     elif [ "$(cut -c2 <<< "$Path")" = ":" ] ; then
-        # Given format is C:/
-        Drive="$(cut -c1 <<< "$Path")"
-        Path="$(cut -c3- <<< "$Path")"
+        # Given format is C:/xxx
+        # Drive="$(cut -c1  <<< "$Path")" # C
+        # Path="$( cut -c3- <<< "$Path")" # /xxx
+        Drive="${Path:0:1}"               # C
+        Path="${Path:2}"                  # /xxx
+        # We only tested "^.[:]" here, so Path may be empty.
+        # If Path is empty, change it to "/"
+        Path="${Path:-"/"}"
     fi
 
     # change C to c
