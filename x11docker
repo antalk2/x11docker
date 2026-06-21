@@ -1786,6 +1786,10 @@ convertpath() {                 # convert unix and windows paths
     # ${parameter,pattern} Lowercase matching characters
     Drive="${Drive,}"
 
+    #
+    #
+    #
+
     # docker volume (same for Windows and Unix)
     if [ "${Path:0:1}" != "/" ] ; then
         # Path does not start with "/"
