@@ -59,7 +59,7 @@ fi
 
 
 
-function echodbg  { >/dev/stderr echo $'\e[0;36m'"DBG  $@"$'\e[0m'; }
+echodbg()  { >/dev/stderr echo $'\e[0;36m'"DBG  $@"$'\e[0m'; }
 
 stacktrace() {
     local i=1 line file func
