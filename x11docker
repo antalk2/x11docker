@@ -63,10 +63,12 @@ echodbg()  { >/dev/stderr echo $'\e[0;36m'"DBG  $@"$'\e[0m'; }
 
 stacktrace() {
     local i=1 line file func
+    echo >&2 "--- stacktrace begin ---"
     while read -r line func file < <(caller $i); do
-        echo >&2 "[$i] $file:$line $func(): $(sed -n ${line}p $file)"
+        echo >&2 "${file}:${line}: level[$i]  $func(): $(sed -n ${line}p $file)"
         ((i++))
     done
+    echo >&2 "--- stacktrace end ---"
 }
 
 function stacktrace2 {
