@@ -1996,33 +1996,8 @@ convertpath() {                 # convert unix and windows paths
     # used_global: Winsubmount
     Path="${Path#$Winsubmount}" # removes prefix Winsubmount from Path
 
-    ## Separate drive prefix,  '/c/'  or 'C:/' .
+    ## Separate "/c/" and "c:" from Path to Drive as lowercase letter
     local Drive=
-
-    #    if [ "$(cut -c1,3 <<< "${Path}/")" = "//" ] ; then
-    #        # Given format is /c/xxx
-    #        # Drive="$(cut -c2  <<< "$Path")" # c
-    #        Drive="${Path:1:1}"               # c
-    #        # Path="$(cut  -c3- <<< "$Path")" # /xxx
-    #        Path="${Path:2}"                  # /xxx
-    #        # Path="${Path:-"/"}" # << we already had "/" at (1-based) character 3
-    #    elif [ "$(cut -c2 <<< "$Path")" = ":" ] ; then
-    #        # Given format is C:/xxx
-    #        # Drive="$(cut -c1  <<< "$Path")" # C
-    #        # Path="$( cut -c3- <<< "$Path")" # /xxx
-    #        Drive="${Path:0:1}"               # C
-    #        Path="${Path:2}"                  # /xxx
-    #        # We only tested "^.[:]" here, so Path may be empty.
-    #        # If Path is empty, change it to "/"
-    #        Path="${Path:-"/"}"
-    #    fi
-    #
-    #    # change C to c
-    #    # https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
-    #    # ${parameter,pattern} Lowercase matching characters
-    #    Drive="${Drive,}"
-
-    ## Separate "/c" and "c:" from Path to Drive as lowercase letter
     convertpath_split_Drive "Drive" "Path" "${Path}"
     #
     #
