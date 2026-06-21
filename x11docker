@@ -1770,7 +1770,7 @@ convertpath_split_Readwritemode() {
         x1_Path_out="$Path_in"
     fi
     #
-    # warning for unexpected suffix value
+    # error for unexpected suffix value
     #
     case "$x1_Readwritemode_out" in
         ":ro"|":rw") return 0 ;;
