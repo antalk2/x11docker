@@ -754,10 +754,19 @@ watchmessagefifo() {            # watch for messages coming from inside of conta
                 :NOTE)      note      "$Message" ;;
                 :DEBUGNOTE) debugnote "$Message" ;;
                 :ERROR)     error     "$Message" ;;
-                :VERBOSE)   [ "-d " = "$(cut -c1-3 <<<"$Message" | head -n1)" ] \
-                                && debugnote "$(tail -c +4 <<< "$Message")"     \
-                               || verbose "$Message"
-                            ;;
+                :VERBOSE)
+                    ## If Message starts with "-d ", then
+                    ## drop this prefix and call debugnote with the rest.
+                    if [ "-d " = "$(cut -c1-3 <<<"$Message" | head -n1)" ] ; then
+                        debugnote "$(tail -c +4 <<< "$Message")"
+                    else
+                        ## Otherwise
+                        verbose "$Message"
+                    fi
+                    #                    [ "-d " = "$(cut -c1-3 <<<"$Message" | head -n1)" ] \
+                    #                        && debugnote "$(tail -c +4 <<< "$Message")"     \
+                    #                            || verbose "$Message"
+                    ;;
                 :STDOUT)    echo "$Message" ;;
             esac
             Message=
