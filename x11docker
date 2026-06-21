@@ -1791,6 +1791,60 @@ convertpath_split_Readwritemode() {
 #
 # function convertpath()
 #
+# --- subsystem ---
+# convertpath subsystem /home/antalk/.cache/x11docker
+# stdout:               /home/antalk/.cache/x11docker
+#
+# --- share ---
+# convertpath share  /home/antalk/.cache/x11docker/644222941101-xfce/share/Xauthority.client
+# stdout:                                                       /x11docker/Xauthority.client
+#
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/containerrc
+# stdout:                                                      /x11docker/containerrc
+#
+# --- mount ---
+# convertpath mount /home/antalk/.cache/x11docker/644222941101-xfce/share/catatonit:ro /usr/local/bin/init
+# stdout: type=bind,source='/home/antalk/.cache/x11docker/644222941101-xfce/share/catatonit',target='/usr/local/bin/init',readonly
+#
+# convertpath mount /home/antalk/.cache/x11docker/644222941101-xfce/share:rw /x11docker
+# stdout: type=bind,source='/home/antalk/.cache/x11docker/644222941101-xfce/share',target='/x11docker'
+#
+# convertpath mount /home/antalk/.cache/x11docker/644222941101-xfce/tmp/.X11-unix/X13:ro /tmp/.X11-unix/X13
+# stdout: type=bind,source='/home/antalk/.cache/x11docker/644222941101-xfce/tmp/.X11-unix/X13',target='/tmp/.X11-unix/X13',readonly
+#
+# --- share ---
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/containerrc
+# stdout:                                                      /x11docker/containerrc
+#
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/container.log
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/message.fifo
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/store.info
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/timetosaygoodbye
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/libc.localtime
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/container.log
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/message.fifo
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/store.info
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/timetosaygoodbye
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/Xauthority.client
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/Xauthority.client
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/container.environment
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/stdout
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/stderr
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/cmdrc
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/stdout
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/stderr
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/message.fifo
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/store.info
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/timetosaygoodbye
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/container.log
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/xhostready
+# convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/containerrootrc
+#
+
+#convertpath(){
+#    SPY_STDOUT convertpath_orig "${@}"
+#}
+
 convertpath() {                 # convert unix and windows paths
     # $1: Mode:
     #     windows   echo Windows path                            - result: c:/path
