@@ -11227,9 +11227,16 @@ parse_preset() {                # nested parsing for --preset
 ${1:-}"
 
   # check global and local preset dir. Prefer local one.
-  [ -f "$Presetdirsystem/${1:-}" ] && Presetfile="$Presetdirsystem/${1:-}"
-  [ -f "$Presetdirlocal/${1:-}" ]  && Presetfile="$Presetdirlocal/${1:-}"
-  [ -f "$Presetfile" ] || return 1
+  #  [ -f "$Presetdirsystem/${1:-}" ] && Presetfile="$Presetdirsystem/${1:-}"
+  #  [ -f "$Presetdirlocal/${1:-}" ]  && Presetfile="$Presetdirlocal/${1:-}"
+  #  [ -f "$Presetfile" ] || return 1
+  if   [  -f "$Presetdirlocal/${1:-}" ] ; then
+      Presetfile="$Presetdirlocal/${1:-}"
+  elif [ -f "$Presetdirsystem/${1:-}" ] ; then
+       Presetfile="$Presetdirsystem/${1:-}"
+  else
+      return 1
+  fi
 
   # parse
   Presetoptions="$(sed '/^#/d' < "$Presetfile" | tr '\n' ' ')"
