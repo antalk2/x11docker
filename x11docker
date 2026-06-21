@@ -80,7 +80,23 @@ stacktrace2() {
    done
 }
 
-
+#
+# To spy on stdout of a function F, rename F to F_orig,
+# and add F(){ SPY_STDOUT F_orig "${@}"  }
+#
+# This will report args and stdout of calls to F, prefixed with "SPY_STDOUT"
+#
+SPY_STDOUT() {
+    local tmpfile1="$(mktemp -t file_1_XXXXXX)"
+    "${@}" 1>"$tmpfile1"
+    local exitCode=${PIPESTATUS[0]}
+    local stdout="$(< "$tmpfile1")"
+    unlink "$tmpfile1"
+    echo "SPY_STDOUT args:   $*"         >&2
+    echo "SPY_STDOUT stdout: ${stdout}"  >&2
+    echo "${stdout}"
+    return $exitCode
+}
 
 ## function usage()
 usage() {                       # --help: show usage information
