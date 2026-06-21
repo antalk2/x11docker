@@ -50,10 +50,12 @@ fi
 # Debug stuff
 #
 
+
+
 # https://gitlab.com/kyb/autorsync/-/blob/master/utils.bash#L84
 
-set -eETuo errexit -o nounset -o pipefail #-o errtrace -o functrace
-shopt -s expand_aliases lastpipe #gnu_errfmt globstar huponexit inherit_errexit localvar_inherit
+# set -eETuo errexit -o nounset -o pipefail #-o errtrace -o functrace
+# shopt -s expand_aliases lastpipe #gnu_errfmt globstar huponexit inherit_errexit localvar_inherit
 
 
 
