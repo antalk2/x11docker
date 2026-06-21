@@ -2005,13 +2005,14 @@ convertpath() {                 # convert unix and windows paths
     # used_global: Winsubmount
     Path="${Path#$Winsubmount}" # removes prefix Winsubmount from Path
 
-    ## Separate "/c/" and "c:" from Path to Drive as lowercase letter
+    ## Separate "/c/" and "c:" from Path to Drive as lowercase letter (or "" if missing)
     local Drive=
     convertpath_split_Drive "Drive" "Path" "${Path}"
     #
     #
     #
-
+    # If Path does not start with "/", then it must be a docker volume (?)
+    #
     # docker volume (same for Windows and Unix)
     if [ "${Path:0:1}" != "/" ] ; then
         # Path does not start with "/"
