@@ -1760,18 +1760,19 @@ convertpath() {                 # convert unix and windows paths
 
     # Check path for suffix :rw or :ro
     local Readwritemode
-    #
-    # If the last 3 characters of Path starts with ":",
-    # then Readwritemode is these 3 characters,
-    #      and these are removed from Path.
-    # otherwise Readwritemode=":rw"
-    #
-    if [ "${Path: -3:1}" = ":" ] ; then
-        Readwritemode="${Path: -3}"
-        Path="${Path:0:-3}"
-    else
-        Readwritemode=":rw"
-    fi
+    #    #
+    #    # If the last 3 characters of Path starts with ":",
+    #    # then Readwritemode is these 3 characters,
+    #    #      and these are removed from Path.
+    #    # otherwise Readwritemode=":rw"
+    #    #
+    #    if [ "${Path: -3:1}" = ":" ] ; then
+    #        Readwritemode="${Path: -3}"
+    #        Path="${Path:0:-3}"
+    #    else
+    #        Readwritemode=":rw"
+    #    fi
+    convertpath_split_Readwritemode  "Readwritemode" "Path" "$Path"
 
     # Set Readwritemode_mount based on Readwritemode
     local Readwritemode_mount
