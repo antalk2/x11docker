@@ -1694,6 +1694,48 @@ mswindowsipcheck() {            # get WSL host IP and Windows host ip
 }
 
 #### file routines
+
+# convertpath_split_Readwritemode( Readwritemode_out, Path_out,  Path )
+#
+# If the last 3 characters of Path starts with ":",
+# then Readwritemode_out is these 3 characters,
+#      and these are removed from Path_out.
+#
+# otherwise Readwritemode_out=":rw"
+#
+# used_global: FDstderr # via warning
+#
+convertpath_split_Readwritemode() {
+    declare -n x1_Readwritemode_out="$1"
+    declare -n x1_Path_out="$2"
+    local Path_in="$3"
+    #
+    if [ "${Path_in: -3:1}" = ":" ] ; then
+        x1_Readwritemode_out="${Path_in: -3}"
+        x1_Path_out="${Path_in:0:-3}"
+    else
+        x1_Readwritemode_out=":rw"
+        x1_Path_out="$Path_in"
+    fi
+    #
+    # warning for unexpected suffix value
+    #
+    case "$x1_Readwritemode_out" in
+        ":ro"|":rw") return 0 ;;
+        *)
+            error "$(printf "%s\n%s\n%s"                                                      \
+                             "convertpath_split_Readwritemode:"                               \
+                             "   Path='$Path_in' has ':..' suffix '${x1_Readwritemode_out}'," \
+                             "   that is neither ':ro', nor ':rw'"                            \
+                             "   Note: NOT removing suffix and emitting Readwritemode=':rw'"  \
+                             )"
+            x1_Readwritemode_out=":rw"
+            x1_Path_out="$Path_in"
+            return 1
+            ;;
+    esac
+}
+
 #
 # function convertpath()
 #
