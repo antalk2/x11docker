@@ -13558,5 +13558,8 @@ $(nl -ba <$Xinitrc)"
   rocknroll && start_xserver
 }
 
-main "$@"
-saygoodbye main
+# Execute main() if this is run in standalone mode (i.e. not from a unit test).
+if [ -z "${SHUNIT_VERSION}" ]; then
+    main "$@"
+    saygoodbye main
+fi
