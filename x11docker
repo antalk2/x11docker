@@ -649,6 +649,7 @@ error() {                       # show error message and exit
       && alertbox "x11docker ERROR" "$Message" &
 
   finish
+  stacktrace
 }
 
 # function logentry()
