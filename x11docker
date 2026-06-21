@@ -12994,18 +12994,38 @@ declare_variables() {           # declare global variables
   grep -q ':/usr/local/games:' <<< ":$PATH:" || PATH="$PATH:/usr/local/games"
   grep -q ':/usr/games:'       <<< ":$PATH:" || PATH="$PATH:/usr/games"
   export PATH
-
+  #
+  # seconds and nanoseconds since epoch
   Cachenumber="$(date +%s%N | cut -c6-17)"        # Number to use for cache folder
   [ -z "$Cachenumber" ] && Cachenumber="$(makecookie | cut -c6-17)"
 
-  # File descriptors
-  FDcmdstdin=""                                   # --stdin channel to forward stdin to container. Previously &7
-  FDmessage=""                                    # message channel for notes, warnings and verbosity across threads and container. Previously &6
-  #FDstderr=""                                    # internal stderr >&2, redirected to null with --silent. Already declared in main(). Previously &3
-  FDtimetosaygoodbye=""                           # message channel to send termination signal from or to containers. Previously &8
-  FDwatchpid=""                                   # message channel for watchpidlist(). Previously &9
+  # --- File descriptors ---
 
-  # Terminal colors used for messages and -V
+  # FDcmdstdin : --stdin channel to forward stdin to container.
+  #              Previously &7
+  FDcmdstdin=""
+
+  # FDmessage : message channel for notes, warnings and verbosity
+  #             across threads and container.
+  #             Previously &6
+  #
+  FDmessage=""
+
+  # FDstderr : internal stderr >&2, redirected to null with
+  #            --silent. Already declared in main(). Previously &3
+  
+  # FDstderr=""
+
+
+  # FDtimetosaygoodbye : message channel to send termination signal
+  #                      from or to containers. Previously &8
+  FDtimetosaygoodbye=""
+  
+  # FDwatchpid : message channel for watchpidlist(). Previously &9
+  FDwatchpid=""
+
+  # --- Terminal colors used for messages and -V ---
+
   Esc="$(printf '\033')"
   Colblue="${Esc}[35m"
   Colyellow="${Esc}[33m"
