@@ -34,7 +34,7 @@ esac
 #  Purpose: Allow lines of multi-line strings to be indented in the
 #           source without affecting the value.
 #
-trim_to_bar(){
+trim_to_bar() {
     # shellcheck disable=SC2001
     echo "${1}" | sed -e 's/^[ ]*|//'
 }
@@ -5866,7 +5866,7 @@ name=$Connector$Count" >> "$Westonini"
       case "$Desktopmode" in
         "yes") Xserveroptions="$Xserveroptions \\
   -D \\
-  -name '${Imagename}_on_${Newdisplay}_(shift+F11_toggles_fullscreen)'" ;;
+  -name '${g_Imagename}_on_${Newdisplay}_(shift+F11_toggles_fullscreen)'" ;;
         "no")  Xserveroptions="$Xserveroptions \\
   -R" ;;
       esac
@@ -7303,22 +7303,22 @@ check_backend() {               # options --backend, --rootless
   # check image name
   case "$BackendKind" in
     docker|podman|nerdctl|proot)
-      [ "${Imagename:0:1}" = "/" ] && {
-        Rootfs="$Imagename"
-        Imagename="$(basename "$Rootfs")"
+      [ "${g_Imagename:0:1}" = "/" ] && {
+        Rootfs="$g_Imagename"
+        g_Imagename="$(basename "$Rootfs")"
       }
       [ "$Podmanrootfs" = "yes" ] && Checkrootfs="yes"
-      Imagebasename="$(echo "$Imagename" | tr / - | cut -d: -f1)"
-      Codename="${Codename:-"$Imagename $Containercommand"}"
-      verbose "Image name: $Imagename
+      Imagebasename="$(echo "$g_Imagename" | tr / - | cut -d: -f1)"
+      Codename="${Codename:-"$g_Imagename $Containercommand"}"
+      verbose "Image name: $g_Imagename
   Container command: $Containercommand"
     ;;
     host)
-      Containercommand="$Imagename $Containercommand"
+      Containercommand="$g_Imagename $Containercommand"
       [ "$Customdockeroptions" ] && error "Option --backend=$BackendKind does not take CUSTOM_RUN_OPTIONS.
   If your command args contain ' -- ', run like
   x11docker --backend=$BackendKind [OPTIONS] -- -- COMMAND -- ARGS"
-      Imagename=""
+      g_Imagename=""
       Imagebasename="$(basename "$Containercommand" | cut -d' ' -f1)"
       Codename="${Codename:-"$Imagebasename"}"
     ;;
@@ -7415,7 +7415,7 @@ check_backend() {               # options --backend, --rootless
       ;;
     esac
     [ -z "$Rootfs" ] && [ -d "$Hosthomebasefolder/ROOTFS/$Imagebasename" ] && Rootfs="$Hosthomebasefolder/ROOTFS/$Imagebasename"
-    [ -z "$Rootfs" ] && error "Option --backend=$BackendKind: Did not find a rootfs for $Imagename
+    [ -z "$Rootfs" ] && error "Option --backend=$BackendKind: Did not find a rootfs for $g_Imagename
   in $Hosthomebasefolder/ROOTFS/$Imagebasename"
     [ -z "$Containercommand" ] && [ -e "$Rootfs/start" ] && Containercommand="/bin/sh /start"
     [ -z "$Containercommand" ] && {
@@ -7433,9 +7433,9 @@ Fallback: using command '$Containercommand' and enabling option --interactive."
 }
 check_image() {                 # get some image information
 
-  # Check if image $Imagename is available locally
-  Imageinspect="$(unpriv_backend "$Backendbin inspect $Imagename" 2>> $Containerlogfile)" || {
-    error "Image $Imagename not found locally.
+  # Check if image $g_Imagename is available locally
+  Imageinspect="$(unpriv_backend "$Backendbin inspect $g_Imagename" 2>> $Containerlogfile)" || {
+    error "Image $g_Imagename not found locally.
   Please pull or build image first. (Backend $BackendKind, rootless $Backendrootless)"
     return 1
   }
@@ -7592,7 +7592,7 @@ check_cgroup() {                # check [and create] cgroup mountpoint for syste
                 Remountcgroup="yes"
                 warning "Option --init=systemd: To support systemd in docker container
   with cgroupv2 on host, x11docker shortly runs a privileged container
-  of '$Imagename' with 'nsenter' to remount the container's /sys/fs/cgroup.
+  of '$g_Imagename' with 'nsenter' to remount the container's /sys/fs/cgroup.
   Evil images might be set up to abuse these privileges."
               ;;
             esac
@@ -8514,7 +8514,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
         no)
           case "$BackendKind" in
             docker|podman|nerdctl)
-              Backendcommand="$Backendcommand ${Rootfs:-$Imagename} $Initcommand /bin/sh - $(convertpath share "$Containerrc")"      # start_container runs containerrootrc with 'docker exec'
+              Backendcommand="$Backendcommand ${Rootfs:-$g_Imagename} $Initcommand /bin/sh - $(convertpath share "$Containerrc")"      # start_container runs containerrootrc with 'docker exec'
             ;;
             proot)
               Backendcommand="$Backendcommand /bin/sh - $(convertpath share "$Containerrc")"
@@ -8524,7 +8524,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
         yes)
           case "$BackendKind" in
             docker|podman|nerdctl)
-              Backendcommand="$Backendcommand ${Rootfs:-$Imagename} $Initcommand /bin/sh - $(convertpath share "$Containerrootrc")"  # containerrootrc runs containerrc
+              Backendcommand="$Backendcommand ${Rootfs:-$g_Imagename} $Initcommand /bin/sh - $(convertpath share "$Containerrootrc")"  # containerrootrc runs containerrc
             ;;
             proot)
               Backendcommand="$Backendcommand /bin/sh - $(convertpath share "$Containerrootrc")"
@@ -8537,8 +8537,8 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
       case "$BackendKind" in
         docker|podman|nerdctl)
           case "$Initsystem" in
-            tini) Backendcommand="$Backendcommand ${Rootfs:-$Imagename} $Initcommand $Containercommand" ;;
-            *) Backendcommand="$Backendcommand ${Rootfs:-$Imagename} $Containercommand" ;;
+            tini) Backendcommand="$Backendcommand ${Rootfs:-$g_Imagename} $Initcommand $Containercommand" ;;
+            *) Backendcommand="$Backendcommand ${Rootfs:-$g_Imagename} $Containercommand" ;;
           esac
         ;;
         proot)
@@ -9238,7 +9238,7 @@ verbose \"containerrc: Container system:
           IFS=$'\n'
           while read -r Line; do
             echo "export $(escapestring "$Line")"
-          done < <(unpriv_backend "$Backendbin run --rm --entrypoint env $Imagename env" 2>> "$Containerlogfile" | rmcr | grep -v 'HOSTNAME=' ||: )
+          done < <(unpriv_backend "$Backendbin run --rm --entrypoint env $g_Imagename env" 2>> "$Containerlogfile" | rmcr | grep -v 'HOSTNAME=' ||: )
           IFS=$' \t\n'
         }
       ;;
@@ -10406,7 +10406,7 @@ $(rmcr < "$Containerlogfile" | uniq )"
         Remountcommand="$Remountcommand --pid=container:$Containerid"
         Remountcommand="$Remountcommand --entrypoint /usr/bin/env"
         [ "$Runtime" ] && Remountcommand="$Remountcommand --runtime $Runtime"
-        Remountcommand="$Remountcommand -- $Imagename"
+        Remountcommand="$Remountcommand -- $g_Imagename"
         Remountcommand="$Remountcommand nsenter -t 1 -m -C -p /bin/sh -c '"
         Remountcommand="$Remountcommand         set -x ; "
         Remountcommand="$Remountcommand         findmnt /sys/fs/cgroup -O rw || mount -v -o remount,rw /sys/fs/cgroup/ ; "
@@ -11098,14 +11098,14 @@ $Hostuserhome/.cache/x11docker/symlink
   $Cachebasefolder"
 
   # Create cache subfolders
-  Cachefolder="$Cachebasefolder/$Cachenumber-$(unspecialstring "$(basename "$Imagename")")"
+  Cachefolder="$Cachebasefolder/$Cachenumber-$(unspecialstring "$(basename "$g_Imagename")")"
   [ -d "$Cachefolder" ] && error "Cache folder already exists:
   $Cachefolder"
 
   [ "$Cachefolder" != "$(escapestring "$Cachefolder")" ] && error "Invalid name created for cache folder:
     $Cachefolder
   Most probably provided image name (or --exe command) is invalid in some way:
-    $(escapestring "$Imagename")
+    $(escapestring "$g_Imagename")
   For special setups like command chains use a syntax like:
     x11docker IMAGENAME  --  sh -c \"cd /etc && xterm\""
 
@@ -11608,9 +11608,9 @@ ${2:-}"                       ; shift ;;                             # Add custo
           done
         }
         while [ $# -gt 0 ] ; do
-          [ -n "${1:-}" ] && [ -z "$Imagename" ] && [ "$(echo "${1:-}" | cut -c1)"  = "-" ]  && Customdockeroptions="$Customdockeroptions ${1:-}"
-          [ -n "${1:-}" ] && [ -z "$Imagename" ] && [ "$(echo "${1:-}" | cut -c1)" != "-" ]  && Imagename="${1:-}" && shift
-          [ -n "${1:-}" ] && [ -n "$Imagename" ] && Containercommand="$Containercommand '${1:-}'"
+          [ -n "${1:-}" ] && [ -z "$g_Imagename" ] && [ "$(echo "${1:-}" | cut -c1)"  = "-" ]  && Customdockeroptions="$Customdockeroptions ${1:-}"
+          [ -n "${1:-}" ] && [ -z "$g_Imagename" ] && [ "$(echo "${1:-}" | cut -c1)" != "-" ]  && g_Imagename="${1:-}" && shift
+          [ -n "${1:-}" ] && [ -n "$g_Imagename" ] && Containercommand="$Containercommand '${1:-}'"
           shift
         done
       ;;
@@ -11713,7 +11713,7 @@ check_options_arguments() {     # check for [likely] valid arguments
   grep -q -- "--runtime=sysbox-runc"    <<< "$Customdockeroptions" && Runtime="sysbox-runc"
 
   # --backend
-  [ -z "$Imagename" ] && {
+  [ -z "$g_Imagename" ] && {
     case "${Cleanup}${Createlauncher}${Installermode}" in
       "")
         # Only create X server / --xonly
@@ -14037,7 +14037,7 @@ declare_variables() {           # declare global variables
   Sharegpu="no"
 
   # Sharehome : --home: Share a folder
-  #              ~/.local/share/x11docker/Imagename with created container
+  #              ~/.local/share/x11docker/g_Imagename with created container
   #
   Sharehome="no"
 
@@ -14076,7 +14076,7 @@ declare_variables() {           # declare global variables
   Imageentrypoint=""
 
   # Imageinspect : Output of --inspect
-  #    Imageinspect="$(unpriv_backend "$Backendbin inspect $Imagename" 2>> $Containerlogfile)"
+  #    Imageinspect="$(unpriv_backend "$Backendbin inspect $g_Imagename" 2>> $Containerlogfile)"
   #
   Imageinspect=""
 
@@ -14151,8 +14151,8 @@ declare_variables() {           # declare global variables
   #
   #   - Used as part of Backendcommand
   #
-  #     tini) Backendcommand="$Backendcommand ${Rootfs:-$Imagename} $Initcommand $Containercommand" ;;
-  #     *)    Backendcommand="$Backendcommand ${Rootfs:-$Imagename}              $Containercommand" ;;
+  #     tini) Backendcommand="$Backendcommand ${Rootfs:-$g_Imagename} $Initcommand $Containercommand" ;;
+  #     *)    Backendcommand="$Backendcommand ${Rootfs:-$g_Imagename}              $Containercommand" ;;
   #
   Containercommand=""
 
@@ -14231,8 +14231,12 @@ declare_variables() {           # declare global variables
   #  # Defaultruntime : not used. There is local_Defaultruntime in check_runtime()
   #  Defaultruntime=""
   
-  Imagename=""                                    # Image to run
-  Interactive="no"                                # --interactive: Run docker with interactive tty yes/no
+  # g_Imagename : Image to run
+  g_Imagename=""
+
+  # Interactive : --interactive: Run docker with interactive tty yes/no
+  Interactive="no"
+
   Limitresources=""                               # --limit: Limit access to CPU and RAM, 0.1 ... 1.0
   Network="none"                                  # --network
   Noentrypoint="no"                               # --no-entrypoint: Disable entrypoint in image yes/no
@@ -14528,7 +14532,7 @@ main() {
   }
   [ "$Buildimage" ] && {                                                          # --build: Build image from x11docker repository
     check_optionset "--build" "$(grep -v -E -- '--build|--backend' <<< "$Optionsetall")" ||:
-    buildimage "$Imagename"
+    buildimage "$g_Imagename"
     finish
   }
   rocknroll || return 0
@@ -14804,3 +14808,4 @@ if [ -z "${X11DOCKER_TESTING:-}" ]; then
     main "$@"
     saygoodbye main
 fi
+
