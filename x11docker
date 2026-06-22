@@ -921,7 +921,7 @@ finish() {      # trap EXIT routine to clean up background processes and cache
     }
 
     # softlink to X unix socket in container
-    case "$Xcontainer" in
+    case "$Xcontainer_option" in
         yes)
             [ -L "/tmp/.X11-unix/X$Newdisplaynumber" ]          && rm "/tmp/.X11-unix/X$Newdisplaynumber"
             [ -L "$XDG_RUNTIME_DIR/wayland-$Newdisplaynumber" ] && rm "$XDG_RUNTIME_DIR/wayland-$Newdisplaynumber"
@@ -2225,9 +2225,9 @@ getwslpath() {                  # get path to currently running WSL system
 #
 get_xpath() {                   # --xc: path to X server
     #
-    # global Xcontainer
+    # global Xcontainer_option
     #
-  case "$Xcontainer" in
+  case "$Xcontainer_option" in
     yes) echo "/usr/bin/${1:-}" ;;
     no)  command -v "${1:-}"    ;;
   esac
@@ -3124,7 +3124,7 @@ that will be set for host user '$(id -u -n)'. (chars are invisible): " Password
 #### host integration features
 check_windowmanager() {         # option --wm: search a host window manager
   # check --wm arguments, adjust mode
-  case "$Xcontainer" in
+  case "$Xcontainer_option" in
     yes)
       case "$Windowmanagermode" in
         auto|host)
@@ -3398,7 +3398,7 @@ case "${1:-}" in
   m:0x54 + c:55
   Control+Mod2+Mod4 + v
 "
-    case "'$Xcontainer'" in
+    case "'$Xcontainer_option'" in
       yes)
         case "'$Xserver'" in
           --weston|--weston-xwayland)
@@ -3496,7 +3496,7 @@ setup_gpu() {                   # option --gpu: share /dev/dri and check nvidia 
   You can provide images with pre-installed drivers to speed up container start.
   Compare: https://github.com/mviereck/x11docker/wiki/NVIDIA-driver-support-for-docker-container"
 
-    [ "$Xcontainer" = "yes" ] && {
+    [ "$Xcontainer_option" = "yes" ] && {
       waitforlogentry "start_xcontainer()" "$Xinitlogfile" "X server container is ready" || return 1
       note "Option --gpu: Installing NVIDIA driver in X container."
       unpriv_xcbackend "$Xcontainerbackend exec --tty --privileged --user=root $Xcontainername bash $Sharefolder/nvidia_installer" >> "$Xinitlogfile" 2>&1 || note 'ERROR: NVIDIA driver installation in X container failed.'
@@ -3988,7 +3988,7 @@ check_newxenv()  {              # find free display
     socat|listentcp)
       case "$Backend" in
         docker|podman|nerdctl)
-          case "$Xcontainer" in
+          case "$Xcontainer_option" in
             yes)
             ;;
             no)
@@ -4019,7 +4019,7 @@ check_newxenv()  {              # find free display
           Newdisplaynumber="$(echo "$Newdisplay" | cut -d: -f2 | cut -d. -f1)"
         ;;
         socat)
-          case "$Xcontainer" in
+          case "$Xcontainer_option" in
             yes) Newdisplay="XCONTAINERIP:$Newdisplaynumber" ;;
             no)  Newdisplay="$Hostip:$Newdisplaynumber" ;;
           esac
@@ -4036,7 +4036,7 @@ check_newxenv()  {              # find free display
     *)
       case "$Xoverip" in
         socat|listentcp)
-          case "$Xcontainer" in
+          case "$Xcontainer_option" in
             yes) 
               Newdisplay="XCONTAINERIP:$Newdisplaynumber"
             ;;
@@ -4060,7 +4060,7 @@ check_newxenv()  {              # find free display
       esac
       Newxsocket="/tmp/.X11-unix/X$Newdisplaynumber"
       # Fix for WSL2g #557, create unix socket file for virtual socket, available only because /tmp/.X11-unix is read-only
-      [ "$X11unixrw" = "no" ] && [ "$Xoverip" = "no" ] && [ "$Xserver" != "--hostdisplay" ] && [ "$Xcontainer" = "no" ] && {
+      [ "$X11unixrw" = "no" ] && [ "$Xoverip" = "no" ] && [ "$Xserver" != "--hostdisplay" ] && [ "$Xcontainer_option" = "no" ] && {
         command -v socat >/dev/null && {
           Newxsocket="$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber"
           socat UNIX-LISTEN:${Newxsocket},fork,unlink-close \
@@ -4240,28 +4240,29 @@ check_vt() {                    # option --xorg: find free vt / tty
 
   return 0
 }
+
 check_xcontainer() {            # option --xc: check backend, rootless and image x11docker/xserver
   local Auto= Fail=
 
-  if [ "$Xcontainer" = "force" ] ; then
-    Xcontainer="yes"
+  if [ "$Xcontainer_option" = "force" ] ; then
+    Xcontainer_option="yes"
     Xcforce="yes"
   fi
 
   # workaround: X server options not supported by --xc already caught here if they are specified on cli
   case "$Xserver" in
     --tty|--hostwayland) ### FIXME allow --hostwayland?
-      check_xdepends "$Xserver" && Xcontainer="no"
+      check_xdepends "$Xserver" && Xcontainer_option="no"
     ;;
   esac
   
-  [ "$Dockervm" != "no" ] && case "$Xcontainer" in
-    auto) Xcontainer="no" ;;
+  [ "$Dockervm" != "no" ] && case "$Xcontainer_option" in
+    auto) Xcontainer_option="no" ;;
     yes)
       note "Option --xc is not supported with Docker Desktop VM.
   Fallback: Disabling option --xc."
       check_fallback
-      Xcontainer="no"
+      Xcontainer_option="no"
     ;;
   esac
 
@@ -4276,7 +4277,7 @@ check_xcontainer() {            # option --xc: check backend, rootless and image
   esac
 
   # check if image x11docker/xserver is available
-  case "$Xcontainer" in
+  case "$Xcontainer_option" in
     no) ;;
     yes|auto) 
       case "$Backend" in
@@ -4293,19 +4294,19 @@ check_xcontainer() {            # option --xc: check backend, rootless and image
           [ -z "$Xcontainerbackend" ] && {
             unpriv_xcbackend "podman inspect $Xcontainerimage" >/dev/null 2>&1 && Xcontainerbackend="podman" && Xcrootless="${Xcrootless:-yes}"
           }
-          [ "$Xcontainer" = "yes" ] && [ -z "$Xcontainerbackend" ] && Xcontainerbackend="docker or podman" && Fail="yes"
+          [ "$Xcontainer_option" = "yes" ] && [ -z "$Xcontainerbackend" ] && Xcontainerbackend="docker or podman" && Fail="yes"
         ;;
       esac
     ;;
     docker)
-      Xcontainerbackend="$Xcontainer"
+      Xcontainerbackend="$Xcontainer_option"
       [ -z "$Xcrootless" ] && {
         [ -n "$DOCKER_HOST" ] && Xcrootless="yes" || Xcrootless="no"
       }
       unpriv_xcbackend "$Xcontainerbackend inspect $Xcontainerimage" >/dev/null 2>&1 || Fail="yes"
     ;;
     podman|nerdctl)
-      Xcontainerbackend="$Xcontainer"
+      Xcontainerbackend="$Xcontainer_option"
       Xcrootless="${Xcrootless:-yes}" unpriv_xcbackend "$Xcontainerbackend inspect $Xcontainerimage" >/dev/null 2>&1 && Xcrootless="${Xcrootless:-yes}" || Fail="yes"
       [ "$Fail" = "yes" ] && [ -z "$Xcrootless" ] && [ "$Startuser" = "root" ] && {
         Fail=""
@@ -4316,44 +4317,44 @@ check_xcontainer() {            # option --xc: check backend, rootless and image
   esac
 
   [ "$Fail" = "yes" ] && {
-    [ "$Xcontainer" = "yes" ] && {
+    [ "$Xcontainer_option" = "yes" ] && {
       note "Option --xc: Image $Xcontainerimage not found
   at backend '$Xcontainerbackend' (rootless: $Xcrootless).
   Fallback: Disabling option --xc"
       check_fallback
     }
-    Xcontainer="no"
+    Xcontainer_option="no"
   }
   
-  [ -z "$Xcontainerbackend" ] && Xcontainer="no"
+  [ -z "$Xcontainerbackend" ] && Xcontainer_option="no"
   
-  case "$Xcontainer" in
+  case "$Xcontainer_option" in
     yes|auto)
       case "$Xcontainerbackend" in
         podman|nerdctl)
           [ "$Startuser" != "root" ] && [ "$Xcrootless" = "no" ] && {
-            [ "$Xcontainer" = "yes" ] && {
+            [ "$Xcontainer_option" = "yes" ] && {
               note "Option --xc with rootful X container backend $Xcontainerbackend
   needs to be started with root privileges. root needed to claim a tty.
   Fallback: Disabling option --xc"
               check_fallback
             }
-            Xcontainer="no"
+            Xcontainer_option="no"
             Auto="yes"
           }
         ;;
       esac
-      [ "$Xcontainer" = "auto" ]    && Xcontainer="yes" && Auto="yes" || Auto="no"
-      [ "$Winsubsystem" ]           && Xcontainer="no"
+      [ "$Xcontainer_option" = "auto" ]    && Xcontainer_option="yes" && Auto="yes" || Auto="no"
+      [ "$Winsubsystem" ]           && Xcontainer_option="no"
       case "$Runtime" in
-        kata-runtime)                  Xcontainer="no" ;;
+        kata-runtime)                  Xcontainer_option="no" ;;
       esac
       case "$Auto" in
         yes)
-          [ "$Xcontainer" = "yes" ] && note "Option --xc for X in container enabled automatically."
+          [ "$Xcontainer_option" = "yes" ] && note "Option --xc for X in container enabled automatically."
         ;;
         no)
-          [ "$Xcontainer" = "no" ] && {
+          [ "$Xcontainer_option" = "no" ] && {
             note "Option --xc not possible:
   - without image x11docker/xserver.
   - with runtime kata-runtime
@@ -4366,7 +4367,7 @@ check_xcontainer() {            # option --xc: check backend, rootless and image
     ;;
   esac
 
-  case "$Xcontainer" in
+  case "$Xcontainer_option" in
     yes)
       Xcontainerinspect="$(unpriv_xcbackend "$Xcontainerbackend inspect $Xcontainerimage")"
       Xcontaineroptions="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "options")"
@@ -4687,7 +4688,7 @@ check_xdepends() {              # check dependencies on host for X server option
         --weston|--kwin|--hostwayland) ;;
         --xpra-xwayland|--xpra2-xwayland|--weston-xwayland|--kwin-xwayland|--xwayland|--satellite) ;;
         --hostdisplay)
-          [ "$Xcontainer" = "no" ] && [ "$Shareipc" != "host" ] && {
+          [ "$Xcontainer_option" = "no" ] && [ "$Shareipc" != "host" ] && {
             $Message "${1:-}: --gpu=$Sharegpu would need insecure and discouraged
   option --ipc=host to avoid MIT-SHM errors. Alternatively you can provide
   image x11docker/xserver (option --xc) that contains a fake MIT-SHM library."
@@ -4784,7 +4785,7 @@ check_xdepends() {              # check dependencies on host for X server option
   }
 
   # --xc
-  case "$Xcontainer" in
+  case "$Xcontainer_option" in
     yes)
       case "$Xcopt" in
         "")
@@ -4865,7 +4866,7 @@ check_xdepends() {              # check dependencies on host for X server option
       case "${1:-}" in
         --xephyr|--xorg|--nxagent|--xpra|--xpra2|--xvfb|--xwin|--runx) ;;
         --hostdisplay)
-          case "$Xcontainer" in
+          case "$Xcontainer_option" in
             yes)
               grep -q socat <<< "$Xcontainertools" || {
                 $Message "${1:-} --xoverip $Xserver needs socat.
@@ -4965,7 +4966,7 @@ check_xlibnoshm() {             # search XlibNoSHM.so and libdl.so.2 for fake MI
 check_xpraoption() {            # check if xpra option $1 is available
   local Option
 
-  [ "$Xcontainer" = "yes" ] && [ "$Xserver" != "--xpra2" ] && {
+  [ "$Xcontainer_option" = "yes" ] && [ "$Xserver" != "--xpra2" ] && {
     echo "$@"
     return 0
    }
@@ -5266,8 +5267,8 @@ check_xserver() {               # check chosen X server, auto-choose X server
 
   case "$Xserver" in
     --hostwayland)
-      [ "$Xcontainer" = "yes" ] && {
-        Xcontainer="no"
+      [ "$Xcontainer_option" = "yes" ] && {
+        Xcontainer_option="no"
         note "Option --xc disabled for option --hostwayland."
       }
     ;;
@@ -5280,7 +5281,7 @@ check_xserver() {               # check chosen X server, auto-choose X server
 
   case "$Xserver" in
     --satellite)
-      case "$Xcontainer" in
+      case "$Xcontainer_option" in
         yes) Satelliteversion="0.8.1" ;;
         no)
           Satelliteversion="$(xwayland-satellite -version | cut -c2-)"
@@ -5331,14 +5332,14 @@ create_xcommand() {             ### create command to start X server and/or Wayl
 
   Xdpyinfooutput="$(xtool "xdpyinfo 2>> $Xinitlogfile" ||:)"
 
-  [ "$Xcontainer" = "yes" ] && [ "$Xcontainerbackend" = "$Backend" ] && Usemitshm="yes"
-  [ "$Xcontainer" = "yes" ] && [ "$Xcontainerbackend" = "nerdctl" ]  && Usemitshm="no"
+  [ "$Xcontainer_option" = "yes" ] && [ "$Xcontainerbackend" = "$Backend" ] && Usemitshm="yes"
+  [ "$Xcontainer_option" = "yes" ] && [ "$Xcontainerbackend" = "nerdctl" ]  && Usemitshm="no"
   [ "$Shareipc" = "host" ]                                           && Usemitshm="yes"
-  [ "$Xcontainer" = "yes" ] && [ -n "$Newxvt" ]                      && Usemitshm="no"
-  [ "$Xcontainer" = "no" ]  && [ "$Shareipc" != "host" ]             && Usemitshm="no"
+  [ "$Xcontainer_option" = "yes" ] && [ -n "$Newxvt" ]                      && Usemitshm="no"
+  [ "$Xcontainer_option" = "no" ]  && [ "$Shareipc" != "host" ]             && Usemitshm="no"
   [ "$Containeruser" != "$Hostuser" ]                                && Usemitshm="no"
   [ "$Xoverip" != "no" ]                                             && Usemitshm="no"
-  [ "$Xcontainer" = "yes" ] && case "$Xserver" in
+  [ "$Xcontainer_option" = "yes" ] && case "$Xserver" in
     --weston*|--xpra*-xwayland) [ "$Shareipc" != "host" ]            && Usemitshm="no" ;;
   esac
   case "$Runtime" in
@@ -5650,7 +5651,7 @@ path=$Xwaylandwrapper" >> "$Westonini"
   # Xwayland: check -decorate -force-xrandr-emulation
   case "$Xserver" in
     *xwayland)
-      case "$Xcontainer" in
+      case "$Xcontainer_option" in
         yes)
           Xrandremulation="-force-xrandr-emulation"
           Decorate="-decorate"
@@ -6543,7 +6544,7 @@ create_xinitrc() {              # create xinitrc: set up X environment, create c
   declare -f storeinfo
   declare -f saygoodbye
   echo "$Messagefifofuncs"
-  case "$Xcontainer" in
+  case "$Xcontainer_option" in
     yes)
       echo           "storepid() { : ; }"
       echo           "unpriv() {"
@@ -6969,7 +6970,7 @@ setup_xcnetwork() {             # --xoverip --xc: start internal network between
   [ "$Backend" = "$Xcontainerbackend" ] && [ "$Xcrootless" = "$Backendrootless" ] || return 1
   case "${1:-}" in
     "")
-      [ "$Xcontainer" = "yes" ] && [ "$Hostxoverip" = "no" ] && {
+      [ "$Xcontainer_option" = "yes" ] && [ "$Hostxoverip" = "no" ] && {
         case "$Xoverip" in
           yes|listentcp|socat)
             case "$Network" in
@@ -7093,7 +7094,7 @@ xtool() {                       # run X tool command in X container if available
   to get a list of currently open windows." ;;
   esac
 
-  case "$Xcontainer" in
+  case "$Xcontainer_option" in
     yes)
       Usexcontainer="yes"
       echo "$Xcontainertools" | grep -w -q "$Tool" || {
@@ -7512,7 +7513,7 @@ check_runtime() {               # option --runtime
   return 0
 }
 check_smallinit() {             # find container init binary on host
-  [ "$Xcontainer" = "yes" ] && grep -q "catatonit" <<< "$Xcontainertools" && Initbinaryfile="$Sharefolder/catatonit" && return 0
+  [ "$Xcontainer_option" = "yes" ] && grep -q "catatonit" <<< "$Xcontainertools" && Initbinaryfile="$Sharefolder/catatonit" && return 0
   [ -x "$Initbinaryfile" ]                                      || Initbinaryfile="$(command -v catatonit ||:)"
   [ -x "$Initbinaryfile" ]                                      || Initbinaryfile="/usr/libexec/catatonit/catatonit"
   [ -x "$Initbinaryfile" ]                                      || Initbinaryfile="$(command -v docker-init ||:)"
@@ -8206,7 +8207,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
   esac
 
   # share X socket
-  [ "$Xoverip" = "no" ] && case "$Xcontainer" in
+  [ "$Xoverip" = "no" ] && case "$Xcontainer_option" in
     yes)
       [ "$Newxsocket" ] && {
         case "$Backend" in
@@ -8228,7 +8229,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
                   case "$Backend" in
                     docker)
                       case "$Xserver" in
-                        --weston*|--xpra*-xwayland) ;; # needs ipc=host in Xcontainer
+                        --weston*|--xpra*-xwayland) ;; # needs ipc=host in Xcontainer_option
                         *)
                           [ "$Xcrootless" = "$Backendrootless" ] && Backendcommand="$Backendcommand \\
   --ipc=container:$Xcontainername"
@@ -8288,7 +8289,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
       yes)
         [ "$Sharehostwayland" = "yes" ] && Backendcommand="$Backendcommand \\
   --mount $(convertpath mount "$XDG_RUNTIME_DIR/$Hostwaylandsocket" "/$Hostwaylandsocket")"
-        case "$Xcontainer" in
+        case "$Xcontainer_option" in
           yes)
             case "$Backend" in
               docker|podman|nerdctl)
@@ -8316,7 +8317,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
         esac
       ;;
       no)
-        case "$Xcontainer" in
+        case "$Xcontainer_option" in
           yes)
             case "$Backend" in
               docker|podman|nerdctl)
@@ -10307,7 +10308,7 @@ start_compositor() {            # start Wayland compositor Weston or KWin
     --kwin|--kwin-xwayland)                    Compositorkeyword="XKEYBOARD" ;;
   esac
 
-  case "$Xcontainer" in
+  case "$Xcontainer_option" in
     yes)
       unpriv_xcbackend "$Xcontainerbackend exec --detach $Xcontainername \
         sh -c '$Compositorcommand >> $Compositorlogfile  2>&1'" 2>> $Compositorlogfile
@@ -10356,7 +10357,7 @@ $(tail "$Xinitlogfile")"
 start_xserver() {               # start X server
   local Exitcode= Xcontainerexitcode= Command
 
-  debugnote "start_xserver(): starting $Xserver. X Container = $Xcontainer"
+  debugnote "start_xserver(): starting $Xserver. X Container = $Xcontainer_option"
 
   case "$Xserver" in
     --xpra|--xpra2|--xephyr|--xvfb|--nxagent|--xwin|--xorg)
@@ -10386,7 +10387,7 @@ start_xserver() {               # start X server
     ;;
   esac
 
-  case "$Xcontainer" in
+  case "$Xcontainer_option" in
     yes)
       unpriv_xcbackend "$Xcontainerbackend exec $Xcontainername $Command" >> $Xinitlogfile 2>&1
       Xcontainerexitcode=$?
@@ -10441,7 +10442,7 @@ $Xpraservercommand"
   debugnote "Running xpra server:
 $Xpraservercommand"
   echo "x11docker [$(timestamp)]: Starting Xpra server" >> "$Xpraserverlogfile"
-  case "$Xcontainer" in
+  case "$Xcontainer_option" in
     no)
       unpriv "$Xpraservercommand ||:" >> "$Xpraserverlogfile" 2>&1 &
     ;;
@@ -10456,7 +10457,7 @@ $Xpraenv $Xpraclientcommand"
   debugnote "Running xpra client:
 $Xpraclientcommand"
   echo "x11docker [$(timestamp)]: Starting Xpra client" >> "$Xpraclientlogfile"
-  [ "$Xcontainer" = "yes" ] && [ "$Xserver" != "--xpra2" ] && [ "$Xserver" != "--xpra2-xwayland" ] && {
+  [ "$Xcontainer_option" = "yes" ] && [ "$Xserver" != "--xpra2" ] && [ "$Xserver" != "--xpra2-xwayland" ] && {
     unpriv_xcbackend "$Xcontainerbackend exec $Xcontainername sh -c '$Xpraclientcommand'" >> "$Xpraclientlogfile" 2>&1 &
     :
   } || {
@@ -10861,7 +10862,7 @@ check_snap() {                  # check if docker is installed in snap. Causes r
   Recommendation: Purge the Docker snap installation and install Docker natively."
     [ "$Allownewprivileges" = "auto" ] && Allownewprivileges="yes"
     Xoverip="${Xoverip:-yes}"
-    Xcontainer="no"
+    Xcontainer_option="no"
     [ "$Network" = "none" ] && Network=""
     case "$Sharegpu" in
       yes|virgl|iglx|direct)
@@ -11220,7 +11221,7 @@ ${1:-}"
                                 *)               Windowmanagermode="auto"; Windowmanagercommand="${2:-}" ;;
                               esac
                               shift ; Desktopmode="yes" ;;
-         --xc)                Xcontainer="${2:-yes}" ; shift ;;      # Run X server in container
+         --xc)                Xcontainer_option="${2:-yes}" ; shift ;;      # Run X server in container
          --xw)                Xwogether="yes" ;;                     # Run X and Wayland side by side
 
      #### X and Wayland appearance
@@ -11862,14 +11863,14 @@ check_options_arguments() {     # check for [likely] valid arguments
   }
 
   # --xc
-  case "$Xcontainer" in
+  case "$Xcontainer_option" in
     yes|no|auto|force) ;;
     docker|podman|nerdctl) ;;
     *)
-      note "Option --xc: Unknown argument '$Xcontainer'.
+      note "Option --xc: Unknown argument '$Xcontainer_option'.
   Fallback: Setting --xc=auto."
       check_fallback
-      Xcontainer="auto"
+      Xcontainer_option="auto"
     ;;
   esac
 
@@ -12163,12 +12164,12 @@ check_options_interferences() { # check multiple option interferences, change se
     esac
     case "$Xserver" in
       --weston)
-        [ "$Xcontainer" = "yes" ] && note "Option $Xserver: TTY switching will not work
+        [ "$Xcontainer_option" = "yes" ] && note "Option $Xserver: TTY switching will not work
   with weston on console running in a container (option --xc).
   Alternative: Run with --xc=no using weston from host."
       ;;
     esac
-    case "$Xcontainer" in
+    case "$Xcontainer_option" in
       yes)
         case "$Xserver" in
           --weston*|--xorg)
@@ -12233,7 +12234,7 @@ check_options_interferences() { # check multiple option interferences, change se
       }
     ;;
   esac
-  [ -n "$Windowmanagercommand" ] && [ "$Xcontainer" = "yes" ] && {
+  [ -n "$Windowmanagercommand" ] && [ "$Xcontainer_option" = "yes" ] && {
     note "Option --wm=$Windowmanagercommand: With option --xc
   only OpenBox is provided as window manager.
   Fallback: Setting --wm=auto"
@@ -12318,7 +12319,7 @@ check_options_interferences() { # check multiple option interferences, change se
       store_runoption env "LIBGL_ALWAYS_INDIRECT=1"
     ;;
     virgl)
-      case "$Xcontainer" in
+      case "$Xcontainer_option" in
         yes)
           case "$Backend" in
             docker|podman|nerdctl) 
@@ -12595,7 +12596,7 @@ check_options_messages() {      # some messages depending on options, but not ch
     ;;
 
     --xorg)
-      [ "$Xcontainer" = "yes" ]  && note "Options --xorg --xc: Running Xorg in container is experimental
+      [ "$Xcontainer_option" = "yes" ]  && note "Options --xorg --xc: Running Xorg in container is experimental
   and might misbehave, fail or crash.
   Please report issues at https://github.com/mviereck/x11docker"
 
@@ -12620,7 +12621,7 @@ check_options_messages() {      # some messages depending on options, but not ch
               warning "Option --xorg: x11docker will run Xorg as root."
             ;;
             *)
-              [ "$Xcontainer" = "no" ] && [ "$Runsonconsole" = "no" ] && [ -z "$Newxvt" ] && warning "Option --xorg: Your configuration seems not to allow
+              [ "$Xcontainer_option" = "no" ] && [ "$Runsonconsole" = "no" ] && [ -z "$Newxvt" ] && warning "Option --xorg: Your configuration seems not to allow
   to start a second core Xorg server from within X. Option --xorg may fail.
   (Per default, only root or console users are allowed to run an Xorg server).
 
@@ -12650,7 +12651,7 @@ check_options_messages() {      # some messages depending on options, but not ch
   Rather install e.g. Xephyr on ssh server and use option --xephyr."
 
       # --gpu=iglx
-      [ "$Sharegpu" = "iglx" ] && [ "$Xcontainer" = "no" ] && [ -e "/var/log/Xorg.0.log" ] && {
+      [ "$Sharegpu" = "iglx" ] && [ "$Xcontainer_option" = "no" ] && [ -e "/var/log/Xorg.0.log" ] && {
         Xorgversion="$(grep -m1 xorg-server </var/log/Xorg.0.log | cut -d: -f2 | cut -d' ' -f1)"
         [ -z "$Nvidiaversion" ] && [ -n "$Xorgversion" ] && verlt "$Xorgversion" "1.20.8" && note "Options --xorg --gpu=iglx: 
   It seems you have Xorg v$Xorgversion. iGLX is known to have a bug
@@ -12706,7 +12707,7 @@ check_options_messages() {      # some messages depending on options, but not ch
 
     --xwayland|--weston-xwayland)
       [ -e "/usr/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so" ] || [ -e "/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so" ] || {
-        [ "$Xcontainer" = "no" ] && note "Option $Xserver: You might need to install
+        [ "$Xcontainer_option" = "no" ] && note "Option $Xserver: You might need to install
   libdecor cairo plugin for Xwayland window decoration.
   $Wikipackages"
       }
@@ -12742,7 +12743,7 @@ check_options_messages() {      # some messages depending on options, but not ch
   # --clipboard
   case "$Shareclipboard" in
     cmv)
-      [ "$Setupwayland" = "yes" ] && [ "$Xcontainer" = "no" ] && note "Option --clipboard=$Shareclipboard:
+      [ "$Setupwayland" = "yes" ] && [ "$Xcontainer_option" = "no" ] && note "Option --clipboard=$Shareclipboard:
   Keyboard binding works only if an X window of container that has focus.
   Options --xeyes or --xlogo can provide an X window for this purpose.
   Alternatively provide image x11docker/xserver (option --xc)
@@ -12910,7 +12911,7 @@ check_options_messages() {      # some messages depending on options, but not ch
   case "$Xoverip" in
     no) ;;
     *)
-      [ "$Xcontainer" = "yes" ] && [ "$Network" = "none" ] || warning "Option --xoverip might allow undesired access to the X server.
+      [ "$Xcontainer_option" = "yes" ] && [ "$Network" = "none" ] || warning "Option --xoverip might allow undesired access to the X server.
   At least along with image x11docker/xserver (option --xc) and 
   --network=none (x11docker default) the setup is considered to be secure
   because a private network is used."
@@ -13678,11 +13679,27 @@ declare_variables() {           # declare global variables
   # =============================================
   # --- X in container, --xc                  ---
   # =============================================
-  
+
+  # Xcforce : "yes" if [ "$Xcontainer_option" = "force" ]
+  #
   Xcforce="no"
+
+  # Xcnetworkid :
+  #   In setup_xcnetwork() :
+  #      Xcnetworkid="$(unpriv_backend "$Backendbin network create $Internal $Xcnetworkname")"
+  #
   Xcnetworkid=""
+
+  # Xcnetworkname :
+  #    In check_newxenv() :
+  #    Xcnetworkname="x11docker_X${Newdisplaynumber}_network_${Cachenumber}"
+  #
   Xcnetworkname=""
-  Xcontainer="auto"
+
+  # Xcontainer_option : Command line arg --xc yes/no/auto
+  #
+  Xcontainer_option="auto"
+
   Xcontainerbackend=""
   Xcontainercommand=""
   Xcontainerimage="x11docker/xserver"
@@ -14074,7 +14091,7 @@ main() {
   }
   check_newxenv                  # find free display
   setup_xcnetwork ||:            # internal network for --xc --xoverip
-  [ "$Xcontainer" = "yes" ] && {                                                  # --xc
+  [ "$Xcontainer_option" = "yes" ] && {                                                  # --xc
     create_xcontainercommand
     debugnote "X container command (rootless ${Xcrootless:-undefined}):
   $Xcontainercommand"
@@ -14185,7 +14202,7 @@ $(nl -ba <$Sshenvscript)"
     waitforlogentry 'start_container()' $Xinitlogfile 'xinitrc is ready' "$Xiniterrorcodes"
 
     # softlink (or socat) to X or Wayland unix socket in container                           # --xc
-    case "$Xcontainer" in
+    case "$Xcontainer_option" in
       yes)
         #[ "$Newdisplay" ]       && ln -s "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber"  "/tmp/.X11-unix/X$Newdisplaynumber"  2>>$Xinitlogfile ||:
         command -v socat >/dev/null && {
