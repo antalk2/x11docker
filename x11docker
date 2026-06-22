@@ -4996,7 +4996,7 @@ check_xserver() {               # check chosen X server, auto-choose X server
             Setupwayland="yes"
           ;;
           *)
-            note "Option --xw: Option $Xserver provides
+            note "Option --xw: Option '$Xserver' provides
   no possibility to also run a Wayland environment.
   This could work only within a Wayland compositor.
   Fallback: Using option --weston-xwayland."
