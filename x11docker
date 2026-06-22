@@ -13947,12 +13947,36 @@ declare_variables() {           # declare global variables
   # =============================================
   # Image information
   # =============================================
-  
+
+  # Imagearchitecture :
+  #    Imagearchitecture=$(parse_inspect "$Imageinspect" "Architecture")
+  #
   Imagearchitecture=""
+
+  # Imagecommand :
+  #    Imagecommand="$(parse_inspect "$Imageinspect" "Config" "Cmd")"
+  #
   Imagecommand=""
+
+  # Imageentrypoint :
+  #   Imageentrypoint="$(parse_inspect "$Imageinspect" "Config" "Entrypoint")"
+  #
   Imageentrypoint=""
-  Imageinspect=""                                 # Output of --inspect
+
+  # Imageinspect : Output of --inspect
+  #    Imageinspect="$(unpriv_backend "$Backendbin inspect $Imagename" 2>> $Containerlogfile)"
+  #
+  Imageinspect=""
+
+  # Imageworkdir :
+  #    Imageworkdir="$(parse_inspect "$Imageinspect" "Config" "Workdir")"
+  #    Imageworkdir="$(parse_inspect "$Imageinspect" "Config" "WorkingDir")"
+  #
   Imageworkdir=""
+
+  # Imageuser :
+  #    Imageuser="$(parse_inspect "$Imageinspect" "Config" "User")"
+  #
   Imageuser=""
 
   # =============================================
