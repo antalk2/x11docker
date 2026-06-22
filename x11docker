@@ -4987,7 +4987,7 @@ check_xserver() {               # check chosen X server, auto-choose X server
   local Xorgautochoice=
 
   # --xw
-  [ "$Xwogether" = "yes" ] && {
+  if [ "$Xwogether" = "yes" ] ; then
     case "$Hostwaylandsocket" in
       "")
         case "$Xserver" in
@@ -5035,7 +5035,7 @@ check_xserver() {               # check chosen X server, auto-choose X server
         esac
       ;;
     esac
-  }
+  fi
 
   # --hostwayland
   [ "$Sharehostwayland" = "yes" ] && {
