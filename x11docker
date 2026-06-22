@@ -7424,7 +7424,7 @@ check_backend() {               # options --backend, --rootless
       note "Option --backend=$BackendKind: No command specified.
 Fallback: using command '$Containercommand' and enabling option --interactive."
       check_fallback
-      Interactive="yes"
+      g_Interactive="yes"
     }
   }
 
@@ -7894,7 +7894,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
   }
 
   # --interactive
-  case "$Interactive" in
+  case "$g_Interactive" in
     yes)
       case "$BackendKind" in
         docker|podman|nerdctl)
@@ -9132,7 +9132,7 @@ storeinfo containerrootrc=ready   # signal for containerrc
 #exec 1>&5 2>&6
 "
 
-  [ "$Interactive" = "yes" ] && echo "
+  [ "$g_Interactive" = "yes" ] && echo "
 exec 1>&5 2>&6
 "
 
@@ -9193,7 +9193,7 @@ create_containerrc() {          # This script runs as unprivileged user in conta
 # Created startscript for docker run used as container command.
 # Runs as unprivileged user in container.
 
-[ '$Interactive' = 'no' ] && exec >> $(convertpath share "$Containerlogfile") 2>&1
+[ '$g_Interactive' = 'no' ] && exec >> $(convertpath share "$Containerlogfile") 2>&1
 
 $(declare -f mysleep)
 $(declare -f pspid)
@@ -9392,7 +9392,7 @@ verbose \"Container environment:
 \$(env | sort)\"
 "
 
-    case "$Interactive" in
+    case "$g_Interactive" in
       no)
         echo "env LD_PRELOAD= tail -f $(convertpath share "$Cmdstdoutlogfile")     2>/dev/null & Stdoutpid=\$!"
         echo "env LD_PRELOAD= tail -f $(convertpath share "$Cmdstderrlogfile") >&2 2>/dev/null & Stderrpid=\$!"
@@ -10312,7 +10312,7 @@ start_container() {             # docker run
 
   debugnote "start_container(): Running image"
 
-  case "$Interactive" in
+  case "$g_Interactive" in
     no)
       case "$BackendKind" in
         host)  unpriv "bash '$Containerrc'" & Pid1pid=$! ;;
@@ -11450,7 +11450,7 @@ ${2:-${LANG:-}}" ; shift                                             # Locale/la
      #### Special options
          --checkwindow)       Checkforopenwindow="${2:-yes}" ; shift ;;  # Run container until all windows are closed
          --fallback)          Fallback="${2:-yes}" ; shift ;;        # Allow/deny fallbacks for impossible options
-      -i|--interactive)       Interactive="yes" ;;                   # Interactive terminal
+      -i|--interactive)       g_Interactive="yes" ;;                   # Interactive terminal
          --runasroot)         Runasroot="$Runasroot
 ${2:-}"                       ; shift ;;                             # Add custom root command in container setup script
          --runasuser)         Runasuser="$Runasuser
@@ -12237,7 +12237,7 @@ check_options_interferences() { # check multiple option interferences, change se
       }
     ;;
     --tty)
-      [ "$Interactive" = "no" ] && {
+      [ "$g_Interactive" = "no" ] && {
         tput lines >/dev/null 2>&1 && {
           store_runoption_env "LINES=$(tput lines)"
           store_runoption_env "COLUMNS=$(tput cols)"
@@ -12713,7 +12713,7 @@ check_options_interferences() { # check multiple option interferences, change se
   esac
 
   # --interactive
-  case "$Interactive" in
+  case "$g_Interactive" in
     yes)
       [ "$Forwardstdin" = "yes" ] && {
         note "Option --stdin is not compatible with option --interactive.
@@ -12726,7 +12726,7 @@ check_options_interferences() { # check multiple option interferences, change se
   bash mode (option --enforce-i).
   Fallback: Disabling option --interactive."
         check_fallback
-        Interactive="no"
+        g_Interactive="no"
       }
       case "$Winsubsystem" in
         MSYS2|CYGWIN|WSL1)
@@ -12740,7 +12740,7 @@ check_options_interferences() { # check multiple option interferences, change se
       esac
     ;;
   esac
-  [ "$Interactive" = "yes" ] && Showcontaineroutput="no"
+  [ "$g_Interactive" = "yes" ] && Showcontaineroutput="no"
 
   return 0
 }
@@ -12971,7 +12971,7 @@ check_options_messages() {      # some messages depending on options, but not ch
   esac
 
   # --interactive
-  [ "$Interactive" = "yes" ] && {
+  [ "$g_Interactive" = "yes" ] && {
     case "$Initsystem" in
       openrc|runit|sysvinit)  note "Option --interactive: Interactive mode with option
   --init=$Initsystem is not well integrated yet.
@@ -14234,8 +14234,8 @@ declare_variables() {           # declare global variables
   # g_Imagename : Image to run
   g_Imagename=""
 
-  # Interactive : --interactive: Run docker with interactive tty yes/no
-  Interactive="no"
+  # g_Interactive : --interactive: Run docker with interactive tty yes/no
+  g_Interactive="no"
 
   Limitresources=""                               # --limit: Limit access to CPU and RAM, 0.1 ... 1.0
   Network="none"                                  # --network
