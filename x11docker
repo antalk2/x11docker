@@ -14161,7 +14161,8 @@ declare_variables() {           # declare global variables
   # ContainerenvironmentArray : --env: Environment variables
   #
   #    Used in:
-  #       store_runoption_env      : ContainerenvironmentArray[$Containerenvironmentcount]="${2:-}"
+  #       store_runoption_env      :
+  #              ContainerenvironmentArray[$Containerenvironmentcount]="${2:-}"
   #       store_runoption_dump_env     
   #     
   #
@@ -14175,13 +14176,29 @@ declare_variables() {           # declare global variables
   # Containerenvironmentfile : file to store final container
   #                            environment
   #
-  #  - changed in: create_cachefiles() : Containerenvironmentfile="$Sharefolder/$Containerenvironmentfile"
+  #  - changed in: create_cachefiles() :
+  #        Containerenvironmentfile="$Sharefolder/$Containerenvironmentfile"
   #  - used in: create_containerrc()
   #
   Containerenvironmentfile="container.environment"
 
-  Containerlocaltimefile="libc.localtime"         # localtime file from host shared to container
-  Containername=""                                # --name: Container name
+  # Containerlocaltimefile : localtime file from host shared to
+  #                          container
+  #
+  #  - changed in: create_cachefiles() :
+  #        Containerlocaltimefile="$Sharefolder/$Containerlocaltimefile"
+  #
+  #  - used in: create_cachefiles() :
+  #        [ -e "$Hostlocaltimefile" ] && cp "$Hostlocaltimefile" "$Containerlocaltimefile"
+  #
+  #  - used in: rootrc_timezone() :
+  #        cp '$(convertpath share "$Containerlocaltimefile")' '$Hostlocaltimefile'
+  #
+  Containerlocaltimefile="libc.localtime"
+
+  # Containername : --name: Container name
+  Containername=""
+
   Containersetup="yes"
   Customdockeroptions=""                          # -- [...] -- : Custom options for "docker run".
   Defaultruntime=""
