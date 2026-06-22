@@ -12174,25 +12174,27 @@ check_options_interferences() { # check multiple option interferences, change se
           --weston*|--xorg)
             case "$Xcforce" in
               yes) 
-                warning "Option --xc=force passes by this issue:
-  Options $Xserver --xc: Running weston or Xorg
-  with option --xc on console can result in not being able to get back
-  to console after terminating or to switch to other ttys.
-  This is likely caused by proprietary NVIDIA drivers.
-  Consider to use free and open source nouveau driver instead.
-  Rather use $Xserver with option '--xc=no'."
+                  warning "$(trim_to_bar \
+                   "|Option --xc=force passes by this issue:
+                    |  Options $Xserver --xc: Running weston or Xorg
+                    |  with option --xc on console can result in not being able to get back
+                    |  to console after terminating or to switch to other ttys.
+                    |  This is likely caused by proprietary NVIDIA drivers.
+                    |  Consider to use free and open source nouveau driver instead.
+                    |  Rather use $Xserver with option '--xc=no'." )"
               ;;
               *)
                 case "$Nvidiaversion" in
                   "") ;;
                   *)
-                    error "Options $Xserver --xc: Running weston or Xorg
-  with option --xc on console can result in not being able to get back
-  to console after terminating or to switch to other ttys.
-  This is likely caused by proprietary NVIDIA drivers.
-  Consider to use free and open source nouveau driver instead.
-  Rather use $Xserver with option '--xc=no'.
-  You can force to run with option --xc with option '--xc=force'."
+                      error  "$(trim_to_bar \
+                       "|Options $Xserver --xc: Running weston or Xorg
+                        |  with option --xc on console can result in not being able to get back
+                        |  to console after terminating or to switch to other ttys.
+                        |  This is likely caused by proprietary NVIDIA drivers.
+                        |  Consider to use free and open source nouveau driver instead.
+                        |  Rather use $Xserver with option '--xc=no'.
+                        |  You can force to run with option --xc with option '--xc=force'." )"
                   ;;
                 esac
               ;;
