@@ -7389,7 +7389,7 @@ check_backend() {               # options --backend, --rootless
       Pulseaudiomode=""
       Runasroot=""
       Runtime=""
-      Sharevolumes=""
+      SharevolumesArray=""
       Sharecgroup="no"
       Sudouser=""
       Sharewebcam=""
@@ -8784,7 +8784,7 @@ store_runoption() {             # store env, cap or volume/device for docker com
       case "${Path:0:1}" in
         "/") # path on host
           Sharevolumescount="$((Sharevolumescount + 1))"
-          Sharevolumes[$Sharevolumescount]="${2:-}"
+          SharevolumesArray[$Sharevolumescount]="${2:-}"
           [ -h "$Path" ] && myrealpath "$Path" >/dev/null && {
             note "Option --share: Shared file is a symbolic link. Sharing target, too.
   Symlink: $Path
@@ -8794,7 +8794,7 @@ store_runoption() {             # store env, cap or volume/device for docker com
         ;;
         *) # Docker volume
           Sharevolumescount="$((Sharevolumescount + 1))"
-          Sharevolumes[$Sharevolumescount]="${2:-}"
+          SharevolumesArray[$Sharevolumescount]="${2:-}"
         ;;
       esac
     ;;
@@ -8809,7 +8809,7 @@ $Line"
         env) for ((Count=$Containerenvironmentcount ; Count>=1 ; Count --)) ; do echo "${Containerenvironment[$Count]}" ; done ;;
         volume)
             for ((Count=1 ; Count<=$Sharevolumescount ; Count ++)) ; do
-                echo "${Sharevolumes[$Count]}" ;
+                echo "${SharevolumesArray[$Count]}" ;
             done
             ;;
         cap)
@@ -13906,9 +13906,12 @@ declare_variables() {           # declare global variables
   #
   Sharehome="no"
 
-  # Sharevolumes : --share: Host files or folders or devices to share,
-  #                array
-  Sharevolumes=""
+  # SharevolumesArray : --share: Host files or folders or devices to share.
+  #                     An array.
+  #
+  #  - Filled in: store_runoption()
+  #
+  SharevolumesArray=""
 
   Sharevolumescount="0"                           # --share: Counts shared folders in array
   Sharewebcam="no"                                # --webcam: Share webcam device /dev/video*
