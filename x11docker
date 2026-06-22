@@ -11345,7 +11345,7 @@ parse_options() {               # parse cli options
   [ "$*" = "--" ]    &&       usage &&        exit 0                 # x11docker without options
 
   while [ $# -gt 0 ]; do
-    Optionset="$Optionset
+    g_Optionset1="$g_Optionset1
 ${1:-}"
     case "${1:-}" in
          --help)              usage ;         exit 0 ;;              # Show help/usage and exit
@@ -11627,11 +11627,11 @@ ${2:-}"                       ; shift ;;                             # Add custo
   -F,--xfishtank --xeyes --xlogo -h,--hostdisplay -H,--hostwayland -i,--interactive -I,--network -K,--kwin -l,--lang -m,--home -n,--nxagent \
   --pipewire -p,--pulseaudio -P,--printer -q,--quiet -t,--tty -T,--weston -v,--verbose -w,--wm -W,--wayland \
   --xopt -x,--xorg -X,--xwayland --satellite -y,--xephyr -Y,--weston-xwayland; do
-    grep -q -x -- "$(cut -d, -f1 <<< "$Line")" <<< "$Optionset" && Optionset="$Optionset
+    grep -q -x -- "$(cut -d, -f1 <<< "$Line")" <<< "$g_Optionset1" && g_Optionset1="$g_Optionset1
 $(cut -d, -f2 <<< "$Line")"
   done
-  Optionset="$(grep -- '--' <<< "$Optionset" | sort | uniq)"
-  Optionset="$(grep -v -x -- '--' <<< "$Optionset")"
+  g_Optionset1="$(grep -- '--' <<< "$g_Optionset1" | sort | uniq)"
+  g_Optionset1="$(grep -v -x -- '--' <<< "$g_Optionset1")"
   for Line in $(tr "," "\n" <<< "$Longoptions"); do
     Optionsetall="$Optionsetall
 $(sed 's/^/--/g ; s/://g' <<< "$Line")"
@@ -13125,7 +13125,7 @@ check_options_messages() {      # some messages depending on options, but not ch
 check_optionset() {             # check if unallowed options in $2 are set for option $1
   local Line Return=
   for Line in ${2:-}; do
-    grep -q -x -- "$Line" <<< "$Optionset" && {
+    grep -q -x -- "$Line" <<< "$g_Optionset1" && {
       Return=1
       note "Option ${1:-} does not support option $Line"
       check_fallback
@@ -14246,7 +14246,10 @@ declare_variables() {           # declare global variables
   # g_Noentrypoint : --no-entrypoint: Disable entrypoint in image yes/no
   g_Noentrypoint="no"
   
-  Optionset=""                                    # list of set options for later support check
+  # g_Optionset1 : list of set options for later support check
+  # was: Optionset
+  g_Optionset1=""
+  
   Optionsetall=""                                 # list of all available long options
   Podmanrootfs=""                                 # --rootfs to indicate that podman should use a root file system
   Remountcgroup=""                                # --init=systemd with cgroupv2 in docker workaround
