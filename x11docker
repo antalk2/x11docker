@@ -7522,15 +7522,15 @@ check_image() {                 # get some image information
 }
 
 check_runtime() {               # option --runtime
-  local Defaultruntime
+  local local_Defaultruntime
 
   case "$BackendKind" in
-    docker)  Defaultruntime="$(parse_inspect "$Backendinfo" "DefaultRuntime" | tr -d '"')" ;;
-    podman)  Defaultruntime="$(parse_inspect "$Backendinfo" "host"  "ociRuntime" "name" | tr -d '"')" ;;
-    nerdctl) Defaultruntime="" ;;
+    docker)  local_Defaultruntime="$(parse_inspect "$Backendinfo" "DefaultRuntime" | tr -d '"')" ;;
+    podman)  local_Defaultruntime="$(parse_inspect "$Backendinfo" "host"  "ociRuntime" "name" | tr -d '"')" ;;
+    nerdctl) local_Defaultruntime="" ;;
   esac
-  debugnote "Default runtime: $Defaultruntime"
-  [ -z "$Runtime" ]        && Runtime="$Defaultruntime"
+  debugnote "Default runtime: $local_Defaultruntime"
+  [ -z "$Runtime" ]        && Runtime="$local_Defaultruntime"
 
   case "$Runtime" in
     ""|runc|crun|oci|nvidia|kata-runtime) ;;
