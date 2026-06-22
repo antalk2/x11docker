@@ -8762,6 +8762,7 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
   
   return 0
 }
+
 store_runoption() {             # store env, cap or volume/device for docker command
   # $1  env     store environment variable $2
   #     volume  store volume or device path $2
@@ -8806,7 +8807,11 @@ $Line"
     dump)
       case "${2:-}" in
         env) for ((Count=$Containerenvironmentcount ; Count>=1 ; Count --)) ; do echo "${Containerenvironment[$Count]}" ; done ;;
-        volume) for ((Count=1 ; Count<=$Sharevolumescount ; Count ++))      ; do echo "${Sharevolumes[$Count]}" ; done ;;
+        volume)
+            for ((Count=1 ; Count<=$Sharevolumescount ; Count ++)) ; do
+                echo "${Sharevolumes[$Count]}" ;
+            done
+            ;;
         cap)
           while read Line; do
             [ "$Line" ] && case "$Capdropall" in
@@ -11909,6 +11914,7 @@ check_options_arguments() {     # check for [likely] valid arguments
 
   return 0
 }
+
 check_options_interferences() { # check multiple option interferences, change settings if needed
   local Message
 
@@ -13779,45 +13785,131 @@ declare_variables() {           # declare global variables
   Xcontaineroptions_normal=""
 
   # Xcontaineroptionsconsole :
-  #   Xcontaineroptionsconsole="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "options_console")"
+  #
+  #   - In check_xcontainer():
+  #      Xcontaineroptionsconsole="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "options_console")"
+  #   - Used in: check_xdepends()
   #
   Xcontaineroptionsconsole=""
 
   # Xcontainertools :
+  #   - In check_xcontainer() :
+  #     Xcontainertools="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "tools")"
+  #   - Used in: check_xdepends(), xtool(), check_smallinit()
+  #
   Xcontainertools=""
 
+  # Xcontainerversion :
+  #   - In check_xcontainer():
+  #     Xcontainerversion="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "version")"
+  #   - Used in: check_xcontainer(), create_xcommand() 
+  #   
+  #
   Xcontainerversion=""
+
+  # Xcontainerversionlatest :
+  #     - constant (only set here)
+  #     - Compared to Xcontainerversion
+  #
   Xcontainerversionlatest="2.6"
+
+  # Xcrootless : yes/no
+  # 
+  #
   Xcrootless=""
 
   # =============================================
   # Window manager
   # =============================================
 
-  Windowmanagermode=""                            # --wm: Window manager to use: container/host/auto
-  Windowmanagercommand=""                         # --wm: Argument for --wm or host wim command
+  # Windowmanagermode : --wm: Window manager to use: container/host/auto/none
+  #
+  #  - In check_windowmanager():
+  #         Windowmanagermode="host"
+  #         Windowmanagermode="none"
+  #   - changed in parse_options()
+  #   - changed in check_options_interferences()
+  #
+  Windowmanagermode=""
+
+  # Windowmanagercommand : --wm: Argument for --wm or host wim command
+  #
+  # - In check_windowmanager():
+  #      Windowmanagercommand="openbox --sm-disable"
+  #
+  #  cinnamon|cinnamon-session)       Windowmanagercommand="cinnamon --sm-disable";;
+  #  enlightenment|e17|e16|e19|e20|e) Windowmanagercommand="enlightenment_start" ;;
+  #  matchbox)                        Windowmanagercommand="matchbox-window-manager"  ;;
+  #  mate|mate-session)               Windowmanagercommand="mate-session -f" ;;
+  #  mate-wm)                         Windowmanagercommand="marco --sm-disable"  ;;
+  #
+  Windowmanagercommand=""
+  
 
   # =============================================
   # Host integration
   # =============================================
   
-  Alsacard="$ALSA_CARD"                           # --alsa: Specified ALSA card
-  Hosthomebasefolder=""                           # --homebasedir: Base directory for container home with --home
-  Langwunsch=""                                   # --lang: Search or create UTF-8 locale in container and set LANG
-  Sharepipewire="no"                              # --pipewire
-  Pipewirepulseaudiosocket=""                     # --pipewire Pipewire pulseaudio socket
-  Pulseaudioconf="pulseaudio.client.conf"         # --pulseaudio: Client config in container
-  Pulseaudiocookie="pulseaudio.cookie"            # --pulseaudio: possible pulse cookie from host to share
-  Pulseaudiomode=""                               # --pulseaudio: 'tcp', 'socket' or 'auto'
-  Pulseaudiomoduleid=""                           # --pulseaudio: module ID, stored for unload in finish()
-  Pulseaudioport=""                               # --pulseaudio: TCP port for --pulseaudio=tcp
-  Pulseaudiosocket="pulseaudio.socket"            # --pulseaudio: unix socket for --pulseaudio=socket
-  Sharealsa="no"                                  # --alsa: enable ALSA sound, share /dev/snd
-  Shareclipboard="no"                             # --clipboard: Enable clipboard sharing
-  Sharecupsmode=""                                # --printer: Share access to CUPS printer server: socket|tcp|""
-  Sharegpu="no"                                   # --gpu: Use hardware accelerated OpenGL, share files in /dev/dri
-  Sharehome="no"                                  # --home: Share a folder ~/.local/share/x11docker/Imagename with created container
-  Sharevolumes=""                                 # --share: Host files or folders or devices to share, array
+  # Alsacard : --alsa: Specified ALSA card
+  Alsacard="$ALSA_CARD"
+
+  # Hosthomebasefolder : --homebasedir: Base directory for container
+  #                      home with --home
+  Hosthomebasefolder=""
+  
+  # Langwunsch : --lang: Search or create UTF-8 locale in container
+  #              and set LANG
+  #
+  Langwunsch=""
+  
+  # Sharepipewire : --pipewire
+  Sharepipewire="no"
+  
+  # Pipewirepulseaudiosocket : --pipewire Pipewire pulseaudio socket
+  Pipewirepulseaudiosocket=""
+  
+  # Pulseaudioconf : --pulseaudio: Client config in container
+  Pulseaudioconf="pulseaudio.client.conf"
+  
+  # Pulseaudiocookie : --pulseaudio: possible pulse cookie from host
+  #                    to share
+  Pulseaudiocookie="pulseaudio.cookie"
+
+  # Pulseaudiomode : --pulseaudio: 'tcp', 'socket' or 'auto'
+  Pulseaudiomode=""
+  
+  # Pulseaudiomoduleid : --pulseaudio: module ID, stored for unload in
+  #                      finish()
+  #
+  Pulseaudiomoduleid=""
+
+  # Pulseaudioport : --pulseaudio: TCP port for --pulseaudio=tcp
+  Pulseaudioport=""
+  
+  # Pulseaudiosocket : --pulseaudio: unix socket for --pulseaudio=socket
+  Pulseaudiosocket="pulseaudio.socket"
+
+  # Sharealsa : --alsa: enable ALSA sound, share /dev/snd
+  Sharealsa="no"
+
+  # Shareclipboard : --clipboard: Enable clipboard sharing
+  Shareclipboard="no"
+
+  # Sharecupsmode : --printer: Share access to CUPS printer server: socket|tcp|""
+  Sharecupsmode=""
+
+  # Sharegpu : --gpu: Use hardware accelerated OpenGL, share files in /dev/dri
+  Sharegpu="no"
+
+  # Sharehome : --home: Share a folder
+  #              ~/.local/share/x11docker/Imagename with created container
+  #
+  Sharehome="no"
+
+  # Sharevolumes : --share: Host files or folders or devices to share,
+  #                array
+  Sharevolumes=""
+
   Sharevolumescount="0"                           # --share: Counts shared folders in array
   Sharewebcam="no"                                # --webcam: Share webcam device /dev/video*
 
