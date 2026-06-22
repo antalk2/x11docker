@@ -13696,7 +13696,7 @@ declare_variables() {           # declare global variables
   #
   Xcnetworkname=""
 
-  # Xcontainer_option : Command line arg --xc yes/no/auto
+  # Xcontainer_option : Command line arg --xc yes/no/auto/force/docker/podman/nerdctl
   #
   Xcontainer_option="auto"
 
