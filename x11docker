@@ -13002,7 +13002,9 @@ declare_variables() {           # declare global variables
   Cachenumber="$(date +%s%N | cut -c6-17)"        # Number to use for cache folder
   [ -z "$Cachenumber" ] && Cachenumber="$(makecookie | cut -c6-17)"
 
+  # =========================
   # --- File descriptors ---
+  # =========================
 
   # FDcmdstdin : --stdin channel to forward stdin to container.
   #              Previously &7
@@ -13027,7 +13029,9 @@ declare_variables() {           # declare global variables
   # FDwatchpid : message channel for watchpidlist(). Previously &9
   FDwatchpid=""
 
+  # ================================================
   # --- Terminal colors used for messages and -V ---
+  # ================================================
 
   Esc="$(printf '\033')"
   Colblue="${Esc}[35m"
@@ -13039,7 +13043,9 @@ declare_variables() {           # declare global variables
   Coluline="${Esc}[4m"
   Colnorm="${Esc}[0m"
 
+  # =====================================
   # --- x11docker startup environment ---
+  # =====================================
   
   # Runsinsnap : docker runs in Ubuntu snap yes/no
   Runsinsnap=""
@@ -13061,7 +13067,9 @@ declare_variables() {           # declare global variables
   # Runssourced : x11docker has been sourced yes/no
   Runssourced=""
 
+  # =========================
   # --- Generated scripts ---
+  # =========================
   
   # Clipboardrc : --clipboard: Generated script for text clipboard sharing
   Clipboardrc="clipboardrc"
@@ -13086,7 +13094,9 @@ declare_variables() {           # declare global variables
   # Xtermrc : Generated script for password prompt
   Xtermrc="xtermrc"
 
+  # =========================
   # --- Internal messages ---
+  # =========================
   
   # Logmessages : Stores messages until logfile is available, needed
   #               by logentry()
@@ -13122,7 +13132,9 @@ declare_variables() {           # declare global variables
   # Watchpidfifo : Message channel to transfer pids to watchpidlist()
   Watchpidfifo="watchpid.fifo"
 
-  # --- Logfiles ---
+  # =========================
+  # --- Logfiles          ---
+  # =========================
 
   # Backendcommandfile : File to store generated docker command,
   #                      needed for --interactive
@@ -13156,7 +13168,9 @@ declare_variables() {           # declare global variables
   # Xpraserverlogfile : Logfile for xpra server
   Xpraserverlogfile="xpra.server.log"
 
+  # ==========================
   # --- Generated commands ---
+  # ==========================
 
   # Compositorcommand : Command to start Weston or KWin
   Compositorcommand=""
@@ -13173,7 +13187,9 @@ declare_variables() {           # declare global variables
   # Xpraservercommand : xpra server command
   Xpraservercommand=""
 
-  # --- Users ---
+  # =========================
+  # --- Users             ---
+  # =========================
 
   # Hostuser : $Lognameuser or --hostuser. Unprivileged user for
   #            non-root commands. Compare unpriv()
@@ -13228,7 +13244,9 @@ declare_variables() {           # declare global variables
   # Containerusershell : --shell: Preferred user shell
   Containerusershell="auto"
 
-  # --- Hostsystem ---
+  # =========================
+  # --- Hostsystem        ---
+  # =========================
 
   # Cgroupversion : Needed for --init=systemd
   Cgroupversion=""
@@ -13316,7 +13334,9 @@ declare_variables() {           # declare global variables
   #
   X11unixrw=""
 
-  # -- MS Windows ---
+  # =========================
+  # -- MS Windows         ---
+  # =========================
 
   # Winpty : Path to winpty for --interactive on MS Windows
   #          Note: https://github.com/rprichard/winpty
@@ -13343,7 +13363,9 @@ declare_variables() {           # declare global variables
   #
   Dockervm=""
 
-  # --- Cache folders ---
+  # =========================
+  # --- Cache folders     ---
+  # =========================
 
   # Cachebasefolder : --cachebasedir Base cache folder
   Cachebasefolder=""
@@ -13362,7 +13384,9 @@ declare_variables() {           # declare global variables
   # Sharefoldercontainer : Mountpoint of $Sharefolder in container
   Sharefoldercontainer="/x11docker"
 
+  # ===========================
   # --- stdin stdout stderr ---
+  # ===========================
 
   # Cmdstdinfifo : stdin for container command. fifo/named pipe to
   #                forward stdin of x11docker to container command
@@ -13378,7 +13402,9 @@ declare_variables() {           # declare global variables
   # Forwardstdin : --stdin: forward stdin to container command yes/no
   Forwardstdin="no"
 
+  # ===================================
   # --- X and Wayland configuration ---
+  # ===================================
 
   # Autochooseserver : --auto: automatic choice of X server (default)
   Autochooseserver="yes"
@@ -13617,16 +13643,40 @@ declare_variables() {           # declare global variables
   # Xwogether : --xw: X11 and Wayland side by side
   Xwogether=""
 
-  # X and Wayland config and cookie files
-  Customwestonini=""                              # --westonini: Custom config file for weston
-  Westonini="weston.ini"                          # Generated config file for weston
-  Xclientcookie="Xauthority.client"               # Generated X client cookie. Normally same as $Xservercookie, except for --hostdisplay and --nxagent
-  Xkbkeymapfile="xkb.keymap"                      # --keymap: File to store output of host keymap in xinitrc
-  Xorgconf=""                                     # --xorgconf: custom xorg.conf
-  Xservercookie="Xauthority.server"               # Generated X server cookie
-  Xwaylandwrapper="Xwayland.wrapper"              # Xwayland wrapper script for --weston-xwayland
+  # =============================================
+  # --- X and Wayland config and cookie files ---
+  # =============================================
+  
+  # Customwestonini : --westonini: Custom config file for weston
+  Customwestonini=""
 
-  # X in container, --xc
+  # Westonini : Generated config file for weston
+  Westonini="weston.ini"
+
+  # Xclientcookie : Generated X client cookie. Normally same as
+  #                 $Xservercookie, except for --hostdisplay and
+  #                 --nxagent
+  #
+  Xclientcookie="Xauthority.client"
+  
+  # Xkbkeymapfile : --keymap: File to store output of host keymap in
+  #                 xinitrc. Tag: keyboard.
+  #
+  Xkbkeymapfile="xkb.keymap"
+  
+  # Xorgconf : --xorgconf: custom xorg.conf
+  Xorgconf=""
+
+  # Xservercookie : Generated X server cookie
+  Xservercookie="Xauthority.server"
+
+  # Xwaylandwrapper : Xwayland wrapper script for --weston-xwayland
+  Xwaylandwrapper="Xwayland.wrapper"
+
+  # =============================================
+  # --- X in container, --xc                  ---
+  # =============================================
+  
   Xcforce="no"
   Xcnetworkid=""
   Xcnetworkname=""
@@ -13643,11 +13693,17 @@ declare_variables() {           # declare global variables
   Xcontainerversionlatest="2.6"
   Xcrootless=""
 
+  # =============================================
   # Window manager
+  # =============================================
+
   Windowmanagermode=""                            # --wm: Window manager to use: container/host/auto
   Windowmanagercommand=""                         # --wm: Argument for --wm or host wim command
 
+  # =============================================
   # Host integration
+  # =============================================
+  
   Alsacard="$ALSA_CARD"                           # --alsa: Specified ALSA card
   Hosthomebasefolder=""                           # --homebasedir: Base directory for container home with --home
   Langwunsch=""                                   # --lang: Search or create UTF-8 locale in container and set LANG
@@ -13668,7 +13724,10 @@ declare_variables() {           # declare global variables
   Sharevolumescount="0"                           # --share: Counts shared folders in array
   Sharewebcam="no"                                # --webcam: Share webcam device /dev/video*
 
+  # =============================================
   # Image information
+  # =============================================
+  
   Imagearchitecture=""
   Imagecommand=""
   Imageentrypoint=""
@@ -13676,7 +13735,10 @@ declare_variables() {           # declare global variables
   Imageworkdir=""
   Imageuser=""
 
+  # =============================================
   # Container setup
+  # =============================================
+  
   Adminusercaps="no"                              # --cap-default, --sudouser, --init=systemd: add capabilities for general container system administration
   Allownewprivileges="auto"                       # --newprivileges: Docker run option --security-opt=no-new-privileges. Default: no. Enabled by options --newprivileges, --cap-default, --sudouser.
   Backend=""                                      # --backend: Backend to use, like docker, podman, nerdctl, proot, host. A default can be specified with default preset file.
@@ -13716,7 +13778,10 @@ declare_variables() {           # declare global variables
   Systemdjournallogfile="systemd.journal.log"
   Workdir=""                                      # --workdir: Set working directory in container
 
+  # =============================================
   # Init and DBus
+  # =============================================
+
   Dbusrunsession="no"                             # --dbus, --wayland, --init=systemd|openrc|runit|sysvinit: Run container command with dbus-run-session / DBus user session
   Dbussystem="no"                                 # --init=systemd|openrc|runit|sysvinit: Run DBus system daemon in container
   Initsystem="tini"                               # --init: Init system in container
@@ -13725,12 +13790,16 @@ declare_variables() {           # declare global variables
   Initbinaryfile=""                               # --init=tini (default): Binary of tini; either /usr/bin/docker-exec or provided by user in [...]/share/x11docker
   Initcontainerpath="/usr/local/bin/init"         # --init=tini: Path of tini (or catatonit) in container
 
+  # =============================================
   # Custom additional commands
+  # =============================================
   Runasuser=""                                    # --runasuser: Add container command to containerrc
   Runasroot=""                                    # --runasroot: Add container command to container setup script running as root
   Runfromhost=""                                  # --runfromhost: Add host command to xinitrc
 
+  # =============================================
   # Miscellaneous
+  # =============================================
   Buildimage=""                                   # --build: x11docker image to build from repo Dockerfile
   Codename=""                                     # created from image name and command without special chars for use with container name and cache folder
   Fallback="yes"                                  # --fallback: Allow or deny fallbacks for failing options.
@@ -13742,7 +13811,9 @@ declare_variables() {           # declare global variables
   Presetlist=""                                   # List of already parsed preset files to avoid a loop
   Preservecachefiles="no"                         # If yes, don't delete cache files on exit. For few failure cases only.
 
+  # =============================================
   # Verbosity options
+  # =============================================
   Debugmode="no"                                  # --debug: Excerpt of --verbose, also bash error checks
   Printcheck="no"                                 # --printcheck: Show X dependency check messages
   Showcontainerid=""                              # --printid: Output of container ID on stdout
@@ -13758,13 +13829,19 @@ declare_variables() {           # declare global variables
   Wikipackagesimage="$Wikipackages
   Alternatively you can provide image x11docker/xserver (option --xc)."
 
+  # =============================================
   # Special options not starting X or docker
+  # =============================================
+
   Cleanup=""                                      # --cleanup: Remove orphaned containers and cache files
   Createlauncher=""                               # --launcher: Create application launcher on desktop and exit yes/no
   Installermode=""                                # --install/--update/--update-master/--remove
   Installerarg=""                                 # --update/--update-master: show diff only, do not install
 
+  # =============================================
   # Lists of window managers
+  # =============================================
+
   # - these window managers are known to work well with x11docker (alphabetical order)(excluding $Wm_not_recommended and $Wm_ugly):
   Wm_good="amiwm blackbox cinnamon compiz ctwm enlightenment fluxbox flwm fvwm"
   Wm_good="$Wm_good jwm kwin kwin_x11 lxsession mate-session mate-wm marco metacity notion olwm olvwm openbox ororobus pekwm"
@@ -13789,7 +13866,10 @@ declare_variables() {           # declare global variables
   # List of all working window managers, recommended ones first, excluding $Wm_bad:
   Wm_all="$Wm_recommended_nodesktop_light $Wm_recommended_nodesktop_heavy  $Wm_recommended_desktop_light $Wm_recommended_desktop_heavy $Wm_good $Wm_ugly $Wm_not_recommended $Wm_nodetect"
 
+  # =============================================
   # x11docker communication functions to integrate into generated scripts
+  # =============================================
+
   Messagefifofuncs='
 warning() {
   echo "$*:WARNING"   >>$Messagefile
@@ -13830,6 +13910,7 @@ error() {
 stdout() {
   echo "$*:STDOUT"    | sed "s/\$/ /" >>$Messagefile
 }'
+
   Messagefifofuncs_escaped='
 warning() {
   echo \"\$*:WARNING\"   >>\$Messagefile
@@ -13870,7 +13951,10 @@ error() {
 stdout() {
   echo \"\$*:STDOUT\"    | sed \"s/\\\$/ /\" >>\$Messagefile
 }'
-}
+
+} # end of declare_variables
+
+
 mytest() {                      # --experimental
   [ "$Mytest" ] && {
     note "Option --experimental: changed something: ${1:-"(no comment)"}"
