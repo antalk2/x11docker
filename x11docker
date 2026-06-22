@@ -3583,7 +3583,7 @@ setup_hostdbus() {              # option --hostdbus: connect to host DBus sessio
     store_runoption_env "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS"
     [ "${DBUS_SESSION_BUS_PID:-}" ]      && store_runoption_env  "${DBUS_SESSION_BUS_PID:-}"
     [ "${DBUS_SESSION_BUS_WINDOWID:-}" ] && store_runoption_env  "${DBUS_SESSION_BUS_WINDOWID:-}"
-    [ "$Network" != "host" ] && {
+    [ "$g_Network" != "host" ] && {
       note "Option --hostdbus: Did not find a DBus session socket file
   but an abstract unix socket. To allow access for container,
   x11docker needs insecure option '--network=host'.
@@ -3620,7 +3620,7 @@ setup_printer() {               # option --printer: connect to cups printer serv
   case "$Sharecupsmode" in
     tcp)
       Cupsserver="$Hostip:631"
-      [ "$Network" = "none" ] && {
+      [ "$g_Network" = "none" ] && {
         note "Option --printer=tcp does not work without network access.
   Consider to enable option -I, --network."
         check_fallback
@@ -3761,7 +3761,7 @@ setup_sound_pulseaudio() {      # option --pulseaudio: set up pulseaudio connect
     [ "$Pulseaudiomode" = "tcp" ] && note "Option --pulseaudio: Enabling TCP mode"
   }
 
-  [ "$Pulseaudiomode" = "tcp" ] && [ "$Network" = "none" ] && {
+  [ "$Pulseaudiomode" = "tcp" ] && [ "$g_Network" = "none" ] && {
     note "Option --pulseaudio: Without option -I, --network
   pulseaudio sound over TCP is not possible but needed in your setup.
   Fallback: Disabling option --pulseaudio."
@@ -3962,11 +3962,11 @@ check_newxenv()  {              # find free display
     case "$Xserver" in
       --xwin|--runx)
         Xoverip="listentcp"
-        [ "$Network" = "none" ] && {
+        [ "$g_Network" = "none" ] && {
           note "Option $Xserver needs network access.
   Enabling option -I, --network."
           check_fallback
-          Network=""
+          g_Network=""
         }
       ;;
       --hostdisplay)
@@ -3999,7 +3999,7 @@ check_newxenv()  {              # find free display
             yes)
             ;;
             no)
-              [ "$Network" = "none" ] && error "Option --xoverip needs network access.
+              [ "$g_Network" = "none" ] && error "Option --xoverip needs network access.
   Please enable option -I, --network.
   Alternatively provide image x11docker/xserver (option --xc)
   to allow an isolated internal network."
@@ -7009,7 +7009,7 @@ setup_xcnetwork() {             # --xoverip --xc: start internal network between
       [ "$Xcontainer_option" = "yes" ] && [ "$Hostxoverip" = "no" ] && {
         case "$Xoverip" in
           yes|listentcp|socat)
-            case "$Network" in
+            case "$g_Network" in
               none) Internal="--internal" ;;
               ""|bridge) Internal="";;
               *) return 1 ;; ### FIXME
@@ -7355,7 +7355,7 @@ check_backend() {               # options --backend, --rootless
   Please try option --hostuser instead."
       Checkrootfs="yes"
       # set defaults. Some might look misleading just to avoid later messages, but not affecting the setup.
-      Network="host"
+      g_Network="host"
       Shareipc="host"
       Createcontaineruser="yes"
       Containersetup="yes"
@@ -7388,7 +7388,7 @@ check_backend() {               # options --backend, --rootless
       Shareipc="host"
       [ "$Langwunsch" ] && store_runoption_env "LANG=$Langwunsch"
       g_Limitresources=""
-      Network="host"
+      g_Network="host"
       Allownewprivileges="no"
       Noentrypoint=""
       Containersetup="yes"
@@ -8032,8 +8032,8 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
     docker|podman|nerdctl)
       case "$Xcnetworkid" in
         "")
-          [ -n "$Network" ] && Backendcommand="$Backendcommand \\
-  --network $Network"
+          [ -n "$g_Network" ] && Backendcommand="$Backendcommand \\
+  --network $g_Network"
         ;;
         *)
           Backendcommand="$Backendcommand \\
@@ -10776,7 +10776,7 @@ $(sestatus 2>&1 ||:)"
   # Check host IP. Needed for --pulseaudio=tcp, --printer=tcp, --xoverip and --runx
   case "$Winsubsystem" in
     "")
-      case "$Network" in
+      case "$g_Network" in
         host)
           Hostip="127.0.0.1"
         ;;
@@ -11036,7 +11036,7 @@ check_snap() {                  # check if docker is installed in snap. Causes r
     [ "$Allownewprivileges" = "auto" ] && Allownewprivileges="yes"
     Xoverip="${Xoverip:-yes}"
     Xcontainer_option="no"
-    [ "$Network" = "none" ] && Network=""
+    [ "$g_Network" = "none" ] && g_Network=""
     case "$Sharegpu" in
       yes|virgl|iglx|direct)
         Sharegpu="iglx"
@@ -11482,8 +11482,8 @@ ${2:-}"                       ; shift ;;                             # Add custo
          --limit)             g_Limitresources="${2:-0.5}" ; shift ;;  # Limited CPU and RAM access
          --mobyvm)            Dockervm="moby" ;;                        # Use MobyVM in WSL2
          --name)              g_Containername="${2:-}" ; shift ;;      # Set container name
-      -I)                     Network="" ;;
-         --network)           Network="${2:-}" ; shift ;;            # Enable internet access
+      -I)                     g_Network="" ;;
+         --network)           g_Network="${2:-}" ; shift ;;            # Enable internet access
          --newprivileges)     Allownewprivileges="${2:-yes}" ; shift ;; # [Don't] set --security-opt=no-new-privileges
          --no-entrypoint)     Noentrypoint="yes" ;;                  # Disable ENTRYPOINT of image
          --no-setup)          Containersetup="no" ;;                 # No setup of x11docker inside of container (notable disables containerrootrc() )
@@ -11545,7 +11545,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
          --hostipc)           Shareipc="host"
                               note "Option --hostipc is deprecated.
   Please use --ipc=host instead." ;;
-         --hostnet)           Network="host"
+         --hostnet)           g_Network="host"
                               note "Option --hostnet is deprecated.
   Please use --network=host instead." ;;
          --iglx)              Sharegpu="iglx"           ;    note "Option --iglx is deprecated.
@@ -11556,7 +11556,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
   Please use option --weston-xwayland instead." ;;
          --no-auth)           Xauthentication="no"  ;        note "Option --no-auth is deprecated.
   Please use option --xauth=no instead." ;;
-         --no-internet)       Network="none"
+         --no-internet)       g_Network="none"
                               note "Option --no-internet is deprecated.
   Option --network=none is default now." ;;
          --sharessh)          [ -e "${SSH_AUTH_SOCK:-}" ] && {       # SSH socket sharing
@@ -12091,11 +12091,11 @@ check_options_interferences() { # check multiple option interferences, change se
   # --runtime
   case "$Runtime" in
     kata-runtime)
-      [ "$Network" = "host" ] && {
+      [ "$g_Network" = "host" ] && {
         note "Option --network=host: Sharing host network stack does not work
   with --runtime=kata-runtime. Fallback: Allowing default kata --network."
         check_fallback
-        Network=""
+        g_Network=""
       }
       check_optionset "--runtime=kata-runtime" "--alsa --webcam" ||:
       Sharewebcam="no"
@@ -12253,7 +12253,7 @@ check_options_interferences() { # check multiple option interferences, change se
       Xtest=""
       Xcomposite=""
       [ "$Runsoverssh" = "yes" ] && { ### FIXME
-        [ "$Network" != "host" ]  && error "For SSH connection with option --hostdisplay
+        [ "$g_Network" != "host" ]  && error "For SSH connection with option --hostdisplay
   x11docker would need insecure option --network=host.
   It is recommended to use another X server option
   like --xpra, --xephyr or --nxagent."
@@ -13000,7 +13000,7 @@ check_options_messages() {      # some messages depending on options, but not ch
     host) ;;
     proot) ;;
     docker|podman|nerdctl)
-      case "$Network" in
+      case "$g_Network" in
         none)
           note "Option --network=none is set to disable network access.
   If you need network and internet access, set option -I, --network [=NET]."
@@ -13016,12 +13016,12 @@ check_options_messages() {      # some messages depending on options, but not ch
   Access to host X server $Hostdisplay may be possible
   through abstract unix socket." ;;
         *)
-          warning "Option --network=$Network: Some sort of network access
+          warning "Option --network=$g_Network: Some sort of network access
      is enabled." ;;
       esac
     ;;
   esac
-  case "$Network" in
+  case "$g_Network" in
     none) ;;
     *)
       case "$BackendKind" in
@@ -13085,7 +13085,7 @@ check_options_messages() {      # some messages depending on options, but not ch
   case "$Xoverip" in
     no) ;;
     *)
-      [ "$Xcontainer_option" = "yes" ] && [ "$Network" = "none" ] || warning "Option --xoverip might allow undesired access to the X server.
+      [ "$Xcontainer_option" = "yes" ] && [ "$g_Network" = "none" ] || warning "Option --xoverip might allow undesired access to the X server.
   At least along with image x11docker/xserver (option --xc) and 
   --network=none (x11docker default) the setup is considered to be secure
   because a private network is used."
@@ -14210,7 +14210,7 @@ declare_variables() {           # declare global variables
   #             --name)              g_Containername="${2:-}" ; shift ;;      # Set container name
   #
   # - set in: create_backendcommand() :
-  #             [ -z "$g_Containername" ] && g_Containername="x11docker_X${Newdisplaynumber}_${Codename}_${Cachenumber}"
+  #      [ -z "$g_Containername" ] && g_Containername="x11docker_X${Newdisplaynumber}_${Codename}_${Cachenumber}"
   #
   g_Containername=""
 
@@ -14240,7 +14240,9 @@ declare_variables() {           # declare global variables
   # g_Limitresources : --limit: Limit access to CPU and RAM, 0.1 ... 1.0
   g_Limitresources=""
 
-  Network="none"                                  # --network
+  # g_Network : --network
+  g_Network="none"
+
   Noentrypoint="no"                               # --no-entrypoint: Disable entrypoint in image yes/no
   Optionset=""                                    # list of set options for later support check
   Optionsetall=""                                 # list of all available long options
