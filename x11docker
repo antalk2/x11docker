@@ -14055,11 +14055,17 @@ declare_variables() {           # declare global variables
   Containerentrypoint=""
 
   # ContainerenvironmentArray : --env: Environment variables
+  #
+  #    Used in:
+  #       store_runoption env      : ContainerenvironmentArray[$Containerenvironmentcount]="${2:-}"
+  #       store_runoption dump env     
   #     
   #
   ContainerenvironmentArray=""
 
+  # Containerenvironmentcount : Number of elements in ContainerenvironmentArray
   Containerenvironmentcount="0"
+
   Containerenvironmentfile="container.environment" # file to store final container environment
   Containerlocaltimefile="libc.localtime"         # localtime file from host shared to container
   Containername=""                                # --name: Container name
