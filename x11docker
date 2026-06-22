@@ -4370,8 +4370,8 @@ check_xcontainer() {            # option --xc: check backend, rootless and image
   case "$Xcontainer_option" in
     yes)
       Xcontainerinspect="$(unpriv_xcbackend "$Xcontainerbackend inspect $Xcontainerimage")"
-      Xcontaineroptions="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "options")"
-      Xcontaineroptions="${Xcontaineroptions:-"--nxagent --xpra --xpra2 --xpra2-xwayland --xephyr --weston-xwayland --xvfb --xwayland --weston"}"
+      Xcontaineroptions_normal="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "options")"
+      Xcontaineroptions_normal="${Xcontaineroptions_normal:-"--nxagent --xpra --xpra2 --xpra2-xwayland --xephyr --weston-xwayland --xvfb --xwayland --weston"}"
       Xcontaineroptionsconsole="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "options_console")"
       Xcontainertools="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "tools")"
       Xcontainerversion="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "version")"
@@ -4385,6 +4385,34 @@ check_xcontainer() {            # option --xc: check backend, rootless and image
 
   return 0
 }
+
+#
+# function check_xdepends( arg1 )
+#
+#  arg1 may be:
+#
+#    --xpra-xwayland
+#    --xpra2-xwayland
+#    --weston-xwayland
+#    --xwayland
+#    --satellite
+#    --weston
+#    --kwin
+#    --kwin-xwayland
+#    --hostwayland
+#    --xephyr
+#    --xpra
+#    --xpra-xwayland
+#    --nxagent
+#    --xvfb
+#    --xwayland
+#    --satellite
+#    --weston-xwayland
+#    --kwin-xwayland
+#    --xorg
+#    --xpra2*
+#       (and maybe more)
+#
 check_xdepends() {              # check dependencies on host for X server option $1
   # Return 1 if something is missing or not possible
   local Return= Message= Xcopt=
@@ -4399,7 +4427,7 @@ check_xdepends() {              # check dependencies on host for X server option
 
   case "$Runsonconsole" in
     no)
-      grep -q -w -- "${1:-}" <<< "$Xcontaineroptions --hostdisplay" && Xcopt="yes"
+      grep -q -w -- "${1:-}" <<< "$Xcontaineroptions_normal --hostdisplay" && Xcopt="yes"
     ;;
     yes)
       grep -q -w -- "${1:-}" <<< "$Xcontaineroptionsconsole"        && Xcopt="yes"
@@ -5990,6 +6018,7 @@ esac
 
   return 0
 }
+
 create_xcontainercommand() {    # option --xc: create docker command for X in container
   local Xcontainerrc Gpudevice
   local Xc_hostx= Xc_hostwayland= Xc_containerwayland Xc_gpu= Xc_nomitshm
@@ -6993,8 +7022,11 @@ setup_xcnetwork() {             # --xoverip --xc: start internal network between
   esac
   return 0
 }
+
 store_newxenv() {               # store display variables
-  Newdisplay="${Newdisplay//"XCONTAINERIP"/"$Xcontainerip"}"
+    #
+    Newdisplay="${Newdisplay//"XCONTAINERIP"/"$Xcontainerip"}"
+    #
   # create $Newxenv: collection of environment variables to access new X from host (e.g. in xinitrc)
   [ "$Newdisplay" ]                   && storeinfo "DISPLAY=$Newdisplay"                 && Newxenv="$Newxenv DISPLAY=$Newdisplay"
   [ "$Xauthentication" != "no" ]      && storeinfo "XAUTHORITY=$Xclientcookie"           && Newxenv="$Newxenv XAUTHORITY=$Xclientcookie"
@@ -10331,6 +10363,7 @@ start_compositor() {            # start Wayland compositor Weston or KWin
   esac
   return 0
 }
+
 start_xcontainer() {            # --xc
   local Containerinspect Xpid1pid
 
@@ -13700,14 +13733,59 @@ declare_variables() {           # declare global variables
   #
   Xcontainer_option="auto"
 
+  # Xcontainerbackend :
+  #   In check_xcontainer() : Xcontainerbackend="$Backend"
+  #                           Xcontainerbackend="docker"
+  #                           Xcontainerbackend="podman"
+  #                           Xcontainerbackend="docker or podman"
+  #                           Xcontainerbackend="$Xcontainer_option"
+  #
   Xcontainerbackend=""
+
+  # Xcontainercommand :
+  #  Filled in create_xcontainercommand():
+  #          Xcontainercommand="$Xcontainerbackend run --pull=never [...]
+  #      
   Xcontainercommand=""
+
+  # Xcontainerimage :
+  #         - Never changed?
+  #         - Used like: docker inspect "$Xcontainerimage"
+  #
   Xcontainerimage="x11docker/xserver"
+
+  # Xcontainerip : IP adress of container, or Hostip, or Xcontainername
+  #
+  # - used in : create_xinitrc()
+  #             start_xcontainer()
+  #             store_newxenv()
+  #
   Xcontainerip=""
+
+  # Xcontainername :
+  #  In  : create_xcontainercommand() :
+  #            Xcontainername="x11docker_X${Newdisplaynumber}_xserver_${Cachenumber}"
+  #
+  #  docker name of the container
+  #
   Xcontainername=""
-  Xcontaineroptions=""
+
+  # Xcontaineroptions_normal :
+  #    - set in check_xcontainer():
+  #         Xcontaineroptions_normal="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "options")"
+  #         default: "--nxagent --xpra --xpra2 --xpra2-xwayland --xephyr --weston-xwayland --xvfb --xwayland --weston"
+  #    - used in: 
+  #
+  Xcontaineroptions_normal=""
+
+  # Xcontaineroptionsconsole :
+  #   Xcontaineroptionsconsole="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "options_console")"
+  #
   Xcontaineroptionsconsole=""
+
+  # Xcontainertools :
   Xcontainertools=""
+
   Xcontainerversion=""
   Xcontainerversionlatest="2.6"
   Xcrootless=""
