@@ -14009,7 +14009,6 @@ declare_variables() {           # declare global variables
   # Backendbin : path to binary of backend
   Backendbin=""
 
-  Chrootmountlist=""
   # Backendinfo : output of 'docker info'
   #   Backendinfo="$(unpriv_backend "env LC_ALL=C $Backendbin info --format='{{json .}}'" 2>&1)"
   #
@@ -14024,6 +14023,10 @@ declare_variables() {           # declare global variables
   #              set --security-opt=no-new-privileges yes/no
   #
   Capdropall="yes"
+
+  #  # Chrootmountlist : Not mentioned anywhere else
+  #  Chrootmountlist=""
+
   Containercommand=""                             # Container command [+args]
   Containerentrypoint=""
   Containerenvironment=""                         # --env: Environment variables
