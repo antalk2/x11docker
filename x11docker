@@ -7390,7 +7390,7 @@ check_backend() {               # options --backend, --rootless
       g_Limitresources=""
       g_Network="host"
       Allownewprivileges="no"
-      Noentrypoint=""
+      g_Noentrypoint=""
       Containersetup="yes"
       Sharecupsmode=""
       Pulseaudiomode=""
@@ -7473,7 +7473,7 @@ check_image() {                 # get some image information
   # Check ENTRYPOINT
   Imageentrypoint="$(parse_inspect "$Imageinspect" "Config" "Entrypoint")"
   debugnote "Image ENTRYPOINT: $Imageentrypoint"
-  case "$Noentrypoint" in
+  case "$g_Noentrypoint" in
     yes) Containerentrypoint="" ;;
     no)
       Containerentrypoint="$Imageentrypoint"
@@ -11485,7 +11485,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
       -I)                     g_Network="" ;;
          --network)           g_Network="${2:-}" ; shift ;;            # Enable internet access
          --newprivileges)     Allownewprivileges="${2:-yes}" ; shift ;; # [Don't] set --security-opt=no-new-privileges
-         --no-entrypoint)     Noentrypoint="yes" ;;                  # Disable ENTRYPOINT of image
+         --no-entrypoint)     g_Noentrypoint="yes" ;;                  # Disable ENTRYPOINT of image
          --no-setup)          Containersetup="no" ;;                 # No setup of x11docker inside of container (notable disables containerrootrc() )
          --rootfs)            Podmanrootfs="yes" ;;                  # run a rootfs in posman instead of image
          --rootless)          Backendrootless="${2:-yes}"; shift ;;
@@ -12547,7 +12547,7 @@ check_options_interferences() { # check multiple option interferences, change se
       # --hostdbus
 
       Dbusrunsession="no"
-      Noentrypoint="no"
+      g_Noentrypoint="no"
       Runasroot=""
       Runasuser=""
     ;;
@@ -14243,7 +14243,9 @@ declare_variables() {           # declare global variables
   # g_Network : --network
   g_Network="none"
 
-  Noentrypoint="no"                               # --no-entrypoint: Disable entrypoint in image yes/no
+  # g_Noentrypoint : --no-entrypoint: Disable entrypoint in image yes/no
+  g_Noentrypoint="no"
+  
   Optionset=""                                    # list of set options for later support check
   Optionsetall=""                                 # list of all available long options
   Podmanrootfs=""                                 # --rootfs to indicate that podman should use a root file system
