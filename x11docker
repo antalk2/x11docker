@@ -4243,10 +4243,10 @@ check_vt() {                    # option --xorg: find free vt / tty
 check_xcontainer() {            # option --xc: check backend, rootless and image x11docker/xserver
   local Auto= Fail=
 
-  [ "$Xcontainer" = "force" ] && {
+  if [ "$Xcontainer" = "force" ] ; then
     Xcontainer="yes"
     Xcforce="yes"
-  }
+  fi
 
   # workaround: X server options not supported by --xc already caught here if they are specified on cli
   case "$Xserver" in
