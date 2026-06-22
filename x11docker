@@ -7363,7 +7363,7 @@ check_backend() {               # options --backend, --rootless
       Allownewprivileges="no"
       Runtime=""
       Sharecgroup="no"
-      Limitresources=""
+      g_Limitresources=""
       # needed
       Switchcontaineruser="yes"
 
@@ -7387,7 +7387,7 @@ check_backend() {               # options --backend, --rootless
       Capdropall="yes"
       Shareipc="host"
       [ "$Langwunsch" ] && store_runoption_env "LANG=$Langwunsch"
-      Limitresources=""
+      g_Limitresources=""
       Network="host"
       Allownewprivileges="no"
       Noentrypoint=""
@@ -7929,12 +7929,12 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
   esac
 
   # --limit
-  [ "$Limitresources" ] && {
+  [ "$g_Limitresources" ] && {
     case "$BackendKind" in
       docker|podman|nerdctl)
-        Memory="$(awk "BEGIN {print int($(LC_ALL=C free -b | grep "Mem:" | awk ' {print $4 + $6}') * $Limitresources)}")"
+        Memory="$(awk "BEGIN {print int($(LC_ALL=C free -b | grep "Mem:" | awk ' {print $4 + $6}') * $g_Limitresources)}")"
         Backendcommand="$Backendcommand \\
-  --cpus=$(awk "BEGIN {print $(nproc) * $Limitresources}") \\
+  --cpus=$(awk "BEGIN {print $(nproc) * $g_Limitresources}") \\
   --memory=$Memory \\
   --kernel-memory=$Memory"
       ;;
@@ -11479,7 +11479,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
          --env)               store_runoption_env "${2:-}"           # Set container environment variables
                               shift ;;
          --ipc)               Shareipc="${2:-host}" ; shift ;;
-         --limit)             Limitresources="${2:-0.5}" ; shift ;;  # Limited CPU and RAM access
+         --limit)             g_Limitresources="${2:-0.5}" ; shift ;;  # Limited CPU and RAM access
          --mobyvm)            Dockervm="moby" ;;                        # Use MobyVM in WSL2
          --name)              Containername="${2:-}" ; shift ;;      # Set container name
       -I)                     Network="" ;;
@@ -11822,13 +11822,13 @@ check_options_arguments() {     # check for [likely] valid arguments
   esac
 
   # --limit N
-  [ "$Limitresources" ] && {
-    [ "1" = "$(awk -v a="$Limitresources" "BEGIN {print (a <= 1)}")" ] && [ "1" = "$(awk -v a="$Limitresources" "BEGIN {print (a > 0)}")" ] || {
-      warning "Option --limit: Specified value '$Limitresources' is out of range.
+  [ "$g_Limitresources" ] && {
+    [ "1" = "$(awk -v a="$g_Limitresources" "BEGIN {print (a <= 1)}")" ] && [ "1" = "$(awk -v a="$g_Limitresources" "BEGIN {print (a > 0)}")" ] || {
+      warning "Option --limit: Specified value '$g_Limitresources' is out of range.
   Allowed is a factor greater than 0 and less than or equal to 1.  0<FACTOR<=1
   Fallback: Setting limit factor to --limit=0.5"
       check_fallback
-      Limitresources="0.5"
+      g_Limitresources="0.5"
     }
   }
 
@@ -12991,7 +12991,7 @@ check_options_messages() {      # some messages depending on options, but not ch
   }
 
   # --limit N
-  [ "$Limitresources" ] && note "Option --limit does not avoid possibly flooding the hard disk
+  [ "$g_Limitresources" ] && note "Option --limit does not avoid possibly flooding the hard disk
   in docker's container partition or in shared folders.
   It only restricts memory and CPU usage."
 
@@ -14237,7 +14237,9 @@ declare_variables() {           # declare global variables
   # g_Interactive : --interactive: Run docker with interactive tty yes/no
   g_Interactive="no"
 
-  Limitresources=""                               # --limit: Limit access to CPU and RAM, 0.1 ... 1.0
+  # g_Limitresources : --limit: Limit access to CPU and RAM, 0.1 ... 1.0
+  g_Limitresources=""
+
   Network="none"                                  # --network
   Noentrypoint="no"                               # --no-entrypoint: Disable entrypoint in image yes/no
   Optionset=""                                    # list of set options for later support check
