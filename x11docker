@@ -8795,7 +8795,7 @@ store_runoption() {  # store env, cap or volume/device for docker command
   case "${1:-}" in
     env)
       Containerenvironmentcount="$((Containerenvironmentcount + 1))"
-      Containerenvironment[$Containerenvironmentcount]="${2:-}"
+      ContainerenvironmentArray[$Containerenvironmentcount]="${2:-}"
     ;;
     volume)
       Path="$(convertpath subsystem "${2:-}")"
@@ -8829,7 +8829,7 @@ $Line"
     ;;
     dump)
       case "${2:-}" in
-        env) for ((Count=$Containerenvironmentcount ; Count>=1 ; Count --)) ; do echo "${Containerenvironment[$Count]}" ; done ;;
+        env) for ((Count=$Containerenvironmentcount ; Count>=1 ; Count --)) ; do echo "${ContainerenvironmentArray[$Count]}" ; done ;;
         volume)
             for ((Count=1 ; Count<=$Sharevolumescount ; Count ++)) ; do
                 echo "${SharevolumesArray[$Count]}" ;
@@ -14054,10 +14054,10 @@ declare_variables() {           # declare global variables
   #     
   Containerentrypoint=""
 
-  # Containerenvironment : --env: Environment variables
+  # ContainerenvironmentArray : --env: Environment variables
   #     
   #
-  Containerenvironment=""
+  ContainerenvironmentArray=""
 
   Containerenvironmentcount="0"
   Containerenvironmentfile="container.environment" # file to store final container environment
