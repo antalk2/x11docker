@@ -14227,8 +14227,8 @@ declare_variables() {           # declare global variables
   # Customdockeroptions : -- [...] -- : Custom options for "docker run".
   Customdockeroptions=""
 
-  # Defaultruntime :
-  Defaultruntime=""
+  #  # Defaultruntime : not used. There is local_Defaultruntime in check_runtime()
+  #  Defaultruntime=""
   
   Imagename=""                                    # Image to run
   Interactive="no"                                # --interactive: Run docker with interactive tty yes/no
