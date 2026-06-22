@@ -11633,10 +11633,10 @@ $(cut -d, -f2 <<< "$Line")"
   g_Optionset1="$(grep -- '--' <<< "$g_Optionset1" | sort | uniq)"
   g_Optionset1="$(grep -v -x -- '--' <<< "$g_Optionset1")"
   for Line in $(tr "," "\n" <<< "$Longoptions"); do
-    Optionsetall="$Optionsetall
+    g_AllAvailableLongOptions="$g_AllAvailableLongOptions
 $(sed 's/^/--/g ; s/://g' <<< "$Line")"
   done
-  Optionsetall="$(grep . <<< "$Optionsetall")"
+  g_AllAvailableLongOptions="$(grep . <<< "$g_AllAvailableLongOptions")"
 
   return 0
 }
@@ -14250,7 +14250,10 @@ declare_variables() {           # declare global variables
   # was: Optionset
   g_Optionset1=""
   
-  Optionsetall=""                                 # list of all available long options
+  # g_AllAvailableLongOptions : list of all available long options
+  # was: Optionsetall
+  g_AllAvailableLongOptions=""
+
   Podmanrootfs=""                                 # --rootfs to indicate that podman should use a root file system
   Remountcgroup=""                                # --init=systemd with cgroupv2 in docker workaround
   Rootfs=""                                       # --backend=proot
@@ -14497,7 +14500,7 @@ main() {
     trap 'traperror $? $LINENO $BASH_LINENO "$BASH_COMMAND" $(printf "::%s" ${FUNCNAME[@]})'  ERR
   }
   [ -n "$Containeruserpassword" ] && {                                            # --password
-    check_optionset "--password" "$(grep -v -- '--password' <<< "$Optionsetall")" ||:
+    check_optionset "--password" "$(grep -v -- '--password' <<< "$g_AllAvailableLongOptions")" ||:
     set_password "$Containeruserpassword"
     finish
     return 0
@@ -14530,17 +14533,17 @@ main() {
         esac
       ;;
     esac
-    check_optionset "$Installermode" "$(grep -v -E -- '--install|--update|--update-master|--remove|--remove-oldprefix' <<< "$Optionsetall")" ||:
+    check_optionset "$Installermode" "$(grep -v -E -- '--install|--update|--update-master|--remove|--remove-oldprefix' <<< "$g_AllAvailableLongOptions")" ||:
     installer "$Installermode"
     finish
   }
   [ "$Cleanup" ] && {                                                             # --cleanup: Clean up cache and orphaned x11docker containers
-    check_optionset "--cleanup" "$(grep -v -E -- '--cleanup|--backend' <<< "$Optionsetall")" ||:
+    check_optionset "--cleanup" "$(grep -v -E -- '--cleanup|--backend' <<< "$g_AllAvailableLongOptions")" ||:
     cleanup
     finish
   }
   [ "$Buildimage" ] && {                                                          # --build: Build image from x11docker repository
-    check_optionset "--build" "$(grep -v -E -- '--build|--backend' <<< "$Optionsetall")" ||:
+    check_optionset "--build" "$(grep -v -E -- '--build|--backend' <<< "$g_AllAvailableLongOptions")" ||:
     buildimage "$g_Imagename"
     finish
   }
