@@ -9175,6 +9175,7 @@ exec 1>&5 2>&6
   }
   return 0
 }
+
 create_containerrc() {          # This script runs as unprivileged user in container
   local Ungrep= Path= Line=
 
@@ -14166,10 +14167,19 @@ declare_variables() {           # declare global variables
   #
   ContainerenvironmentArray=""
 
-  # Containerenvironmentcount : Number of elements in ContainerenvironmentArray
+  # Containerenvironmentcount : Number of elements in
+  #                             ContainerenvironmentArray
+  #
   Containerenvironmentcount="0"
 
-  Containerenvironmentfile="container.environment" # file to store final container environment
+  # Containerenvironmentfile : file to store final container
+  #                            environment
+  #
+  #  - changed in: create_cachefiles() : Containerenvironmentfile="$Sharefolder/$Containerenvironmentfile"
+  #  - used in: create_containerrc()
+  #
+  Containerenvironmentfile="container.environment"
+
   Containerlocaltimefile="libc.localtime"         # localtime file from host shared to container
   Containername=""                                # --name: Container name
   Containersetup="yes"
