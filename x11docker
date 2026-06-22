@@ -3892,6 +3892,7 @@ setup_vaapi() {                 # option --gpu: setup for VAAPI and VDPAU video 
 
   return 0
 }
+
 setup_webcam() {                # option --webcam: share webcam devices
   # Webcam devices appear as /dev/video* files.
   # Unprivileged users need to be in group video.
@@ -8763,7 +8764,29 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
   return 0
 }
 
-store_runoption() {             # store env, cap or volume/device for docker command
+#
+# function store_runoption()
+#
+#  Usage:
+#    store_runoption env "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS"
+#    store_runoption env  "${DBUS_SESSION_BUS_PID:-}"  # No name?
+#    store_runoption env "DISPLAY=$Newdisplay"
+#
+#    store_runoption volume  "$Gpudevice"
+#    store_runoption volume "/run/cups"
+#    store_runoption volume "$Cupsserver"
+#    store_runoption volume "$(myrealpath "$Path")$Readwritemode"
+#
+#    store_runoption cap "FSETID FOWNER SETPCAP SYS_BOOT"
+#    store_runoption cap "SYS_BOOT KILL"
+#    store_runoption cap "SETUID SETGID DAC_OVERRIDE AUDIT_WRITE"
+#    store_runoption cap "CHOWN FOWNER DAC_OVERRIDE"
+#
+#    store_runoption dump cap
+#    store_runoption dump volume
+#    store_runoption dump env
+#
+store_runoption() {  # store env, cap or volume/device for docker command
   # $1  env     store environment variable $2
   #     volume  store volume or device path $2
   #     cap     store capability $2
@@ -13913,8 +13936,13 @@ declare_variables() {           # declare global variables
   #
   SharevolumesArray=""
 
-  Sharevolumescount="0"                           # --share: Counts shared folders in array
-  Sharewebcam="no"                                # --webcam: Share webcam device /dev/video*
+  # Sharevolumescount : --share: Counts shared folders in array
+  #                     Length of the array SharevolumesArray
+  #
+  Sharevolumescount="0"
+  
+  # Sharewebcam : --webcam: Share webcam device /dev/video*
+  Sharewebcam="no"
 
   # =============================================
   # Image information
