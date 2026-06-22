@@ -14027,9 +14027,38 @@ declare_variables() {           # declare global variables
   #  # Chrootmountlist : Not mentioned anywhere else
   #  Chrootmountlist=""
 
-  Containercommand=""                             # Container command [+args]
+  # Containercommand : Container command [+args]
+  #   - In check_backend() :
+  #       Containercommand="/bin/sh /start"
+  #       Containercommand="/bin/bash"
+  #       Containercommand="/bin/sh"
+  #       Containercommand="$Containerusershell"
+  #       Containercommand="$Imagecommand"
+  #       Containercommand="sh -c 'while :; do sleep 10; done'"
+  #       Containercommand="sleep infinity"
+  #
+  #   - Used as part of Backendcommand
+  #
+  #     tini) Backendcommand="$Backendcommand ${Rootfs:-$Imagename} $Initcommand $Containercommand" ;;
+  #     *)    Backendcommand="$Backendcommand ${Rootfs:-$Imagename}              $Containercommand" ;;
+  #
+  Containercommand=""
+
+  # Containerentrypoint :
+  #     Containerentrypoint="$Imageentrypoint"
+  #     Containerentrypoint="$Initbinaryfile --"
+  #
+  #   Used:
+  #     grep -qE 'tini|init|systemd' <<< "$Containerentrypoint"
+  #     [ "$Containerentrypoint" = '/init' ]
+  #     
   Containerentrypoint=""
-  Containerenvironment=""                         # --env: Environment variables
+
+  # Containerenvironment : --env: Environment variables
+  #     
+  #
+  Containerenvironment=""
+
   Containerenvironmentcount="0"
   Containerenvironmentfile="container.environment" # file to store final container environment
   Containerlocaltimefile="libc.localtime"         # localtime file from host shared to container
