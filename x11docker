@@ -7520,6 +7520,7 @@ check_image() {                 # get some image information
 
   return 0
 }
+
 check_runtime() {               # option --runtime
   local Defaultruntime
 
@@ -7550,6 +7551,7 @@ check_runtime() {               # option --runtime
 
   return 0
 }
+
 check_smallinit() {             # find container init binary on host
   [ "$Xcontainer_option" = "yes" ] && grep -q "catatonit" <<< "$Xcontainertools" && Initbinaryfile="$Sharefolder/catatonit" && return 0
   [ -x "$Initbinaryfile" ]                                      || Initbinaryfile="$(command -v catatonit ||:)"
@@ -14202,11 +14204,32 @@ declare_variables() {           # declare global variables
   Containerlocaltimefile="libc.localtime"
 
   # Containername : --name: Container name
+  #
+  # - set in: parse_options()
+  #             --name)              Containername="${2:-}" ; shift ;;      # Set container name
+  #
+  # - set in: create_backendcommand() :
+  #             [ -z "$Containername" ] && Containername="x11docker_X${Newdisplaynumber}_${Codename}_${Cachenumber}"
+  #
   Containername=""
 
+  # Containersetup :
+  #
+  # - set in: parse_options()
+  #      --no-setup)          Containersetup="no" ;;
+  #       # No setup of x11docker inside of container (notable disables containerrootrc() )
+  #
+  # - set in: check_backend()
+  #       Containersetup="yes"
+  #
   Containersetup="yes"
-  Customdockeroptions=""                          # -- [...] -- : Custom options for "docker run".
+
+  # Customdockeroptions : -- [...] -- : Custom options for "docker run".
+  Customdockeroptions=""
+
+  # Defaultruntime :
   Defaultruntime=""
+  
   Imagename=""                                    # Image to run
   Interactive="no"                                # --interactive: Run docker with interactive tty yes/no
   Limitresources=""                               # --limit: Limit access to CPU and RAM, 0.1 ... 1.0
