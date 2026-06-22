@@ -1,0 +1,5 @@
+  -- This is a comment  Empty lines, and lines beginning with space or tab are ignored. 
+  -- myfun()
+/\([a-zA-Z_][a-zA-Z0-9_]*\)[(][)]/\1/
+  -- var=
+/[ \t]*\([a-zA-Z_][a-zA-Z0-9_]*\)[=]/\1/

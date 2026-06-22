@@ -1,5 +1,5 @@
 
-.PHONY: test all
+.PHONY: test all TAGS
 
 
 all:
@@ -13,3 +13,9 @@ run1:
 
 run2:
 	../x11docker-firefox
+
+
+#
+TAGS:
+	./etags-bash.sh x11docker
+
