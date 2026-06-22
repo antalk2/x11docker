@@ -13500,43 +13500,122 @@ declare_variables() {           # declare global variables
   Sharehostwayland="no"
 
   # Waylandtoolkitenv : 
-  Waylandtoolkitenv="$(echo \
-                            " XDG_SESSION_TYPE=wayland" \
-                            " GDK_BACKEND=wayland"      \
-                            " QT_QPA_PLATFORM=wayland"  \
-                            " CLUTTER_BACKEND=wayland"  \
-                            " SDL_VIDEODRIVER=wayland"  \
-                            " ELM_DISPLAY=wl"           \
-                            " ELM_ACCEL=opengl"         \
-                            " ECORE_EVAS_ENGINE=wayland_egl" )"
+  Waylandtoolkitenv=""; printf -v Waylandtoolkitenv "%s"     \
+                            " XDG_SESSION_TYPE=wayland"      \
+                            " GDK_BACKEND=wayland"           \
+                            " QT_QPA_PLATFORM=wayland"       \
+                            " CLUTTER_BACKEND=wayland"       \
+                            " SDL_VIDEODRIVER=wayland"       \
+                            " ELM_DISPLAY=wl"                \
+                            " ELM_ACCEL=opengl"              \
+                            " ECORE_EVAS_ENGINE=wayland_egl"
 
   
   # Westonarg : --weston=ARG
   Westonarg=""
 
-  Xauthentication="yes"                           # --xauth: cookie authentication
-  Xaxis=""                                        # Virtual screen width
-  Xcomposite=""                                   # --xcomposite: +extension COMPOSITE yes/no
-  Xkblayout=""                                    # --keymap: Layout for keymap, compare /usr/share/X11/xkb/symbols
-  Xeyes=""                                        # --xeyes: Run xeyes, eyes following your mouse cursor
-  Xlogo=""                                        # --xlogo: Shows X logo
-  Xfishtank="no"                                  # --xfishtank: Show a fish tank on new X server
-  Xhost=""                                        # --xhost: custom xhost setting on new X server
-  Xiniterrorcodes="xinit: giving up|unable to connect to X server|Connection refused|server error|Only console users are allowed"
-  Xlegacywrapper=""                               # --xorg: /etc/X11/Xwrapper.config is configured to run within X yes/no
-  Xlibnoshmfile=""                                # --hostdisplay: fake MIT-SHM library
-  Xpraborder=""                                   # --border: Colored border for xpra clients
-  Xpracontainerenv="UBUNTU_MENUPROXY= QT_X11_NO_NATIVE_MENUBAR=1 MWNOCAPTURE=true MWNO_RIT=true MWWM=allwm GTK_OVERLAY_SCROLLING=0 GTK_CSD=0 NO_AT_BRIDGE=1" # environment variables
-  Xprahelp=""                                     # Output of 'xpra --help'
-  Xprashm=""                                      # xpra server should use MIT-SHM yes/no
-  Xpraversion=""                                  # $(xpra --version) to decide some xpra options and messages
-  Xserver=""                                      # X server option to use
-  Xoverip=""                                      # --xoverip: Connect to X over TCP yes/no
-  Xserveroptions=""                               # --xopt: Custom X server options
-  Xtest=""                                        # --xtest: Enable extension Xtest yes/no. If empty, yes for --xpra/--xvfb, otherwise no
-  Xwaylandrootless="no"                           # Xwayland -rootless yes/no
-  Xwogether=""                                    # --xw: X11 and Wayland side by side
-  Yaxis=""                                        # Virtual screen height
+  # Xauthentication : --xauth: cookie authentication yes/no
+  Xauthentication="yes"
+
+  #  Xaxis : Virtual screen width
+  Xaxis=""
+  # Yaxis : Virtual screen height
+  Yaxis=""
+
+  # Xcomposite : --xcomposite: +extension COMPOSITE yes/no
+  Xcomposite=""
+  
+  # Xkblayout : --keymap: Layout for keymap, compare
+  #               /usr/share/X11/xkb/symbols
+  #
+  Xkblayout=""
+
+  # Xeyes : --xeyes: Run xeyes, eyes following your mouse cursor
+  Xeyes=""
+
+  # Xlogo : --xlogo: Shows X logo
+  Xlogo=""
+
+  # Xfishtank : --xfishtank: Show a fish tank on new X server
+  Xfishtank="no"
+
+  # Xhost : --xhost: custom xhost setting on new X server
+  Xhost=""
+
+  # Xiniterrorcodes :
+  Xiniterrorcodes=""; printf -v Xiniterrorcodes "%s"      \
+                       "xinit: giving up"                 \
+                       "|unable to connect to X server"   \
+                       "|Connection refused|server error" \
+                       "|Only console users are allowed"
+  
+  # Xlegacywrapper : --xorg: /etc/X11/Xwrapper.config is configured to
+  #                  run within X yes/no
+  Xlegacywrapper=""
+
+  # Xlibnoshmfile : --hostdisplay: fake MIT-SHM library
+  Xlibnoshmfile=""
+
+  # Xpraborder : --border: Colored border for xpra clients
+  Xpraborder=""
+
+  # Xpracontainerenv :  environment variables
+  Xpracontainerenv=""; printf -v Xpracontainerenv "%s"      \
+                              "UBUNTU_MENUPROXY=''"         \
+                              " QT_X11_NO_NATIVE_MENUBAR=1" \
+                              " MWNOCAPTURE=true"           \
+                              " MWNO_RIT=true"              \
+                              " MWWM=allwm"                 \
+                              " GTK_OVERLAY_SCROLLING=0"    \
+                              " GTK_CSD=0"                  \
+                              " NO_AT_BRIDGE=1"
+  
+  # Xprahelp : Output of 'xpra --help'
+  Xprahelp=""
+
+  # Xprashm : xpra server should use MIT-SHM yes/no
+  Xprashm=""
+
+  # Xpraversion : $(xpra --version) to decide some xpra options and
+  #               messages
+  #
+  Xpraversion=""
+
+  # Xserver : X server option to use.
+  #
+  #           "--hostdisplay" "--nxagent" "--runx" "--satellite"
+  #           "--tty" "--weston" "--weston-xwayland" "--xephyr"
+  #           "--xpra" "--xpra2" "--xpra-xwayland" "--xpra2-xwayland"
+  #           "--xorg" "--xvfb" "--xwayland"
+  #
+  #           Deprecated: "--kwin" "--kwin-xwayland" "--xwin"
+  #
+  Xserver=""
+
+  # Xoverip : --xoverip: Connect to X over TCP yes/no/socat/listentcp
+  #
+  Xoverip=""
+  
+  # Xserveroptions : --xopt: Custom X server options
+  Xserveroptions=""
+  
+  # Xtest : --xtest: Enable extension Xtest yes/no.
+  #
+  #         If empty, yes for --xpra/--xvfb, otherwise no
+  #
+  # Note:
+  #       https://xorg.freedesktop.org/archive/current/doc/xextproto/xtest.pdf
+  #       This extension is a minimal set of client and server
+  #       extensions required to completely test the X11 server with
+  #       no user intervention.
+  #
+  Xtest=""
+
+  # Xwaylandrootless : Xwayland -rootless yes/no
+  Xwaylandrootless="no"
+
+  # Xwogether : --xw: X11 and Wayland side by side
+  Xwogether=""
 
   # X and Wayland config and cookie files
   Customwestonini=""                              # --westonini: Custom config file for weston
