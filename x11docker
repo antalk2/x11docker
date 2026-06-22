@@ -7307,7 +7307,7 @@ check_backend() {               # options --backend, --rootless
         Rootfs="$g_Imagename"
         g_Imagename="$(basename "$Rootfs")"
       }
-      [ "$Podmanrootfs" = "yes" ] && Checkrootfs="yes"
+      [ "$g_Podmanrootfs" = "yes" ] && Checkrootfs="yes"
       Imagebasename="$(echo "$g_Imagename" | tr / - | cut -d: -f1)"
       Codename="${Codename:-"$g_Imagename $Containercommand"}"
       verbose "Image name: $g_Imagename
@@ -8492,7 +8492,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
   # --rootfs
   case "$BackendKind" in
     podman)
-      [ "$Podmanrootfs" = "yes" ] && Backendcommand="$Backendcommand \\
+      [ "$g_Podmanrootfs" = "yes" ] && Backendcommand="$Backendcommand \\
   --rootfs"
     ;;
   esac
@@ -11487,7 +11487,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
          --newprivileges)     Allownewprivileges="${2:-yes}" ; shift ;; # [Don't] set --security-opt=no-new-privileges
          --no-entrypoint)     g_Noentrypoint="yes" ;;                  # Disable ENTRYPOINT of image
          --no-setup)          Containersetup="no" ;;                 # No setup of x11docker inside of container (notable disables containerrootrc() )
-         --rootfs)            Podmanrootfs="yes" ;;                  # run a rootfs in posman instead of image
+         --rootfs)            g_Podmanrootfs="yes" ;;                  # run a rootfs in podman instead of image
          --rootless)          Backendrootless="${2:-yes}"; shift ;;
          --runtime)           Runtime="${2:-}" ; shift               # Runtime=runc|nvidia|kata-runtime|crun
                               [ "$Runtime" = "kata" ]   && Runtime="kata-runtime"
@@ -14254,7 +14254,10 @@ declare_variables() {           # declare global variables
   # was: Optionsetall
   g_AllAvailableLongOptions=""
 
-  Podmanrootfs=""                                 # --rootfs to indicate that podman should use a root file system
+  # g_Podmanrootfs : --rootfs to indicate that podman should use a root
+  #                file system
+  g_Podmanrootfs=""
+
   Remountcgroup=""                                # --init=systemd with cgroupv2 in docker workaround
   Rootfs=""                                       # --backend=proot
   Backendrootless=""                              # Check for rootful/rootless docker depending on DOCKER_HOST
