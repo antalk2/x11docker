@@ -825,7 +825,7 @@ finish() {      # trap EXIT routine to clean up background processes and cache
                         mysleep "$(awk "BEGIN { print $Count * 0.1 }")"
                         debugnote "finish(): Waiting for container PID 1: $Pid1pid to terminate."
                     done
-                    checkpid "$Pid1pid" && unpriv_backend "$Backendbin stop $Containername"
+                    checkpid "$Pid1pid" && unpriv_backend "$Backendbin stop $g_Containername"
                     ;;
                 Xcontainerpid1)
                     Xpid1pid="$Pid"
@@ -863,7 +863,7 @@ finish() {      # trap EXIT routine to clean up background processes and cache
              "|finish(): Container still running. Executing 'docker stop'.
               |  Will wait up to 15 seconds for docker to finish." )"
                 #
-                unpriv_backend "$Backendbin stop $Containername" >> "$Containerlogfile" 2>&1
+                unpriv_backend "$Backendbin stop $g_Containername" >> "$Containerlogfile" 2>&1
 
                 Zeit="$(date +%s)"
                 while true; do
@@ -879,7 +879,7 @@ finish() {      # trap EXIT routine to clean up background processes and cache
               "|finish(): Container did not terminate as it should.
                |  Will not clean cache to avoid file permission issues.
                |  You can remove the new container with command:
-               |    docker rm -f $Containername
+               |    docker rm -f $g_Containername
                |  Afterwards, remove cache files with:
                |    rm -R $Cachefolder
                |  or let x11docker do the cleanup work for you:
@@ -7919,12 +7919,12 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
   esac
 
   # --name
-  [ -z "$Containername" ] && Containername="x11docker_X${Newdisplaynumber}_${Codename}_${Cachenumber}"
+  [ -z "$g_Containername" ] && g_Containername="x11docker_X${Newdisplaynumber}_${Codename}_${Cachenumber}"
   case "$BackendKind" in
     docker|podman|nerdctl)
       Backendcommand="$Backendcommand \\
-  --name $Containername"
-      storeinfo "containername=$Containername"
+  --name $g_Containername"
+      storeinfo "containername=$g_Containername"
     ;;
   esac
 
@@ -10343,7 +10343,7 @@ start_container() {             # docker run
       # Wait for container to be ready
       debugnote "start_container(): Running repeated checks if container is ready."
       for ((Count=1 ; Count<=100 ; Count++)); do
-        unpriv_backend "$Backendbin exec $Containername sh -c ':'" 2>&1 | rmcr >> $Containerlogfile && {
+        unpriv_backend "$Backendbin exec $g_Containername sh -c ':'" 2>&1 | rmcr >> $Containerlogfile && {
           debugnote 'start_container(): Container is up and running.'
           break
         } || {
@@ -10356,7 +10356,7 @@ start_container() {             # docker run
       # Wait for pid 1 in container
       for ((Count=1 ; Count<=100 ; Count++)); do
         debugnote "start_container(): $Count. check for PID 1"
-        Containerinspect="$(unpriv_backend "$Backendbin inspect $Containername" 2>> $Containerlogfile | rmcr)" ||:
+        Containerinspect="$(unpriv_backend "$Backendbin inspect $g_Containername" 2>> $Containerlogfile | rmcr)" ||:
         [ -n "$Containerinspect" ] && [ "$Containerinspect" != "[]" ] && Pid1pid="$(parse_inspect "$Containerinspect" "State" "Pid")"
         case "$Dockervm" in
           no)           checkpid "$Pid1pid" && break ;;
@@ -10379,7 +10379,7 @@ $(rmcr < "$Containerlogfile" | uniq )"
       # store stdout and stderr
       [ "$Containersetup" = "no" ] && {
         # Store container output separated for stdout and stderr
-        unpriv_backend "$Backendbin logs -f $Containername" 1>> "$Cmdstdoutlogfile" 2>> "$Cmdstderrlogfile" & ### FIXME rootless, unpriv
+        unpriv_backend "$Backendbin logs -f $g_Containername" 1>> "$Cmdstdoutlogfile" 2>> "$Cmdstderrlogfile" & ### FIXME rootless, unpriv
         storepid $! dockerlogs
       }
 
@@ -10450,7 +10450,7 @@ $(tail "$Containerlogfile")"
       docker|podman|nerdctl)
         # copy to /tmp because host HOME might be nosuid or noexec
         # run container root setup. containerrc will wait until setup script is ready.
-        unpriv_backend "$Backendbin exec -u root $Containername sh -c 'cp $(convertpath share "$Containerrootrc") /tmp/containerrootrc ; chmod 644 /tmp/containerrootrc ; exec /bin/sh /tmp/containerrootrc'" 2>&1 | rmcr >> $Containerlogfile
+        unpriv_backend "$Backendbin exec -u root $g_Containername sh -c 'cp $(convertpath share "$Containerrootrc") /tmp/containerrootrc ; chmod 644 /tmp/containerrootrc ; exec /bin/sh /tmp/containerrootrc'" 2>&1 | rmcr >> $Containerlogfile
       ;;
     esac
   }
@@ -11481,7 +11481,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
          --ipc)               Shareipc="${2:-host}" ; shift ;;
          --limit)             g_Limitresources="${2:-0.5}" ; shift ;;  # Limited CPU and RAM access
          --mobyvm)            Dockervm="moby" ;;                        # Use MobyVM in WSL2
-         --name)              Containername="${2:-}" ; shift ;;      # Set container name
+         --name)              g_Containername="${2:-}" ; shift ;;      # Set container name
       -I)                     Network="" ;;
          --network)           Network="${2:-}" ; shift ;;            # Enable internet access
          --newprivileges)     Allownewprivileges="${2:-yes}" ; shift ;; # [Don't] set --security-opt=no-new-privileges
@@ -11833,11 +11833,11 @@ check_options_arguments() {     # check for [likely] valid arguments
   }
 
   # --name
-  [ -n "$Containername" ] && {
-    [ "$Containername" = "$(unspecialstring "$Containername" ".")" ] || error "Option --name: container name must not contain special chars.
+  [ -n "$g_Containername" ] && {
+    [ "$g_Containername" = "$(unspecialstring "$g_Containername" ".")" ] || error "Option --name: container name must not contain special chars.
   Compare:
-  $Containername
-  $(unspecialstring "$Containername" ".")"
+  $g_Containername
+  $(unspecialstring "$g_Containername" ".")"
   }
 
   # --newprivileges
@@ -14204,15 +14204,15 @@ declare_variables() {           # declare global variables
   #
   Containerlocaltimefile="libc.localtime"
 
-  # Containername : --name: Container name
+  # g_Containername : --name: Container name
   #
   # - set in: parse_options()
-  #             --name)              Containername="${2:-}" ; shift ;;      # Set container name
+  #             --name)              g_Containername="${2:-}" ; shift ;;      # Set container name
   #
   # - set in: create_backendcommand() :
-  #             [ -z "$Containername" ] && Containername="x11docker_X${Newdisplaynumber}_${Codename}_${Cachenumber}"
+  #             [ -z "$g_Containername" ] && g_Containername="x11docker_X${Newdisplaynumber}_${Codename}_${Cachenumber}"
   #
-  Containername=""
+  g_Containername=""
 
   # Containersetup :
   #
@@ -14730,11 +14730,11 @@ $(nl -ba <$Sshenvscript)"
     case "$Winsubsystem" in
       "")
         case "$Dockervm" in
-          desktop) setonwatchpidlist "CONTAINER$Containername" ;;
+          desktop) setonwatchpidlist "CONTAINER$g_Containername" ;;
           *)       setonwatchpidlist "${Pid1pid:-NOPID}" pid1pid ;;
         esac
       ;;
-      *)           setonwatchpidlist "CONTAINER$Containername" ;;
+      *)           setonwatchpidlist "CONTAINER$g_Containername" ;;
     esac
 
     # watch xinit and X server
