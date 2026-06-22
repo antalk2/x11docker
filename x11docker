@@ -1136,23 +1136,28 @@ waitfortheend() {               # wait for end of x11docker session
 # function watchpidlist()
 #
 watchpidlist() {                # watch list of important pids
+    #
     # terminate x11docker if a PID in $Watchpidlist terminates
     # serves mainly watching X server, Wayland compositor, container and hostexe
+    #
     # echo PIDs to watch into >{FDwatchpid} (setonwatchpidlist())
-    local Pid= Containername= Line= Watchpidlist=
+    #
+    local Pid= local_Containername= Line= Watchpidlist=
     local ListOfLines
     trap '' SIGINT
 
     while rocknroll; do
         # check for new Pid once a second
         read -t1 Pid <&${FDwatchpid} || true
-        [ "$Usemkfifo" = "no" ] && sleep 2  # read does not wait if not a fifo
+        #
+        if [ "$Usemkfifo" = "no" ] ; then  sleep 2 ; fi  # read does not wait if not a fifo
+        #
         # Got new pid
         if [ "$Pid" ] ; then
             if [ "${Pid:0:9}" = "CONTAINER" ] ; then
                 # Workaround for MS Windows where the pid cannot be watched
-                Containername="${Pid#CONTAINER}"
-                debugnote "watchpidlist(): Watching Container: $Containername"
+                local_Containername="${Pid#CONTAINER}" # remove prefix "CONTAINER"
+                debugnote "watchpidlist(): Watching Container: $local_Containername"
             else
                 Watchpidlist="$Watchpidlist $Pid"
                 #
@@ -1173,10 +1178,10 @@ watchpidlist() {                # watch list of important pids
         done
         #
         # Container PID not watchable in MSYS2/Cygwin/WSL1.
-        if [ "$Containername" ] ; then
-            unpriv_backend "$Backendbin inspect '$Containername'" >/dev/null || {
-                debugnote  "watchpidlist(): Container $Containername has terminated"
-                saygoodbye "watchpidlist $Containername"
+        if [ "$local_Containername" ] ; then
+            unpriv_backend "$Backendbin inspect '$local_Containername'" >/dev/null || {
+                debugnote  "watchpidlist(): Container $local_Containername has terminated"
+                saygoodbye "watchpidlist $local_Containername"
             }
         fi
     done
