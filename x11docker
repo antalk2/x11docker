@@ -1,4 +1,5 @@
 #! /usr/bin/env bash
+# -*- eval: (modify-syntax-entry ?_ "w") -*-
 
 # x11docker
 # Run GUI applications and desktop environments in Docker containers.
