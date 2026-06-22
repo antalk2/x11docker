@@ -13983,10 +13983,30 @@ declare_variables() {           # declare global variables
   # Container setup
   # =============================================
   
-  Adminusercaps="no"                              # --cap-default, --sudouser, --init=systemd: add capabilities for general container system administration
-  Allownewprivileges="auto"                       # --newprivileges: Docker run option --security-opt=no-new-privileges. Default: no. Enabled by options --newprivileges, --cap-default, --sudouser.
-  Backend=""                                      # --backend: Backend to use, like docker, podman, nerdctl, proot, host. A default can be specified with default preset file.
-  Backendbin=""                                   # path to binary of backend
+  #  Adminusercaps : --cap-default, --sudouser, --init=systemd: add
+  #                  capabilities for general container system
+  #                  administration
+  #
+  Adminusercaps="no"
+  
+  # Allownewprivileges : --newprivileges: Docker run option
+  #                      --security-opt=no-new-privileges.
+  #
+  #                      Default: no. Enabled by options
+  #                      --newprivileges, --cap-default, --sudouser.
+  #
+  Allownewprivileges="auto"
+  
+  # Backend : --backend: Backend to use, like docker, podman, nerdctl,
+  #                      proot, host.
+  #
+  #            A default can be specified with default preset file.
+  #
+  Backend=""
+
+  # Backendbin : path to binary of backend
+  Backendbin=""
+
   Backendinfo=""                                  # output of 'docker info'
   Capabilities=""                                 # Capabilities to add. Default: none, exceptions for --init, --sudouser
   Capdropall="yes"                                # --cap-default: Drop all container capabilities and set --securty-opt=no-new-privileges yes/no
