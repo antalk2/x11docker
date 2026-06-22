@@ -3450,7 +3450,7 @@ setup_gpu() {                   # option --gpu: share /dev/dri and check nvidia 
 
   # share device files
   while read -r Gpudevice ; do
-    store_runoption volume "$Gpudevice"
+    store_runoption_volume "$Gpudevice"
   done < <(devicelist_gpu)
 
   # NVIDIA
@@ -3489,8 +3489,8 @@ setup_gpu() {                   # option --gpu: share /dev/dri and check nvidia 
   requires container privileges that x11docker would drop otherwise.
   Though, they are still within default docker capabilities."
     Allownewprivileges="yes"
-    store_runoption cap CHOWN
-    store_runoption cap FOWNER
+    store_runoption_cap CHOWN
+    store_runoption_cap FOWNER
 
     note "Option --gpu: x11docker will install NVIDIA driver in container.
   You can provide images with pre-installed drivers to speed up container start.
@@ -3566,17 +3566,17 @@ setup_hostdbus() {              # option --hostdbus: connect to host DBus sessio
         return 1
       ;;
       *)
-        store_runoption env "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS"
-        store_runoption volume "/$(cut -d/ -f2- <<<"$DBUS_SESSION_BUS_ADDRESS")"
+        store_runoption_env "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS"
+        store_runoption_volume "/$(cut -d/ -f2- <<<"$DBUS_SESSION_BUS_ADDRESS")"
       ;;
     esac
   }
 
   grep -q "unix:abstract" <<< "$DBUS_SESSION_BUS_ADDRESS" && {
     # DBus abstract socket (dbus-launch)
-    store_runoption env "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS"
-    [ "${DBUS_SESSION_BUS_PID:-}" ]      && store_runoption env  "${DBUS_SESSION_BUS_PID:-}"
-    [ "${DBUS_SESSION_BUS_WINDOWID:-}" ] && store_runoption env  "${DBUS_SESSION_BUS_WINDOWID:-}"
+    store_runoption_env "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS"
+    [ "${DBUS_SESSION_BUS_PID:-}" ]      && store_runoption_env  "${DBUS_SESSION_BUS_PID:-}"
+    [ "${DBUS_SESSION_BUS_WINDOWID:-}" ] && store_runoption_env  "${DBUS_SESSION_BUS_WINDOWID:-}"
     [ "$Network" != "host" ] && {
       note "Option --hostdbus: Did not find a DBus session socket file
   but an abstract unix socket. To allow access for container,
@@ -3643,9 +3643,9 @@ Port 631
 Also you need to allow network access for each printer in a CUPS GUI."
   }
 
-  [ "$Cupsserver" ]    && store_runoption env "CUPS_SERVER=$Cupsserver"
+  [ "$Cupsserver" ]    && store_runoption_env "CUPS_SERVER=$Cupsserver"
   [ -e "$Cupsserver" ] && {
-    [ "$(dirname "$Cupsserver")" = "/run/cups" ] && store_runoption volume "/run/cups" || store_runoption volume "$Cupsserver"
+    [ "$(dirname "$Cupsserver")" = "/run/cups" ] && store_runoption_volume "/run/cups" || store_runoption_volume "$Cupsserver"
   }
 
   return 0
@@ -3660,14 +3660,14 @@ setup_sound_alsa() {            # option --alsa: share sound devices
   Sharing device files in /dev/snd, container gains access to sound hardware.
   Container applications can catch audio output and microphone input."
 
-  [ "$Alsacard" ] && store_runoption env "ALSA_CARD=$Alsacard"
+  [ "$Alsacard" ] && store_runoption_env "ALSA_CARD=$Alsacard"
 
   pgrep pulseaudio >/dev/null && note "Option --alsa: It seems that pulseaudio is running
   on your host. Pulseaudio can interfere with ALSA sound.
   Host sound may not work while container is playing sound and vice versa.
   Alternative: with pulseaudio on host and in image, use option --pulseaudio."
 
-  [ -d /dev/snd ] && store_runoption volume "/dev/snd" || {
+  [ -d /dev/snd ] && store_runoption_volume "/dev/snd" || {
     warning "Option --alsa: /dev/snd not found.
   Sound support not possible."
     check_fallback
@@ -3708,8 +3708,8 @@ done
   storepid $! "pw-container"
   Pipewiresocket="$(cat "$Cachefolder/PIPEWIRE_REMOTE")"
   Pipewiresocket="/$(echo "$Pipewiresocket" | cut -d/ -f2-)"
-  store_runoption env "PIPEWIRE_REMOTE=$Pipewiresocket"
-  store_runoption volume "$Pipewiresocket"
+  store_runoption_env "PIPEWIRE_REMOTE=$Pipewiresocket"
+  store_runoption_volume "$Pipewiresocket"
 
   # share pulseaudio socket created by pipewire
   command -v pactl >/dev/null && {
@@ -3783,7 +3783,7 @@ setup_sound_pulseaudio() {      # option --pulseaudio: set up pulseaudio connect
 
       isint "$Pulseaudiomoduleid" && {
         storeinfo "pulseaudiomoduleid=$Pulseaudiomoduleid"
-        store_runoption env "PULSE_SERVER=unix:$(convertpath share "$Pulseaudiosocket")"
+        store_runoption_env "PULSE_SERVER=unix:$(convertpath share "$Pulseaudiosocket")"
         Setcookie="yes"
       } || {
         note "Option --pulseaudio: command pactl failed with output:
@@ -3817,12 +3817,12 @@ $(nl -ba < "$Pulseaudioconf")"
       done
       [ -e "$Hostuserhome/.config/pulse/cookie" ] && cp "$Hostuserhome/.config/pulse/cookie" "$Pulseaudiocookie" || note "Option --pulseaudio: Did not find cookie
   $Hostuserhome/.config/pulse/cookie"
-      store_runoption env "PULSE_SERVER=tcp:$Hostip:$Pulseaudioport"
+      store_runoption_env "PULSE_SERVER=tcp:$Hostip:$Pulseaudioport"
       Setcookie="yes"
     ;;
     host)
       Pulseaudiosocket="$(unpriv "env LC_ALL=C pactl info" | grep 'Server String' |rev|cut -d' ' -f1|rev)"
-      store_runoption env "PULSE_SERVER=unix:/tmp/pulseaudio.socket.host"
+      store_runoption_env "PULSE_SERVER=unix:/tmp/pulseaudio.socket.host"
       Setcookie="yes"
     ;;
   esac
@@ -3830,7 +3830,7 @@ $(nl -ba < "$Pulseaudioconf")"
   [ "$Setcookie" = "yes" ] && {
     [ -e "$Hostuserhome/.config/pulse/cookie" ] && {
       cp "$Hostuserhome/.config/pulse/cookie" "$Pulseaudiocookie"
-      store_runoption env "PULSE_COOKIE=$(convertpath share "$Pulseaudiocookie")"
+      store_runoption_env "PULSE_COOKIE=$(convertpath share "$Pulseaudiocookie")"
     } || {
       note "Option --pulseaudio: Did not find cookie
   $Hostuserhome/.config/pulse/cookie"
@@ -3841,9 +3841,9 @@ $(nl -ba < "$Pulseaudioconf")"
 }
 setup_vaapi() {                 # option --gpu: setup for VAAPI and VDPAU video decoding acceleration
   # support for prime-run / discrete NVIDIA card #394
-  [ -n "$__NV_PRIME_RENDER_OFFLOAD" ] && DRI_PRIME="1" && store_runoption env "__NV_PRIME_RENDER_OFFLOAD=$__NV_PRIME_RENDER_OFFLOAD"
-  [ -n "$__VK_LAYER_NV_optimus" ]     && DRI_PRIME="1" && store_runoption env "__VK_LAYER_NV_optimus=$__VK_LAYER_NV_optimus"
-  [ -n "$__GLX_VENDOR_LIBRARY_NAME" ] && DRI_PRIME="1" && store_runoption env "__GLX_VENDOR_LIBRARY_NAME=$__GLX_VENDOR_LIBRARY_NAME"
+  [ -n "$__NV_PRIME_RENDER_OFFLOAD" ] && DRI_PRIME="1" && store_runoption_env "__NV_PRIME_RENDER_OFFLOAD=$__NV_PRIME_RENDER_OFFLOAD"
+  [ -n "$__VK_LAYER_NV_optimus" ]     && DRI_PRIME="1" && store_runoption_env "__VK_LAYER_NV_optimus=$__VK_LAYER_NV_optimus"
+  [ -n "$__GLX_VENDOR_LIBRARY_NAME" ] && DRI_PRIME="1" && store_runoption_env "__GLX_VENDOR_LIBRARY_NAME=$__GLX_VENDOR_LIBRARY_NAME"
 
   # VA-API and VDPAU #443
   # Infos at https://wiki.archlinux.org/title/Hardware_video_acceleration
@@ -3886,9 +3886,9 @@ setup_vaapi() {                 # option --gpu: setup for VAAPI and VDPAU video 
     "") note "Option --gpu: Could not estimate drivers for VA-API and VDPAU
   video decoding acceleration support. This will likely fail in container." ;; 
   esac
-  [ -n "${LIBVA_DRIVER_NAME:-}" ] && store_runoption env "LIBVA_DRIVER_NAME=${LIBVA_DRIVER_NAME:-}"
-  [ -n "${VDPAU_DRIVER:-}" ]      && store_runoption env "VDPAU_DRIVER=${VDPAU_DRIVER:-}"
-  [ -n "${DRI_PRIME:-}" ]         && store_runoption env "DRI_PRIME=${DRI_PRIME:-1}"
+  [ -n "${LIBVA_DRIVER_NAME:-}" ] && store_runoption_env "LIBVA_DRIVER_NAME=${LIBVA_DRIVER_NAME:-}"
+  [ -n "${VDPAU_DRIVER:-}" ]      && store_runoption_env "VDPAU_DRIVER=${VDPAU_DRIVER:-}"
+  [ -n "${DRI_PRIME:-}" ]         && store_runoption_env "DRI_PRIME=${DRI_PRIME:-1}"
 
   return 0
 }
@@ -3904,13 +3904,13 @@ setup_webcam() {                # option --webcam: share webcam devices
   at you and also might take screenshots of your Desktop."
 
   while read -r Webcamdevice ; do
-    store_runoption volume "$Webcamdevice"
+    store_runoption_volume "$Webcamdevice"
   done < <(find /dev/video* -maxdepth 0 2>/dev/null || note "Option --webcam: No webcam devices /dev/video* found.
   Webcam in container will fail.")
   Containerusergroups="$Containerusergroups video"
 
   # at least cheese and gnome-ring need some device information from udev.
-  store_runoption volume "/run/udev/data:ro"
+  store_runoption_volume "/run/udev/data:ro"
   return 0
 }
 
@@ -5618,7 +5618,7 @@ create_xcommand() {             ### create command to start X server and/or Wayl
 
       # xpra environment variables
       for Line in $Xpracontainerenv; do
-        store_runoption env "$Line"
+        store_runoption_env "$Line"
       done
     ;;
   esac
@@ -5770,7 +5770,7 @@ $Xwaylandoptions \\
       } || {
         Xcommand="$(get_xpath xwayland-satellite) :$Newdisplaynumber $Xserveroptions"
       }
-      store_runoption env "_JAVA_AWT_WM_NONREPARENTING=1"
+      store_runoption_env "_JAVA_AWT_WM_NONREPARENTING=1"
     ;;
 
     --xpra-xwayland|--xpra2-xwayland)
@@ -7047,21 +7047,21 @@ store_newxenv() {               # store display variables
   # X / Wayland environment variables for container
   case "$Xserver" in
     --xpra*|--xephyr|--weston-xwayland|--hostdisplay|--xorg|--xvfb|--xwayland|--satellite|--kwin-xwayland|--nxagent|--xwin|--runx)
-      store_runoption env "DISPLAY=$Newdisplay"
-      [ "$Xauthentication" != "no" ] && store_runoption env "XAUTHORITY=$(convertpath share "$Xclientcookie")"
+      store_runoption_env "DISPLAY=$Newdisplay"
+      [ "$Xauthentication" != "no" ] && store_runoption_env "XAUTHORITY=$(convertpath share "$Xclientcookie")"
     ;;
   esac
   case "$Xserver" in
     --weston|--kwin|--tty)
-      store_runoption env "WAYLAND_DISPLAY=$Newwaylandsocket"
+      store_runoption_env "WAYLAND_DISPLAY=$Newwaylandsocket"
     ;;
     --hostwayland)
-      store_runoption env "WAYLAND_DISPLAY=$Hostwaylandsocket"
+      store_runoption_env "WAYLAND_DISPLAY=$Hostwaylandsocket"
     ;;
   esac
   [ "$Setupwayland" = "yes" ] && {
     for Line in $Waylandtoolkitenv; do
-      store_runoption env "$Line"
+      store_runoption_env "$Line"
     done
   }
   
@@ -7330,7 +7330,7 @@ check_backend() {               # options --backend, --rootless
       [ "$(cat /proc/sys/kernel/unprivileged_userns_clone 2>/dev/null)" = "0" ] && error "Option --backend=podman: Linux kernel disallows
   unprivileged user namespace setup. Please run as root:
     sysctl -w kernel.unprivileged_userns_clone=1"
-      store_runoption cap "CHOWN"
+      store_runoption_cap "CHOWN"
     ;;
     nerdctl)
       note "Option --backend=nerdctl: Support of nerdctl is experimental yet.
@@ -7380,7 +7380,7 @@ check_backend() {               # options --backend, --rootless
       Sharealsa="no"
       Capdropall="yes"
       Shareipc="host"
-      [ "$Langwunsch" ] && store_runoption env "LANG=$Langwunsch"
+      [ "$Langwunsch" ] && store_runoption_env "LANG=$Langwunsch"
       Limitresources=""
       Network="host"
       Allownewprivileges="no"
@@ -7529,7 +7529,7 @@ check_runtime() {               # option --runtime
   case "$Runtime" in
     ""|runc|crun|oci|nvidia|kata-runtime) ;;
     sysbox-runc)
-      store_runoption env "SYSBOX_HONOR_CAPS=TRUE"
+      store_runoption_env "SYSBOX_HONOR_CAPS=TRUE"
       check_optionset "--runtime=sysbox-runc" "--alsa --webcam" ||:
       verlt "$(uname -r)" "5.12" && error "Option --runtime=sysbox-runc needs at least
   Linux kernel version >=5.12"
@@ -7741,10 +7741,10 @@ check_containerhome() {         # option --home: check HOME of container user.
     ;;
   esac
   [ "$Createcontaineruser" = "yes" ] && Containeruserhome="${Containeruserhome:-$Containeruserhomebasefolder/$Containeruser}"
-  [ "$Sharehome" != "no" ] && store_runoption env "HOME=$Containeruserhome"
+  [ "$Sharehome" != "no" ] && store_runoption_env "HOME=$Containeruserhome"
 
 #  case "$Createcontaineruser" in
-#    no)  store_runoption env "HOME=/tmp" ;;
+#    no)  store_runoption_env "HOME=/tmp" ;;
 #  esac
 
   case "$Sharehome" in
@@ -7831,14 +7831,14 @@ check_containeruser() {         # check container user (also option --user)
   [ -z "$Containeruserpassword" ] && Containeruserpassword='$6$Mj$WtcqpZ7JFegW4.0Br1WM0NJcNSxVxUQXgVLxGEV5uD3ib3jWGvIM3FNg2Gcj8e//mI06yhgfZ79WoNHGVtaYw1' # password: x11docker
 
   storeinfo containeruser="$Containeruser"
-  store_runoption env "USER=$Containeruser"
+  store_runoption_env "USER=$Containeruser"
   debugnote "container user: $Containeruser $Containeruseruid:$Containerusergid $Containeruserhosthome"
   Containerusergroups="$Containerusergroups $Containerusergroup"
 
   case "$BackendKind" in
     docker|podman|nerdctl|proot)
       case "$Containersetup" in
-        no)  store_runoption env "XDG_RUNTIME_DIR=/tmp" ;;
+        no)  store_runoption_env "XDG_RUNTIME_DIR=/tmp" ;;
       esac
     ;;
     host) ;;
@@ -8043,7 +8043,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
       while read Line ; do
         Backendcommand="$Backendcommand \\
   --cap-add $Line"
-      done < <(store_runoption dump cap)
+      done < <(store_runoption_dump_cap)
     ;;
   esac
 
@@ -8210,7 +8210,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
   --bind=$Line:$Line"
       ;;
     esac
-  done < <(store_runoption dump volume)
+  done < <(store_runoption_dump_volume)
 
   # --gpu
   case "$Sharegpu" in
@@ -8469,7 +8469,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
   --env '$(escapestring "$Line")'"
       ;;
     esac
-  done < <(store_runoption dump env)
+  done < <(store_runoption_dump_env)
 
   # add custom docker arguments, imagename and imagecommand
   [ "$Customdockeroptions" ] && {
@@ -8561,7 +8561,7 @@ setup_capabilities() {          # check linux capabilities needed by container
   # enable dbus
   [ "$Dbussystem" = "yes" ]    && {
     Dbusrunsession="yes"
-    store_runoption cap "CHOWN FOWNER" ### FIXME: CHOWN needed indeed here?
+    store_runoption_cap "CHOWN FOWNER" ### FIXME: CHOWN needed indeed here?
     Switchcontaineruser="yes"
   }
   #case "$Initsystem" in
@@ -8572,15 +8572,15 @@ setup_capabilities() {          # check linux capabilities needed by container
     none|tini|dockerinit) ;;
     systemd)
       Switchcontaineruser="yes"
-      store_runoption cap "FSETID FOWNER SETPCAP SYS_BOOT"
+      store_runoption_cap "FSETID FOWNER SETPCAP SYS_BOOT"
     ;;
     runit|openrc|sysvinit)
       Switchcontaineruser="yes"
-      store_runoption cap "SYS_BOOT KILL"
+      store_runoption_cap "SYS_BOOT KILL"
     ;;
     s6-overlay)
       Switchcontaineruser="yes"
-      store_runoption cap "CHOWN KILL"
+      store_runoption_cap "CHOWN KILL"
     ;;
   esac
 
@@ -8589,7 +8589,7 @@ setup_capabilities() {          # check linux capabilities needed by container
 
   [ "$Adminusercaps" = "yes" ] && {
     Switchcontainerusercaps="yes"
-    store_runoption cap "CHOWN KILL FSETID FOWNER SETPCAP"
+    store_runoption_cap "CHOWN KILL FSETID FOWNER SETPCAP"
     [ "$Allownewprivileges" = "auto" ] && {
       note "Option --sudouser: Enabling option --newprivileges=yes.
   You can avoid this with --newprivileges=no"
@@ -8599,13 +8599,13 @@ setup_capabilities() {          # check linux capabilities needed by container
   [ "$Switchcontainerusercaps" = "yes" ] && {
     warning "setup_capabilities(): Adding capabilities for user switching
   from root to unprivileged user"
-    store_runoption cap "SETUID SETGID DAC_OVERRIDE AUDIT_WRITE"
+    store_runoption_cap "SETUID SETGID DAC_OVERRIDE AUDIT_WRITE"
   }
 
   # Automated NVIDIA driver installation
 #  [ "$Sharegpu" = "direct" ] && [ "$Nvidiainstallerfile" ] && [ "$Switchcontaineruser" = "yes" ] && {
   [ "$Sharegpu" = "direct" ] && [ "$Nvidiainstallerfile" ] && {
-    store_runoption cap "CHOWN FOWNER DAC_OVERRIDE"
+    store_runoption_cap "CHOWN FOWNER DAC_OVERRIDE"
   }
 
   [ "$Allownewprivileges" = "auto" ] && Allownewprivileges="no"
@@ -8665,7 +8665,7 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
 
   case "$BackendKind" in
     docker|podman|nerdctl)
-      store_runoption env "container=$BackendKind"   # At least OpenRC and systemd regard this hint
+      store_runoption_env "container=$BackendKind"   # At least OpenRC and systemd regard this hint
     ;;
   esac
 
@@ -8698,7 +8698,7 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
     ;;
     runit)
       Stopsignal="HUP"
-      store_runoption env "VIRTUALIZATION=docker"
+      store_runoption_env "VIRTUALIZATION=docker"
     ;;
     openrc)
     ;;
@@ -8750,7 +8750,7 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
     host)
       [ "$Initsystem" = "tini" ] && {
         Containerentrypoint="$Initbinaryfile --"
-        store_runoption env "TINI_SUBREAPER=1"
+        store_runoption_env "TINI_SUBREAPER=1"
       }
     ;;
   esac
@@ -8768,86 +8768,189 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
 # function store_runoption()
 #
 #  Usage:
-#    store_runoption env "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS"
-#    store_runoption env  "${DBUS_SESSION_BUS_PID:-}"  # No name?
-#    store_runoption env "DISPLAY=$Newdisplay"
+#    store_runoption_env "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS"
+#    store_runoption_env  "${DBUS_SESSION_BUS_PID:-}"  # No name?
+#    store_runoption_env "DISPLAY=$Newdisplay"
 #
-#    store_runoption volume  "$Gpudevice"
-#    store_runoption volume "/run/cups"
-#    store_runoption volume "$Cupsserver"
-#    store_runoption volume "$(myrealpath "$Path")$Readwritemode"
+#    store_runoption_volume  "$Gpudevice"
+#    store_runoption_volume "/run/cups"
+#    store_runoption_volume "$Cupsserver"
+#    store_runoption_volume "$(myrealpath "$Path")$Readwritemode"
 #
-#    store_runoption cap "FSETID FOWNER SETPCAP SYS_BOOT"
-#    store_runoption cap "SYS_BOOT KILL"
-#    store_runoption cap "SETUID SETGID DAC_OVERRIDE AUDIT_WRITE"
-#    store_runoption cap "CHOWN FOWNER DAC_OVERRIDE"
+#    store_runoption_cap "FSETID FOWNER SETPCAP SYS_BOOT"
+#    store_runoption_cap "SYS_BOOT KILL"
+#    store_runoption_cap "SETUID SETGID DAC_OVERRIDE AUDIT_WRITE"
+#    store_runoption_cap "CHOWN FOWNER DAC_OVERRIDE"
 #
-#    store_runoption dump cap
-#    store_runoption dump volume
-#    store_runoption dump env
+#    store_runoption_dump_cap
+#    store_runoption_dump_volume
+#    store_runoption_dump_env
 #
-store_runoption() {  # store env, cap or volume/device for docker command
-  # $1  env     store environment variable $2
-  #     volume  store volume or device path $2
-  #     cap     store capability $2
-  #     dump    dump all entries of $2
-  local Count Line Path Readwritemode
-  case "${1:-}" in
-    env)
-      Containerenvironmentcount="$((Containerenvironmentcount + 1))"
-      ContainerenvironmentArray[$Containerenvironmentcount]="${2:-}"
-    ;;
-    volume)
-      Path="$(convertpath subsystem "${2:-}")"
-      Readwritemode="$(echo "${2:-}" | rev | cut -c1-3 | rev)"
-      [ "$Readwritemode" = ":ro" ] || Readwritemode=""
-      Path="$(convertpath subsystem "${2:-}")"
-      Readwritemode="$(echo "${2:-}" | rev | cut -c1-3 | rev)"
-      [ "$Readwritemode" = ":ro" ] || Readwritemode=""
-      case "${Path:0:1}" in
-        "/") # path on host
-          Sharevolumescount="$((Sharevolumescount + 1))"
-          SharevolumesArray[$Sharevolumescount]="${2:-}"
-          [ -h "$Path" ] && myrealpath "$Path" >/dev/null && {
-            note "Option --share: Shared file is a symbolic link. Sharing target, too.
-  Symlink: $Path
-  Target:  $(myrealpath "$Path")"
-            store_runoption volume "$(myrealpath "$Path")$Readwritemode"
-          }
-        ;;
-        *) # Docker volume
-          Sharevolumescount="$((Sharevolumescount + 1))"
-          SharevolumesArray[$Sharevolumescount]="${2:-}"
-        ;;
-      esac
-    ;;
-    cap)
-      for Line in ${2:-} ; do
-        Capabilities="$Capabilities
-$Line"
-      done
-    ;;
-    dump)
-      case "${2:-}" in
-        env) for ((Count=$Containerenvironmentcount ; Count>=1 ; Count --)) ; do echo "${ContainerenvironmentArray[$Count]}" ; done ;;
-        volume)
-            for ((Count=1 ; Count<=$Sharevolumescount ; Count ++)) ; do
-                echo "${SharevolumesArray[$Count]}" ;
-            done
-            ;;
-        cap)
-          while read Line; do
-            [ "$Line" ] && case "$Capdropall" in
-              yes) echo "$Line" ;;
-              no)  grep -w -q "$Line" <<< "SETPCAP MKNOD AUDIT_WRITE CHOWN NET_RAW DAC_OVERRIDE FOWNER FSETID KILL SETGID SETUID NET_BIND_SERVICE SYS_CHROOT SETFCAP" || echo "$Line" ;;
-            esac
-          done < <(echo "$Capabilities" | sort -u)
-        ;;
-      esac
-    ;;
-  esac
-  return 0
+store_runoption_env() {  # store env for docker command
+    # local Count Line Path Readwritemode
+    Containerenvironmentcount="$((Containerenvironmentcount + 1))"
+    ContainerenvironmentArray[$Containerenvironmentcount]="${1:-}"
+    return 0
 }
+
+store_runoption_dump_env() {
+    # local Count Line Path Readwritemode
+    local Count
+    for ((Count=$Containerenvironmentcount ; Count>=1 ; Count --)) ; do
+        echo "${ContainerenvironmentArray[$Count]}" ;
+    done
+    return 0
+}
+
+store_runoption_volume() {  # store volume/device for docker command
+    # local Count
+    # local Line
+    local Path Readwritemode
+    #
+    local ARG1="${2:-}"
+    #
+    Path="$(convertpath subsystem "${ARG1}")"
+    Readwritemode="$(echo "${ARG1}" | rev | cut -c1-3 | rev)"
+    [ "$Readwritemode" = ":ro" ] || Readwritemode=""
+    Path="$(convertpath subsystem "${ARG1}")"
+    Readwritemode="$(echo "${ARG1}" | rev | cut -c1-3 | rev)"
+    [ "$Readwritemode" = ":ro" ] || Readwritemode=""
+    #
+    case "${Path:0:1}" in
+        "/") # path on host
+            Sharevolumescount="$((Sharevolumescount + 1))"
+            SharevolumesArray[$Sharevolumescount]="${ARG1}"
+            [ -h "$Path" ] && myrealpath "$Path" >/dev/null && {
+                    #
+                    note "$(trim_to_bar \
+                       "|Option --share: Shared file is a symbolic link. Sharing target, too.
+                        |  Symlink: $Path
+                        |  Target:  $(myrealpath "$Path")" )"
+                    #
+                    store_runoption_volume "$(myrealpath "$Path")$Readwritemode"
+                }
+            ;;
+        *) # Docker volume
+            Sharevolumescount="$((Sharevolumescount + 1))"
+            SharevolumesArray[$Sharevolumescount]="${ARG1}"
+            ;;
+    esac
+    #
+    return 0
+}
+
+store_runoption_dump_volume() {  # store volume/device for docker command
+    local Count
+    for ((Count=1 ; Count<=$Sharevolumescount ; Count ++)) ; do
+        echo "${SharevolumesArray[$Count]}" ;
+    done
+    return 0
+}
+
+store_runoption_cap() {  # dump cap for docker command
+    # local Count Line Path Readwritemode
+    local Line
+    for Line in ${1:-} ; do
+        Capabilities="$Capabilities${NEWLINE}$Line"
+    done
+    return 0
+}
+
+store_runoption_dump_cap() {  # dump cap for docker command
+    # local Count
+    local Line
+    # local Path
+    # local Readwritemode
+    while read Line; do
+        if  [ "$Line" ] ; then
+            case "$Capdropall" in
+                yes)
+                    echo "$Line"
+                    ;;
+                no)
+                    # If Capdropall=no then the following
+                    #     capabilities, are already included. Avoid
+                    #     duplicating them.
+                    #
+                    if grep -w -q "$Line" <<< "SETPCAP MKNOD AUDIT_WRITE CHOWN NET_RAW DAC_OVERRIDE FOWNER FSETID KILL SETGID SETUID NET_BIND_SERVICE SYS_CHROOT SETFCAP" ; then
+                        : # nothing, already included
+                    else
+                        echo "$Line"
+                    fi
+                    ;;
+            esac
+        fi
+    done < <(echo "$Capabilities" | sort -u)
+    return 0
+}
+
+#store_runoption() {  # store env, cap or volume/device for docker command
+#    # $1  env     store environment variable $2
+#    #     volume  store volume or device path $2
+#    #     cap     store capability $2
+#    #     dump    dump all entries of $2
+#    local Count Line Path Readwritemode
+#    case "${1:-}" in
+#        #    env)
+#        #      Containerenvironmentcount="$((Containerenvironmentcount + 1))"
+#        #      ContainerenvironmentArray[$Containerenvironmentcount]="${2:-}"
+#        #    ;;
+#        #      volume)
+#        #          #
+#        #          Path="$(convertpath subsystem "${2:-}")"
+#        #          Readwritemode="$(echo "${2:-}" | rev | cut -c1-3 | rev)"
+#        #          [ "$Readwritemode" = ":ro" ] || Readwritemode=""
+#        #          Path="$(convertpath subsystem "${2:-}")"
+#        #          Readwritemode="$(echo "${2:-}" | rev | cut -c1-3 | rev)"
+#        #          [ "$Readwritemode" = ":ro" ] || Readwritemode=""
+#        #          #
+#        #          case "${Path:0:1}" in
+#        #              "/") # path on host
+#        #                  Sharevolumescount="$((Sharevolumescount + 1))"
+#        #                  SharevolumesArray[$Sharevolumescount]="${2:-}"
+#        #                  [ -h "$Path" ] && myrealpath "$Path" >/dev/null && {
+#        #                          #
+#        #                          note "$(trim_to_bar \
+#        #                       "|Option --share: Shared file is a symbolic link. Sharing target, too.
+#        #                        |  Symlink: $Path
+#        #                        |  Target:  $(myrealpath "$Path")" )"
+#        #                          #
+#        #                          store_runoption_volume "$(myrealpath "$Path")$Readwritemode"
+#        #                      }
+#        #                  ;;
+#        #              *) # Docker volume
+#        #                  Sharevolumescount="$((Sharevolumescount + 1))"
+#        #                  SharevolumesArray[$Sharevolumescount]="${2:-}"
+#        #                  ;;
+#        #          esac
+#        #          #
+#        #    ;;
+#        #        cap)
+#        #            for Line in ${2:-} ; do
+#        #                Capabilities="$Capabilities${NEWLINE}$Line"
+#        #            done
+#        #            ;;
+#    dump)
+#      case "${2:-}" in
+#        env) for ((Count=$Containerenvironmentcount ; Count>=1 ; Count --)) ; do echo "${ContainerenvironmentArray[$Count]}" ; done ;;
+#        volume)
+#            for ((Count=1 ; Count<=$Sharevolumescount ; Count ++)) ; do
+#                echo "${SharevolumesArray[$Count]}" ;
+#            done
+#            ;;
+#        cap)
+#          while read Line; do
+#            [ "$Line" ] && case "$Capdropall" in
+#              yes) echo "$Line" ;;
+#              no)  grep -w -q "$Line" <<< "SETPCAP MKNOD AUDIT_WRITE CHOWN NET_RAW DAC_OVERRIDE FOWNER FSETID KILL SETGID SETUID NET_BIND_SERVICE SYS_CHROOT SETFCAP" || echo "$Line" ;;
+#            esac
+#          done < <(echo "$Capabilities" | sort -u)
+#        ;;
+#      esac
+#    ;;
+#  esac
+#  return 0
+#}
 
 #### scripts running in container
 create_containerrootrc() {      # This script runs as root in container
@@ -8923,7 +9026,7 @@ echo 'esac' >> /etc/profile.d/10-x11docker-env.sh"
         echo "echo 'export $Line'                                          >> /etc/profile.d/10-x11docker-env.sh"
       ;;
     esac
-  done <<< $(store_runoption dump env)
+  done <<< $(store_runoption_dump_env)
 
   echo "
 # Container system
@@ -9192,7 +9295,7 @@ export XDG_RUNTIME_DIR=/tmp/XDG_RUNTIME_DIR
             esac
           }
         }
-      done < <(store_runoption dump volume)
+      done < <(store_runoption_dump_volume)
     }
 
     echo "
@@ -9266,7 +9369,7 @@ storeinfo test locale && export LANG=\"\$(storeinfo dump locale)\"
     esac
     while read -r Line ; do
       echo "export $(escapestring "$Line")"
-    done < <(store_runoption dump env)
+    done < <(store_runoption_dump_env)
 
     [ "$Xauthentication" = "no" ] && echo "unset XAUTHORITY && export XAUTHORITY"
 
@@ -9837,7 +9940,7 @@ sed -i 's/ProtectHostname=yes/ProtectHostname=no/' /lib/systemd/system/systemd-l
 
 mkdir -p /etc/systemd/system.conf.d
 echo \"[Manager]
-DefaultEnvironment=$(while read -r Line; do echo -n "$Line " ; done < <(store_runoption dump env))
+DefaultEnvironment=$(while read -r Line; do echo -n "$Line " ; done < <(store_runoption_dump_env))
 \" > /etc/systemd/system.conf.d/x11docker.environment.conf
 
 echo \"[Unit]
@@ -11364,7 +11467,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
      #### Container configuration
          --backend)           BackendKind="${2:-}" ; shift ;;            # container backend to use: docker, podman, nerdctl, others
          --cap-default)       Capdropall="no" ;;                     # Don't use --cap-drop=ALL --security-opt=no-new-privileges
-         --env)               store_runoption env "${2:-}"           # Set container environment variables
+         --env)               store_runoption_env "${2:-}"           # Set container environment variables
                               shift ;;
          --ipc)               Shareipc="${2:-host}" ; shift ;;
          --limit)             Limitresources="${2:-0.5}" ; shift ;;  # Limited CPU and RAM access
@@ -11388,7 +11491,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
       -m)                     Sharehome="host" ;;
          --home)              Sharehome="yes"                                   # Share host folder as HOME in container, ~/x11docker/imagename or $2
                               Persistanthomevolume="${2:-}" ; shift ;;
-         --share)             store_runoption volume "${2:-}" ; shift ;;        # Share host file, device or directory
+         --share)             store_runoption_volume "${2:-}" ; shift ;;        # Share host file, device or directory
          --homebasedir)       Hosthomebasefolder="${2:-}" ; shift ;;            # Set base folder for --home instead of ~/.local/share/x11docker
          --cachebasedir)      Cachebasefolder="${2:-}" ; shift ;;               # Set base folder for cache  instead of ~/.cache/x11docker
 
@@ -11448,8 +11551,8 @@ ${2:-}"                       ; shift ;;                             # Add custo
                               note "Option --no-internet is deprecated.
   Option --network=none is default now." ;;
          --sharessh)          [ -e "${SSH_AUTH_SOCK:-}" ] && {       # SSH socket sharing
-                                store_runoption volume "$(dirname "$SSH_AUTH_SOCK")"
-                                store_runoption env "SSH_AUTH_SOCK=$(escapestring "${SSH_AUTH_SOCK:-}")"
+                                store_runoption_volume "$(dirname "$SSH_AUTH_SOCK")"
+                                store_runoption_env "SSH_AUTH_SOCK=$(escapestring "${SSH_AUTH_SOCK:-}")"
                               } || note "Option --sharessh: environment variable \$SSH_AUTH_SOCK not set:" ;
                               note "Option --sharessh is deprecated.
   Please use (directly or with help of option --preset):
@@ -11469,7 +11572,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
          --systemd)           Initsystem="systemd" ;         note "Option --systemd is deprecated. Please use: --init=systemd" ;;
          --homedir)           Sharehome="yes" ; Persistanthomevolume="${2:-}" ; shift ; note "Option --homedir is deprecated.
   Please use --home=DIR instead."  ;;
-         --sharedir)          store_runoption volume "${2:-}" ; shift ; note "Option --sharedir is deprecated.
+         --sharedir)          store_runoption_volume "${2:-}" ; shift ; note "Option --sharedir is deprecated.
   Please use option --share=PATH instead." ;;
   
      #### Removed options
@@ -11817,7 +11920,7 @@ check_options_arguments() {     # check for [likely] valid arguments
     [ "${Line:0:1}" = "/" ] && [ ! -e "$Line" ] && error "Option --share: File or folder does not exist:
   $Line"
     [ -z "$Line" ] && error "Option --share needs an argument"
-  done < <(store_runoption dump volume)
+  done < <(store_runoption_dump_volume)
 
   # --size
   [ "$Screensize" ] && {
@@ -12127,8 +12230,8 @@ check_options_interferences() { # check multiple option interferences, change se
     --tty)
       [ "$Interactive" = "no" ] && {
         tput lines >/dev/null 2>&1 && {
-          store_runoption env "LINES=$(tput lines)"
-          store_runoption env "COLUMNS=$(tput cols)"
+          store_runoption_env "LINES=$(tput lines)"
+          store_runoption_env "COLUMNS=$(tput cols)"
         }
       }
       check_optionset "--tty" "--border --clipboard --composite --desktop --display --dpi
@@ -12188,9 +12291,9 @@ check_options_interferences() { # check multiple option interferences, change se
             case "$Xauthentication" in
               trusted|yes)
                 note "Option --hostdisplay --xauth=trusted: MIT-SHM errors might occur."
-                store_runoption env "QT_X11_NO_MITSHM=1"
-                store_runoption env "_X11_NO_MITSHM=1"
-                store_runoption env "_MITSHM=0"
+                store_runoption_env "QT_X11_NO_MITSHM=1"
+                store_runoption_env "_X11_NO_MITSHM=1"
+                store_runoption_env "_MITSHM=0"
               ;;
             esac
           ;;
@@ -12198,9 +12301,9 @@ check_options_interferences() { # check multiple option interferences, change se
             case $BackendKind in
               docker|host)
                 [ -f "$Libdlsofile" ] && {
-                  store_runoption env "LD_PRELOAD=$Sharefoldercontainer/$(basename "$Libdlsofile"):$Sharefoldercontainer/XlibNoSHM.so"
+                  store_runoption_env "LD_PRELOAD=$Sharefoldercontainer/$(basename "$Libdlsofile"):$Sharefoldercontainer/XlibNoSHM.so"
                 } || {
-                  store_runoption env "LD_PRELOAD=$Sharefoldercontainer/XlibNoSHM.so"
+                  store_runoption_env "LD_PRELOAD=$Sharefoldercontainer/XlibNoSHM.so"
                 }
               ;;
               podman)
@@ -12318,7 +12421,7 @@ check_options_interferences() { # check multiple option interferences, change se
   # --gpu --xoverip
   case "$Xoverip" in
     socat)
-      store_runoption env "LIBGL_ALWAYS_SOFTWARE=1"
+      store_runoption_env "LIBGL_ALWAYS_SOFTWARE=1"
       case "$Sharegpu" in
         virgl|no) ;;
         yes|direct|iglx)
@@ -12378,15 +12481,15 @@ check_options_interferences() { # check multiple option interferences, change se
   esac
   case "$Sharegpu" in
     iglx)
-      store_runoption env "LIBGL_ALWAYS_INDIRECT=1"
+      store_runoption_env "LIBGL_ALWAYS_INDIRECT=1"
     ;;
     virgl)
       case "$Xcontainer_option" in
         yes)
           case "$BackendKind" in
             docker|podman|nerdctl) 
-              store_runoption env "LIBGL_ALWAYS_SOFTWARE=1"   ### FIXME rather belongs to setup_gpu()
-              store_runoption env "GALLIUM_DRIVER=virpipe"           ;;
+              store_runoption_env "LIBGL_ALWAYS_SOFTWARE=1"   ### FIXME rather belongs to setup_gpu()
+              store_runoption_env "GALLIUM_DRIVER=virpipe"           ;;
             *) 
               note "Option --gpu=virgl is supported with
   backends docker|podman|nerdctl only.
@@ -12411,7 +12514,7 @@ check_options_interferences() { # check multiple option interferences, change se
     no)
       check_optionset "--no-setup" "--dbus --no-entrypoint --runasroot --runasuser" ||:
 
-      [ "$Langwunsch" ] && store_runoption env "LANG=$Langwunsch"
+      [ "$Langwunsch" ] && store_runoption_env "LANG=$Langwunsch"
 
       case "$Initsystem" in
         none|tini|dockerinit) ;;
@@ -12498,7 +12601,7 @@ check_options_interferences() { # check multiple option interferences, change se
   case "$Containerusershell" in
     auto) ;;
     *)
-      store_runoption env "SHELL=$Containerusershell"
+      store_runoption_env "SHELL=$Containerusershell"
       [ "$Containersetup" = "no" ] && note "Option --shell: With option --no-setup
   x11docker only sets variable SHELL, but does no setup in /etc/passwd.
   Some terminal emulators might not work as expected."
@@ -14057,8 +14160,8 @@ declare_variables() {           # declare global variables
   # ContainerenvironmentArray : --env: Environment variables
   #
   #    Used in:
-  #       store_runoption env      : ContainerenvironmentArray[$Containerenvironmentcount]="${2:-}"
-  #       store_runoption dump env     
+  #       store_runoption_env      : ContainerenvironmentArray[$Containerenvironmentcount]="${2:-}"
+  #       store_runoption_dump_env     
   #     
   #
   ContainerenvironmentArray=""
