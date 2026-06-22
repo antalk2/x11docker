@@ -14002,15 +14002,28 @@ declare_variables() {           # declare global variables
   #
   #            A default can be specified with default preset file.
   #
+  # was: Backend
+  #
   BackendKind=""
 
   # Backendbin : path to binary of backend
   Backendbin=""
 
-  Backendinfo=""                                  # output of 'docker info'
-  Capabilities=""                                 # Capabilities to add. Default: none, exceptions for --init, --sudouser
-  Capdropall="yes"                                # --cap-default: Drop all container capabilities and set --securty-opt=no-new-privileges yes/no
   Chrootmountlist=""
+  # Backendinfo : output of 'docker info'
+  #   Backendinfo="$(unpriv_backend "env LC_ALL=C $Backendbin info --format='{{json .}}'" 2>&1)"
+  #
+  Backendinfo=""
+
+  # Capabilities : Capabilities to add. Default: none, exceptions for
+  #                --init, --sudouser
+  #
+  Capabilities=""
+
+  # Capdropall : --cap-default: Drop all container capabilities and
+  #              set --security-opt=no-new-privileges yes/no
+  #
+  Capdropall="yes"
   Containercommand=""                             # Container command [+args]
   Containerentrypoint=""
   Containerenvironment=""                         # --env: Environment variables
