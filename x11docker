@@ -7308,8 +7308,8 @@ check_backend() {               # options --backend, --rootless
   case "$BackendKind" in
     docker|podman|nerdctl|proot)
       [ "${g_Imagename:0:1}" = "/" ] && {
-        Rootfs="$g_Imagename"
-        g_Imagename="$(basename "$Rootfs")"
+        g_Rootfs="$g_Imagename"
+        g_Imagename="$(basename "$g_Rootfs")"
       }
       [ "$g_Podmanrootfs" = "yes" ] && Checkrootfs="yes"
       Imagebasename="$(echo "$g_Imagename" | tr / - | cut -d: -f1)"
@@ -7418,12 +7418,12 @@ check_backend() {               # options --backend, --rootless
         error "Option --rootfs is supported by backends proot and podman only."
       ;;
     esac
-    [ -z "$Rootfs" ] && [ -d "$Hosthomebasefolder/ROOTFS/$Imagebasename" ] && Rootfs="$Hosthomebasefolder/ROOTFS/$Imagebasename"
-    [ -z "$Rootfs" ] && error "Option --backend=$BackendKind: Did not find a rootfs for $g_Imagename
+    [ -z "$g_Rootfs" ] && [ -d "$Hosthomebasefolder/ROOTFS/$Imagebasename" ] && g_Rootfs="$Hosthomebasefolder/ROOTFS/$Imagebasename"
+    [ -z "$g_Rootfs" ] && error "Option --backend=$BackendKind: Did not find a rootfs for $g_Imagename
   in $Hosthomebasefolder/ROOTFS/$Imagebasename"
-    [ -z "$Containercommand" ] && [ -e "$Rootfs/start" ] && Containercommand="/bin/sh /start"
+    [ -z "$Containercommand" ] && [ -e "$g_Rootfs/start" ] && Containercommand="/bin/sh /start"
     [ -z "$Containercommand" ] && {
-      [ -e "$Rootfs/bin/bash" ]                          && Containercommand="/bin/bash" || Containercommand="/bin/sh"
+      [ -e "$g_Rootfs/bin/bash" ]                          && Containercommand="/bin/bash" || Containercommand="/bin/sh"
       [ "$Containerusershell" != "auto" ]                && Containercommand="$Containerusershell"
       note "Option --backend=$BackendKind: No command specified.
 Fallback: using command '$Containercommand' and enabling option --interactive."
@@ -7868,7 +7868,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
     ;;
     proot)
       Backendcommand="proot \\
-  --rootfs='$Rootfs' \\
+  --rootfs='$g_Rootfs' \\
   --bind=/etc/host.conf \\
   --bind=/etc/nsswitch.conf \\
   --bind=/etc/resolv.conf \\
@@ -8518,7 +8518,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
         no)
           case "$BackendKind" in
             docker|podman|nerdctl)
-              Backendcommand="$Backendcommand ${Rootfs:-$g_Imagename} $Initcommand /bin/sh - $(convertpath share "$Containerrc")"      # start_container runs containerrootrc with 'docker exec'
+              Backendcommand="$Backendcommand ${g_Rootfs:-$g_Imagename} $Initcommand /bin/sh - $(convertpath share "$Containerrc")"      # start_container runs containerrootrc with 'docker exec'
             ;;
             proot)
               Backendcommand="$Backendcommand /bin/sh - $(convertpath share "$Containerrc")"
@@ -8528,7 +8528,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
         yes)
           case "$BackendKind" in
             docker|podman|nerdctl)
-              Backendcommand="$Backendcommand ${Rootfs:-$g_Imagename} $Initcommand /bin/sh - $(convertpath share "$Containerrootrc")"  # containerrootrc runs containerrc
+              Backendcommand="$Backendcommand ${g_Rootfs:-$g_Imagename} $Initcommand /bin/sh - $(convertpath share "$Containerrootrc")"  # containerrootrc runs containerrc
             ;;
             proot)
               Backendcommand="$Backendcommand /bin/sh - $(convertpath share "$Containerrootrc")"
@@ -8541,8 +8541,8 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
       case "$BackendKind" in
         docker|podman|nerdctl)
           case "$Initsystem" in
-            tini) Backendcommand="$Backendcommand ${Rootfs:-$g_Imagename} $Initcommand $Containercommand" ;;
-            *) Backendcommand="$Backendcommand ${Rootfs:-$g_Imagename} $Containercommand" ;;
+            tini) Backendcommand="$Backendcommand ${g_Rootfs:-$g_Imagename} $Initcommand $Containercommand" ;;
+            *) Backendcommand="$Backendcommand ${g_Rootfs:-$g_Imagename} $Containercommand" ;;
           esac
         ;;
         proot)
@@ -9223,8 +9223,8 @@ verbose \"containerrc: Container system:
     case "$BackendKind" in
       proot)
         # set another hostname ### FIXME fails
-        sed "s/$(hostname)/$BackendKind-$Imagebasename/g" "/etc/hosts" > "$Rootfs/etc/hosts"
-        echo "$BackendKind-$Imagebasename"                             > "$Rootfs/etc/hostname"
+        sed "s/$(hostname)/$BackendKind-$Imagebasename/g" "/etc/hosts" > "$g_Rootfs/etc/hosts"
+        echo "$BackendKind-$Imagebasename"                             > "$g_Rootfs/etc/hostname"
         # clean environment variables
         while read -r Line; do
           Line="$(cut -d= -f1 <<< "$Line")"
@@ -14155,8 +14155,8 @@ declare_variables() {           # declare global variables
   #
   #   - Used as part of Backendcommand
   #
-  #     tini) Backendcommand="$Backendcommand ${Rootfs:-$g_Imagename} $Initcommand $Containercommand" ;;
-  #     *)    Backendcommand="$Backendcommand ${Rootfs:-$g_Imagename}              $Containercommand" ;;
+  #     tini) Backendcommand="$Backendcommand ${g_Rootfs:-$g_Imagename} $Initcommand $Containercommand" ;;
+  #     *)    Backendcommand="$Backendcommand ${g_Rootfs:-$g_Imagename}              $Containercommand" ;;
   #
   Containercommand=""
 
@@ -14268,8 +14268,8 @@ declare_variables() {           # declare global variables
   # g_Remountcgroup : --init=systemd with cgroupv2 in docker workaround
   g_Remountcgroup=""
   
-  # Rootfs : --backend=proot
-  Rootfs=""
+  # g_Rootfs : --backend=proot
+  g_Rootfs=""
   
   # Backendrootless : Check for rootful/rootless docker depending on
   #                   DOCKER_HOST
@@ -14628,7 +14628,7 @@ $(nl -ba <$Westonini)"
   setup_initsystem               # init in container.                             # --init
   case "$BackendKind" in
     docker|podman|nerdctl)
-      [ -z "$Rootfs" ] && check_image
+      [ -z "$g_Rootfs" ] && check_image
       setup_capabilities         # add linux capabilities if needed for some options. Default: --cap-drop=ALL
       [ "$Sharegpu" = "yes" ] && setup_vaapi                                      # --gpu
     ;;
