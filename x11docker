@@ -935,22 +935,28 @@ finish() {      # trap EXIT routine to clean up background processes and cache
     }
 
     # backup of logfile in $Cachebasefolder
-    [ -e "$Logfile" ] && {
-        [ "$Verbose" ] && sleep 1
+    if [ -e "$Logfile" ] ; then
+        if [ "$Verbose" ] ; then sleep 1 ; fi
         unpriv "cp '$Logfile' '$Logfilebackup'"
         case "$Winsubsystem" in
             WSL1|WSL2)
-                [ "$Dockervm" = "moby" ] && unpriv "cp -T '$Logfilebackup' '$Hostuserhome/.cache/x11docker/x11docker.log'"
+                if [ "$Dockervm" = "moby" ] ; then
+                    unpriv "cp -T '$Logfilebackup' '$Hostuserhome/.cache/x11docker/x11docker.log'"
+                fi
                 ;;
         esac
         #unpriv "rmcr '$Logfilebackup'"
-    }
+    fi
 
     # softlink to X unix socket in container
     case "$Xcontainer_option" in
         yes)
-            [ -L "/tmp/.X11-unix/X$Newdisplaynumber" ]          && rm "/tmp/.X11-unix/X$Newdisplaynumber"
-            [ -L "$XDG_RUNTIME_DIR/wayland-$Newdisplaynumber" ] && rm "$XDG_RUNTIME_DIR/wayland-$Newdisplaynumber"
+            if [ -L "/tmp/.X11-unix/X$Newdisplaynumber" ] ; then
+                rm  "/tmp/.X11-unix/X$Newdisplaynumber"
+            fi
+            if [ -L "$XDG_RUNTIME_DIR/wayland-$Newdisplaynumber" ] ; then
+                rm  "$XDG_RUNTIME_DIR/wayland-$Newdisplaynumber"
+            fi
             ;;
     esac
 
