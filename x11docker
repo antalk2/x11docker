@@ -7348,7 +7348,7 @@ check_backend() {               # options --backend, --rootless
     nerdctl)
       note "Option --backend=nerdctl: Support of nerdctl is experimental yet.
   In production rather use docker or podman for now."
-      Switchcontaineruser="yes"
+      Switchcontaineruserflag="yes"
       [ "$Capdropall" = "yes" ] && note "Option --backend=nerdctl: If you encounter issues,
   please try with option --cap-default to remove some container restrictions."
     ;;
@@ -7372,7 +7372,7 @@ check_backend() {               # options --backend, --rootless
       Sharecgroup="no"
       g_Limitresources=""
       # needed
-      Switchcontaineruser="yes"
+      Switchcontaineruserflag="yes"
 
       [ "$Sudouser" ] && note "Option --backend=$BackendKind --sudouser: sudo fails in $BackendKind.
   Workaround: starting with user root.
@@ -7415,7 +7415,7 @@ check_backend() {               # options --backend, --rootless
       proot) ;;
       podman)
         note "Option --backend=podman with --rootfs is experimental yet."
-        [ "$Containersetup" = "yes" ] && Switchcontaineruser="yes"
+        [ "$Containersetup" = "yes" ] && Switchcontaineruserflag="yes"
       ;;
       *)  # BackendKind_host
         error "Option --rootfs is supported by backends proot and podman only."
@@ -7955,7 +7955,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
   # --user
   case "$Initsystem" in
     none|tini|dockerinit)
-      case "$Switchcontaineruser" in
+      case "$Switchcontaineruserflag" in
         no)
           case "$BackendKind" in
             docker|podman|nerdctl)
@@ -8007,7 +8007,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
   }
 
   # --group-add
-  [ "$Switchcontaineruser" = "no" ] && {
+  [ "$Switchcontaineruserflag" = "no" ] && {
     case "$BackendKind" in
       docker|podman)
         for Line in $Containerusergroups; do
@@ -8538,7 +8538,7 @@ esac
 
   case "$Containersetup" in
     yes)
-      case "$Switchcontaineruser" in
+      case "$Switchcontaineruserflag" in
         no)
           case "$BackendKind" in
             docker|podman|nerdctl)
@@ -8601,7 +8601,7 @@ setup_capabilities() {          # check linux capabilities needed by container
   [ "$Dbussystem" = "yes" ]    && {
     Dbusrunsession="yes"
     store_runoption_cap "CHOWN FOWNER" ### FIXME: CHOWN needed indeed here?
-    Switchcontaineruser="yes"
+    Switchcontaineruserflag="yes"
   }
   #case "$Initsystem" in
   #  systemd) Dbusrunsession="no" ;;
@@ -8610,21 +8610,21 @@ setup_capabilities() {          # check linux capabilities needed by container
   case "$Initsystem" in
     none|tini|dockerinit) ;;
     systemd)
-      Switchcontaineruser="yes"
+      Switchcontaineruserflag="yes"
       store_runoption_cap "FSETID FOWNER SETPCAP SYS_BOOT"
     ;;
     runit|openrc|sysvinit)
-      Switchcontaineruser="yes"
+      Switchcontaineruserflag="yes"
       store_runoption_cap "SYS_BOOT KILL"
     ;;
     s6-overlay)
-      Switchcontaineruser="yes"
+      Switchcontaineruserflag="yes"
       store_runoption_cap "CHOWN KILL"
     ;;
   esac
 
-  [ "$Sharecgroup" = "yes" ]         && Switchcontaineruser="yes" # needed for elogind
-  [ "$Switchcontaineruser" = "yes" ] && Switchcontainerusercaps="yes"
+  [ "$Sharecgroup" = "yes" ]         && Switchcontaineruserflag="yes" # needed for elogind
+  [ "$Switchcontaineruserflag" = "yes" ] && Switchcontainerusercaps="yes"
 
   [ "$Adminusercaps" = "yes" ] && {
     Switchcontainerusercaps="yes"
@@ -8642,7 +8642,7 @@ setup_capabilities() {          # check linux capabilities needed by container
   }
 
   # Automated NVIDIA driver installation
-#  [ "$Sharegpu" = "direct" ] && [ "$Nvidiainstallerfile" ] && [ "$Switchcontaineruser" = "yes" ] && {
+#  [ "$Sharegpu" = "direct" ] && [ "$Nvidiainstallerfile" ] && [ "$Switchcontaineruserflag" = "yes" ] && {
   [ "$Sharegpu" = "direct" ] && [ "$Nvidiainstallerfile" ] && {
     store_runoption_cap "CHOWN FOWNER DAC_OVERRIDE"
   }
@@ -8655,7 +8655,7 @@ setup_capabilities() {          # check linux capabilities needed by container
   However, this is still within a default docker setup."
 
   # Issues with hidepid=2 seen on NixOS (issue #83)
-  { [ "$Switchcontaineruser" = "yes" ] || [ "$Containeruser" != "$Hostuser" ] ; } && {
+  { [ "$Switchcontaineruserflag" = "yes" ] || [ "$Containeruser" != "$Hostuser" ] ; } && {
     [ "$Hostcanwatchroot" = "no" ] && {
       [ "$Hosthidepid" = "yes" ]            && Message="/proc is mounted with hidepid=2." || Message="Cannot watch processes of other users for unknown reasons."
       Message="$Message
@@ -8663,7 +8663,7 @@ setup_capabilities() {          # check linux capabilities needed by container
   or other users different from $Hostuser."
       [ "$Hostuser" != "$Containeruser" ]   && Message="$Message
   Container user $Containeruser is different from host user $Hostuser."
-      [ "$Switchcontaineruser" = "yes" ]    && Message="$Message
+      [ "$Switchcontaineruserflag" = "yes" ]    && Message="$Message
   Container PID 1 will run as root."
       Message="$Message
   Therefore x11docker cannot watch container processes
@@ -9112,7 +9112,7 @@ ls -la \"\$Containeruserhome\"
 export HOME=\"\$Containeruserhome\"
 "
 
-  [ "$Switchcontaineruser" = "yes" ] && rootrc_create_helperscripts
+  [ "$Switchcontaineruserflag" = "yes" ] && rootrc_create_helperscripts
   [ "$Dbussystem" = "yes" ]          && rootrc_prepare_dbus
   case "$Initsystem" in
     openrc)   rootrc_prepare_init_openrc ;;
@@ -9167,7 +9167,7 @@ storeinfo containerrootrc=ready   # signal for containerrc
 exec 1>&5 2>&6
 "
 
-  [ "$Switchcontaineruser" = "yes" ] && {   # if "no", containerrc is executed in command line $Backendcommand, and containerrootrc is started with 'docker exec'
+  [ "$Switchcontaineruserflag" = "yes" ] && {   # if "no", containerrc is executed in command line $Backendcommand, and containerrootrc is started with 'docker exec'
     echo "debugnote 'containerrootrc(): --init=$Initsystem'"
     case "$Initsystem" in
       none|dockerinit)
@@ -9266,7 +9266,7 @@ verbose \"containerrc: Container system:
         echo 'export PS1="\u@'"$BackendKind"'-'"$Imagebasename"':\w\$ "' ### FIXME fails
       ;;
       docker|podman|nerdctl)
-        [ "$Switchcontaineruser" = "yes" ] && {
+        [ "$Switchcontaineruserflag" = "yes" ] && {
           echo '# Environment variables found in image:'
           IFS=$'\n'
           while read -r Line; do
@@ -10481,11 +10481,11 @@ $(tail "$Containerlogfile")"
   }
 
   # start containerrootrc
-  [ "$Switchcontaineruser" = "no" ] && [ "$Containersetup" = "yes" ] && {
+  [ "$Switchcontaineruserflag" = "no" ] && [ "$Containersetup" = "yes" ] && {
     debugnote "start_container(): Starting containerrootrc with $BackendKind exec"
     # copy containerrootrc inside of container to avoid possible noexec of host home.
     case "$BackendKind" in
-      proot) ### FIXME currently with Switchcontaineruser=yes only
+      proot) ### FIXME currently with Switchcontaineruserflag=yes only
       ;;
       host) ;; # BackendKind_host # no containerrootrc
       docker|podman|nerdctl)
@@ -11101,6 +11101,7 @@ check_xdg_runtime_dir() {       # set up XDG_RUNTIME_DIR if needed
   esac
   return 0
 }
+
 create_cachefiles() {           # create empty cache files owned by unprivileged user
   local Line
   # create base cache folder
@@ -11281,6 +11282,7 @@ setup_fifo() {                  # set up fifo channels (also option --stdin)
 
   return 0
 }
+
 setup_verbosity() {             # options --verbose, --stdout, --stderr
   local Line Logfiles
   # create summary logfile
@@ -14364,11 +14366,40 @@ declare_variables() {           # declare global variables
   #
   Shareipc="no"
   
-  Stopsignal=""                                   # Signal to send on 'docker stop'
-  Sudouser=""                                     # --sudouser: Create user with sudo permissions and root user with password 'x11docker'
-  Switchcontaineruser="no"                        # --init=systemd|openrc|runit|sysvinit: User switching to trigger login services yes/no
-  Switchcontainerusercaps="no"                    # --init=systemd|openrc|runit|sysvinit, --sudouser: Add capabilities for su/sudo user switching
+  # Stopsignal : Signal to send on 'docker stop'
+  #
+  #   - Passed to docker|podman|nerdctl as "--stop-signal $Stopsignal"
+  #   - Depends on Initsystem
+  #
+  #   - Probably the signal to be sent by docker to the "init" program
+  #     running in the container.
+  #
+  #   - If not set, docker will send SIGTERM, wait a bit and then SIGKILL
+  #
+  Stopsignal=""
+
+  # Sudouser : --sudouser: Create user with sudo permissions and root
+  #            user with password 'x11docker' (in the container)
+  #
+  Sudouser=""
+
+  # Switchcontaineruserflag : --init=systemd|openrc|runit|sysvinit: User
+  #                       switching to trigger login services. yes/no
+  #
+  Switchcontaineruserflag="no"
+
+  # Switchcontainerusercaps : --init=systemd|openrc|runit|sysvinit,
+  #                           --sudouser: Add capabilities for su/sudo user switching
+  #
+  Switchcontainerusercaps="no"
+
+  # Systemdjournallogfile :
+  #     - set in: create_cachefiles() : Systemdjournallogfile="$Sharefolder/$Systemdjournallogfile"
+  #     - used in: setup_verbosity()
+  #     - used in: rootrc_prepare_init_systemd()
+  #
   Systemdjournallogfile="systemd.journal.log"
+
   Workdir=""                                      # --workdir: Set working directory in container
 
   # =============================================
