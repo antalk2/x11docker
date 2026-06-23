@@ -11062,8 +11062,8 @@ check_snap() {                  # check if docker is installed in snap. Causes r
     check_fallback
   }
 
-  # FIXME: Snapsupport is never set to "no". (Starts as "", later set to "yes")
-  [ -d "/snap/docker" ] && [ "$Snapsupport" = "no" ] && note "Detected /snap/docker.
+  # Note: Snapsupport is never set to "no". (Starts as "", later set to "yes")
+  [ -d "/snap/docker" ] && [ -z "$Snapsupport" ] && note "Detected /snap/docker.
   If you run Docker in snap, you might need option --snap to support this setup."
 
   [ "$Snapsupport" = "yes" ] && {
@@ -13270,7 +13270,7 @@ declare_variables() {           # declare global variables
   # --- x11docker startup environment ---
   # =====================================
   
-  # Runsinsnap : docker runs in Ubuntu snap yes/no
+  # Runsinsnap : docker runs in Ubuntu snap, Value: yes|""
   Runsinsnap=""
   
   # Runsinteractive : --enforce-i: Script runs in bash interactive
