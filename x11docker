@@ -4297,7 +4297,7 @@ check_xcontainer() {            # option --xc: check backend, rootless and image
           Xcontainerbackend="$BackendKind"
           unpriv_xcbackend "$Xcontainerbackend inspect $Xcontainerimage" >/dev/null 2>&1 || Fail="yes"
         ;;
-        host|proot) # BackendKind_X_only
+        host|proot) # BackendKind_host
           Xcrootless="no"  unpriv_xcbackend "docker inspect $Xcontainerimage" >/dev/null 2>&1 && Xcontainerbackend="docker" && Xcrootless="no"
           [ -z "$Xcontainerbackend" ] && {
             Xcrootless="yes" unpriv_xcbackend "docker inspect $Xcontainerimage" >/dev/null 2>&1 && Xcontainerbackend="docker" && Xcrootless="yes"
@@ -7204,7 +7204,7 @@ check_backend() {               # options --backend, --rootless
     ;;
     moby)
       case "$BackendKind" in
-          docker|host)  # BackendKind_X_only
+          docker|host)  # BackendKind_host
           ;;
         *) 
           error "Option --backend=$BackendKind is not supported on MS Windows yet.
@@ -7232,7 +7232,7 @@ check_backend() {               # options --backend, --rootless
         ;;
       esac
     ;;
-    host)  # BackendKind_X_only
+    host)  # BackendKind_host
         Backendbin=""
         ;;
   esac
@@ -7261,7 +7261,7 @@ check_backend() {               # options --backend, --rootless
     podman|nerdctl)
       [ "$(id -u)" = "0" ] && Backendrootless="no" || Backendrootless="yes" ;;
     proot) ;;
-    host) ;;  # BackendKind_X_only
+    host) ;;  # BackendKind_host
   esac
   case "$Backendrootless" in
     yes)
@@ -7320,7 +7320,7 @@ check_backend() {               # options --backend, --rootless
       verbose "Image name: $g_Imagename
   Container command: $Containercommand"
     ;;
-    host)  # BackendKind_X_only
+    host)  # BackendKind_host
       Containercommand="$g_Imagename $Containercommand"
       [ "$Customdockeroptions" ] && error "Option --backend=$BackendKind does not take CUSTOM_RUN_OPTIONS.
   If your command args contain ' -- ', run like
@@ -7379,7 +7379,7 @@ check_backend() {               # options --backend, --rootless
   You can switch to user $Containeruser with 'su $Containeruser'.
   Note that root in $BackendKind is a fake and does not have real root privileges."
     ;;
-    host)  # BackendKind_X_only
+    host)  # BackendKind_host
       warning "Option --backend=host provides no isolation at all.
   It only provides an X server for a host application."
       storeinfo "containerrootrc=ready"
@@ -7417,7 +7417,7 @@ check_backend() {               # options --backend, --rootless
         note "Option --backend=podman with --rootfs is experimental yet."
         [ "$Containersetup" = "yes" ] && Switchcontaineruser="yes"
       ;;
-      *)  # BackendKind_X_only
+      *)  # BackendKind_host
         error "Option --rootfs is supported by backends proot and podman only."
       ;;
     esac
@@ -7856,7 +7856,7 @@ check_containeruser() {         # check container user (also option --user)
         no)  store_runoption_env "XDG_RUNTIME_DIR=/tmp" ;;
       esac
     ;;
-    host) ;;  # BackendKind_X_only
+    host) ;;  # BackendKind_host
   esac
   return 0
 }
@@ -7880,7 +7880,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
   --bind=/dev \\
   --bind=/run/shm"
       ;;
-    host) ;; # BackendKind_X_only
+    host) ;; # BackendKind_host
   esac
 
   # --keepcache
@@ -8105,7 +8105,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
           Backendcommand="$Backendcommand \\
   --bind=$Initbinaryfile:$Initcontainerpath"
           ;;
-        host) ;; # BackendKind_X_only
+        host) ;; # BackendKind_host
       esac
     ;;
     systemd)
@@ -8167,7 +8167,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
       Backendcommand="$Backendcommand \\
   --bind=$Sharefolder:$Sharefoldercontainer"
       ;;
-    host) ;; # BackendKind_X_only
+    host) ;; # BackendKind_host
   esac
 
   # --home
@@ -8182,7 +8182,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
           Backendcommand="$Backendcommand \\
   --bind=$Persistanthomevolume:$Containeruserhome"
           ;;
-        host) ;; # BackendKind_X_only
+        host) ;; # BackendKind_host
       esac
     ;;
     volume)
@@ -8192,7 +8192,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
   --volume $(convertpath volume "$Persistanthomevolume" "$Containeruserhomebasefolder")"
           ### FIXME $Containeruserhomebasefolder ?? mount/volume?
         ;;
-        *) # proot|host) ;; # BackendKind_X_only
+        *) # proot|host) ;; # BackendKind_host
             error "$(printf "%s\n%s"                                                \
              "Option --backend=$BackendKind: Sharing a docker volume is not supported." \
              "  Failing option: --home=$Persistanthomevolume")"
@@ -8228,7 +8228,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
         Backendcommand="$Backendcommand \\
   --bind=$Line:$Line"
         ;;
-      # host) ;; # BackendKind_X_only
+      # host) ;; # BackendKind_host
     esac
   done < <(store_runoption_dump_volume)
 
@@ -8246,7 +8246,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
             Backendcommand="$Backendcommand \\
   --bind=$Nvidiainstallerfile:$Nvidiacontainerfile"
           ;;
-          # host) ;; # BackendKind_X_only
+          # host) ;; # BackendKind_host
         esac
       }
       ;;
@@ -8318,7 +8318,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
               ;;
             esac
             ;;
-          # host) ;; # BackendKind_X_only
+          # host) ;; # BackendKind_host
         esac
       }
     ;;
@@ -8333,7 +8333,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
             Backendcommand="$Backendcommand \\
   --bind=$Newxsocket:$Newxsocket"
           ;;
-          # host) ;; # BackendKind_X_only
+          # host) ;; # BackendKind_host
         esac
       }
     ;;
@@ -8356,7 +8356,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
                 Backendcommand="$Backendcommand \\
   --bind=$Cachefolder/XDG_RUNTIME_DIR/$Newwaylandsocket:/$Newwaylandsocket"
               ;;
-              # host) ;; # BackendKind_X_only
+              # host) ;; # BackendKind_host
             esac
           ;;
           no)
@@ -8369,7 +8369,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
                 Backendcommand="$Backendcommand \\
   --bind=$XDG_RUNTIME_DIR/$Newwaylandsocket:/$Newwaylandsocket"
               ;;
-              # host) ;; # BackendKind_X_only
+              # host) ;; # BackendKind_host
             esac
           ;;
         esac
@@ -8386,7 +8386,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
                 Backendcommand="$Backendcommand \\
   --bind=$Cachefolder/XDG_RUNTIME_DIR/$Newwaylandsocket" ### FIXME looks wrong
               ;;
-              # host) ;; # BackendKind_X_only
+              # host) ;; # BackendKind_host
             esac
           ;;
           no)
@@ -8399,7 +8399,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
                 Backendcommand="$Backendcommand \\
   --bind=$XDG_RUNTIME_DIR/$Newwaylandsocket"
               ;;
-              # host) ;; # BackendKind_X_only
+              # host) ;; # BackendKind_host
             esac
           ;;
         esac
@@ -8419,7 +8419,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
           Backendcommand="$Backendcommand \\
   --bind=$Pulseaudioconf:/etc/pulse/client.conf"
         ;;
-        # host) ;; # BackendKind_X_only
+        # host) ;; # BackendKind_host
       esac
     ;;
     host)
@@ -8434,7 +8434,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
   --bind=$Pulseaudiosocket:/tmp/pulseaudio.socket.host \\
   --bind=$Pulseaudioconf:/etc/pulse/client.conf"
         ;;
-        # host) ;; # BackendKind_X_only
+        # host) ;; # BackendKind_host
       esac
     ;;
   esac
@@ -8460,7 +8460,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
           Backendcommand="$Backendcommand \\
   --cwd=${Workdir:-/tmp}"
         ;;
-        # host) ;; # BackendKind_X_only
+        # host) ;; # BackendKind_host
       esac
     ;;
     no)
@@ -8474,7 +8474,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
             Backendcommand="$Backendcommand \\
   --cwd=${Workdir}"
           ;;
-          # host) ;; # BackendKind_X_only
+          # host) ;; # BackendKind_host
         esac
       }
     ;;
@@ -8509,7 +8509,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
         Backendcommand="$Backendcommand \\
   $Customdockeroptions"
       ;;
-      # host) ;; # BackendKind_X_only
+      # host) ;; # BackendKind_host
     esac
   }
 
@@ -8530,7 +8530,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
       Backendcommand="$Backendcommand \\
   "
     ;;
-    # host) ;; # BackendKind_X_only
+    # host) ;; # BackendKind_host
 esac
 
   case "$Containersetup" in
@@ -8544,7 +8544,7 @@ esac
             proot)
               Backendcommand="$Backendcommand /bin/sh - $(convertpath share "$Containerrc")"
             ;;
-          # host) ;; # BackendKind_X_only
+          # host) ;; # BackendKind_host
           esac
         ;;
         yes)
@@ -8555,7 +8555,7 @@ esac
             proot)
               Backendcommand="$Backendcommand /bin/sh - $(convertpath share "$Containerrootrc")"
             ;;
-          # host) ;; # BackendKind_X_only
+          # host) ;; # BackendKind_host
           esac
         ;;
       esac
@@ -8571,7 +8571,7 @@ esac
         proot)
           Backendcommand="$Backendcommand $Containercommand"
         ;;
-        # host) ;; # BackendKind_X_only
+        # host) ;; # BackendKind_host
       esac
     ;;
   esac
@@ -8686,7 +8686,7 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
   esac
 
   case "$BackendKind" in
-    proot|host) # BackendKind_X_only
+    proot|host) # BackendKind_host
       case "$Initsystem" in
         tini|none) ;;
         *)
@@ -8783,7 +8783,7 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
   esac
 
   case "$BackendKind" in
-    host) # BackendKind_X_only
+    host) # BackendKind_host
       [ "$Initsystem" = "tini" ] && {
         Containerentrypoint="$Initbinaryfile --"
         store_runoption_env "TINI_SUBREAPER=1"
@@ -9171,14 +9171,14 @@ exec 1>&5 2>&6
         case "$BackendKind" in
           proot)                 echo "exec /bin/sh $(convertpath share "$Containerrc")" ;;
           docker|podman|nerdctl) echo "exec /usr/local/bin/x11docker-agetty" ;;
-          # host) ;; # BackendKind_X_only
+          # host) ;; # BackendKind_host
         esac
       ;;
       tini)
         case "$BackendKind" in
           proot)                 echo "exec env TINI_SUBREAPER=1 '$Initcontainerpath' -- /bin/sh $(convertpath share "$Containerrc")" ;;
           docker|podman|nerdctl) echo "exec '$Initcontainerpath' -- /usr/local/bin/x11docker-agetty" ;;
-          # host) ;; # BackendKind_X_only
+          # host) ;; # BackendKind_host
         esac
       ;;
       sysvinit)
@@ -9272,7 +9272,7 @@ verbose \"containerrc: Container system:
           IFS=$' \t\n'
         }
       ;;
-      # host) ;; # BackendKind_X_only
+      # host) ;; # BackendKind_host
     esac
 
     [ "$Initsystem" = 'systemd' ] && echo "systemctl --user start dbus"  ### FIXME
@@ -9539,7 +9539,7 @@ chmod +x $(convertpath share "$Containerrc")
   case "$BackendKind" in
     proot)                        echo "echo 'exec /bin/sh - $(convertpath share "$Containerrc")'                          >>/usr/local/bin/x11docker-su" ;;
     docker|podman|nerdctl) echo "echo \"exec su - -s /bin/sh  \$Containeruser $(convertpath share "$Containerrc")\" >>/usr/local/bin/x11docker-su" ;;
-    # host) ;; # BackendKind_X_only
+    # host) ;; # BackendKind_host
   esac
 
   echo "
@@ -9778,7 +9778,7 @@ done
   return 0
 }
 rootrc_prepare_init_openrc() {
-    # BackendKind_X_only BackendKind_in_output
+    # BackendKind_host BackendKind_in_output
 
   echo "
 # --init=openrc
@@ -10349,7 +10349,7 @@ start_container() {             # docker run
   case "$g_Interactive" in
     no)
       case "$BackendKind" in
-          host) # BackendKind_X_only
+          host) # BackendKind_host
               unpriv "bash '$Containerrc'" & Pid1pid=$!
               ;;
         proot) unpriv "$Backendcommand" & Pid1pid=$! ;;
@@ -10360,7 +10360,7 @@ start_container() {             # docker run
     ;;
     yes)
       case "$BackendKind" in
-          host) # BackendKind_X_only
+          host) # BackendKind_host
               unpriv "bash '$Containerrc'" <&0 & Pid1pid=$!
               ;;
         proot) unpriv "$Backendcommand"     <&0 & Pid1pid=$! ;;
@@ -10376,7 +10376,7 @@ start_container() {             # docker run
   esac
 
   case "$BackendKind" in
-    proot|host) ;;  # BackendKind_X_only
+    proot|host) ;;  # BackendKind_host
     docker|podman|nerdctl)
       # Wait for container to be ready
       debugnote "start_container(): Running repeated checks if container is ready."
@@ -10484,7 +10484,7 @@ $(tail "$Containerlogfile")"
     case "$BackendKind" in
       proot) ### FIXME currently with Switchcontaineruser=yes only
       ;;
-      host) ;; # BackendKind_X_only # no containerrootrc
+      host) ;; # BackendKind_host # no containerrootrc
       docker|podman|nerdctl)
         # copy to /tmp because host HOME might be nosuid or noexec
         # run container root setup. containerrc will wait until setup script is ready.
@@ -11389,7 +11389,7 @@ ${1:-}"
          --help)              usage ;         exit 0 ;;              # Show help/usage and exit
          --license|--licence) license ;       exit 0 ;;              # Show MIT license and exit
          --version)           echo $Version ; exit 0 ;;              # Output version number and exit
-         --xonly)             BackendKind="host"                     # Only create X server # BackendKind_X_only
+         --xonly)             BackendKind="host"                     # Only create X server # BackendKind_host
                               Containercommand="sleep infinity"
                               Showdisplayenvironment="${Showdisplayenvironment:-yes}" ;;
          --preset)                                                   # Predefined option sets
@@ -11512,7 +11512,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
          --sharecgroup)       Sharecgroup="yes" ;;                   # Share /sys/fs/cgroup. Default for --init=systemd, possible use with --init=openrc or elogind.
 
      #### Container configuration
-         --backend)           BackendKind="${2:-}" ; shift ;;            # container backend to use: docker, podman, nerdctl, others  # BackendKind_X_only
+         --backend)           BackendKind="${2:-}" ; shift ;;            # container backend to use: docker, podman, nerdctl, others  # BackendKind_host
          --cap-default)       Capdropall="no" ;;                     # Don't use --cap-drop=ALL --security-opt=no-new-privileges
          --env)               store_runoption_env "${2:-}"           # Set container environment variables
                               shift ;;
@@ -11576,7 +11576,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
                               check_fallback
                               Dbusrunsession="system"
                               Capdropall="no" ;;
-      -e|--exe)               BackendKind="host" ;               note "Option -e, --exe is deprecated. # BackendKind_X_only
+      -e|--exe)               BackendKind="host" ;               note "Option -e, --exe is deprecated. # BackendKind_host
   Please use --backend=host instead." ;;
          --enforce-i)         note "Option --enforce-i is deprecated.
   Rather create a group weston-launch and add your user to it." ;;
@@ -11754,9 +11754,9 @@ check_options_arguments() {     # check for [likely] valid arguments
   [ -z "$g_Imagename" ] && {
     case "${Cleanup}${Createlauncher}${Installermode}" in
       "")
-        # Only create X server / --xonly  # BackendKind_X_only
+        # Only create X server / --xonly  # BackendKind_host
         Codename="xonly"
-        BackendKind="${BackendKind:-host}" # BackendKind_X_only
+        BackendKind="${BackendKind:-host}" # BackendKind_host
         Containercommand="sleep infinity"
         Showdisplayenvironment="${Showdisplayenvironment:-yes}"
       ;;
@@ -11764,7 +11764,7 @@ check_options_arguments() {     # check for [likely] valid arguments
   }
   BackendKind="${BackendKind:-docker}"
   case "$BackendKind" in
-    docker|podman|host) ;; # BackendKind_X_only
+    docker|podman|host) ;; # BackendKind_host
     proot|nerdctl) 
       note "Option --backend=$BackendKind is deprecated.
   Please use --backend=docker or --backend=podman instead."
@@ -12346,7 +12346,7 @@ check_options_interferences() { # check multiple option interferences, change se
           ;;
           *)
             case $BackendKind in
-              docker|host) # BackendKind_X_only
+              docker|host) # BackendKind_host
                 [ -f "$Libdlsofile" ] && {
                   store_runoption_env "LD_PRELOAD=$Sharefoldercontainer/$(basename "$Libdlsofile"):$Sharefoldercontainer/XlibNoSHM.so"
                 } || {
@@ -12538,7 +12538,7 @@ check_options_interferences() { # check multiple option interferences, change se
               store_runoption_env "LIBGL_ALWAYS_SOFTWARE=1"   ### FIXME rather belongs to setup_gpu()
               store_runoption_env "GALLIUM_DRIVER=virpipe"
               ;;
-            *)  # proot|host # BackendKind_X_only
+            *)  # proot|host # BackendKind_host
               note "Option --gpu=virgl is supported with
   backends docker|podman|nerdctl only.
   Fallback: Disabling option --gpu=virgl."
@@ -13036,7 +13036,7 @@ check_options_messages() {      # some messages depending on options, but not ch
 
   # --network
   case "$BackendKind" in
-    host) ;; # BackendKind_X_only
+    host) ;; # BackendKind_host
     proot) ;;
     docker|podman|nerdctl)
       case "$g_Network" in
@@ -14174,9 +14174,11 @@ declare_variables() {           # declare global variables
   #
   # host : No container. Only an X server.
   #
-  #        Appearances in code marked with: BackendKind_X_only
+  #        Since the word "host" is also used for other purposes, marked
+  #        appearances of "host" as a BackendKind with:
+  #        BackendKind_host in comment.
   #
-  #        Changing the value host to BackendKind_X_only may be risky,
+  #        Changing the value "host" to "BackendKind_host" may be risky,
   #        because:
   #          (1) BackendKind may be used to initialize other variables.
   #          (2) BackendKind is emitted into generated config files. (For example to rc.conf)
@@ -14713,7 +14715,7 @@ $(nl -ba <$Westonini)"
 $(nl -ba <$Containerrootrc)"
       }
       ;;
-    # host) ;; # BackendKind_X_only
+    # host) ;; # BackendKind_host
   esac
   [ "$Containersetup" = "yes" ] && {
     create_containerrc
