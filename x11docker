@@ -34,18 +34,43 @@ esac
 #  Purpose: Allow lines of multi-line strings to be indented in the
 #           source without affecting the value.
 #
-trim_to_bar() {
+trim_to_bar_filter() {
     # shellcheck disable=SC2001
-    echo "${1}" | sed -e 's/^[ ]*|//'
+    sed -e 's/^[ \t]*|//'
+}
+trim_to_bar() {
+    echo -n "${1}" | trim_to_bar_filter
 }
 
-if false; then
-    x="$(trim_to_bar \
-        "|aa'a
-         |bb
-         |")"
-    echo "$x"
-fi
+#
+#  Join lines starting with /[ \t]*:/ to the previous line.
+#
+#  - The pattern is not looked for in the first line.
+#
+ws_colon_is_continuation_filter() {
+    # Based on https://www.gnu.org/software/sed/manual/html_node/Joining-lines.html
+    # Join lines that start with whitespace (e.g SMTP headers):
+    #  GNU sed: sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D'
+    #  A portable (non-gnu) variation: sed -e :a -e '$!N;s/\n  */ /;ta' -e 'P;D'
+    #
+    # Modified to look for /[ \t]*:/ instad of /\s+/ and leave no space after.
+    #
+    sed -e :a -e '$!N;s/\n[ \t]*://;ta' -e 'P;D'
+}
+
+#
+# function trim_to_mark( s )
+#
+# Lines starting with spaces followed by a colon /^[ \t]*:/ are joined to the
+# previous line (dropping the mathin part). The result is passed through trim_to_bar_filter.
+#
+trim_to_mark() {
+    echo -n "${1}" \
+        | ws_colon_is_continuation_filter \
+        | trim_to_bar_filter
+}
+
+
 
 #
 # Debug stuff
@@ -1776,6 +1801,7 @@ convertpath_split_Readwritemode() {
     declare -n x1_Readwritemode_out="$1"
     declare -n x1_Path_out="$2"
     local Path_in="$3"
+    # local error_fun="${4:-error}"
     #
     if [ "${Path_in: -3:1}" = ":" ] ; then
         x1_Readwritemode_out="${Path_in: -3}"
@@ -1790,7 +1816,7 @@ convertpath_split_Readwritemode() {
     case "$x1_Readwritemode_out" in
         ":ro"|":rw") return 0 ;;
         *)
-            error "$(printf "%s\n%s\n%s"                                                      \
+            warning "$(printf "%s\n%s\n%s"                                                    \
                              "convertpath_split_Readwritemode:"                               \
                              "   Path='$Path_in' has ':..' suffix '${x1_Readwritemode_out}'," \
                              "   that is neither ':ro', nor ':rw'"                            \
@@ -13691,8 +13717,8 @@ declare_variables() {           # declare global variables
   #
   Newxenv=""
   
-  # Newxenv_cr : Like Newxenv, but with newlines
-  Newxenv_cr=""
+  #  # Newxenv_cr : Like Newxenv, but with newlines
+  #  Newxenv_cr=""
 
   # Newxlock : .Xn-lock - exists for running X server with socket n
   Newxlock=""
@@ -14926,7 +14952,12 @@ $(cat $Storepidfile)"
     case "$Showdisplayenvironment" in                                             # --printenv
       "") ;;
       yes) storeinfo dump Xenv ;;
-      *)   unpriv "echo '$Newxenv_cr' > '$Showdisplayenvironment'"  || error "Option --printenv: Invalid file $Showdisplayenvironment" ;;
+      *)
+          # Newxenv_cr : Like Newxenv, but with newlines. Was global,
+          #     never set, only used here.
+          #
+          local Newxenv_cr="${Newxenv// /$'\n'}" # spaces_to_newlines
+          unpriv "echo '$Newxenv_cr' > '$Showdisplayenvironment'"  || error "Option --printenv: Invalid file $Showdisplayenvironment" ;;
     esac
     case "$Showcontainerid" in                                                    # --printid
       "") ;;

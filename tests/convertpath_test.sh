@@ -1,61 +1,60 @@
 #!/usr/bin/env bash
 
-
-#
-# Testing with https://github.com/kward/shunit2
-#
-
-testOne() {
-    assertEquals "Jaj1" "a" "a"
-    # assertEquals "Jaj2" "a" "b"
+set_up() {
+    X11DOCKER_TESTING=1
+    . ./x11docker
 }
 
-# assertEquals   [message] expected actual
-# assertContains [message] container content
 
-#
-# declare -A res
-# capture res cmd args
-#
-# Runs `cmd args`, captures exitCode, stderr and stdout to
-#       res[exitCode] res[stdout] and res[stderr]
-#
-capture() {
-    # $1 should name an associative array
-    declare -n result="$1"
-    shift
-    #
-    # Run cmd and capture its exitCode, stdout, stderr
-    #
-    local tmpfile1="$(mktemp -t file_1_XXXXXX)"
-    local tmpfile2="$(mktemp -t file_2_XXXXXX)"
-    "${@}"  2>"$tmpfile2" 1>"$tmpfile1"
-    result[exitCode]="$?"
-    result[stdout]="$(< "$tmpfile1")"
-    result[stderr]="$(< "$tmpfile2")"
-    unlink "$tmpfile1"
-    unlink "$tmpfile2"
-    return 0
+test_One() {
+    assert_same "a" "a" "Demo: success"
+    # assert_same "a" "b" "Demo: This is a failure" 
 }
 
-f1() {
-    echo "Good $1"
-    echo "Bad $2" >&2
-    return 13
-}
-
-test_capture() {
-    declare -A res
-    capture res f1 aha jaj
-    assertEquals 13         "${res[exitCode]}"
-    assertEquals "Good aha" "${res[stdout]}"
-    assertEquals "Bad jaj"  "${res[stderr]}"
-}
 
 #
 # test convertpath_split_Readwritemode()
 #
-test_convertpath_split_Readwritemode() {
+test_convertpath_split_Readwritemode_ro() {
+    local Readwritemode_out
+    local Path_out
+    local Path
+    #
+    # export FDstderr=2 # warning needs it
+    #
+    Path="/some/path:ro"
+
+    assert_exec "convertpath_split_Readwritemode Readwritemode_out Path_out \"$Path\"" \
+                --exit 0    \
+                --stdout "" \
+                --stderr ""
+    #
+    assert_same ":ro"         "${Readwritemode_out}"
+    assert_same "/some/path"  "${Path_out}"
+}
+
+ 
+test_convertpath_split_Readwritemode_rw() {
+     local Readwritemode_out
+     local Path_out
+     local Path
+     #
+     export FDstderr=2 # warning needs it
+     #
+     Path="/some/path:rw"
+
+     assert_exec "convertpath_split_Readwritemode Readwritemode_out Path_out '$Path'" \
+                 --exit 0    \
+                 --stdout "" \
+                 --stderr ""
+                 
+     #
+     assert_same ":rw"         "${Readwritemode_out}"
+     assert_same "/some/path"  "${Path_out}"
+}
+
+ 
+test_convertpath_split_Readwritemode_rr() {
     local Readwritemode_out
     local Path_out
     local Path
@@ -63,77 +62,44 @@ test_convertpath_split_Readwritemode() {
     #
     export FDstderr=2 # warning needs it
     #
-    Path="/some/path:ro"
-    declare -A res
-    capture res convertpath_split_Readwritemode Readwritemode_out Path_out "$Path"
-    #
-    assertEquals ":ro"         "${Readwritemode_out}"
-    assertEquals "/some/path"  "${Path_out}"
-    #
-    assertEquals 0             "${res[exitCode]}"
-    assertEquals ""            "${res[stdout]}"
-    assertEquals ""            "${res[stderr]}"
-    #
-    #
-    #
-    Path="/some/path:rw"
-    declare -A res
-    capture res convertpath_split_Readwritemode Readwritemode_out Path_out "$Path"
-    #
-    assertEquals ":rw"         "${Readwritemode_out}"
-    assertEquals "/some/path"  "${Path_out}"
-    #
-    assertEquals 0             "${res[exitCode]}"
-    assertEquals ""            "${res[stdout]}"
-    assertEquals ""            "${res[stderr]}"
-    #
     #
     # Suffix ":.." exists, but is not :ro or :rw
     #
     # Currently (1) Readwritemode_out is set to "rw",
-    #           (2) Suffix is removed from Path_out.
-    #           (3) A warning is emitted
-    #           (4) return 1
+    #           (2) Suffix is NOT removed from Path_out.
+    #           (3) A warning() is emitted
+    #           (4) return 1 (To allow caller to decide)
     #           
-    #
     Path="/some/path:rr"
     Readwritemode_out='UNCHANGED'
     #
-    # WRONG: $(stuff) executes stuff in a subshell: outpout values are lost
-    # stderr="$(convertpath_split_Readwritemode Readwritemode_out Path_out "$Path" 2>&1 1>/dev/null)"
+    #my_error() {
+    #    echo "x11docker ERROR: (from my_error) $*" >&2 ;
+    #    # exit 1
+    #}
     #
+    declare_variables # create global variables with default values
     #
-    error() {
-        echo "error: $*" >&2
-    }
+    assert_exec "convertpath_split_Readwritemode Readwritemode_out Path_out '$Path'" \
+                --exit 1    \
+                --stdout "" \
+                --stderr-contains "x11docker WARNING:"
     #
-    declare -A res
-    capture res convertpath_split_Readwritemode Readwritemode_out Path_out "$Path"
-    #
-    assertEquals ":rw"             "${Readwritemode_out}"
-    assertEquals "/some/path"      "${Path_out}"
-    #
-    assertEquals "Wrong suffix should fail with exitCode=1"   1 "${res[exitCode]}"
-    assertEquals ""                "${res[stdout]}"
-    assertContains "Wrong suffix should emit warning on stderr" "${res[stderr]}" "x11docker WARNING:"
-    echo "---here---"
-    assertEquals 1 2
+    assert_same ":rw"             "${Readwritemode_out}"
+    assert_same "/some/path:rr"   "${Path_out}"
 }
 
-
-
-xxtest_convertpath(){
-
+test_convertpath() {
     #
     # gobal variables used in convertpath
     #
     local Hostuserhome="@(Hostuserhome)"
     local HOME="@(HOME)"
     #
-    local Sharefoldercontainer # Sharefoldercontainer : prefixed to stdout
-    local Sharefolder          # Possible prefix of Path
+    local Sharefoldercontainer="@(Sharefoldercontainer)" # prefixed to stdout
+    local Sharefolder="@(Sharefolder)"  # Possible prefix of Path
     #
-    local Winsubmount          # Possible prefix of Path
+    local Winsubmount="@(Winsubmount)"  # Possible prefix of Path
     #
     local Createcontaineruser  # yes|no
     local Sharehome            # host
@@ -143,19 +109,24 @@ xxtest_convertpath(){
     local Persistanthomevolume
     
     # Arguments
-    local Mode 
-    local Path   # prefix/common_path{:ro|:rw}
-    local containerpath_arg
+    local Mode=share
+    local Path=prefix/path:ro   # prefix/common_path{:ro|:rw}
+    local containerpath_arg=''
 
-    Hostuserhome="$Hostuserhome" \
-    HOME="${HOME}"               \
-                
-    convertpath "$Mode" "$Path" "$containerpath_arg" 
+    export FDstderr=2 # warning needs it
+
+    # Hostuserhome="$Hostuserhome"
+    # HOME="${HOME}"
+    
+    assert_exec "convertpath share 'prefix/path:ro' 'containerpath_arg'"--exit 0 --stderr "" \
+                --stdout "@(Sharefoldercontainer)prefix/path"
+    assert_exec "convertpath share 'prefix/path:rw' 'containerpath_arg'"--exit 0 --stderr "" \
+                --stdout "@(Sharefoldercontainer)prefix/path"
+
+    ## Case of a problematic rw-mode suffix
+    ## convertpath ignores return value from convertpath_split_Readwritemode
+    ##
+    assert_exec "(convertpath share 'prefix/path:rr' 'containerpath_arg')" --exit 0 \
+                --stderr-contains "x11docker WARNING:" \
+                --stdout "@(Sharefoldercontainer)prefix/path:rr"
 }
-
-X11DOCKER_TESTING=1
-. ../x11docker
-
-
-
-. shunit2
