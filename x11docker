@@ -2069,8 +2069,6 @@ convertpath() {                 # convert unix and windows paths
                 ;;
             mount)
                 ##
-                ## 
-                ##
                 echo "type=volume,source='$Path',target='${containerpath_arg:-/$Path}'${Readwritemode_mount}"
                 ;;
             container)      echo "${containerpath_arg:-/$Path}" ;;
@@ -2108,7 +2106,6 @@ convertpath() {                 # convert unix and windows paths
             #container) echo "${containerpath_arg:-$Path}" ;;
             volume)     echo "'$Path':'${containerpath_arg:-$Containerpath}'${Readwritemode}" ;;
             mount)
-                # echo "type=bind,source='$Path',target='${containerpath_arg:-/$Containerpath}'${Readwritemode_mount}"
                 printf "%s"                                              \
                        "type=bind"                                       \
                        ",source='$Path'"                                 \
@@ -2163,14 +2160,12 @@ convertpath() {                 # convert unix and windows paths
                     # global Dockervm
                     case "$Dockervm" in
                         no|desktop)
-                            # echo "'$Path':'${containerpath_arg:-$Path}'$Readwritemode"
                             printf "%s"                             \
                                    "'$Path'"                        \
                                    ":'${containerpath_arg:-$Path}'" \
                                    "$Readwritemode"
                             ;;
                         moby)
-                            # echo "'$Winsubpath$Path':'${containerpath_arg:-$Path}'$Readwritemode"
                             printf "%s"                             \
                                    "'$Winsubpath$Path'"             \
                                    ":'${containerpath_arg:-$Path}'" \
@@ -2181,7 +2176,6 @@ convertpath() {                 # convert unix and windows paths
                 mount)
                     case "$Dockervm" in
                         no|desktop)
-                            # echo "type=bind,source='$Path',target='${containerpath_arg:-$Path}'$Readwritemode_mount"
                             printf "%s"                                    \
                                    "type=bind"                             \
                                    ",source='$Path'"                       \
@@ -2189,7 +2183,6 @@ convertpath() {                 # convert unix and windows paths
                                    "$Readwritemode_mount"
                             ;;
                         moby)
-                            # echo "type=bind,source='$Winsubpath$Path',target='${containerpath_arg:-$Path}'$Readwritemode_mount"
                             printf "%s"                                    \
                                    "type=bind"                             \
                                    ",source='$Winsubpath$Path'"            \
