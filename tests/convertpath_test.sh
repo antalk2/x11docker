@@ -249,6 +249,27 @@ test_convertpath_3() {
     assert_exec "convertpath volume '/~/prefix//lala\\path:ro' '$containerpath_arg'" --exit 0 --stderr "" \
                 --stdout "'/@(Hostuserhome)/prefix/lala/path':'/home.host/prefix/lala/path':ro"
     assert_same  "/home.host/prefix/lala/path" "${Containerpath}"
+    #
+    Createcontaineruser="no"
+    Sharehome="not-host"
+    Containeruserhome="/@(Hostuserhome)"
+    assert_exec "convertpath volume '/~/prefix//lala\\path:ro' '$containerpath_arg'" --exit 0 --stderr "" \
+                --stdout "'/@(Hostuserhome)/prefix/lala/path':'/@(Hostuserhome)/prefix/lala/path':ro"
+    assert_same  "/@(Hostuserhome)/prefix/lala/path" "${Containerpath}"
+    ##
+    #
+    Createcontaineruser="no"
+    Sharehome="not-host"
+    Containeruserhome="/@(Hostuserhome)"
+    assert_exec "convertpath mount '/~/prefix//lala\\path:ro' '$containerpath_arg'" --exit 0 --stderr "" \
+    --stdout "type=bind,source='/@(Hostuserhome)/prefix/lala/path',target='//@(Hostuserhome)/prefix/lala/path',readonly"
+    assert_same  "/@(Hostuserhome)/prefix/lala/path" "${Containerpath}"
+    #
+    Createcontaineruser="yes"
+    Sharehome="not-host"
+    Containeruserhome="/@(Hostuserhome)"
+    assert_exec "convertpath mount '/~/prefix//lala\\path:ro' '$containerpath_arg'" --exit 0 --stderr "" \
+     --stdout "type=bind,source='/@(Hostuserhome)/prefix/lala/path',target='//home.host/prefix/lala/path',readonly"
+    assert_same  "/home.host/prefix/lala/path" "${Containerpath}"
     ##
 }
-
