@@ -4276,7 +4276,11 @@ check_xcontainer() {            # option --xc: check backend, rootless and image
   # check if X container should run rootful or rootless (for tty access it must be rootful)
   case "$Backendrootless" in
     yes)
-      { [ "$Xserver" = "--xorg" ] || [ -n "$Newxvt" ] ; } && Xcrootless="no" || Xcrootless="yes"
+        if [ "$Xserver" = "--xorg" ] || [ -n "$Newxvt" ] ; then
+            Xcrootless="no"
+        else
+            Xcrootless="yes"
+        fi
     ;;
     no)
       Xcrootless="no"
