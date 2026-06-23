@@ -7513,7 +7513,8 @@ check_image() {                 # get some image information
 
   # Check WORKDIR
   Imageworkdir="$(parse_inspect "$Imageinspect" "Config" "Workdir")"
-  # It seems Config.Workdir is Config.WorkingDir in more recent versions?
+  # It seems Config.Workdir is Config.WorkingDir in more recent
+  # versions?
   [ -z "$Imageworkdir" ] && {
     Imageworkdir="$(parse_inspect "$Imageinspect" "Config" "WorkingDir")"
   }
@@ -14383,24 +14384,30 @@ declare_variables() {           # declare global variables
   #
   Sudouser=""
 
-  # Switchcontaineruserflag : --init=systemd|openrc|runit|sysvinit: User
-  #                       switching to trigger login services. yes/no
+  # Switchcontaineruserflag : --init=systemd|openrc|runit|sysvinit:
+  #                           User switching to trigger login
+  #                           services. yes/no
   #
   Switchcontaineruserflag="no"
 
   # Switchcontainerusercaps : --init=systemd|openrc|runit|sysvinit,
-  #                           --sudouser: Add capabilities for su/sudo user switching
+  #      --sudouser: Add capabilities for su/sudo user switching
   #
   Switchcontainerusercaps="no"
 
   # Systemdjournallogfile :
-  #     - set in: create_cachefiles() : Systemdjournallogfile="$Sharefolder/$Systemdjournallogfile"
+  #
+  #     - set in: create_cachefiles() :
+  #          Systemdjournallogfile="$Sharefolder/$Systemdjournallogfile"
+  #
   #     - used in: setup_verbosity()
   #     - used in: rootrc_prepare_init_systemd()
   #
   Systemdjournallogfile="systemd.journal.log"
 
-  Workdir=""                                      # --workdir: Set working directory in container
+  # Workdir : --workdir: Set working directory in container
+  #
+  Workdir=""
 
   # =============================================
   # Init and DBus
