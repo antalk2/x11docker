@@ -14479,7 +14479,12 @@ unpriv() {                      # run a command as unprivileged user. Needed if 
   return $?
 }
 
-unpriv_backend() {              # run container backend rootful or rootless
+# function unpriv_backend( Command )
+#
+# Run container backend rootful (with current privileges) or rootless
+# (dropping privileges), depending on Backendrootless
+#
+unpriv_backend() {
     local Command
     Command="$(oneline "${1:-}")"
     [ -z "$Backendbin" ] && {
