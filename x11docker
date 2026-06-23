@@ -1798,10 +1798,13 @@ mswindowsipcheck() {            # get WSL host IP and Windows host ip
 # used_global: FDstderr # via warning
 #
 convertpath_split_Readwritemode() {
+    ##
+    ## Note: Local name for namerefs has to differ from tha name
+    ## passed in.  Here we use the prefix `x1_` for this reason.
+    ##
     declare -n x1_Readwritemode_out="$1"
     declare -n x1_Path_out="$2"
     local Path_in="$3"
-    # local error_fun="${4:-error}"
     #
     if [ "${Path_in: -3:1}" = ":" ] ; then
         x1_Readwritemode_out="${Path_in: -3}"
