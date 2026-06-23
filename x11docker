@@ -7589,7 +7589,7 @@ check_cgroup() {                # check [and create] cgroup mountpoint for syste
             case "$Runtime" in
               sysbox-runc) ;;
               *)
-                Remountcgroup="yes"
+                g_Remountcgroup="yes"
                 warning "Option --init=systemd: To support systemd in docker container
   with cgroupv2 on host, x11docker shortly runs a privileged container
   of '$g_Imagename' with 'nsenter' to remount the container's /sys/fs/cgroup.
@@ -8111,7 +8111,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
   --systemd=always"
         ;;
       esac
-      [ "$Remountcgroup" = "yes" ] && {
+      [ "$g_Remountcgroup" = "yes" ] && {
         unpriv_backend "$Backendbin run --help" | grep -q -- '--cgroupns' && Backendcommand="$Backendcommand \\
   --cgroupns private"
       }
@@ -9109,7 +9109,7 @@ dbus-daemon --system --fork
     esac
   }
 
-  [ "$Remountcgroup" = "yes" ] && echo "
+  [ "$g_Remountcgroup" = "yes" ] && echo "
 # wait for nsenter to remount /sys/fs/cgroup to :rw
 for i in 1 2 3 4 5 6 7 8 9 10; do
   test -e /nsenter_is_ready && break
@@ -10399,7 +10399,7 @@ $(rmcr < "$Containerlogfile" | uniq )"
       storeinfo "containerid=$Containerid"
 
       # --init=systemd cgroupv2
-      [ "$Remountcgroup" = "yes" ] && {
+      [ "$g_Remountcgroup" = "yes" ] && {
         # Compare https://github.com/mviereck/x11docker/issues/349
         Remountcommand="$Backendbin run --rm --user root"
         Remountcommand="$Remountcommand --cap-add SYS_ADMIN --cap-add=SYS_PTRACE --security-opt apparmor=unconfined"
@@ -11525,7 +11525,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
      #### Experimental options
          --experimental)      Mytest="yes" ;;                                   # Allow some experimental code that might be changed at any time
          --keepcache)         Preservecachefiles="yes" ;     note "Option --keepcache: experimental option." ;;
-         --remountcgroup)     Remountcgroup="yes" ;          note "Option --remountcgroup: experimental option." ;;
+         --remountcgroup)     g_Remountcgroup="yes" ;          note "Option --remountcgroup: experimental option." ;;
          --xorgconf)          Xorgconf="${2:-}" ;    shift ; note "Option --xorgconf: experimental option." ;;  # Custom xorg.conf
 
      #### Deprecated options
@@ -14228,7 +14228,9 @@ declare_variables() {           # declare global variables
   # Customdockeroptions : -- [...] -- : Custom options for "docker run".
   Customdockeroptions=""
 
-  #  # Defaultruntime : not used. There is local_Defaultruntime in check_runtime()
+  #  # Defaultruntime : Not used. There is local_Defaultruntime in
+  #  #                  check_runtime()
+  #
   #  Defaultruntime=""
   
   # g_Imagename : Image to run
@@ -14256,11 +14258,20 @@ declare_variables() {           # declare global variables
 
   # g_Podmanrootfs : --rootfs to indicate that podman should use a root
   #                file system
+  #
   g_Podmanrootfs=""
 
-  Remountcgroup=""                                # --init=systemd with cgroupv2 in docker workaround
-  Rootfs=""                                       # --backend=proot
-  Backendrootless=""                              # Check for rootful/rootless docker depending on DOCKER_HOST
+  # g_Remountcgroup : --init=systemd with cgroupv2 in docker workaround
+  g_Remountcgroup=""
+  
+  # Rootfs : --backend=proot
+  Rootfs=""
+  
+  # Backendrootless : Check for rootful/rootless docker depending on
+  #                   DOCKER_HOST
+  #
+  Backendrootless=""
+
   Runtime=""                                      # Runtime to use. runc|nvidia|kata-runtime|crun
   Snapsupport=""                                  # --snap: Fallback mode to support docker in snap
   Shareipc="no"
