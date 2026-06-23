@@ -14276,7 +14276,9 @@ declare_variables() {           # declare global variables
   #
   Backendrootless=""
 
-  Runtime=""                                      # Runtime to use. runc|nvidia|kata-runtime|crun
+  # Runtime : Runtime to use. runc|nvidia|kata-runtime|crun
+  Runtime=""
+
   Snapsupport=""                                  # --snap: Fallback mode to support docker in snap
   Shareipc="no"
   Stopsignal=""                                   # Signal to send on 'docker stop'
