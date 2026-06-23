@@ -2100,20 +2100,27 @@ convertpath() {                 # convert unix and windows paths
 
     # not on Windows
     # global Winsubsystem
-    [ -z "$Winsubsystem" ] && {
+    if [ -z "$Winsubsystem" ] ; then
         case "$Mode" in
             unix|subsystem) echo "$Path" ;;
-            windows)        warning "convertpath(): Nonsense path conversion $Mode: $Path" ; return 1 ;;
-            #volume)         echo "'$Path':'${containerpath_arg:-$Path}'$Readwritemode" ;;
-            #container)      echo "${containerpath_arg:-$Path}" ;;
-            volume)         echo "'$Path':'${containerpath_arg:-$Containerpath}'${Readwritemode}" ;;
-            mount)          echo "type=bind,source='$Path',target='${containerpath_arg:-/$Containerpath}'${Readwritemode_mount}" ;;
+            windows)    warning "convertpath(): Nonsense path conversion $Mode: $Path" ; return 1 ;;
+            #volume)    echo "'$Path':'${containerpath_arg:-$Path}'$Readwritemode" ;;
+            #container) echo "${containerpath_arg:-$Path}" ;;
+            volume)     echo "'$Path':'${containerpath_arg:-$Containerpath}'${Readwritemode}" ;;
+            mount)
+                # echo "type=bind,source='$Path',target='${containerpath_arg:-/$Containerpath}'${Readwritemode_mount}"
+                printf "%s"                                              \
+                       "type=bind"                                       \
+                       ",source='$Path'"                                 \
+                       ",target='${containerpath_arg:-/$Containerpath}'" \
+                       "${Readwritemode_mount}"
+                ;;
             container)      echo "${containerpath_arg:-$Containerpath}" ;;
         esac
         return 0
-    }
+    fi
 
-  # global Cachefolder
+    # global Cachefolder
   case "$Winsubsystem" in
     WSL1)
         if [ -z "$Drive" ] ; then
