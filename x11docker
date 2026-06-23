@@ -1537,8 +1537,13 @@ parse_inspect() {               # parse json of inspect output using python
     [[ "$Jqbin" ]] && {
         # we have jq (e.g. /usr/bin/jq)
         Jsonstring="${1:-}" ; shift
+        #
         # If we have an array, get the first item
-        [[ $("$Jqbin" -r 'type' <<< "$Jsonstring" 2>/dev/null) == array ]] && Keystring=".[0]" || Keystring=""
+        if [[ $("$Jqbin" -r 'type' <<< "$Jsonstring" 2>/dev/null) == array ]] ; then
+            Keystring=".[0]"
+        else
+            Keystring=""
+        fi
         # Recursively find key using the sequence of keys
         while [ $# -gt 0 ]; do
             Keystring="$Keystring.${1:-}"
@@ -1552,6 +1557,7 @@ parse_inspect() {               # parse json of inspect output using python
             EXPR="map(tostring | \"'\" + . + \"'\") | join(\" \")"
             Output="$("$Jqbin" -r "$EXPR" <<< "$Output" )"
         fi
+        #
         # If we have a string, output the raw contents without quotes
         if [[ $("$Jqbin" -r 'type' <<< "$Output" 2>/dev/null) == string ]]; then
             Output="$("$Jqbin" -r '.' <<< "$Output")"
@@ -1564,7 +1570,7 @@ parse_inspect() {               # parse json of inspect output using python
   ##
   ## Replacement using trim_to_bar(), intercepted single quotes and ${SINGLE_QUOTE}
   ##
-  Parserscript="#! $Pythonbin$(trim_to_bar \
+  Parserscript="#! $Pythonbin$(trim_to_mark \
       '|
        |import json,sys
        |
@@ -1577,7 +1583,8 @@ parse_inspect() {               # parse json of inspect output using python
        |     2..n: json keys. For second level keys provide e.g. "Config","Cmd"
        |    Prints key value as a string.
        |    Prints empty string if key not found.
-       |    A list is printed as a string with '${SINGLE_QUOTE}${SINGLE_QUOTE}' around each element.
+       |    A list is printed as a string with
+       : '${SINGLE_QUOTE}${SINGLE_QUOTE}' around each element.
        |    """
        |
        |    output=""
@@ -1589,7 +1596,9 @@ parse_inspect() {               # parse json of inspect output using python
        |    if "'${SINGLE_QUOTE}'list'${SINGLE_QUOTE}'" in str(type(obj)):
        |        obj = obj[0]
        |
-       |    for arg in args[2:]: # recursively find the desired object. Command.Cmd is found with args "Command" , "Cmd"
+       |    # recursively find the desired object.
+       |    # Command.Cmd is found with args "Command" , "Cmd"
+       |    for arg in args[2:]:
        |        try:
        |            obj=obj[arg]
        |        except:
@@ -1643,20 +1652,38 @@ storeinfo() {                   # store some information for later use
     #   $1 test
     #   $2 codeword
     #
-    # note: sed -i causes file permission issues if called in container in Cygwin, compare ticket #187
+    # note: sed -i causes file permission issues if called
+    #       in container in Cygwin, compare ticket #187
     #       chmod 666 for $Sharefolder could probably fix that. (FIXME)
     #
     [ -e "$Storeinfofile" ] || return 1
+    #
+    local key="${2:-}"
     case "${1:-}" in
-        dump) grep     "^${2:-}="   "$Storeinfofile" | sed "s/^${2:-}=//" ;;      # dump entry
-        drop) sed -i  "/^${2:-}=/d" "$Storeinfofile" ;;                           # drop entry
-        test) grep -q  "^${2:-}="   "$Storeinfofile" ;;                           # test for entry
-        *)                                                                        # store entry
+        dump)
+            # dump entry : find line, drop key
+            grep    "^${key}="   "$Storeinfofile" \
+            | sed "s/^${key}=//"
+            ;;
+        drop)
+            # delete entry: remove line matching to key
+            sed -i  "/^${key}=/d" "$Storeinfofile"
+            ;;
+        test)
+            # test line matching to key
+            grep -q  "^${key}="   "$Storeinfofile"
+            ;;
+        #
+        *)
+            # store entry  key=value
             debugnote "storeinfo(): ${1:-}"
-            grep -q   "^$(echo "${1:-}" | cut -d= -f1)="     "$Storeinfofile" && {
-                sed -i "/^$(echo "${1:-}" | cut -d= -f1)=/d"   "$Storeinfofile"       # drop possible old entry
-            }
-            echo "${1:-}"                                 >> "$Storeinfofile"
+            key="$(echo "${1:-}" | cut -d= -f1)"
+            # drop possible old entry :
+            if grep -q  "^${key}="     "$Storeinfofile" ; then
+                sed -i "/^${key}=/d"   "$Storeinfofile"
+            fi
+            # Store value
+            echo "${1:-}"           >> "$Storeinfofile"
             ;;
     esac
 }
@@ -1664,10 +1691,13 @@ storeinfo() {                   # store some information for later use
 #
 # function rmcr( filepath )
 #
+# Remove carriage return to translate DOS/Windows newlines into UNIX
+# newlines
+#
 #  Usage1: cat $filepath | rmcr # result on stdout
 #  Usage2: rmcr $filepath       # inplace edit $filepath Never used in this way
 #
-rmcr() {                        # remove carriage return to translate DOS/Windows newlines into UNIX newlines
+rmcr() {
     # convert stdin if $1 is empty. Otherwise convert file $1.
     case "${1:-}" in
         "")
@@ -1918,13 +1948,18 @@ convertpath_split_Drive(){
 #
 # --- mount ---
 # convertpath mount /home/antalk/.cache/x11docker/644222941101-xfce/share/catatonit:ro /usr/local/bin/init
-# stdout: type=bind,source='/home/antalk/.cache/x11docker/644222941101-xfce/share/catatonit',target='/usr/local/bin/init',readonly
+# stdout: type=bind
+#        ,source='/home/antalk/.cache/x11docker/644222941101-xfce/share/catatonit'
+#        ,target='/usr/local/bin/init'
+#        ,readonly
 #
 # convertpath mount /home/antalk/.cache/x11docker/644222941101-xfce/share:rw /x11docker
 # stdout: type=bind,source='/home/antalk/.cache/x11docker/644222941101-xfce/share',target='/x11docker'
 #
 # convertpath mount /home/antalk/.cache/x11docker/644222941101-xfce/tmp/.X11-unix/X13:ro /tmp/.X11-unix/X13
-# stdout: type=bind,source='/home/antalk/.cache/x11docker/644222941101-xfce/tmp/.X11-unix/X13',target='/tmp/.X11-unix/X13',readonly
+# stdout: type=bind
+#         ,source='/home/antalk/.cache/x11docker/64..01-xfce/tmp/.X11-unix/X13'
+#         ,target='/tmp/.X11-unix/X13',readonly
 #
 # --- share ---
 # convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/containerrc
@@ -2216,7 +2251,6 @@ convertpath() {                 # convert unix and windows paths
                     echo "'/$Drive$Path':'${containerpath_arg:-/$Drive$Path}'$Readwritemode"
                     ;;
                 mount)
-                    # echo "type=bind,source='/$Drive$Path',target='${containerpath_arg:-/$Drive$Path}'$Readwritemode_mount"
                     printf "%s"                                            \
                            "type=bind"                                     \
                            ",source='/$Drive$Path'"                        \
@@ -2924,6 +2958,7 @@ Keywords=docker x11docker $(echo "$Name" | tr -c '[:alpha:][:digit:][:blank:]' '
 
   unpriv "xdg-desktop-icon install --novendor '$Cachefolder/$Name.desktop'"
 }
+
 installer() {                   # --install, --update, --update-master, --remove: Installer for x11docker
   # --install:
   #   - copies x11docker to /usr/local/bin
@@ -3175,6 +3210,7 @@ $(diff -u -s -Z "$(command -v x11docker)" "$(pwd)/x11docker" 2>&1 | sed "s/^+.*/
   esac
   note "Ready."
 }
+
 mkpasswd() {                    # Create a salted password suitable for /etc/shadow
   local Password Salt
 
@@ -3191,6 +3227,7 @@ mkpasswd() {                    # Create a salted password suitable for /etc/sha
 
   Containeruserpassword="$Password"
 }
+
 set_password() {                # option --password: set container user password
   local Password
 
@@ -3315,6 +3352,7 @@ s0_active_plugins = core;composite;opengl;decor;resize;move;
   note "Using host window manager: ${Windowmanagercommand:-"(none)"}"
   return 0
 }
+
 clean_xhost() {                 # option --clean-xhost: disable xhost policies on host X
   [ -z "$Hostdisplay" ] && note "Option --clean-xhost: No host X display found." && return 1
   [ -z "$Hostxauthority" ] && warning "Option --clean-xhost: You host X server does not provide
@@ -3323,6 +3361,7 @@ clean_xhost() {                 # option --clean-xhost: disable xhost policies o
   echo "Option --clean-xhost:" >> "$Xinitlogfile"
   disable_xhost "DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority" >> "$Xinitlogfile" 2>&1
 }
+
 create_clipboardrc() {          # option --clipboard: create shareclipboard script
   echo "#! /usr/bin/env bash
 $(declare -f rocknroll)
@@ -3521,6 +3560,7 @@ esac
     ;;
   esac
 }
+
 setup_gpu() {                   # option --gpu: share /dev/dri and check nvidia driver
   # Easiest case: share /dev/dri.
   # Works for open source MESA drivers on host and in image.
@@ -3627,6 +3667,7 @@ setup_gpu() {                   # option --gpu: share /dev/dri and check nvidia 
 
   return 0
 }
+
 setup_hostdbus() {              # option --hostdbus: connect to host DBus session daemon.
   warning "Option --hostdbus: Connecting container to host DBus degrades
   container isolation. Container applications might send malicious requests."
@@ -3680,6 +3721,7 @@ setup_hostdbus() {              # option --hostdbus: connect to host DBus sessio
   }
   return 0
 }
+
 setup_printer() {               # option --printer: connect to cups printer server
   # Default CUPS setups create a unix socket /run/cups/cups.sock as given from 'lpstat -H'.
   # Sharing this socket and pointing environment variable CUPS_SERVER to it serves most cases.
@@ -3742,6 +3784,7 @@ Also you need to allow network access for each printer in a CUPS GUI."
 
   return 0
 }
+
 setup_sound_alsa() {            # option --alsa: share sound devices
   # Sound with ALSA is directly supported by the kernel and only needs to share devices in /dev/snd.
   # libasound2 in image is recommended.
@@ -3771,6 +3814,7 @@ setup_sound_alsa() {            # option --alsa: share sound devices
 
   return 0
 }
+
 setup_sound_pipewire() {        # option --pipewire: pipewire sound in container
   local Pipewiresocket Pipewirescript
 
@@ -3815,6 +3859,7 @@ done
   Are 'pipewire-module-pulse' and 'pactl' installed?
   Fallback: Not sharing pipewire pulseaudio scoket."
 }
+
 setup_sound_pulseaudio() {      # option --pulseaudio: set up pulseaudio connection
   # Allowing container access to Pulseaudio on host can be done with a shared socket or over TCP.
   # Sharing host user socket in XDG_RUNTIME_DIR fails since Pulseaudio v12.0.
@@ -4173,6 +4218,7 @@ check_newxenv()  {              # find free display
 
   return 0
 }
+
 check_nvidiainstaller() {       # option --gpu: look for nvidia driver installer file
   [ -n "$Nvidiaversion" ] && {
     Nvidiainstallerfile="$(find /usr/local/share/x11docker/NVIDIA*$Nvidiaversion*.run $Localsharedir/NVIDIA*$Nvidiaversion*.run 2>/dev/null | tail -n1 )"
@@ -4180,6 +4226,7 @@ check_nvidiainstaller() {       # option --gpu: look for nvidia driver installer
     [ -n "$Nvidiainstallerfile" ] && debugnote "check_nvidiainstaller(): Found NVIDIA installer $Nvidiainstallerfile"
   }
 }
+
 check_screensize() {            # check physical and virtual screen size (also option --size)
   local Line= Xrandroutput=
 
@@ -4262,6 +4309,7 @@ check_screensize() {            # check physical and virtual screen size (also o
 
   return 0
 }
+
 check_vt() {                    # option --xorg: find free vt / tty
   local Line= Ttyinuse=
 
@@ -7753,6 +7801,7 @@ check_cgroup() {                # check [and create] cgroup mountpoint for syste
   
   return 0
 }
+
 check_containerhomebasedir() {  # options --homebasedir, --home
   ## option '--homebasedir': Specify base folder here to store container home folders for --home
   case "$BackendKind" in
@@ -7767,6 +7816,7 @@ check_containerhomebasedir() {  # options --homebasedir, --home
     ;;
   esac
 }
+
 check_containerhome() {         # option --home: check HOME of container user.
   ## option '--home':        Share folder ~/.local/share/x11docker/imagename with created container as its home directory
   ## option '--home=DIR':    Share custom host folder as home
@@ -7881,6 +7931,7 @@ check_containerhome() {         # option --home: check HOME of container user.
 
   return 0
 }
+
 check_containeruser() {         # check container user (also option --user)
   ## check container user
   [ "$Containeruser" = "RETAIN" ] && {
@@ -7950,6 +8001,7 @@ check_containeruser() {         # check container user (also option --user)
   esac
   return 0
 }
+
 create_backendcommand() {       ### create command to run docker|podman|nerdctl ###
   local Line= Memory Initcommand= Grouplist=
 
