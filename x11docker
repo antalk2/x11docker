@@ -14499,20 +14499,55 @@ declare_variables() {           # declare global variables
   # Init and DBus
   # =============================================
 
-  Dbusrunsession="no"                             # --dbus, --wayland, --init=systemd|openrc|runit|sysvinit: Run container command with dbus-run-session / DBus user session
-  Dbussystem="no"                                 # --init=systemd|openrc|runit|sysvinit: Run DBus system daemon in container
-  Initsystem="tini"                               # --init: Init system in container
-  Sharecgroup="no"                                # --sharecgroup, --init=systemd: share /sys/fs/cgroup. Also needed for elogind
-  Sharehostdbus="no"                              # --hostdbus: Connect to DBus user daemon on host
-  Initbinaryfile=""                               # --init=tini (default): Binary of tini; either /usr/bin/docker-exec or provided by user in [...]/share/x11docker
-  Initcontainerpath="/usr/local/bin/init"         # --init=tini: Path of tini (or catatonit) in container
+  # Dbusrunsession : --dbus, --wayland, --init=systemd |openrc |runit
+  # |sysvinit:
+  #
+  #      Run container command with dbus-run-session / DBus user
+  #      session
+  
+  Dbusrunsession="no"
+  
+  # Dbussystem : --init=systemd|openrc|runit|sysvinit: Run DBus system
+  #              daemon in container
+  #
+  Dbussystem="no"
+  
+  # Initsystem : --init: Init system in container
+  Initsystem="tini"
+  
+  # Sharecgroup : --sharecgroup,
+  #               --init=systemd: share /sys/fs/cgroup.
+  #               Also needed for elogind
+  #
+  Sharecgroup="no"
+  
+  # Sharehostdbus : --hostdbus: Connect to DBus user daemon on host
+  Sharehostdbus="no"
+  
+  # Initbinaryfile : --init=tini (default): Binary of tini; either
+  #                   /usr/bin/docker-exec or provided by user in
+  #                   [...]/share/x11docker
+  #
+  Initbinaryfile=""
+  
+  # Initcontainerpath : --init=tini: Path of tini (or catatonit) in
+  #                     container
+  #
+  Initcontainerpath="/usr/local/bin/init"
 
   # =============================================
   # Custom additional commands
   # =============================================
-  Runasuser=""                                    # --runasuser: Add container command to containerrc
-  Runasroot=""                                    # --runasroot: Add container command to container setup script running as root
-  Runfromhost=""                                  # --runfromhost: Add host command to xinitrc
+
+  # Runasuser : --runasuser: Add container command to containerrc
+  Runasuser=""
+
+  # Runasroot : --runasroot: Add container command to container setup
+  #             script running as root
+  Runasroot=""
+
+  # Runfromhost : --runfromhost: Add host command to xinitrc
+  Runfromhost=""
 
   # =============================================
   # Miscellaneous
