@@ -2051,7 +2051,7 @@ convertpath() {                 # convert unix and windows paths
 
     Containerpath="$Path"                                  # global Containerpath
     [ "$Createcontaineruser" = "no" ] || {                 # global Createcontaineruser
-        [ "$Sharehome" = "host" ] || {                       # global Sharehome Containeruserhome Containerpath
+        [ "$Sharehome" = "host" ] || { # Sharehome_host # global Sharehome Containeruserhome Containerpath
             [ -n "$Containeruserhome" ]                      \
                 && grep -q "^$Containeruserhome" <<< "$Path" \
                 && Containerpath="$(sed "s%^$Containeruserhome%/home.host%" <<< "$Containerpath")"
@@ -3133,8 +3133,8 @@ check_windowmanager() {         # option --wm: search a host window manager
   case "$Xcontainer_option" in
     yes)
       case "$Windowmanagermode" in
-        auto|host)
-          Windowmanagermode="host"
+        auto|host) # Windowmanagermode_host
+          Windowmanagermode="host"  # Windowmanagermode_host
           Windowmanagercommand="openbox --sm-disable" ;;
         *) Windowmanagermode="none" ;;
       esac
@@ -3148,10 +3148,10 @@ check_windowmanager() {         # option --wm: search a host window manager
       return 0
     ;;
     auto)
-      Windowmanagermode="host"
+      Windowmanagermode="host" # Windowmanagermode_host
       [ -n "$Windowmanagercommand" ] && {
         command -v "$(cut -d' ' -f1 <<< "$Windowmanagercommand")" >/dev/null && {
-          Windowmanagermode="host"
+          Windowmanagermode="host" # Windowmanagermode_host
         } || {
           note "Option --wm: Did not find command on host: $Windowmanagercommand
   Fallback: Searching for another window manager."
@@ -3221,7 +3221,7 @@ s0_active_plugins = core;composite;opengl;decor;resize;move;
   esac
 
   case "$Windowmanagermode" in
-    host)
+    host) # Windowmanagermode_host
       xtool --check "wmctrl" ||:
     ;;
   esac
@@ -3583,7 +3583,7 @@ setup_hostdbus() {              # option --hostdbus: connect to host DBus sessio
     store_runoption_env "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS"
     [ "${DBUS_SESSION_BUS_PID:-}" ]      && store_runoption_env  "${DBUS_SESSION_BUS_PID:-}"
     [ "${DBUS_SESSION_BUS_WINDOWID:-}" ] && store_runoption_env  "${DBUS_SESSION_BUS_WINDOWID:-}"
-    [ "$g_Network" != "host" ] && {
+    [ "$g_Network" != "host" ] && { # g_Network_host
       note "Option --hostdbus: Did not find a DBus session socket file
   but an abstract unix socket. To allow access for container,
   x11docker needs insecure option '--network=host'.
@@ -4727,7 +4727,7 @@ check_xdepends() {              # check dependencies on host for X server option
         --weston|--kwin|--hostwayland) ;;
         --xpra-xwayland|--xpra2-xwayland|--weston-xwayland|--kwin-xwayland|--xwayland|--satellite) ;;
         --hostdisplay)
-          [ "$Xcontainer_option" = "no" ] && [ "$Shareipc" != "host" ] && {
+          [ "$Xcontainer_option" = "no" ] && [ "$Shareipc" != "host" ] && { # Shareipc_host
             $Message "${1:-}: --gpu=$Sharegpu would need insecure and discouraged
   option --ipc=host to avoid MIT-SHM errors. Alternatively you can provide
   image x11docker/xserver (option --xc) that contains a fake MIT-SHM library."
@@ -5373,13 +5373,13 @@ create_xcommand() {             ### create command to start X server and/or Wayl
 
   [ "$Xcontainer_option" = "yes" ] && [ "$Xcontainerbackend" = "$BackendKind" ] && Usemitshm="yes"
   [ "$Xcontainer_option" = "yes" ] && [ "$Xcontainerbackend" = "nerdctl" ]  && Usemitshm="no"
-  [ "$Shareipc" = "host" ]                                           && Usemitshm="yes"
+  [ "$Shareipc" = "host" ]                                           && Usemitshm="yes" # Shareipc_host
   [ "$Xcontainer_option" = "yes" ] && [ -n "$Newxvt" ]                      && Usemitshm="no"
-  [ "$Xcontainer_option" = "no" ]  && [ "$Shareipc" != "host" ]             && Usemitshm="no"
+  [ "$Xcontainer_option" = "no" ]  && [ "$Shareipc" != "host" ]             && Usemitshm="no" # Shareipc_host
   [ "$Containeruser" != "$Hostuser" ]                                && Usemitshm="no"
   [ "$Xoverip" != "no" ]                                             && Usemitshm="no"
   [ "$Xcontainer_option" = "yes" ] && case "$Xserver" in
-    --weston*|--xpra*-xwayland) [ "$Shareipc" != "host" ]            && Usemitshm="no" ;;
+    --weston*|--xpra*-xwayland) [ "$Shareipc" != "host" ]            && Usemitshm="no" ;;  # Shareipc_host
   esac
   case "$Runtime" in
     kata-runtime|sysbox-runc)                                           Usemitshm="no" ;;
@@ -6916,7 +6916,7 @@ create_xinitrc() {              # create xinitrc: set up X environment, create c
   echo ""
 
   # --wm
-  [ "$Windowmanagermode" = "host" ] && {
+  [ "$Windowmanagermode" = "host" ] && {  # Windowmanagermode_host
     echo             "# window manager"
     echo             "$Windowmanagercommand & storepid \$! windowmanager"
     echo             "# only one desktop"
@@ -7362,8 +7362,8 @@ check_backend() {               # options --backend, --rootless
   Please try option --hostuser instead."
       Checkrootfs="yes"
       # set defaults. Some might look misleading just to avoid later messages, but not affecting the setup.
-      g_Network="host"
-      Shareipc="host"
+      g_Network="host" # g_Network_host
+      Shareipc="host"  # Shareipc_host
       Createcontaineruser="yes"
       Containersetup="yes"
       Capdropall="yes"
@@ -7392,10 +7392,10 @@ check_backend() {               # options --backend, --rootless
       # set defaults. Some might look misleading just to avoid later messages, but not affecting the setup.
       Sharealsa="no"
       Capdropall="yes"
-      Shareipc="host"
+      Shareipc="host" # Shareipc_host
       [ "$Langwunsch" ] && store_runoption_env "LANG=$Langwunsch"
       g_Limitresources=""
-      g_Network="host"
+      g_Network="host" # g_Network_host
       Allownewprivileges="no"
       g_Noentrypoint=""
       Containersetup="yes"
@@ -7534,7 +7534,10 @@ check_runtime() {               # option --runtime
 
   case "$BackendKind" in
     docker)  local_Defaultruntime="$(parse_inspect "$Backendinfo" "DefaultRuntime" | tr -d '"')" ;;
-    podman)  local_Defaultruntime="$(parse_inspect "$Backendinfo" "host"  "ociRuntime" "name" | tr -d '"')" ;;
+    podman)
+        # literal host
+        local_Defaultruntime="$(parse_inspect "$Backendinfo" "host"  "ociRuntime" "name" | tr -d '"')"
+        ;;
     nerdctl) local_Defaultruntime="" ;;
   esac
   debugnote "Default runtime: $local_Defaultruntime"
@@ -7698,10 +7701,10 @@ check_containerhome() {         # option --home: check HOME of container user.
   }
 
   case "$Sharehome" in
-    yes|host)
+    yes|host) # Sharehome_host
       [ -z "$Persistanthomevolume" ] && Persistanthomevolume="$Hosthomebasefolder/$Imagebasename"
       Persistanthomevolume="${Persistanthomevolume//"~"/"$Hostuserhome"}"
-      [ "${Persistanthomevolume:0:1}" = "/" ] && Sharehome="host" || Sharehome="volume"
+      [ "${Persistanthomevolume:0:1}" = "/" ] && Sharehome="host" || Sharehome="volume" # Sharehome_host
     ;;
   esac
 
@@ -11058,8 +11061,11 @@ check_snap() {                  # check if docker is installed in snap. Causes r
     Snapsupport="yes"
     check_fallback
   }
+
+  # FIXME: Snapsupport is never set to "no". (Starts as "", later set to "yes")
   [ -d "/snap/docker" ] && [ "$Snapsupport" = "no" ] && note "Detected /snap/docker.
   If you run Docker in snap, you might need option --snap to support this setup."
+
   [ "$Snapsupport" = "yes" ] && {
     note "Option --snap to support a docker-in-snap setup
   causes some restrictions:
@@ -11427,7 +11433,7 @@ ${1:-}"
       -w)                                        Windowmanagermode="auto" ; Desktopmode="yes" ;;
          --wm)                case "${2:-}" in                       # choose window manager
                                 "n"|"none"|"no") Windowmanagermode="none" ;;
-                                "host")          Windowmanagermode="host" ;;
+                                "host")          Windowmanagermode="host" ;; # Windowmanagermode_host
                                 ""|"auto"|"m")   Windowmanagermode="auto" ;;
                                 *)               Windowmanagermode="auto"; Windowmanagercommand="${2:-}" ;;
                               esac
@@ -11535,7 +11541,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
          --workdir)           Workdir="${2:-}" ; shift ;;            # Set working directory
 
      #### host folders and docker volumes
-      -m)                     Sharehome="host" ;;
+      -m)                     Sharehome="host" ;; # Sharehome_host
          --home)              Sharehome="yes"                                   # Share host folder as HOME in container, ~/x11docker/imagename or $2
                               Persistanthomevolume="${2:-}" ; shift ;;
          --share)             store_runoption_volume "${2:-}" ; shift ;;        # Share host file, device or directory
@@ -11580,10 +11586,10 @@ ${2:-}"                       ; shift ;;                             # Add custo
   Please use --backend=host instead." ;;
          --enforce-i)         note "Option --enforce-i is deprecated.
   Rather create a group weston-launch and add your user to it." ;;
-         --hostipc)           Shareipc="host"
+         --hostipc)           Shareipc="host" # Shareipc_host
                               note "Option --hostipc is deprecated.
   Please use --ipc=host instead." ;;
-         --hostnet)           g_Network="host"
+         --hostnet)           g_Network="host" # g_Network_host
                               note "Option --hostnet is deprecated.
   Please use --network=host instead." ;;
          --iglx)              Sharegpu="iglx"           ;    note "Option --iglx is deprecated.
@@ -12095,7 +12101,7 @@ check_options_interferences() { # check multiple option interferences, change se
     desktop)
       # --pipewire, --pulseaudio, --alsa
       [ "$Pulseaudiomode" = "auto" ] && Pulseaudiomode="tcp"
-      { [ "$Sharepipewire" = "yes" ] || [ "$Sharealsa" = "yes" ] || [ "$Pulseaudiomode" = "socket" ] || [ "$Pulseaudiomode" = "host" ] ; } && {
+      { [ "$Sharepipewire" = "yes" ] || [ "$Sharealsa" = "yes" ] || [ "$Pulseaudiomode" = "socket" ] || [ "$Pulseaudiomode" = "host" ] ; } && { # Pulseaudiomode_host
         note "Options --pipewire and --alsa do not work
   with Docker Desktop VM. Pulseaudio works only in tcp mode.
   Fallback: Setting --pulseaudio=tcp"
@@ -12129,7 +12135,7 @@ check_options_interferences() { # check multiple option interferences, change se
   # --runtime
   case "$Runtime" in
     kata-runtime)
-      [ "$g_Network" = "host" ] && {
+      [ "$g_Network" = "host" ] && { # g_Network_host
         note "Option --network=host: Sharing host network stack does not work
   with --runtime=kata-runtime. Fallback: Allowing default kata --network."
         check_fallback
@@ -12291,13 +12297,13 @@ check_options_interferences() { # check multiple option interferences, change se
       Xtest=""
       Xcomposite=""
       [ "$Runsoverssh" = "yes" ] && { ### FIXME
-        [ "$g_Network" != "host" ]  && error "For SSH connection with option --hostdisplay
+        [ "$g_Network" != "host" ]  && error "For SSH connection with option --hostdisplay # g_Network_host
   x11docker would need insecure option --network=host.
   It is recommended to use another X server option
   like --xpra, --xephyr or --nxagent."
       }
       # MIT-SHM
-      [ "$Hostmitshm" = "yes" ] && [ "$Shareipc" != "host" ] && [ "$Xoverip" = "no" ] && {
+      [ "$Hostmitshm" = "yes" ] && [ "$Shareipc" != "host" ] && [ "$Xoverip" = "no" ] && { # Shareipc_host
         case "$Xlibnoshmfile" in
           "")
             case "$Sharegpu" in
@@ -13020,7 +13026,7 @@ check_options_messages() {      # some messages depending on options, but not ch
   }
 
   # --ipc=host
-  [ "$Shareipc" = "host" ] && {
+  [ "$Shareipc" = "host" ] && { # Shareipc_host
     case "$BackendKind" in
       docker|podman|nerdctl)
         warning "Option --ipc=host severely degrades
@@ -14000,7 +14006,7 @@ declare_variables() {           # declare global variables
   # Windowmanagermode : --wm: Window manager to use: container/host/auto/none
   #
   #  - In check_windowmanager():
-  #         Windowmanagermode="host"
+  #         Windowmanagermode="host" # marked  # Windowmanagermode_host
   #         Windowmanagermode="none"
   #   - changed in parse_options()
   #   - changed in check_options_interferences()
@@ -14346,8 +14352,18 @@ declare_variables() {           # declare global variables
   # Runtime : Runtime to use. runc|nvidia|kata-runtime|crun
   Runtime=""
 
-  Snapsupport=""                                  # --snap: Fallback mode to support docker in snap
+  # Snapsupport : --snap: Fallback mode to support docker in snap. yes/no
+  #
+  #   Note: It is never set to "no"
+  #
+  Snapsupport=""
+
+  # Shareipc : --ipc=value
+  #      value: "host" # marked Shareipc_host
+  #             "no"
+  #
   Shareipc="no"
+  
   Stopsignal=""                                   # Signal to send on 'docker stop'
   Sudouser=""                                     # --sudouser: Create user with sudo permissions and root user with password 'x11docker'
   Switchcontaineruser="no"                        # --init=systemd|openrc|runit|sysvinit: User switching to trigger login services yes/no
