@@ -2120,70 +2120,116 @@ convertpath() {                 # convert unix and windows paths
         return 0
     fi
 
-    # global Cachefolder
-  case "$Winsubsystem" in
-    WSL1)
-        if [ -z "$Drive" ] ; then
-            case "$Mode" in
-                windows|unix|volume)
-                    debugnote "convertpath(): Request of WSL path: $Path"
-                    #
-                    grep -q "$Cachefolder" <<< "$Path" || {
-                        if  [ "$Readwritemode" = ":rw" ] ; then
-                            warning "$(trim_to_bar \
+    
+    case "$Winsubsystem" in
+        WSL1)
+            if [ -z "$Drive" ] ; then # no drive letter
+                case "$Mode" in
+                    windows|unix|volume)
+                        debugnote "convertpath(): Request of WSL path: $Path"
+                        #
+                        grep -q "$Cachefolder" <<< "$Path" || { # global Cachefolder
+                            if  [ "$Readwritemode" = ":rw" ] ; then
+                                warning "$(trim_to_bar \
                             "|Request of Windows path to path within WSL:
                              |  $Path
                              |  Write access from Windows host to WSL files can damage the WSL file system.
                              |  Read-only access is ok.
                              |  Option --share: You can add :ro to the path to allow read-only access.
                              |  Example: --share='$Path:ro'" )"
-                        fi
-                    }
+                            fi
+                        }
+                        ;;
+                esac
+            fi
+            ;;
+    esac
+
+    case "$Drive" in
+        "") # Path points into subsystem
+            Path="${Path#"$Winsubpath"}" # remove prefix Winsubpath        # global Winsubpath
+            #
+            Drive="$(cut -c2 <<<"$Winsubpath")" # 2nd character, /c/path -> c
+            # Q: Is it possible that we did not find the drive letter above?
+            #
+            case "$Mode" in
+                windows)
+                    # Uppercase Drive, colon, /path -> C:/path
+                    echo "${Drive^}:$(cut -c3- <<< "$Winsubpath")$Path"
                     ;;
+                unix)         echo "$Winsubpath$Path" ;;
+                subsystem)    echo "$Path" ;;
+                volume)
+                    # global Dockervm
+                    case "$Dockervm" in
+                        no|desktop)
+                            # echo "'$Path':'${containerpath_arg:-$Path}'$Readwritemode"
+                            printf "%s"                             \
+                                   "'$Path'"                        \
+                                   ":'${containerpath_arg:-$Path}'" \
+                                   "$Readwritemode"
+                            ;;
+                        moby)
+                            # echo "'$Winsubpath$Path':'${containerpath_arg:-$Path}'$Readwritemode"
+                            printf "%s"                             \
+                                   "'$Winsubpath$Path'"             \
+                                   ":'${containerpath_arg:-$Path}'" \
+                                   "$Readwritemode"
+                            ;;
+                    esac
+                    ;;
+                mount)
+                    case "$Dockervm" in
+                        no|desktop)
+                            # echo "type=bind,source='$Path',target='${containerpath_arg:-$Path}'$Readwritemode_mount"
+                            printf "%s"                                    \
+                                   "type=bind"                             \
+                                   ",source='$Path'"                       \
+                                   ",target='${containerpath_arg:-$Path}'" \
+                                   "$Readwritemode_mount"
+                            ;;
+                        moby)
+                            # echo "type=bind,source='$Winsubpath$Path',target='${containerpath_arg:-$Path}'$Readwritemode_mount"
+                            printf "%s"                                    \
+                                   "type=bind"                             \
+                                   ",source='$Winsubpath$Path'"            \
+                                   ",target='${containerpath_arg:-$Path}'" \
+                                   "$Readwritemode_mount"
+                            ;;
+                    esac
+                    ;;
+                container)    echo "${containerpath_arg:-$Path}" ;;
             esac
-      fi
-    ;;
-  esac
+            ;;
+        *)  # We have a drive letter --> Path outside of subsystem
+            #
+            # global Winsubmount
+            case "$Mode" in
+                windows)      echo "${Drive^}:$Path" ;;
+                unix)         echo "/$Drive$Path" ;;
+                subsystem)
+                    # Winsubmount : where does C:\ appear within the
+                    #    subsystem? (e.g. for cygwin, we ask it from
+                    #    cygpath.exe )
+                    echo "$Winsubmount/$Drive$Path"
+                    ;;
+                volume)
+                    echo "'/$Drive$Path':'${containerpath_arg:-/$Drive$Path}'$Readwritemode"
+                    ;;
+                mount)
+                    # echo "type=bind,source='/$Drive$Path',target='${containerpath_arg:-/$Drive$Path}'$Readwritemode_mount"
+                    printf "%s"                                            \
+                           "type=bind"                                     \
+                           ",source='/$Drive$Path'"                        \
+                           ",target='${containerpath_arg:-/$Drive$Path}'"  \
+                           "$Readwritemode_mount"
+                    ;;
+                container)    echo "${containerpath_arg:-/$Drive$Path}" ;;
+            esac
+            ;;
+    esac
 
-  case "$Drive" in
-      "") # Path points into subsystem
-          # global Winsubpath
-          Path="${Path#"$Winsubpath"}"
-          Drive="$(cut -c2 <<<"$Winsubpath")"
-          case "$Mode" in
-              windows)      echo "${Drive^}:$(cut -c3- <<< "$Winsubpath")$Path" ;;
-              unix)         echo "$Winsubpath$Path" ;;
-              subsystem)    echo "$Path" ;;
-              volume)
-                  # global Dockervm
-                  case "$Dockervm" in
-                      no|desktop) echo "'$Path':'${containerpath_arg:-$Path}'$Readwritemode" ;;
-                      moby)       echo "'$Winsubpath$Path':'${containerpath_arg:-$Path}'$Readwritemode" ;;
-                  esac
-                  ;;
-              mount)
-                  case "$Dockervm" in
-                      no|desktop)  echo "type=bind,source='$Path',target='${containerpath_arg:-$Path}'$Readwritemode_mount" ;;
-                      moby)        echo "type=bind,source='$Winsubpath$Path',target='${containerpath_arg:-$Path}'$Readwritemode_mount" ;;
-                  esac
-                  ;;
-              container)    echo "${containerpath_arg:-$Path}" ;;
-          esac
-          ;;
-      *) # Path outside of subsystem
-          # global Winsubmount
-          case "$Mode" in
-              windows)      echo "${Drive^}:$Path" ;;
-              unix)         echo "/$Drive$Path" ;;
-              subsystem)    echo "$Winsubmount/$Drive$Path" ;;
-              volume)       echo "'/$Drive$Path':'${containerpath_arg:-/$Drive$Path}'$Readwritemode" ;;
-              mount)        echo "type=bind,source='/$Drive$Path',target='${containerpath_arg:-/$Drive$Path}'$Readwritemode_mount" ;;
-              container)    echo "${containerpath_arg:-/$Drive$Path}" ;;
-          esac
-          ;;
-  esac
-
-  return 0
+    return 0
 }
 
 #
