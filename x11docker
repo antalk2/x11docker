@@ -9448,8 +9448,10 @@ export XDG_RUNTIME_DIR=/tmp/XDG_RUNTIME_DIR
       --weston|--kwin|--hostwayland)
         echo "unset DISPLAY XAUTHORITY" ;;
       *)
-        echo "unset WAYLAND_DISPLAY"
-        echo "ln -s $(convertpath share "$Xclientcookie") $Containeruserhome/.Xauthority" # provide softlink because ssh does not regard XAUTHORITY #554
+          echo "unset WAYLAND_DISPLAY"
+          #
+          # provide softlink because ssh does not regard XAUTHORITY #554
+          echo "ln -s $(convertpath share "$Xclientcookie") $Containeruserhome/.Xauthority"
       ;;
     esac
 
@@ -9590,6 +9592,7 @@ saygoodbye cmdrc
   } >> "$Cmdrc"
   return 0
 }
+
 create_sshenv() {               # Helper scripts for running ssh server in container
   # ssh -X environment
   # helper script for ssh -X to set evnvironment variables
@@ -9602,6 +9605,7 @@ create_sshenv() {               # Helper scripts for running ssh server in conta
   [ "$Xauthentication" != "no" ] && echo "export XAUTHORITY=$Containeruserhome/.Xauthority" >> "$Sshenvscript"
   chmod +x "$Sshenvscript"
 }
+
 # code pieces for containerrootrc
 rootrc_create_helperscripts() {
   echo "
@@ -9686,6 +9690,7 @@ chmod +x /usr/local/bin/x11docker-watch
 "
   return 0
 }
+
 rootrc_create_locale() {
   local Line
   while read Line; do
