@@ -15105,25 +15105,50 @@ unpriv_xcbackend() {
 # function main()
 #
 main() {
-  [ "$(uname -s)" = "Darwin" ] && echo "Error: x11docker does not run on MacOS. Please use Linux." >&2 && exit 64
+    if [ "$(uname -s)" = "Darwin" ] ; then
+        echo "Error: x11docker does not run on MacOS. Please use Linux." >&2 ;
+        exit 64
+    fi
 
-  trap finish EXIT
-  trap finish_sigint SIGINT
-  exec {FDstderr}>&2            # stderr channel for warning(), note(), debugnote() and --verbose
+    trap finish EXIT
+    trap finish_sigint SIGINT
+    
+    # stderr channel for warning(), note(), debugnote() and --verbose
+    exec {FDstderr}>&2
 
-  declare_variables
-  parse_options "$@"
-  [ "$Silent" = "yes" ]    && exec {FDstderr}>/dev/null                           # --quiet
-  [ "$Debugmode" = "yes" ] && {                                                   # --debug
-    set -Eu
-    trap 'traperror $? $LINENO $BASH_LINENO "$BASH_COMMAND" $(printf "::%s" ${FUNCNAME[@]})'  ERR
-  }
-  [ -n "$Containeruserpassword" ] && {                                            # --password
-    check_optionset "--password" "$(grep -v -- '--password' <<< "$g_AllAvailableLongOptions")" ||:
-    set_password "$Containeruserpassword"
-    finish
-    return 0
-  }
+    declare_variables
+    parse_options "$@"
+
+    if [ "$Silent" = "yes" ] ; then
+        # --quiet
+        exec {FDstderr}>/dev/null
+    fi
+    
+    if [ "$Debugmode" = "yes" ] ; then
+        # --debug
+        #
+        # -E  If set, the ERR trap is inherited by shell functions.
+        # -u  Treat unset variables as an error when substituting.
+        set -Eu
+        trap 'traperror $? $LINENO $BASH_LINENO "$BASH_COMMAND" $(printf "::%s" ${FUNCNAME[@]})'  ERR
+    fi
+
+    if [ -n "$Containeruserpassword" ] ; then  {
+        #
+        # --password  [=WORD]   Change container user password and exit.
+        #
+        # --password is incompatible with all other options
+        #
+        check_optionset                                                   \
+            "--password"                                                  \
+            "$(grep -v -- '--password' <<< "$g_AllAvailableLongOptions")" \
+            || true
+        #
+        set_password "$Containeruserpassword"
+        finish
+        return 0
+    fi
+
   debugnote "x11docker version $Version"
   check_host                     # get some infos about host system
   check_options_arguments        # check for valid arguments
