@@ -76,6 +76,33 @@ test_trim_to_bar_special_chars() {
      assert_same "$expected" "$x"
 }
 
+test_trim_follows_variable_expansion() {
+    #
+    # Since trimming happens AFTER variable expansion,
+    # the bar before xxx is removed due to $a inserting a newline.
+    #
+    # Consequence: beware of multiline expansions, and expansions at
+    # the beginning of a line. Best if each line starts literal text.
+    #
+    local a=$'\n'
+    local x expected
+     x="$(trim_to_bar \
+         "|abc$a    |xxx
+          | def
+          |  ghi")"
+     expected="$(printf "abc\nxxx\n def\n  ghi")"
+     assert_same "$expected" "$x"
+     #
+     # With single quotes, no expansion of $a
+     #
+     x="$(trim_to_bar \
+         '|abc$a    |xxx
+          | def
+          |  ghi')"
+     expected="$(printf "abc\$a    |xxx\n def\n  ghi")"
+     assert_same "$expected" "$x"
+}
+
  
 test_trim_to_mark_usage() {
     local x expected
