@@ -15398,10 +15398,27 @@ main() {
   storeinfo "x11dockerpid=$$"    # store pid of x11docker
 
   (
+      # Values for the debugnote below
       local Backendbin_version="$(${Backendbin:-:} --version 2>&1)"
-      local Host_system_to_report="$(grep '^PRETTY_NAME' /etc/os-release 2>/dev/null | cut -d= -f2 || echo "$Hostsystem")"
-      local Container_user_will_be="$( [ "$Createcontaineruser" = "yes" ] && echo "$Containeruser" || echo "(retaining USER of image)")"
-      local Container_user_password="$( [ "$Createcontaineruser" = "yes" ] && echo "x11docker"      || echo "(unknown)")"
+      local Host_system_to_report="$(
+                grep '^PRETTY_NAME' /etc/os-release 2>/dev/null  \
+                | cut -d= -f2                                    \
+                || echo "$Hostsystem"
+            )"
+      local Container_user_will_be="$(
+               if [ "$Createcontaineruser" = "yes" ] ; then
+                  echo "$Containeruser"
+               else
+                  echo "(retaining USER of image)"
+               fi
+            )"
+      local Container_user_password="$(
+               if [ "$Createcontaineruser" = "yes" ] ; then
+                  echo "x11docker"
+               else
+                   echo "(unknown)"
+               fi
+            )"
       #
       debugnote "$(trim_to_mark \
       "|x11docker version:  $Version
