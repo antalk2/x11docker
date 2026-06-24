@@ -11964,22 +11964,28 @@ $(sed 's/^/--/g ; s/://g' <<< "$Line")"
 
   return 0
 }
-parse_preset() {                # nested parsing for --preset
-  local Presetfile Presetoptions
 
-  # file already parsed? Avoid a loop
-  grep -q -x "${1:-}" <<< "$Presetlist" && return 0
-  Presetlist="$Presetlist
-${1:-}"
+parse_preset() {
+    # nested parsing for --preset
+    local Presetfile Presetoptions
+    local fn="${1:-}"
 
-  # check global and local preset dir. Prefer local one.
-  #  [ -f "$Presetdirsystem/${1:-}" ] && Presetfile="$Presetdirsystem/${1:-}"
-  #  [ -f "$Presetdirlocal/${1:-}" ]  && Presetfile="$Presetdirlocal/${1:-}"
-  #  [ -f "$Presetfile" ] || return 1
-  if   [  -f "$Presetdirlocal/${1:-}" ] ; then
-      Presetfile="$Presetdirlocal/${1:-}"
-  elif [ -f "$Presetdirsystem/${1:-}" ] ; then
-       Presetfile="$Presetdirsystem/${1:-}"
+    # file already parsed? Avoid a loop
+    if grep -q -x "${fn}" <<< "$Presetlist" ; then return 0; fi
+
+    #
+    Presetlist="$Presetlist${NEWLINE}${fn}"
+
+    # check global and local preset dir. Prefer local one.
+    
+    #  [ -f "$Presetdirsystem/${fn}" ] && Presetfile="$Presetdirsystem/${fn}"
+    #  [ -f "$Presetdirlocal/${fn}" ]  && Presetfile="$Presetdirlocal/${fn}"
+    #  [ -f "$Presetfile" ] || return 1
+    
+  if   [  -f "$Presetdirlocal/${fn}" ] ; then
+      Presetfile="$Presetdirlocal/${fn}"
+  elif [ -f "$Presetdirsystem/${fn}" ] ; then
+       Presetfile="$Presetdirsystem/${fn}"
   else
       return 1
   fi
@@ -11987,11 +11993,11 @@ ${1:-}"
   # parse
   Presetoptions="$(sed '/^#/d' < "$Presetfile" | tr '\n' ' ')"
   [ -n "$(tr -d ' ' <<< "$Presetoptions")" ] && {
-    note "Option --preset: Parsing $Presetfile:
-  $Presetoptions"
+    note "Option --preset: Parsing $Presetfile:${NEWLINE}  $Presetoptions"
     eval parse_options "$Presetoptions" # eval to preserve whitespace in arguments
   }
 }
+
 check_options_arguments() {     # check for [likely] valid arguments
   # not checked here yet:
   # --home
