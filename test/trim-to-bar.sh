@@ -219,3 +219,10 @@ echo "A: Only the first colon is removed, OK."
 NEWLINE=$'\n'
 trim_to_mark5 "a${NEWLINE} : : : b" | showSpaces
 
+
+
+echo  "$(trim_to_mark5 \
+            "|waitforlogentry(): application:
+             : Timeout waiting for entry \"{keyword}\" in {logfile_basename}
+             |  Last lines of {logfile_basename}:
+             |")${NEWLINE}$(printf "%s\n" "Line1" "Line2" )"

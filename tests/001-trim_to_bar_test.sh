@@ -116,3 +116,21 @@ test_trim_to_mark_usage() {
     assert_same "$expected" "$x" 
 }
 
+test_trim_to_mark_2() {
+    ##
+    ## A bar after a colon marker is not affected by trim_to_mark.
+    ##
+    local pattern="$(trim_to_mark \
+                  '|xinit: giving up
+                   :|unable to connect to X server
+                   :|Connection refused
+                   :|server error
+                   :|Only console users are allowed
+                   :|Failed to process Wayland
+                   :|failed to create display
+                   :|] fatal:' )"
+    local expected='xinit: giving up|unable to connect to X server|Connection refused|server error'
+    expected+='|Only console users are allowed|Failed to process Wayland|failed to create display|] fatal:'
+    assert_same "$expected" "$pattern" 
+}
+
