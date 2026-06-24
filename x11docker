@@ -11517,43 +11517,112 @@ setup_verbosity() {             # options --verbose, --stdout, --stderr
 }
 
 #### options
-parse_options() {               # parse cli options
-  local Shortoptions Longoptions Parsedoptions Presetoptions Presetfile
-  Shortoptions="aAcdDfFghHiIKlmnpPqtTvVwWxXyY"
-  Shortoptions="${Shortoptions}e"                                                                                             # deprecated
-  Longoptions=""
-  Longoptions="$Longoptions,auto,desktop,tty,wayland,wm::,xc::,xonly,xw"                                                      # Influencing auto-setup of X/Wayland/x11docker
-  Longoptions="$Longoptions,hostdisplay,nxagent,runx,xephyr,xpra,xpra2,xorg,xvfb"                                             # X servers
-  Longoptions="$Longoptions,weston-xwayland,xpra-xwayland,xpra2-xwayland,xwayland,satellite"                                  # X servers depending on a Wayland compositor
-  Longoptions="$Longoptions,hostwayland,weston::"                                                                             # Wayland compositors without X
-  Longoptions="$Longoptions,border::,dpi:,fullscreen,output-count:,rotate:,scale:,size:"                                      # X/Wayland appearance options
-  Longoptions="$Longoptions,clean-xhost,composite::,display:,keymap:,vt::,westonini:,xauth::,xhost::,xoverip::,xtest::,xopt:" # X/Wayland config
-  Longoptions="$Longoptions,checkwindow::,fallback::,preset:,pull::"                                                          # x11docker config
-  Longoptions="$Longoptions,cachebasedir:,home::,homebasedir:,share:"                                                         # Host folders
-  Longoptions="$Longoptions,alsa::,clipboard::,gpu::,lang::,printer::,pipewire,pulseaudio::,webcam"                           # Host integration features
-  Longoptions="$Longoptions,backend:,env:,mobyvm,name:,no-entrypoint,no-setup,rootfs,rootless::,runtime:,snap,workdir:"       # Container config
-  Longoptions="$Longoptions,cap-default,ipc::,limit::,newprivileges::,network::"                                              # Container capabilities
-  Longoptions="$Longoptions,group-add:,hostuser:,password::,sudouser::,user:,shell:"                                          # Container user
-  Longoptions="$Longoptions,dbus::,init::,hostdbus,sharecgroup"                                                               # Container init and DBus
-  Longoptions="$Longoptions,stdin,interactive"                                                                                # Container interaction
-  Longoptions="$Longoptions,runasuser:,runfromhost:,runasroot:,xeyes::,xlogo,xfishtank"                                       # Additional commands to execute
-  Longoptions="$Longoptions,printenv::,printid::,printinfofile::,printpid1::"                                                 # Output of vars on stdout
-  Longoptions="$Longoptions,debug,printcheck,quiet,verbose::"                                                                 # Verbose options
-  Longoptions="$Longoptions,build,cleanup,help,launcher,licence,license,version"                                              # Special options without starting X or container
-  Longoptions="$Longoptions,install,remove,remove-oldprefix,update::,update-master::"                                         # Installation
-  #
-  Longoptions="$Longoptions,experimental,keepcache,remountcgroup,xorgconf:"                                                   # Experimental
-  Longoptions="$Longoptions,dbus-system,enforce-i,exe,homedir:,hostipc,hostnet,iglx,kwin,kwin-xwayland,xwin"                  # Deprecated
-  Longoptions="$Longoptions,no-auth,no-internet,no-xhost"                                                                     # Deprecated
-  Longoptions="$Longoptions,sharedir:,sharessh,systemd,showenv,showid,showinfofile,showpid1"                                  # Deprecated
-  Longoptions="$Longoptions,cachedir:,no-init,nothing,no-xtest,openrc,podman,pull::,ps,pw::,runit,silent,starter"             # Removed
-  Longoptions="$Longoptions,stderr,stdout,sys-admin,sysvinit,tini,trusted,untrusted,vcxsrv,xdummy"                            # Removed
 
-  # default preset files
-  parse_preset "default" ||:
+# function parse_options()
+#
+#   Parse cli options
+#
+parse_options() {
+    local Shortoptions
+    local Longoptions
+    local Parsedoptions
+    local Presetoptions
+    local Presetfile
 
-  # options from cli
-  Parsedoptions="$(getopt --options "$Shortoptions" --longoptions "$Longoptions" --name "$0" -- "$@" )" || error "Failed to parse options."
+    #
+    # Shortoptions and Longoptions are passed to /usr/bin/getopt
+    #
+    Shortoptions="aAcdDfFghHiIKlmnpPqtTvVwWxXyY"
+    #
+    # Deprecated short options:
+    #     -e --exe is deprecated
+    Shortoptions="${Shortoptions}e"
+
+    #
+    # Comma-separated list of long options.
+    # A single colon after the name means the option has a required argument.
+    # Two colons mean an optional argument.
+    #
+    Longoptions=""
+    #
+    # Influencing auto-setup of X/Wayland/x11docker
+    Longoptions="$Longoptions,auto,desktop,tty,wayland,wm::,xc::,xonly,xw"
+    
+    # X servers
+    Longoptions="$Longoptions,hostdisplay,nxagent,runx,xephyr,xpra,xpra2,xorg,xvfb"
+    
+    # X servers depending on a Wayland compositor
+    Longoptions="$Longoptions,weston-xwayland,xpra-xwayland,xpra2-xwayland,xwayland,satellite"
+    
+    # Wayland compositors without X
+    Longoptions="$Longoptions,hostwayland,weston::"
+    
+    # X/Wayland appearance options
+    Longoptions="$Longoptions,border::,dpi:,fullscreen,output-count:,rotate:,scale:,size:"
+    
+    # X/Wayland config
+    Longoptions="$Longoptions,clean-xhost,composite::,display:,keymap:,vt::,westonini:,xauth::,xhost::,xoverip::,xtest::,xopt:"
+    
+    # x11docker config
+    Longoptions="$Longoptions,checkwindow::,fallback::,preset:,pull::"
+    
+    # Host folders
+    Longoptions="$Longoptions,cachebasedir:,home::,homebasedir:,share:"
+    
+    # Host integration features
+    Longoptions="$Longoptions,alsa::,clipboard::,gpu::,lang::,printer::,pipewire,pulseaudio::,webcam"
+    
+    # Container config
+    Longoptions="$Longoptions,backend:,env:,mobyvm,name:,no-entrypoint,no-setup,rootfs,rootless::,runtime:,snap,workdir:"
+    
+    # Container capabilities
+    Longoptions="$Longoptions,cap-default,ipc::,limit::,newprivileges::,network::"
+    
+    # Container user
+    Longoptions="$Longoptions,group-add:,hostuser:,password::,sudouser::,user:,shell:"
+    
+    # Container init and DBus
+    Longoptions="$Longoptions,dbus::,init::,hostdbus,sharecgroup"
+    
+    # Container interaction
+    Longoptions="$Longoptions,stdin,interactive"
+
+    # Additional commands to execute
+    Longoptions="$Longoptions,runasuser:,runfromhost:,runasroot:,xeyes::,xlogo,xfishtank"
+    
+    # Output of vars on stdout
+    Longoptions="$Longoptions,printenv::,printid::,printinfofile::,printpid1::"
+
+    # Verbose options
+    Longoptions="$Longoptions,debug,printcheck,quiet,verbose::"
+
+    # Special options without starting X or container
+    Longoptions="$Longoptions,build,cleanup,help,launcher,licence,license,version"
+
+    # Installation
+    Longoptions="$Longoptions,install,remove,remove-oldprefix,update::,update-master::"
+    #
+    # Experimental
+    Longoptions="$Longoptions,experimental,keepcache,remountcgroup,xorgconf:"
+    
+    # Deprecated options
+    Longoptions="$Longoptions,dbus-system,enforce-i,exe,homedir:,hostipc,hostnet,iglx,kwin,kwin-xwayland,xwin"
+    Longoptions="$Longoptions,no-auth,no-internet,no-xhost"
+    Longoptions="$Longoptions,sharedir:,sharessh,systemd,showenv,showid,showinfofile,showpid1"
+
+    # Removed options
+    Longoptions="$Longoptions,cachedir:,no-init,nothing,no-xtest,openrc,podman,pull::,ps,pw::,runit,silent,starter"
+    Longoptions="$Longoptions,stderr,stdout,sys-admin,sysvinit,tini,trusted,untrusted,vcxsrv,xdummy"
+
+    # default preset files
+    parse_preset "default" || true
+
+    # options from cli
+    # /usr/bin/getopt
+    # man getopt
+    Parsedoptions="$(getopt --options "$Shortoptions" --longoptions "$Longoptions" --name "$0" -- "$@" )" \
+        || error "Failed to parse options."
+    
   eval set -- "$Parsedoptions"
   Parsedoptions_global="$Parsedoptions_global
   $Parsedoptions"
