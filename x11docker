@@ -15323,74 +15323,108 @@ main() {
   #### Create command to run X server [and/or Wayland compositor]
   create_xcommand                # set up start command for X server              # all X server and Wayland options
 
-  [ "$Xcommand" ] && case "$Xwaylandrootless" in
-    no)                             debugnote "X server command:
-  $Xcommand" ;;
-    yes)                            debugnote "Xwayland wrapper:
-$(cat $Xwaylandwrapper)" ;;
-  esac
-  [ "$Compositorcommand" ]       && debugnote "Wayland compositor command:
-  $Compositorcommand"
-  [ -s "$Westonini" ]            && debugnote "Generated weston.ini:
-$(nl -ba <$Westonini)"
+  if [ "$Xcommand" ] ; then
+      case "$Xwaylandrootless" in
+          no)   debugnote "X server command:${NEWLINE}  $Xcommand" ;;
+          yes)  debugnote "Xwayland wrapper:${NEWLINE}$(cat $Xwaylandwrapper)" ;;
+      esac
+  fi
 
-  setup_initsystem               # init in container.                             # --init
+  if [ "$Compositorcommand" ] ; then
+      debugnote "Wayland compositor command:${NEWLINE}  $Compositorcommand"
+  fi
+
+  if [ -s "$Westonini" ] ; then
+      debugnote "Generated weston.ini:${NEWLINE}$(nl -ba <$Westonini)"
+  fi
+
+  # init in container.                                            # --init
+  setup_initsystem
+
   case "$BackendKind" in
-    docker|podman|nerdctl)
-      [ -z "$g_Rootfs" ] && check_image
-      setup_capabilities         # add linux capabilities if needed for some options. Default: --cap-drop=ALL
-      [ "$Sharegpu" = "yes" ] && setup_vaapi                                      # --gpu
+
+      docker|podman|nerdctl)
+        if [ -z "$g_Rootfs" ] ; then
+            check_image
+        fi
+
+        # Add linux capabilities if needed for some options.
+        # Default: --cap-drop=ALL
+        setup_capabilities
+
+        if [ "$Sharegpu" = "yes" ] ; then                         # --gpu
+            setup_vaapi
+        fi
     ;;
   esac
+
   case "$BackendKind" in
-    proot|docker|podman|nerdctl)
-      create_backendcommand           # create 'docker run' command
-      echo "$Backendcommand" >> "$Backendcommandfile"
-      debugnote "$BackendKind command (rootless ${Backendrootless:-undefined}):
-  $Backendcommand"
-      [ "$Containersetup" = "yes" ] && {
-        ## containerrootrc runs as root in container.
-        # Main jobs: create unprivileged container user, disable possible privilege leaks, set local time.
-        # Optional jobs: run init system, run DBus daemon, install nvidia driver, create language locale.
-        create_containerrootrc >> "$Containerrootrc"
-        verbose "Generated containerrootrc:
-$(nl -ba <$Containerrootrc)"
-      }
-      ;;
-    # host) ;; # BackendKind_host
+      proot|docker|podman|nerdctl)
+
+          create_backendcommand           # create 'docker run' command
+          echo "$Backendcommand" >> "$Backendcommandfile"
+          debugnote "$(trim_to_bar \
+             "|$BackendKind command (rootless ${Backendrootless:-undefined}):
+              |  $Backendcommand" )"
+
+          if [ "$Containersetup" = "yes" ] ; then
+              ## containerrootrc runs as root in container.
+              #
+              # Main jobs: create unprivileged container user,
+              #            disable possible privilege leaks,
+              #            set local time.
+              #
+              # Optional jobs: run init system,
+              #                run DBus daemon,
+              #                install nvidia driver,
+              #                create language locale.
+              #
+              create_containerrootrc >> "$Containerrootrc"
+              verbose "Generated containerrootrc:${NEWLINE}$(nl -ba <$Containerrootrc)"
+          fi
+          ;;
+      # host) ;; # BackendKind_host
   esac
-  [ "$Containersetup" = "yes" ] && {
-    create_containerrc
-    verbose "Generated containerrc:
-$(nl -ba <$Containerrc)"
-    create_cmdrc
-    verbose "Generated cmdrc:
-$(nl -ba <$Cmdrc)"
-    create_sshenv
-    verbose "Generated sshenv:
-$(nl -ba <$Sshenvscript)"
-  }
+
+  if [ "$Containersetup" = "yes" ] ; then
+      create_containerrc
+      verbose "Generated containerrc:${NEWLINE}$(nl -ba <$Containerrc)"
+      create_cmdrc
+      verbose "Generated cmdrc:${NEWLINE}$(nl -ba <$Cmdrc)"
+      create_sshenv
+      verbose "Generated sshenv:${NEWLINE}$(nl -ba <$Sshenvscript)"
+  fi
 
   storeinfo "x11dockerpid=$$"    # store pid of x11docker
-  debugnote "x11docker version:  $Version
-  Backend version:               $(${Backendbin:-:} --version 2>&1)
-  Running rootless:              $Backendrootless
-  OCI Runtime:                   $Runtime
-  Host system:                   $(grep '^PRETTY_NAME' /etc/os-release 2>/dev/null | cut -d= -f2 || echo "$Hostsystem")
-  Host architecture:             $Hostarchitecture
-  Command:
-    '$0' $(for Line in "$@"; do echo -n "'$Line' " ; done)
-  Parsed options:
-    $Parsedoptions_global
-  x11docker was started by:      $Startuser
-  As host user serves:           $Hostuser
-  Container user will be:        $( [ "$Createcontaineruser" = "yes" ] && echo "$Containeruser" || echo "(retaining USER of image)")
-  Container user password:       $( [ "$Createcontaineruser" = "yes" ] && echo "x11docker"      || echo "(unknown)")
-  Running in a terminal:         $Runsinterminal
-  Running on console:            $Runsonconsole
-  Running over SSH:              $Runsoverssh
-  Running sourced:               $Runssourced
-  bash \$-:                       $-"
+
+  (
+      local Backendbin_version="$(${Backendbin:-:} --version 2>&1)"
+      local Host_system_to_report="$(grep '^PRETTY_NAME' /etc/os-release 2>/dev/null | cut -d= -f2 || echo "$Hostsystem")"
+      local Container_user_will_be="$( [ "$Createcontaineruser" = "yes" ] && echo "$Containeruser" || echo "(retaining USER of image)")"
+      local Container_user_password="$( [ "$Createcontaineruser" = "yes" ] && echo "x11docker"      || echo "(unknown)")"
+      #
+      debugnote "$(trim_to_mark \
+      "|x11docker version:  $Version
+       |  Backend version:               ${Backendbin_version}
+       |  Running rootless:              $Backendrootless
+       |  OCI Runtime:                   $Runtime
+       |  Host system:                   ${Host_system_to_report}
+       |  Host architecture:             $Hostarchitecture
+       |  Command:
+       |    '$0' $(for Line in "$@"; do echo -n "'$Line' " ; done)
+       |  Parsed options:
+       |    $Parsedoptions_global
+       |  x11docker was started by:      $Startuser
+       |  As host user serves:           $Hostuser
+       |  Container user will be:        ${Container_user_will_be}
+       |  Container user password:       ${Container_user_password}
+       |  Running in a terminal:         $Runsinterminal
+       |  Running on console:            $Runsonconsole
+       |  Running over SSH:              $Runsoverssh
+       |  Running sourced:               $Runssourced
+       |  bash \$-:                       $-" )"
+  )
+
   [ "$Winsubsystem" ] && debugnote "
   Running on Windows subsystem:  $Winsubsystem
   Path to subsystem:             $(convertpath windows "$Winsubpath")/
