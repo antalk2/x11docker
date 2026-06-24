@@ -14582,7 +14582,7 @@ declare_variables() {           # declare global variables
   # g_Noentrypoint : --no-entrypoint: Disable entrypoint in image yes/no
   g_Noentrypoint="no"
   
-  # g_Optionset1 : list of set options for later support check
+  # g_Optionset1 : list of newline-separate command line options for later support check
   # was: Optionset
   g_Optionset1=""
   
