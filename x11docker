@@ -2522,8 +2522,6 @@ waitforlogentry() {             # wait for entry $3 in logfile $2 of application
              : Timeout waiting for entry \"${keyword}\" in ${logfile_basename}
              |  Last lines of ${logfile_basename}:")${NEWLINE}$(tail -n15 "${logfile}")"
     fi
-
-    #    grep -i -q -E 'xinit: giving up|unable to connect to X server|Connection refused|server error|Only console users are allowed|Failed to process Wayland|failed to create display|] fatal:' <"${logfile}" &&
     
     [ "$Errorkeys" ] && {
         Errorkey="$(grep -i -E "$Errorkeys" <"${logfile}")" || true
