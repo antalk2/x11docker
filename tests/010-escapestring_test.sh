@@ -6,8 +6,9 @@ set_up() {
 }
 
 test_escapestring() {
-    # fixed : characters not to be escaped
-    #         Note: uses character ranges, but that is OK here.
+    # fixed : characters not to be escaped. Note: uses character
+    #         ranges, but that is OK here, it contains a
+    #         representative set
     #
     local fixed='a-zA-Z0-9,._+@=:/-'
     local escaped
@@ -48,4 +49,15 @@ test_createmountopt() {
     #
     # If the file does not exist, stdout is empty and exitcode is 1
     assert_exec 'createmountopt mount  "$File" "ro"' --exit 1 --stdout "" --stderr ""
+    #
+    # The following result in message on stderr
+    #
+    local Debugmode=yes
+    local Verbose=not-yes
+    local FDstderr=2
+    assert_exec 'createmountopt mount  "$File" "ro"' --exit 1 --stdout "" \
+                --stderr-contains "DEBUGNOTE"
+    assert_exec 'createmountopt mount  "$File" "ro"' --exit 1 --stdout "" \
+                --stderr-contains "createmountopt(): ERROR: File not found:"
 }
+
