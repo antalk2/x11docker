@@ -14883,38 +14883,95 @@ declare_variables() {           # declare global variables
   # Special options not starting X or docker
   # =============================================
 
-  Cleanup=""                                      # --cleanup: Remove orphaned containers and cache files
-  Createlauncher=""                               # --launcher: Create application launcher on desktop and exit yes/no
-  Installermode=""                                # --install/--update/--update-master/--remove
-  Installerarg=""                                 # --update/--update-master: show diff only, do not install
+  # Cleanup : --cleanup: Remove orphaned containers and cache files
+  Cleanup=""
+
+  # Createlauncher : --launcher: Create application launcher on
+  #                  desktop and exit yes/no
+  Createlauncher=""
+
+  # Installermode : --install/--update/--update-master/--remove
+  Installermode=""
+
+  # Installerarg : --update/--update-master: show diff only, do not install
+  Installerarg=""
 
   # =============================================
   # Lists of window managers
   # =============================================
 
-  # - these window managers are known to work well with x11docker (alphabetical order)(excluding $Wm_not_recommended and $Wm_ugly):
-  Wm_good="amiwm blackbox cinnamon compiz ctwm enlightenment fluxbox flwm fvwm"
-  Wm_good="$Wm_good jwm kwin kwin_x11 lxsession mate-session mate-wm marco metacity notion olwm olvwm openbox ororobus pekwm"
-  Wm_good="$Wm_good sawfish twm wmaker w9wm"
-  # - these wm's are recommended and lightweight, but cannot show desktop options. best first:
+  # Wm_good : these window managers are known to work well with
+  #   x11docker (alphabetical order)(excluding $Wm_not_recommended and
+  #   $Wm_ugly):
+  #
+  # Format: space-separated list
+  #
+  Wm_good="$(trim_to_mark \
+        "|amiwm blackbox cinnamon compiz ctwm enlightenment fluxbox flwm fvwm
+         : jwm kwin kwin_x11 lxsession mate-session mate-wm
+         : marco metacity notion olwm olvwm openbox ororobus pekwm
+         : sawfish twm wmaker w9wm" )"
+  
+  # Wm_recommended_nodesktop_light : these wm's are recommended and
+  #       lightweight, but cannot show desktop options. best first:
+  #
   Wm_recommended_nodesktop_light="metacity marco openbox sawfish xfwm4"
-  # - these wm's are recommended and heavy, but cannot show desktop options (especially exiting themselves). best first:
+  
+  # Wm_recommended_nodesktop_heavy : these wm's are recommended and
+  #       heavy, but cannot show desktop options (especially exiting
+  #       themselves). best first:
+  #
   Wm_recommended_nodesktop_heavy="kwin compiz"
-  # - these wm's are recommended, lightweight AND desktop independent. best first:
-  Wm_recommended_desktop_light="flwm blackbox fluxbox jwm mwm wmaker afterstep
-    amiwm fvwm ctwm pekwm olwm olvwm xfwm4"
-  # - these wm's are recommended, heavy AND desktop independent. best first:
-  Wm_recommended_desktop_heavy="lxsession mate-session enlightenment cinnamon cinnamon-session plasmashell"
-  # - these wm's are not really useful (please don't hit me) (best first):
-  Wm_not_recommended="awesome evilwm herbstluftwm i3 lwm matchbox miwm mutter spectrwm subtle windowlab wmii wm2"
-  # - these wm's cannot be autodetected by wmctrl if they are already running
-  Wm_nodetect="aewm aewm++ afterstep awesome ctwm mwm miwm olwm olvwm sapphire windowlab wm2 w9wm"
-  # - these wm's can cause problems (they can be beautiful, though):
+
+  # Wm_recommended_desktop_light : these wm's are recommended,
+  #           lightweight AND desktop independent. best first:
+  #
+  Wm_recommended_desktop_light="$(trim_to_mark \
+     "|flwm blackbox fluxbox jwm mwm wmaker afterstep
+      : amiwm fvwm ctwm pekwm olwm olvwm xfwm4" )"
+  
+  # Wm_recommended_desktop_heavy : these wm's are recommended, heavy
+  #           AND desktop independent. best first:
+  #
+  Wm_recommended_desktop_heavy="$(trim_to_mark \
+     "|lxsession mate-session
+      : enlightenment
+      : cinnamon
+      : cinnamon-session
+      : plasmashell" )"
+
+  # Wm_not_recommended : these wm's are not really useful (please
+  #                      don't hit me) (best first):
+  #
+  Wm_not_recommended="$(trim_to_mark \
+      "|awesome evilwm herbstluftwm i3 lwm
+       : matchbox miwm mutter spectrwm subtle windowlab wmii wm2" )"
+
+  # Wm_nodetect : these wm's cannot be autodetected by wmctrl if they
+  #               are already running
+  #
+  Wm_nodetect="$(trim_to_mark \
+     "|aewm aewm++ afterstep awesome ctwm mwm miwm
+      : olwm olvwm sapphire windowlab wm2 w9wm"    )"
+
+  # Wm_ugly : these wm's can cause problems (they can be beautiful, though):
   Wm_ugly="icewm sapphire aewm aewm++"
-  # - these wm's doesn't work:
+
+  # Wm_bad : these wm's doesn't work:
   Wm_bad="budgie-wm clfswm tinywm tritium muffin gnome-shell"
-  # List of all working window managers, recommended ones first, excluding $Wm_bad:
-  Wm_all="$Wm_recommended_nodesktop_light $Wm_recommended_nodesktop_heavy  $Wm_recommended_desktop_light $Wm_recommended_desktop_heavy $Wm_good $Wm_ugly $Wm_not_recommended $Wm_nodetect"
+
+  # List of all working window managers, recommended ones first,
+  #            excluding $Wm_bad:
+  #
+  Wm_all="$(trim_to_mark \
+       "|$Wm_recommended_nodesktop_light
+       : $Wm_recommended_nodesktop_heavy
+       : $Wm_recommended_desktop_light
+       : $Wm_recommended_desktop_heavy
+       : $Wm_good
+       : $Wm_ugly
+       : $Wm_not_recommended
+       : $Wm_nodetect" )"
 
   # =============================================
   # x11docker communication functions to integrate into generated scripts
