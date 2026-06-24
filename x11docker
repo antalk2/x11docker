@@ -15442,11 +15442,15 @@ main() {
        |  bash \$-:                       $-" )"
   )
 
-  [ "$Winsubsystem" ] && debugnote "
-  Running on Windows subsystem:  $Winsubsystem
-  Path to subsystem:             $(convertpath windows "$Winsubpath")/
-  Mount path in subsystem:       $Winsubmount/
-  Using docker VM:               $Dockervm"
+  if [ "$Winsubsystem" ] ; then
+      debugnote "$(trim_to_bar \
+          "|
+           |  Running on Windows subsystem:  $Winsubsystem
+           |  Path to subsystem:             $(convertpath windows "$Winsubpath")/
+           |  Mount path in subsystem:       $Winsubmount/
+           |  Using docker VM:               $Dockervm"
+      )"
+  fi
 
   { #### Run docker image
     # For code flow logic, start_xserver() should run here first and be moved to background.
