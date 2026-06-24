@@ -14980,6 +14980,9 @@ declare_variables() {           # declare global variables
   #
   # ==============================================================
 
+  # Messagefifofuncs: goes to "Generated containerrc:", "Generated cmdrc:",
+  #     "Generated xinitrc"
+  #
   Messagefifofuncs="$(trim_to_bar \
     '|
      |# Messagefifofuncs
@@ -15023,34 +15026,42 @@ declare_variables() {           # declare global variables
 } # end of declare_variables
 
 
-mytest() {                      # --experimental
-  [ "$Mytest" ] && {
-    note "Option --experimental: changed something: ${1:-"(no comment)"}"
-    return 0
-  }
+# function mytest() :  --experimental
+#
+#    This function is not called anywhere.
+# 
+mytest() {
+  if [ "$Mytest" ] ; then
+      note "Option --experimental: changed something: ${1:-"(no comment)"}"
+      return 0
+  fi
   return 1
 }
 
-unpriv() {                      # run a command as unprivileged user. Needed if x11docker was started by root or with sudo.
-  # $Unpriv is declared in check_hostuser: 'eval' or 'su $Hostuser -c'
-  local Command
-  Command="$(oneline "${1:-}")"
-  $Unpriv "$Command"
-  return $?
+# function unpriv( Command ) :  Run a command as unprivileged user.
+#             Needed if x11docker was started by root or with sudo.
+#
+unpriv() {
+    # $Unpriv is declared in check_hostuser: 'eval' or 'su $Hostuser -c'
+    local Command
+    Command="$(oneline "${1:-}")"
+    $Unpriv "$Command"
+    return $?
 }
 
 # function unpriv_backend( Command )
 #
-# Run container backend rootful (with current privileges) or rootless
-# (dropping privileges), depending on Backendrootless
+#   Run container backend rootful (with current privileges) or
+#   rootless (dropping privileges), depending on `Backendrootless`
 #
 unpriv_backend() {
     local Command
     Command="$(oneline "${1:-}")"
-    [ -z "$Backendbin" ] && {
+    if [ -z "$Backendbin" ] ; then
         warning "Binary path for backend $BackendKind not set."
         return 1
-    }
+    fi
+    #
     case "$Backendrootless" in
         yes)   unpriv                  "$Command" ;;
         no|"") eval   "env DOCKER_HOST= $Command" ;;
@@ -15058,16 +15069,22 @@ unpriv_backend() {
     return $?
 }
 
-unpriv_xcbackend() {            # run X container backend rootful or rootless
-  local Command
-  Command="$(oneline "${1:-}")"
-  case "${Xcrootless:-no}" in
-    yes) unpriv                  "$Command" ;;
-    no)  eval   "env DOCKER_HOST= $Command" ;;
-  esac
-  return $?
+# function unpriv_xcbackend( Command ) : Run X container backend
+#          rootful or rootless, depending on `Xcrootless`
+#
+unpriv_xcbackend() {
+    local Command
+    Command="$(oneline "${1:-}")"
+    case "${Xcrootless:-no}" in
+        yes) unpriv                  "$Command" ;;
+        no)  eval   "env DOCKER_HOST= $Command" ;;
+    esac
+    return $?
 }
 
+#
+# function main()
+#
 main() {
   [ "$(uname -s)" = "Darwin" ] && echo "Error: x11docker does not run on MacOS. Please use Linux." >&2 && exit 64
 
