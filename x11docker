@@ -14973,91 +14973,52 @@ declare_variables() {           # declare global variables
        : $Wm_not_recommended
        : $Wm_nodetect" )"
 
-  # =============================================
-  # x11docker communication functions to integrate into generated scripts
-  # =============================================
+  # ==============================================================
+  #
+  # x11docker communication functions to integrate into generated
+  # scripts
+  #
+  # ==============================================================
 
-  Messagefifofuncs='
-warning() {
-  echo "$*:WARNING"   >>$Messagefile
-}
-note() {
-  echo "$*:NOTE"      >>$Messagefile
-}
-verbose() {
-  echo "$*:VERBOSE"   >>$Messagefile
-}
-debugnote() {
-  echo "$*:DEBUGNOTE" >>$Messagefile
-}
-error() {
-  echo "$*:ERROR"     >>$Messagefile
-  exit 64
-}
-stdout() {
-  echo "$*:STDOUT"    >>$Messagefile
-}'
-  MessagefifofuncsX='
-warning() {
-  echo "$*:WARNING"   | sed "s/\$/ /" >>$Messagefile
-}
-note() {
-  echo "$*:NOTE"      | sed "s/\$/ /" >>$Messagefile
-}
-verbose() {
-  echo "$*:VERBOSE"   | sed "s/\$/ /" >>$Messagefile
-}
-debugnote() {
-  echo "$*:DEBUGNOTE" | sed "s/\$/ /" >>$Messagefile
-}
-error() {
-  echo "$*:ERROR"     | sed "s/\$/ /" >>$Messagefile
-  exit 64
-}
-stdout() {
-  echo "$*:STDOUT"    | sed "s/\$/ /" >>$Messagefile
-}'
+  Messagefifofuncs="$(trim_to_bar \
+    '|
+     |# Messagefifofuncs
+     |warning()   {  echo "$*:WARNING"   >>$Messagefile ; }
+     |note()      {  echo "$*:NOTE"      >>$Messagefile ; }
+     |verbose()   {  echo "$*:VERBOSE"   >>$Messagefile ; }
+     |debugnote() {  echo "$*:DEBUGNOTE" >>$Messagefile ; }
+     |error()     {  echo "$*:ERROR"     >>$Messagefile ;  exit 64 ; }
+     |stdout()    {  echo "$*:STDOUT"    >>$Messagefile ; }' )"
 
-  Messagefifofuncs_escaped='
-warning() {
-  echo \"\$*:WARNING\"   >>\$Messagefile
-}
-note() {
-  echo \"\$*:NOTE\"      >>\$Messagefile
-}
-verbose() {
-  echo \"\$*:VERBOSE\"   >>\$Messagefile
-}
-debugnote() {
-  echo \"\$*:DEBUGNOTE\" >>\$Messagefile
-}
-error() {
-  echo \"\$*:ERROR\"     >>\$Messagefile
-  exit 64
-}
-stdout() {
-  echo \"\$*:STDOUT\"    | sed \"s/\\\$/ /\" >>\$Messagefile
-}'
-  Messagefifofuncs_escapedX='
-warning() {
-  echo \"\$*:WARNING\"   | sed \"s/\\\$/ /\"  >>\$Messagefile
-}
-note() {
-  echo \"\$*:NOTE\"      | sed \"s/\\\$/ /\" >>\$Messagefile
-}
-verbose() {
-  echo \"\$*:VERBOSE\"   | sed \"s/\\\$/ /\" >>\$Messagefile
-}
-debugnote() {
-  echo \"\$*:DEBUGNOTE\" | sed \"s/\\\$/ /\" >>\$Messagefile
-}
-error() {
-  echo \"\$*:ERROR\"     | sed \"s/\\\$/ /\" >>\$Messagefile
-  exit 64
-}
-stdout() {
-  echo \"\$*:STDOUT\"    | sed \"s/\\\$/ /\" >>\$Messagefile
-}'
+  MessagefifofuncsX="$(trim_to_bar \
+    '|
+     |# MessagefifofuncsX
+     |warning()   {  echo "$*:WARNING"   | sed "s/\$/ /" >>$Messagefile ; }
+     |note()      {  echo "$*:NOTE"      | sed "s/\$/ /" >>$Messagefile ; }
+     |verbose()   {  echo "$*:VERBOSE"   | sed "s/\$/ /" >>$Messagefile ; }
+     |debugnote() {  echo "$*:DEBUGNOTE" | sed "s/\$/ /" >>$Messagefile ; }
+     |error()     {  echo "$*:ERROR"     | sed "s/\$/ /" >>$Messagefile ;  exit 64 ; }
+     |stdout()    {  echo "$*:STDOUT"    | sed "s/\$/ /" >>$Messagefile ; }' )"
+
+  Messagefifofuncs_escaped="$(trim_to_bar \
+    '|
+     |# Messagefifofuncs_escaped
+     |warning()   {  echo \"\$*:WARNING\"   >>\$Messagefile ; }
+     |note()      {  echo \"\$*:NOTE\"      >>\$Messagefile ; }
+     |verbose()   {  echo \"\$*:VERBOSE\"   >>\$Messagefile ; }
+     |debugnote() {  echo \"\$*:DEBUGNOTE\" >>\$Messagefile ; }
+     |error()     {  echo \"\$*:ERROR\"     >>\$Messagefile ;  exit 64 ; }
+     |stdout()    {  echo \"\$*:STDOUT\"    | sed \"s/\\\$/ /\" >>\$Messagefile ; }' )"
+  
+  Messagefifofuncs_escapedX="$(trim_to_bar \
+    '|
+     |# Messagefifofuncs_escapedX
+     |warning()   {  echo \"\$*:WARNING\"   | sed \"s/\\\$/ /\" >>\$Messagefile ; }
+     |note()      {  echo \"\$*:NOTE\"      | sed \"s/\\\$/ /\" >>\$Messagefile ; }
+     |verbose()   {  echo \"\$*:VERBOSE\"   | sed \"s/\\\$/ /\" >>\$Messagefile ; }
+     |debugnote() {  echo \"\$*:DEBUGNOTE\" | sed \"s/\\\$/ /\" >>\$Messagefile ; }
+     |error()     {  echo \"\$*:ERROR\"     | sed \"s/\\\$/ /\" >>\$Messagefile ;  exit 64 ; }
+     |stdout()    {  echo \"\$*:STDOUT\"    | sed \"s/\\\$/ /\" >>\$Messagefile ; }' )"
 
 } # end of declare_variables
 
