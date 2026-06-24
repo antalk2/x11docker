@@ -10915,6 +10915,7 @@ check_console() {               # check whether x11docker runs on console
   }
   debugnote "check_console(): Guess if running on console: $Runsonconsole"
 }
+
 check_fallback() {              # --fallback
   # Option --fallback
   case "$Fallback" in
