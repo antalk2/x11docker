@@ -11422,55 +11422,85 @@ $Hostuserhome/.cache/x11docker/symlink
 
   return 0
 }
-setup_fifo() {                  # set up fifo channels (also option --stdin)
-  # setup fifos to allow messages from within container and xinitrc
-  # and to send pids to watch to watchpidlist() thread
 
-  # file descriptors in use:
-  # FDstderr            stderr                for warnings and notes redirected to &2, with --silent redirected to /dev/null
-  # FDmessage           $Messagefifo          for messages from other threads to watchmessagefifo()
-  # FDcmdstdin          stdin>>$Cmdstinfile   --stdin with catstdin, redirection of &0
-  # FDtimetosaygoodbye  $Timetosaygoodbyefifo for saygoodbye() and waitfortheend()
-  # FDwatchpid          $Watchpidfifo         for watchpidlist()
-  case "$Dockervm" in
-    moby|desktop) Usemkfifo="no" ;;
-    no)           Usemkfifo="yes" ;;
-  esac
+# function setup_fifo() : set up fifo channels (also option --stdin)
+#
+# Setup fifos to allow messages from within container and xinitrc
+#       and to send pids to watch to watchpidlist() thread.
+#
+# Starts backgound processes:
+#
+#   - cat <&0 >>"$Cmdstdinfifo" &
+#   - watchpidlist &
+#   - watchmessagefifo &
+#
+setup_fifo() {
+    # file descriptors in use:
+    #
+    # FDstderr           stderr
+    #                         For warnings and notes redirected to &2,
+    #                         with --silent redirected to /dev/null
+    #
+    # FDmessage           $Messagefifo
+    #                         For messages from other threads to watchmessagefifo()
+    #
+    # FDcmdstdin          stdin>>$Cmdstinfile
+    #                         --stdin with catstdin, redirection of &0
+    #
+    # FDtimetosaygoodbye  $Timetosaygoodbyefifo
+    #                         For saygoodbye() and waitfortheend()
+    #
+    # FDwatchpid          $Watchpidfifo         For watchpidlist()
+    #
 
-  [ "$Runtime" = "kata-runtime" ] && Usemkfifo="no"
-  #[ "$Runtime" = "sysbox-runc" ]  && Usemkfifo="no"
-  # redirect stdin to named pipe. Named pipe is shared with container and used as stdin of container command in containerrc
-  [ "$Forwardstdin" = "yes" ] && {
-    case "$Usemkfifo" in
-      yes) unpriv "mkfifo '$Cmdstdinfifo'" ;;
-      no)  mkfile "$Cmdstdinfifo" ;;
+    case "$Dockervm" in
+        moby|desktop) Usemkfifo="no"  ;;
+        no)           Usemkfifo="yes" ;;
     esac
-    #exec {FDcmdstdin}<>$Cmdstdinfifo
-    #cat <&0 >>${FDcmdstdin} & storepid $! catstdin
-    cat <&0 >>"$Cmdstdinfifo" & storepid $! catstdin
-    storeinfo "stdin=$Cmdstdinfifo"
-  }
-  case "$Usemkfifo" in
-    yes)
-      unpriv "mkfifo '$Watchpidfifo'"
-      unpriv "mkfifo '$Messagefifo' && chmod 666 '$Messagefifo'"
-      unpriv "mkfifo '$Timetosaygoodbyefifo'"
-    ;;
-    no) # Windows, kata
-      mkfile "$Watchpidfifo"
-      mkfile "$Messagefifo" 666
-      mkfile "$Timetosaygoodbyefifo" 666
-    ;;
-  esac
+
+    if [ "$Runtime" = "kata-runtime" ] ; then Usemkfifo="no" ; fi
+    
+    #[ "$Runtime" = "sysbox-runc" ]  && Usemkfifo="no"
+    
+    # Redirect stdin to named pipe. Named pipe is shared with
+    # container and used as stdin of container command in containerrc
+    #
+    if [ "$Forwardstdin" = "yes" ] ; then
+        case "$Usemkfifo" in
+            yes) unpriv "mkfifo '$Cmdstdinfifo'" ;;
+            no)  mkfile         "$Cmdstdinfifo"  ;;
+        esac
+        # exec {FDcmdstdin}<>$Cmdstdinfifo
+        # cat <&0 >>${FDcmdstdin} & storepid $! catstdin
+        #
+        # storepid PID codename
+        #
+        cat <&0 >>"$Cmdstdinfifo" & storepid $! catstdin
+        storeinfo "stdin=$Cmdstdinfifo"
+    fi
+
+    case "$Usemkfifo" in
+        yes)
+            unpriv "mkfifo '$Watchpidfifo'"
+            unpriv "mkfifo '$Messagefifo' && chmod 666 '$Messagefifo'"
+            unpriv "mkfifo '$Timetosaygoodbyefifo'"
+            ;;
+        no) # Windows, kata
+            mkfile "$Watchpidfifo"
+            mkfile "$Messagefifo"          666
+            mkfile "$Timetosaygoodbyefifo" 666
+            ;;
+    esac
 
   # used by waitfortheend()
   exec {FDtimetosaygoodbye}<>"$Timetosaygoodbyefifo"
 
-  # start watching important pids, e.g. xinit, container.
+  # Start watching important pids, e.g. xinit, container.
+  #
   exec {FDwatchpid}<>"$Watchpidfifo"
   watchpidlist & storepid $! watchpidlist
 
-  # start watching for messages out of container
+  # Start watching for messages out of container
   exec {FDmessage}<>"$Messagefifo"
   watchmessagefifo & storepid $! watchmessagefifo
 
@@ -15217,7 +15247,9 @@ main() {
 
   rocknroll || return 0
 
-  setup_fifo                     # open message channels for container, xinitrc and watchpidlist()
+  # open message channels for container, xinitrc and watchpidlist()
+  setup_fifo
+
   check_xdg_runtime_dir
   check_hostxenv                 # check X environment from host ### FIXME could use xtool()+X container for xauth
   check_snap                     # check if docker is installed in snap; causes restrictions
