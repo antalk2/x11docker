@@ -11518,6 +11518,32 @@ setup_verbosity() {             # options --verbose, --stdout, --stderr
 
 #### options
 
+longoptions_collect() {
+    #
+    # Starting from a space-separated list of options
+    # with optional comments (starting with #),
+    # create a comma-separated list.
+    #
+    # Also include an initial comma, to match the original
+    # Longoptions value.
+    #
+    local L1 L2
+    L1="$(trim_to_bar "$1"  )"
+    #
+    # drop comments
+    L2=$(echo "$L1" | sed -e 's/#.*//')
+    #
+    # List of words, comma-separated.
+    # Add initial comma to match original
+    L2=",$(echo $L2  | sed -e 's/[ ][ ]*/,/g'  )"
+    #
+    # Allow --optname, remove the -- part.
+    L2="$(echo $L2 | sed -e 's/,--/,/g')"
+    #
+    echo "${L2}"
+}
+
+
 # function parse_options()
 #
 #   Parse cli options
@@ -11537,82 +11563,89 @@ parse_options() {
     # Deprecated short options:
     #     -e --exe is deprecated
     Shortoptions="${Shortoptions}e"
-
     #
-    # Comma-separated list of long options.
-    # A single colon after the name means the option has a required argument.
-    # Two colons mean an optional argument.
+    # Longoptions: Comma-separated list of long options.
     #
-    Longoptions=""
+    # - A single colon after the name means the option has a required
+    #   argument.
     #
-    # Influencing auto-setup of X/Wayland/x11docker
-    Longoptions="$Longoptions,auto,desktop,tty,wayland,wm::,xc::,xonly,xw"
-    
-    # X servers
-    Longoptions="$Longoptions,hostdisplay,nxagent,runx,xephyr,xpra,xpra2,xorg,xvfb"
-    
-    # X servers depending on a Wayland compositor
-    Longoptions="$Longoptions,weston-xwayland,xpra-xwayland,xpra2-xwayland,xwayland,satellite"
-    
-    # Wayland compositors without X
-    Longoptions="$Longoptions,hostwayland,weston::"
-    
-    # X/Wayland appearance options
-    Longoptions="$Longoptions,border::,dpi:,fullscreen,output-count:,rotate:,scale:,size:"
-    
-    # X/Wayland config
-    Longoptions="$Longoptions,clean-xhost,composite::,display:,keymap:,vt::,westonini:,xauth::,xhost::,xoverip::,xtest::,xopt:"
-    
-    # x11docker config
-    Longoptions="$Longoptions,checkwindow::,fallback::,preset:,pull::"
-    
-    # Host folders
-    Longoptions="$Longoptions,cachebasedir:,home::,homebasedir:,share:"
-    
-    # Host integration features
-    Longoptions="$Longoptions,alsa::,clipboard::,gpu::,lang::,printer::,pipewire,pulseaudio::,webcam"
-    
-    # Container config
-    Longoptions="$Longoptions,backend:,env:,mobyvm,name:,no-entrypoint,no-setup,rootfs,rootless::,runtime:,snap,workdir:"
-    
-    # Container capabilities
-    Longoptions="$Longoptions,cap-default,ipc::,limit::,newprivileges::,network::"
-    
-    # Container user
-    Longoptions="$Longoptions,group-add:,hostuser:,password::,sudouser::,user:,shell:"
-    
-    # Container init and DBus
-    Longoptions="$Longoptions,dbus::,init::,hostdbus,sharecgroup"
-    
-    # Container interaction
-    Longoptions="$Longoptions,stdin,interactive"
-
-    # Additional commands to execute
-    Longoptions="$Longoptions,runasuser:,runfromhost:,runasroot:,xeyes::,xlogo,xfishtank"
-    
-    # Output of vars on stdout
-    Longoptions="$Longoptions,printenv::,printid::,printinfofile::,printpid1::"
-
-    # Verbose options
-    Longoptions="$Longoptions,debug,printcheck,quiet,verbose::"
-
-    # Special options without starting X or container
-    Longoptions="$Longoptions,build,cleanup,help,launcher,licence,license,version"
-
-    # Installation
-    Longoptions="$Longoptions,install,remove,remove-oldprefix,update::,update-master::"
+    # -Two colons mean an optional argument.
     #
-    # Experimental
-    Longoptions="$Longoptions,experimental,keepcache,remountcgroup,xorgconf:"
+    Longoptions="$(longoptions_collect \
+    "|# Influencing auto-setup of X/Wayland/x11docker
+     | --auto --desktop --tty --wayland --wm:: --xc:: --xonly --xw
+     |    
+     |# X servers
+     | --hostdisplay --nxagent --runx --xephyr --xpra --xpra2 --xorg --xvfb
+     |
+     |# X servers depending on a Wayland compositor
+     | --weston-xwayland --xpra-xwayland --xpra2-xwayland --xwayland --satellite
+     |
+     |# Wayland compositors without X
+     | --hostwayland --weston::
+     |
+     |# X/Wayland appearance options
+     | --border:: --dpi: --fullscreen --output-count: --rotate: --scale: --size:
+     |
+     |# X/Wayland config
+     | --clean-xhost --composite:: --display: --keymap: --vt:: --westonini:
+     | --xauth:: --xhost:: --xoverip:: --xtest:: --xopt:
+     |    
+     |# x11docker config
+     | --checkwindow:: --fallback:: --preset: --pull::
+     |
+     |# Host folders
+     | --cachebasedir: --home:: --homebasedir: --share:
+     |    
+     |# Host integration features
+     | --alsa:: --clipboard:: --gpu:: --lang:: --printer:: --pipewire --pulseaudio:: --webcam
+     |
+     |# Container config
+     | --backend: --env: --mobyvm --name: --no-entrypoint
+     | --no-setup --rootfs --rootless:: --runtime: --snap --workdir:
+     |
+     |# Container capabilities
+     | --cap-default --ipc:: --limit:: --newprivileges:: --network::
+     |
+     |# Container user
+     | --group-add: --hostuser: --password:: --sudouser:: --user: --shell:
+     |
+     |# Container init and DBus
+     | --dbus:: --init:: --hostdbus --sharecgroup
+     |    
+     |# Container interaction
+     | --stdin --interactive
+     |
+     |# Additional commands to execute
+     | --runasuser: --runfromhost: --runasroot: --xeyes:: --xlogo --xfishtank
+     |
+     |# Output of vars on stdout
+     | --printenv:: --printid:: --printinfofile:: --printpid1::
+     |
+     |# Verbose options
+     | --debug --printcheck --quiet --verbose::
+     |
+     |# Special options without starting X or container
+     | --build --cleanup --help --launcher --licence --license --version
+     |
+     |# Installation
+     | --install --remove --remove-oldprefix --update:: --update-master::
+     |
+     |# Experimental
+     | --experimental --keepcache --remountcgroup --xorgconf:
+     |
+     |# Deprecated options
+     | --dbus-system --enforce-i --exe --homedir:
+     | --hostipc --hostnet --iglx --kwin --kwin-xwayland --xwin
+     | --no-auth --no-internet --no-xhost
+     | --sharedir: --sharessh --systemd --showenv --showid --showinfofile --showpid1
+     |
+     |# Removed options
+     | --cachedir: --no-init --nothing --no-xtest
+     | --openrc --podman --pull:: --ps --pw:: --runit --silent --starter
+     | --stderr --stdout --sys-admin --sysvinit --tini --trusted --untrusted --vcxsrv --xdummy
+     |"  )"
     
-    # Deprecated options
-    Longoptions="$Longoptions,dbus-system,enforce-i,exe,homedir:,hostipc,hostnet,iglx,kwin,kwin-xwayland,xwin"
-    Longoptions="$Longoptions,no-auth,no-internet,no-xhost"
-    Longoptions="$Longoptions,sharedir:,sharessh,systemd,showenv,showid,showinfofile,showpid1"
-
-    # Removed options
-    Longoptions="$Longoptions,cachedir:,no-init,nothing,no-xtest,openrc,podman,pull::,ps,pw::,runit,silent,starter"
-    Longoptions="$Longoptions,stderr,stdout,sys-admin,sysvinit,tini,trusted,untrusted,vcxsrv,xdummy"
 
     # default preset files
     parse_preset "default" || true
@@ -11622,13 +11655,16 @@ parse_options() {
     # man getopt
     Parsedoptions="$(getopt --options "$Shortoptions" --longoptions "$Longoptions" --name "$0" -- "$@" )" \
         || error "Failed to parse options."
-    
-  eval set -- "$Parsedoptions"
-  Parsedoptions_global="$Parsedoptions_global
-  $Parsedoptions"
 
-  [ "$*" = "-h --" ] &&       usage &&        exit 0                 # Catch single -h for usage info, otherwise it means --hostdisplay
-  [ "$*" = "--" ]    &&       usage &&        exit 0                 # x11docker without options
+    ## Modify positional arguments of ...
+    eval set -- "$Parsedoptions"
+    Parsedoptions_global="$Parsedoptions_global${NEWLINE}$Parsedoptions"
+
+    # Catch single -h for usage info, otherwise it means --hostdisplay
+    if [ "$*" = "-h --" ] ; then  usage; exit 0 ; fi
+    
+    # x11docker without options
+    if [ "$*" = "--" ] ; then  usage;  exit 0; fi
 
   while [ $# -gt 0 ]; do
     g_Optionset1="$g_Optionset1${NEWLINE}${1:-}"
