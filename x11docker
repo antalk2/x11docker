@@ -2505,15 +2505,16 @@ waitforlogentry() {             # wait for entry $3 in logfile $2 of application
     SleepTime="$(( Count / 10 ))"
 
     if [ "$SleepTime" = "0" ] ; then  SleepTime="0.5" ; fi
+
     mysleep "$SleepTime"
 
-   if [ "$ElapsedTime" -gt "10" ] ; then
-       debugnote "$(trim_to_mark \
-        "|waitforlogentry(): ${application}:
-         : Waiting since ${ElapsedTime}s
-         : for log entry \"${keyword}\" in ${logfile_basename}"
+    if [ "$ElapsedTime" -gt "10" ] ; then
+        debugnote "$(trim_to_mark \
+           "|waitforlogentry(): ${application}:
+            : Waiting since ${ElapsedTime}s
+            : for log entry \"${keyword}\" in ${logfile_basename}"
          )"
-   fi
+    fi
 
     [ "$ElapsedTime" -gt "$TimeToWait" ] \
         && error "waitforlogentry(): ${application}: Timeout waiting for entry \"${keyword}\" in ${logfile_basename}
