@@ -2516,10 +2516,12 @@ waitforlogentry() {             # wait for entry $3 in logfile $2 of application
          )"
     fi
 
-    [ "$ElapsedTime" -gt "$TimeToWait" ] \
-        && error "waitforlogentry(): ${application}: Timeout waiting for entry \"${keyword}\" in ${logfile_basename}
-  Last lines of ${logfile_basename}:
-$(tail -n15 "${logfile}")"
+    if [ "$ElapsedTime" -gt "$TimeToWait" ] ; then
+        error  "$(trim_to_mark \
+            "|waitforlogentry(): ${application}:
+             : Timeout waiting for entry \"${keyword}\" in ${logfile_basename}
+             |  Last lines of ${logfile_basename}:")${NEWLINE}$(tail -n15 "${logfile}")"
+    fi
 
     #    grep -i -q -E 'xinit: giving up|unable to connect to X server|Connection refused|server error|Only console users are allowed|Failed to process Wayland|failed to create display|] fatal:' <"${logfile}" &&
     
