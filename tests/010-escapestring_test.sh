@@ -45,4 +45,7 @@ test_createmountopt() {
     assert_same '--volume /tmp/xxx\ yyy:/tmp/xxx\ yyy:ro' "${res}"
     #
     unlink "${File}"
+    #
+    # If the file does not exist, stdout is empty and exitcode is 1
+    assert_exec 'createmountopt mount  "$File" "ro"' --exit 1 --stdout "" --stderr ""
 }

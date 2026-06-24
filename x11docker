@@ -1411,13 +1411,15 @@ download() {                    # download file at URL $1 and store it in file $
 #
 # function escapestring()
 #
-escapestring() {                # escape special chars of $1
-    # escape all characters except those described in [^a-zA-Z0-9,._+@=:/-]
-    grep -q "'" <<< "${1:-}" && {
-        error "escapestring(): x11docker cannot escape char ' in :
-  ${1:-}"
+# Escape special chars of $1
+#
+# Escape all characters except those described in [^a-zA-Z0-9,._+@=:/-]
+#
+escapestring() {
+    if grep -q "'" <<< "${1:-}" ; then
+        error "escapestring(): x11docker cannot escape char ' in :${NEWLINE}  ${1:-}"
         return 1
-    }
+    fi
     echo "${1:-}" | LC_ALL=C sed -e 's/[^a-zA-Z0-9,._+@=:/-]/\\&/g; '
 }
 
@@ -2266,41 +2268,65 @@ convertpath() {                 # convert unix and windows paths
 }
 
 #
-# function createmountopt()
+# function createmountopt( Modus, File, Rw )
 #
-createmountopt(){               # create option to mount file or device, check if file exists
-  # $1  Modus:  one of mount, device, volume
-  # $2  File:   file or device to share
-  # $3  Rw:     ro, readonly (optional)
-  local Modus File Rw
-  Modus="${1:-}"
-  File="${2:-}"
-  Rw="${3:-}"
+# Create option for docker to mount file or device, check if file exists
+#
+createmountopt() {
+    # $1  Modus:  one of mount, device, volume
+    #             Note: only used with mount and device
+    #
+    #             mount  -> "--mount type=bind,source=${eFile},target=${eFile}$Rw"
+    #             device -> "--device ${eFile}$Rw"
+    #             volume -> "--volume ${eFile}:${eFile}$Rw"
+    #
+    # $2  File:   file or device to share
+    #             If does not exist, emit nothing and return 1
+    #
+    # $3  Rw:     ro, readonly (optional)
+    local Modus File Rw
+    Modus="${1:-}"
+    File="${2:-}"
+    Rw="${3:-}"
 
-  [ -e "$File" ] || {
-    debugnote "createmountopt(): ERROR: File not found: $File"
-    return 1
-  }
+    if [ ! -e "$File" ] ; then 
+        debugnote "createmountopt(): ERROR: File not found: '$File'"
+        return 1
+    fi
   #
   case "$Rw" in
       "ro"|"readonly")
           case "$Modus" in
               mount)         Rw=",readonly" ;;
-              volume|device) Rw=":ro" ;;
+              volume|device) Rw=":ro"       ;;
           esac
           ;;
       *)                 Rw="" ;;
   esac
   #
+  local eFile="$(escapestring "$File")"
+  #
   case "$Modus" in
-    mount)
-      echo "--mount type=bind,source=$(escapestring "$File"),target=$(escapestring "$File")$Rw"
+      # 
+      mount)
+          # https://docs.docker.com/engine/storage/bind-mounts/
+          # To create a bind mount, you can use either the --mount or --volume flag.
+          # docker run --mount type=bind,src=<host-path>,dst=<container-path>
+          # 
+        echo "--mount type=bind,source=${eFile},target=${eFile}$Rw"
     ;;
-    device)
-      echo "--device $(escapestring "$File")$Rw"
+      device)
+          # --device=/dev/host-device:/dev/container-device
+          echo "--device ${eFile}$Rw"
     ;;
     volume)
-      echo "--volume $(escapestring "$File"):$(escapestring "$File")$Rw"
+      # https://docs.docker.com/engine/storage/volumes/
+        # docker run --mount type=volume,src=<volume-name>,dst=<mount-path>
+        # docker run --volume <volume-name>:<mount-path>
+        # docker run --volume [<volume-name>:]<mount-path>[:opts]
+        #   Here opts is a comma-separated list of options, like ro.
+        #   The colon just separates it from <mount-path>
+      echo "--volume ${eFile}:${eFile}$Rw"
     ;;
   esac
 }
