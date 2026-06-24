@@ -2939,8 +2939,11 @@ $Orphanedfolders"
 }
 
 
-
-create_launcher() {             # --launcher: create application launcher on desktop
+# function create_launcher()
+#
+# --launcher: create application launcher on desktop
+#
+create_launcher() {
   local Name=
 
   command -v xdg-desktop-icon >/dev/null || error "Command 'xdg-desktop-icon' not found.
@@ -11653,12 +11656,21 @@ parse_options() {
     # options from cli
     # /usr/bin/getopt
     # man getopt
+    # https://linuxvox.com/blog/linux-getopt/
+    #
+    # getopt rearranges the arguments so that all options come before
+    #   the non-option arguments. It returns a string containing the
+    #   rearranged arguments, which can be used to iterate over the
+    #   options and their values.
+    #
     Parsedoptions="$(getopt --options "$Shortoptions" --longoptions "$Longoptions" --name "$0" -- "$@" )" \
         || error "Failed to parse options."
 
     ## Modify positional arguments of ...
     eval set -- "$Parsedoptions"
-    Parsedoptions_global="$Parsedoptions_global${NEWLINE}$Parsedoptions"
+    
+    ## Parsedoptions_global="$Parsedoptions_global${NEWLINE}$Parsedoptions"
+    Parsedoptions_global+="${NEWLINE}$Parsedoptions"
 
     # Catch single -h for usage info, otherwise it means --hostdisplay
     if [ "$*" = "-h --" ] ; then  usage; exit 0 ; fi
@@ -11967,6 +11979,8 @@ $(sed 's/^/--/g ; s/://g' <<< "$Line")"
 
 #
 # parse_preset( fn )
+#
+#  - Note: called from parse_options(), and it also calls parse_options()
 #
 parse_preset() {
     # nested parsing for --preset
@@ -14775,38 +14789,95 @@ declare_variables() {           # declare global variables
   #              Dockerfile
   Buildimage=""
   
-  Codename=""                                     # created from image name and command without special chars for use with container name and cache folder
-  Fallback="yes"                                  # --fallback: Allow or deny fallbacks for failing options.
-  Imagebasename=""                                # Image name without tags and / replaced with -. For use of --home folders.
-  Mytest=""                                       # --experimental: use experimental code
-  Parsedoptions_global=""                         # Parsed options
-  Presetdirlocal="$HOME/.config/x11docker/preset" # --preset storage dir (local)
-  Presetdirsystem="/etc/x11docker/preset"         # --preset storage dir (system)
+  # Codename : created from image name and command without special
+  #            chars for use in g_Containername and cache folder
+  Codename=""
+
+  # Fallback : --fallback: Allow or deny fallbacks for failing
+  #             options.
+  #
+  Fallback="yes"
+  
+  # Imagebasename : Image name without tags and / replaced with -.
+  #                 For use of --home folders.
+  #
+  Imagebasename=""
+  
+  # Mytest : --experimental: use experimental code
+  Mytest=""
+
+  # Parsedoptions_global: Parsed options
+  #
+  #  - modified in parse_options()
+  #
+  #  - used in: create_launcher() to preserve the current arguments
+  #             (in parsed order, with --launcher removed)
+  #
+  #  - also used in main() to report the parsed options
+  #
+  Parsedoptions_global=""
+  
+  # Presetdirlocal : --preset storage dir (local)
+  Presetdirlocal="$HOME/.config/x11docker/preset"
+  
+  # Presetdirsystem : --preset storage dir (system)
+  Presetdirsystem="/etc/x11docker/preset"
   
   # g_Preset_list_of_seen_files_nls : Newline-separated list of
   #        already parsed preset files, to avoid a loop.
   #
   g_Preset_list_of_seen_files_nls=""
   
-  Preservecachefiles="no"                         # If yes, don't delete cache files on exit. For few failure cases only.
+  # Preservecachefiles : If yes, don't delete cache files on exit.
+  #                      For few failure cases only.
+  #
+  Preservecachefiles="no"
 
   # =============================================
   # Verbosity options
   # =============================================
-  Debugmode="no"                                  # --debug: Excerpt of --verbose, also bash error checks
-  Printcheck="no"                                 # --printcheck: Show X dependency check messages
-  Showcontainerid=""                              # --printid: Output of container ID on stdout
-  Showcontaineroutput="yes"                       # Show container command stdout
-  Showcontainerpid1pid=""                         # --printpid1: Output of host PID of container PID 1 on stdout
-  Showdisplayenvironment=""                       # --printenv: Output of environment variables of new display on stdout
-  Showinfofile=""                                 # --printinfofile: Show path of $Storeinfofile
-  Silent="no"                                     # --quiet: Do not show x11docker messages
-  Verbose=""                                      # --verbose: Be verbose yes/no
-  Verbosecolors="no"                              # -V: colored output for --verbose (and delete some noisy systemd error messages)
-  Wikipackages="You can look for the package name of this command at:
- https://github.com/mviereck/x11docker/wiki/dependencies#table-of-all-packages"
-  Wikipackagesimage="$Wikipackages
-  Alternatively you can provide image x11docker/xserver (option --xc)."
+  
+  # Debugmode : --debug: Excerpt of --verbose, also bash error checks
+  Debugmode="no"
+  
+  # Printcheck : --printcheck: Show X dependency check messages
+  Printcheck="no"
+  
+  # Showcontainerid : --printid: Output of container ID on stdout
+  Showcontainerid=""
+  
+  # Showcontaineroutput : Show container command stdout
+  Showcontaineroutput="yes"
+
+  # Showcontainerpid1pid : --printpid1: Output of host PID of
+  #                        container PID 1 on stdout
+  Showcontainerpid1pid=""
+
+  # Showdisplayenvironment : --printenv: Output of environment
+  #                          variables of new display on stdout
+  #
+  Showdisplayenvironment=""
+  
+  # Showinfofile : --printinfofile: Show path of $Storeinfofile
+  Showinfofile=""
+
+  # Silent : --quiet: Do not show x11docker messages
+  Silent="no"
+
+  # Verbose : --verbose: Be verbose yes/no
+  Verbose=""
+
+  # Verbosecolors : -V: colored output for --verbose (and delete some
+  #                     noisy systemd error messages)
+  #
+  Verbosecolors="no"
+  
+  Wikipackages="$(trim_to_bar \
+         "|You can look for the package name of this command at:
+          | https://github.com/mviereck/x11docker/wiki/dependencies#table-of-all-packages"  )"
+  Wikipackagesimage="$(trim_to_bar \
+         "|$Wikipackages
+          |  Alternatively you can provide image x11docker/xserver (option --xc)."  )"
 
   # =============================================
   # Special options not starting X or docker
