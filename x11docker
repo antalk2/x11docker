@@ -11965,37 +11965,42 @@ $(sed 's/^/--/g ; s/://g' <<< "$Line")"
   return 0
 }
 
+#
+# parse_preset( fn )
+#
 parse_preset() {
     # nested parsing for --preset
     local Presetfile Presetoptions
     local fn="${1:-}"
 
     # file already parsed? Avoid a loop
-    if grep -q -x "${fn}" <<< "$Presetlist" ; then return 0; fi
+    if grep -q -x "${fn}" <<< "$g_Preset_list_of_seen_files_nls" ; then return 0; fi
 
     #
-    Presetlist="$Presetlist${NEWLINE}${fn}"
+    g_Preset_list_of_seen_files_nls+="${NEWLINE}${fn}"
 
     # check global and local preset dir. Prefer local one.
-    
-    #  [ -f "$Presetdirsystem/${fn}" ] && Presetfile="$Presetdirsystem/${fn}"
-    #  [ -f "$Presetdirlocal/${fn}" ]  && Presetfile="$Presetdirlocal/${fn}"
-    #  [ -f "$Presetfile" ] || return 1
-    
-  if   [  -f "$Presetdirlocal/${fn}" ] ; then
-      Presetfile="$Presetdirlocal/${fn}"
-  elif [ -f "$Presetdirsystem/${fn}" ] ; then
-       Presetfile="$Presetdirsystem/${fn}"
-  else
-      return 1
-  fi
+    if   [ -f  "$Presetdirlocal/${fn}" ] ; then Presetfile="$Presetdirlocal/${fn}"  ;
+    elif [ -f "$Presetdirsystem/${fn}" ] ; then Presetfile="$Presetdirsystem/${fn}" ;
+    else
+        return 1 # Not found
+    fi
 
-  # parse
-  Presetoptions="$(sed '/^#/d' < "$Presetfile" | tr '\n' ' ')"
-  [ -n "$(tr -d ' ' <<< "$Presetoptions")" ] && {
-    note "Option --preset: Parsing $Presetfile:${NEWLINE}  $Presetoptions"
-    eval parse_options "$Presetoptions" # eval to preserve whitespace in arguments
-  }
+    # parse:
+    #    - drop lines starting with #
+    #    - tr newline to space
+    Presetoptions="$(sed '/^#/d' < "$Presetfile" | tr '\n' ' ')"
+    #
+    if [ -n "$(tr -d ' ' <<< "$Presetoptions")" ] ; then
+        #
+        # Presetoptions contains at least one non-space character.
+        #
+        note "Option --preset: Parsing $Presetfile:${NEWLINE}  $Presetoptions"
+        #
+        # Use `eval`,  to preserve whitespace in arguments:
+        # Q: The spaces in "$Presetoptions" ?
+        eval parse_options "$Presetoptions"
+  fi
 }
 
 check_options_arguments() {     # check for [likely] valid arguments
@@ -14777,7 +14782,12 @@ declare_variables() {           # declare global variables
   Parsedoptions_global=""                         # Parsed options
   Presetdirlocal="$HOME/.config/x11docker/preset" # --preset storage dir (local)
   Presetdirsystem="/etc/x11docker/preset"         # --preset storage dir (system)
-  Presetlist=""                                   # List of already parsed preset files to avoid a loop
+  
+  # g_Preset_list_of_seen_files_nls : Newline-separated list of
+  #        already parsed preset files, to avoid a loop.
+  #
+  g_Preset_list_of_seen_files_nls=""
+  
   Preservecachefiles="no"                         # If yes, don't delete cache files on exit. For few failure cases only.
 
   # =============================================
