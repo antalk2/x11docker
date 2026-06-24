@@ -13344,16 +13344,32 @@ check_options_messages() {      # some messages depending on options, but not ch
 
   return 0
 }
-check_optionset() {             # check if unallowed options in $2 are set for option $1
-  local Line Return=
-  for Line in ${2:-}; do
-    grep -q -x -- "$Line" <<< "$g_Optionset1" && {
-      Return=1
-      note "Option ${1:-} does not support option $Line"
-      check_fallback
-    }
-  done
-  return "${Return:-0}"
+
+#
+# function check_optionset( the_option, incompatible_options )
+#
+# - the_option : The option we are testing for
+#
+# - incompatible_options : List of options that are not compatible
+#                with the_option
+#
+# Check if any of the incompatible_options appear in g_Optionset1, the
+# list of current options. Return false (1) if some appear.
+#
+# global g_Optionset1 : the currently selected options.
+#
+check_optionset() {
+    local Line Return=
+    for Line in ${2:-}; do
+        # -x, --line-regexp Select only those matches that exactly match
+        #                   the whole line.
+        if grep -q -x -- "$Line" <<< "$g_Optionset1" ; then
+            Return=1
+            note "Option ${1:-} does not support option $Line"
+            check_fallback
+        fi
+    done
+    return "${Return:-0}"
 }
 
 #### main
@@ -14639,7 +14655,11 @@ declare_variables() {           # declare global variables
   # =============================================
   # Miscellaneous
   # =============================================
-  Buildimage=""                                   # --build: x11docker image to build from repo Dockerfile
+  
+  # Buildimage : --build: x11docker image to build from repo
+  #              Dockerfile
+  Buildimage=""
+  
   Codename=""                                     # created from image name and command without special chars for use with container name and cache folder
   Fallback="yes"                                  # --fallback: Allow or deny fallbacks for failing options.
   Imagebasename=""                                # Image name without tags and / replaced with -. For use of --home folders.
