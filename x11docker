@@ -3241,18 +3241,25 @@ $(diff -u -s -Z "$(command -v x11docker)" "$(pwd)/x11docker" 2>&1 | sed "s/^+.*/
   note "Ready."
 }
 
-mkpasswd() {                    # Create a salted password suitable for /etc/shadow
+# mkpasswd( Password ) : Create a salted password suitable for
+#                        /etc/shadow, and put it into
+#                        Containeruserpassword
+#
+mkpasswd() {
   local Password Salt
 
   Password="${1:-}"
 
   command -v perl >/dev/null || {
-    error "Option --password: command 'perl' not found.
-  perl is needed to generate an encrypted password."
-    return 1
+      error "$(trim_to_bar \
+          "|Option --password: command 'perl' not found.
+           |  perl is needed to generate an encrypted password." )"
+      #
+      return 1
   }
 
-  Salt="$(LC_ALL=C base64 <<< "$RANDOM" | cut -c1-2)"
+  Salt="$(LC_ALL=C base64 <<< "$RANDOM" | cut -c1-2)" # 2 characters
+
   Password=$(perl -le 'my $Salt=shift; my $Password=shift; print crypt($Password, "\$6\$".$Salt."\$")' "$Salt" "$Password")
 
   Containeruserpassword="$Password"
