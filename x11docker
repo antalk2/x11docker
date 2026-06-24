@@ -1068,12 +1068,13 @@ pspid() {                     # Return some info to pid $1
 
 
 #
-# function rocknroll()
+# function rocknroll() : Check whether x11docker session is still
+#                        running
 #
-rocknroll() {                   # check whether x11docker session is still running
-  [ -s "$Timetosaygoodbyefile" ]   && return 1
-  [ -e "$Timetosaygoodbyefile" ]   || return 1
-  return 0
+rocknroll() {
+    [ -s "$Timetosaygoodbyefile" ]   && return 1
+    [ -e "$Timetosaygoodbyefile" ]   || return 1
+    return 0
 }
 
 #
