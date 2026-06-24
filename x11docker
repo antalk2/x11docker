@@ -15247,44 +15247,78 @@ main() {
 
   rocknroll || return 0
 
-  # open message channels for container, xinitrc and watchpidlist()
+  # Open message channels for container, xinitrc and watchpidlist().
+  # Also start corresponding background processes.
   setup_fifo
 
   check_xdg_runtime_dir
-  check_hostxenv                 # check X environment from host ### FIXME could use xtool()+X container for xauth
-  check_snap                     # check if docker is installed in snap; causes restrictions
-  check_xcontainer               # check if x11docker/xserver can/will be used    # --xc
-  check_xserver                  # check chosen X server or auto-choose one
-  check_nvidiainstaller ||:      # look for nvidia installer file                 # --gpu
 
-  [ "$Xserver" = "--xorg" ] || [ -n "$Newxvt" ] || [ "$Runsonconsole" = "yes" ] && {
-    [ -z "$Winsubsystem" ] && check_vt   # --vt: find free tty/virtual terminal for Xorg or weston
-  }
-  check_newxenv                  # find free display
-  setup_xcnetwork ||:            # internal network for --xc --xoverip
-  [ "$Xcontainer_option" = "yes" ] && {                                                  # --xc
-    create_xcontainercommand
-    debugnote "X container command (rootless ${Xcrootless:-undefined}):
-  $Xcontainercommand"
-    start_xcontainer
-  }
+  # Check X environment from host ### FIXME could use xtool()+X
+  #                                   container for xauth
+  check_hostxenv
+
+  # Check if docker is installed in snap; causes restrictions
+  check_snap
+
+  # Check if x11docker/xserver can/will be used    # --xc
+  check_xcontainer
+
+  # Check chosen X server or auto-choose one
+  check_xserver
+
+  # Look for nvidia installer file                 # --gpu
+  check_nvidiainstaller || true
+
+  if [ "$Xserver" = "--xorg" ] || [ -n "$Newxvt" ] || [ "$Runsonconsole" = "yes" ] ; then
+      if [ -z "$Winsubsystem" ] ; then
+          check_vt   # --vt: find free tty/virtual terminal for Xorg or weston
+      fi
+  fi
+
+  # Find free display
+  check_newxenv
+
+  # Internal network for --xc --xoverip
+  setup_xcnetwork || true
+  if [ "$Xcontainer_option" = "yes" ] ; then
+      # --xc
+      create_xcontainercommand
+      debugnote "$(trim_to_bar \
+            "|X container command (rootless ${Xcrootless:-undefined}):
+             |  $Xcontainercommand" )"
+      #
+      start_xcontainer
+  fi
   store_newxenv
 
-  check_xlibnoshm ||:            # look for XlibNoSHM.so and libdl.so.2 / fake MIT-SHM
-  check_options_interferences    # check options, change settings if needed
-  check_containerhome            # create persistent container home               # --home
-  check_options_messages         # some messages depending on options, but not changing anything
-  check_windowmanager                                                             # --wm
-  [ "$Sharegpu" = "direct" ]     && setup_gpu ||:                                 # --gpu
-  [ "$Sharewebcam" = "yes" ]     && setup_webcam                                  # --webcam
-  [ "$Sharecupsmode" ]           && setup_printer                                 # --printer
-  [ "$Sharepipewire" = "yes" ]   && setup_sound_pipewire ||:                      # --pipewire
-  [ "$Pulseaudiomode" ]          && setup_sound_pulseaudio ||:                    # --pulseaudio
-  [ "$Sharealsa" = "yes" ]       && setup_sound_alsa                              # --alsa
-  [ "$Sharehostdbus" = "yes" ]   && setup_hostdbus                                # --hostdbus
-  [ "$Cleanxhost" = "yes" ]      && clean_xhost                                   # --clean-xhost
-                                    create_clipboardrc >> "$Clipboardrc"          # --clipboard
-  check_screensize               # size of host X and of new X server             # --size
+  # Look for XlibNoSHM.so and libdl.so.2 / fake MIT-SHM
+  check_xlibnoshm || true
+
+  # Check options, change settings if needed
+  check_options_interferences
+
+  # Create persistent container home               # --home
+  check_containerhome
+
+  # Some messages depending on options, but not changing anything
+  check_options_messages
+
+  # --wm
+  check_windowmanager
+
+  if [ "$Sharegpu"   = "direct" ] ; then setup_gpu              || true ; fi      # --gpu
+  if [ "$Sharewebcam"   = "yes" ] ; then setup_webcam                   ; fi      # --webcam
+  if [ "$Sharecupsmode"         ] ; then setup_printer                  ; fi      # --printer
+  if [ "$Sharepipewire" = "yes" ] ; then setup_sound_pipewire   || true ; fi      # --pipewire
+  if [ "$Pulseaudiomode"        ] ; then setup_sound_pulseaudio || true ; fi      # --pulseaudio
+  if [ "$Sharealsa"     = "yes" ] ; then setup_sound_alsa               ; fi      # --alsa
+  if [ "$Sharehostdbus" = "yes" ] ; then setup_hostdbus                 ; fi      # --hostdbus
+  if [ "$Cleanxhost"    = "yes" ] ; then clean_xhost                    ; fi      # --clean-xhost
+  
+  create_clipboardrc >> "$Clipboardrc"                                            # --clipboard
+
+  # size of host X and of new X server
+  check_screensize                                                                # --size
 
   #### Create command to run X server [and/or Wayland compositor]
   create_xcommand                # set up start command for X server              # all X server and Wayland options
