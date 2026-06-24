@@ -3265,22 +3265,33 @@ mkpasswd() {
   Containeruserpassword="$Password"
 }
 
-set_password() {                # option --password: set container user password
+# function set_password()
+#
+# option --password: set container user password
+#
+set_password() {
   local Password
 
   Password="${1:-}"
 
-  [ "$Password" = "INTERACTIVE" ] && {
-    read -rs -p "Please type in a new container user password
-that will be set for host user '$(id -u -n)'. (chars are invisible): " Password
-    echo ""
-    [ -z "$Password" ] && {
-      error "Input empty, password not changed."
-      return 1
-    }
-  }
-  mkpasswd "$Password"
-  mkdir -p "$(dirname "$Passwordfile")" || error "Failed to create $(dirname "$Passwordfile")"
+  if [ "$Password" = "INTERACTIVE" ] ; then
+      read -rs -p "$(trim_to_bar \
+          "|Please type in a new container user password
+           |that will be set for host user '$(id -u -n)'. (chars are invisible): " )" \
+           Password
+      #
+      echo ""
+      if [ -z "$Password" ] ; then
+          error "Input empty, password not changed."
+          return 1
+      fi
+  fi
+
+  mkpasswd "$Password" # Sets Containeruserpassword
+
+  mkdir -p "$(dirname "$Passwordfile")" \
+      || error "Failed to create $(dirname "$Passwordfile")"
+
   echo "$Containeruserpassword" > "$Passwordfile"
   chmod 600                       "$Passwordfile"
   note "Option --password: Password changed, exiting."
