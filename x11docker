@@ -14893,11 +14893,12 @@ main() {
     cleanup
     finish
   }
-  [ "$Buildimage" ] && {                                                          # --build: Build image from x11docker repository
-    check_optionset "--build" "$(grep -v -E -- '--build|--backend' <<< "$g_AllAvailableLongOptions")" ||:
-    buildimage "$g_Imagename"
-    finish
-  }
+  if [ "$Buildimage" ] ; then
+      # --build: Build image from x11docker repository
+      check_optionset "--build" "$(grep -v -E -- '--build|--backend' <<< "$g_AllAvailableLongOptions")" ||:
+      buildimage "$g_Imagename"
+      finish
+  fi
   rocknroll || return 0
 
   setup_fifo                     # open message channels for container, xinitrc and watchpidlist()
