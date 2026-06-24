@@ -11746,8 +11746,11 @@ ${2:-}"                       ; shift ;;                             # Add custo
          --xorgconf)          Xorgconf="${2:-}" ;    shift ; note "Option --xorgconf: experimental option." ;;  # Custom xorg.conf
 
      #### Deprecated options
-         --build)             Buildimage="yes" ;             note "Option ---build is deprecated.
-  Please directly build with docker or podman instead." ;;
+         --build)             Buildimage="yes" ;
+                              note "$(trim_to_bar \
+                                   "|Option ---build is deprecated.
+                                    |  Please directly build with docker or podman instead." )"
+                              ;;
          --dbus-system)       note "Option --dbus-system is deprecated.
   Please use one of --init=systemd|openrc|runit|sysvinit instead.
   Possible but discouraged is --dbus=system.
