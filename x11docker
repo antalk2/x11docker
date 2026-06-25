@@ -53,7 +53,7 @@ ws_colon_is_continuation_filter() {
     #  GNU sed: sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D'
     #  A portable (non-gnu) variation: sed -e :a -e '$!N;s/\n  */ /;ta' -e 'P;D'
     #
-    # Modified to look for /[ \t]*:/ instad of /\s+/ and leave no space after.
+    # Modified to look for /[ \t]*:/ instead of /\s+/ and leave no space after.
     #
     sed -e :a -e '$!N;s/\n[ \t]*://;ta' -e 'P;D'
 }
