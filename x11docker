@@ -637,8 +637,7 @@ alertbox() {                    # X alert box with title $1 and message $2
 # return 0
 #
 debugnote() {                   # show debug output $*
-    if [ "$Debugmode" = "yes" ]       \
-        && [ "$Verbose" != "yes" ] ; then
+    if [ "$Debugmode" = "yes" ] && [ "$Verbose" != "yes" ] ; then
         echo "${Colblue}DEBUGNOTE[$(timestamp)]:${Colnorm} $*" >&${FDstderr}
     fi
     #
