@@ -2526,16 +2526,19 @@ waitforlogentry() {  # wait for keyword $3 in logfile $2 of application $1
              )${NEWLINE}$(tail -n15 "${logfile}")"
     fi
     
-    [ "$Errorkeys" ] && {
+    if [ "$Errorkeys" ] ; then
         Errorkey="$(grep -i -E "$Errorkeys" <"${logfile}")" || true
         #
-        [ -n "$Errorkey" ] && error "waitforlogentry(): ${application}: Found error message in logfile:
-  <'$Errorkey'>
-
-  Context in logfile ${logfile_basename}:
-$(grep -C7 "$Errorkey" "${logfile}")"
-        # ---
-    }
+        if [ -n "$Errorkey" ] ; then
+            error "$(trim_to_bar \
+              "|waitforlogentry(): ${application}: Found error message in logfile:
+               |  <'$Errorkey'>
+               |
+               |  Context in logfile ${logfile_basename}:"
+               )${NEWLINE}$(grep -C7 "$Errorkey" "${logfile}" )"
+            # ---
+        fi
+    fi
 
     rocknroll || {
       debugnote "waitforlogentry(): ${application}: Stopped waiting for ${keyword} in ${logfile_basename} due to terminating signal."
