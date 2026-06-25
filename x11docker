@@ -2471,10 +2471,10 @@ myrealpath() {                  # real path of possible symlink
 #  waitforlogentry 'start_container()'   $Xinitlogfile        'xinitrc is ready'     "$Xiniterrorcodes"
 #  waitforlogentry xpra                  $Xinitlogfile        "xinitrc is ready"     ""                       infinity
 #
-waitforlogentry() {             # wait for entry $3 in logfile $2 of application $1
+waitforlogentry() {  # wait for keyword $3 in logfile $2 of application $1
   # $1 is the application we are waiting for to be ready
   # $2 points to logfile
-  # $3 keyword to wait for
+  # $3 keyword to wait for (May contain space, used as a grep pattern)
   # $4 possible error keywords
   # $5 time to wait in seconds or infinity. default: 60
 
