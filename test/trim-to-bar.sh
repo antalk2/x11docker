@@ -226,3 +226,5 @@ echo  "$(trim_to_mark5 \
              : Timeout waiting for entry \"{keyword}\" in {logfile_basename}
              |  Last lines of {logfile_basename}:
              |")${NEWLINE}$(printf "%s\n" "Line1" "Line2" )"
+
+
