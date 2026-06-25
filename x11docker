@@ -1314,11 +1314,31 @@ check_envvar() {
 }
 
 #
-# function get_ppid()
+# function get_ppid( pid_to_check ) :  Get ppid of pid $1. Result goes to stdout.
 #
-get_ppid() {                    # get ppid of pid $1
-    $Myps ax -o pid,ppid | awk '$1 ~ /'${1:-}'/ { SUM += $2 } END { print SUM } '
+#  If pid_to_check not found, echo "", return 1
+#  Otherwise echo ppid, return 0
+#
+get_ppid() {
+    local pid_to_check="${1:-}"
+    local res=''
+    if [ -z "${pid_to_check}" ] ; then
+        echo ''
+        return 1
+    fi
+    res="$( $Myps ax -o pid,ppid                  \
+           | grep -E '^\s+'"${pid_to_check}"'\s+' \
+           | awk ' { print $2 } '
+         )"
+    if [ -z "$res" ] ; then
+        echo "" # what should be printed here?
+        return 1
+    else
+        echo "$res"
+        return 0
+    fi
 }
+
 
 #
 # function check_parent_sshd()
