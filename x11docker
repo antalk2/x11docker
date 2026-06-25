@@ -767,9 +767,9 @@ warning() {
 }
 
 #
-# function watchmessagefifo()
+# function watchmessagefifo() :  Watch for messages coming from inside of container.
 #
-watchmessagefifo() {            # watch for messages coming from inside of container
+watchmessagefifo() {
     # message in fifo must end with :$Messagetype
     local Line='' Message='' Messagetype=''
     #
@@ -777,9 +777,9 @@ watchmessagefifo() {            # watch for messages coming from inside of conta
     #
     while [ -e "$Cachefolder" ]; do
         IFS= read -r Line <&${FDmessage} || true
-        [ "$Line" ] || sleep 2  # sleep for MSYS2/CYGWIN workaround
+        if [ -z "$Line" ] ; then sleep 2 ; fi  # sleep for MSYS2/CYGWIN workaround
 
-        [ "$Line" ] && Message="${Message}${NEWLINE}${Line}"
+        if [ -n "$Line" ] ; then Message+="${NEWLINE}${Line}" ; fi
         #
         if grep -q -E ":WARNING|:NOTE|:DEBUGNOTE|:VERBOSE|:ERROR|:STDOUT" <<< "$Line" ; then
             #
@@ -814,9 +814,6 @@ watchmessagefifo() {            # watch for messages coming from inside of conta
                         ## Otherwise
                         verbose "$Message"
                     fi
-                    #                    [ "-d " = "$(cut -c1-3 <<<"$Message" | head -n1)" ] \
-                    #                        && debugnote "$(tail -c +4 <<< "$Message")"     \
-                    #                            || verbose "$Message"
                     ;;
                 :STDOUT)    echo "$Message" ;;
             esac
