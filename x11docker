@@ -1269,28 +1269,47 @@ watchpidlist() {
 #
 # function check_envvar()
 #
-check_envvar() {                # allow only chars in string $1 that can be expected in environment variables
+#       Allow only chars in string $1 that can be expected in
+#       the value of environment variables
+#
+#  Usage:  check_envvar [ -w ] "string"
+#
+#  Examples:
+#    ALSA_CARD="$(check_envvar "${ALSA_CARD:-}")"
+#    PATH="$(check_envvar -w "${PATH:-}")"
+#
+#  Note: The returned value is not used anywhere.
+#        This leaves us with the debugnote emitted.
+#        Or maybe when set -e is set for debugging.
+#
+check_envvar() {
     # Allows only chars in "a-zA-Z0-9_:/.,@=-"
+    #
     # Option -w allows whitespace, too. Can be needed for PATH.
+    #
     # Char * as in LS_COLORS is not allowed to avoid abuse.
-    # Replaces forbidden chars with X and returns 1
-    # Returns 0 if no change occurred.
-    # Echoes result.
-    local Newvar Space=
+    #
+    # - Replaces forbidden chars with X and returns 1
+    # - Returns 0 if no change occurred.
+    # - Echoes result.
+    local Newvar Space=''
 
     case "${1:-}" in
         -w) Space=" " ; shift ;;
     esac
 
+    # tr -c : replace characters not in the list.
     Newvar="$(printf %s "${1:-}" | LC_ALL=C tr -c "a-zA-Z0-9_:/.,@=${Space}-" "X" )"
 
     printf %s "$Newvar"
     printf "\n"
 
-    [ "$Newvar" = "${1:-}" ] && return 0
+    if [ "$Newvar" = "${1:-}" ] ; then return 0 ; fi
 
-    debugnote "check_envvar(): Input string has been changed. Result:
-  $Newvar"
+    debugnote "$(trim_to_bar \
+              "|check_envvar(): Input string has been changed. Result:
+               |  $Newvar"
+               )"
     return 1
 }
 
