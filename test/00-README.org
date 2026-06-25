@@ -1,0 +1,3 @@
+
+In this directory is for testing how bash et al works.
+Noting here is needed for the application (x11docker)
