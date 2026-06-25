@@ -2490,7 +2490,9 @@ waitforlogentry() {  # wait for keyword $3 in logfile $2 of application $1
   StartTime="$(date +%s || true)"
   StartTime="${StartTime:-0}"
   
-  if [ "$TimeToWait" = "infinity" ] ; then  TimeToWait=32000 ; fi
+  if [ "$TimeToWait" = "infinity" ] ; then
+      TimeToWait=32000 ; # 8.888 hours. 32400 would be 9 hours.
+  fi
 
   debugnote "$(trim_to_mark \
         "|waitforlogentry(): ${application}:
