@@ -709,9 +709,12 @@ logentry() {                    # write into logfile
 }
 
 # function note()
-note() {                        # show notice messages
-    [ "$Verbose" = "yes" ] \
-        || echo "${Colgreen}x11docker note:${Colnorm} $*${NEWLINE}" >&${FDstderr}
+# Show notice messages
+note() {
+    # Only show notice messages if not Verbose ?
+    if [ "$Verbose" != "yes" ] ; then
+        echo "${Colgreen}x11docker note:${Colnorm} $*${NEWLINE}" >&${FDstderr}
+    fi
     #
     logentry  "x11docker note: $*${NEWLINE}"
 }
