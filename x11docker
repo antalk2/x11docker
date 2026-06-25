@@ -691,14 +691,17 @@ error() {                       # show error message and exit
 logentry() {                    # write into logfile
     if [ -e "$Logfile" ] ; then
         #
-        # Emit earlier messages
-        [ -n "$Logmessages" ]                                       \
-            && echo "$Logmessages" >> "$Messagelogfile" 2>/dev/null \
-            && Logmessages=""
+        # Try to emit earlier messages. Clear Logmessages on success
+        if [ -n "$Logmessages" ] ; then
+            if echo "$Logmessages" >> "$Messagelogfile" 2>/dev/null ; then
+                Logmessages=""
+            fi
+        fi
         #
-        # Emit current message
-        echo "$*" >> "$Messagelogfile" 2>/dev/null
-        true
+        # Try to emit current message. Append to Logmessages on failure.
+        if ! echo "$*" >> "$Messagelogfile" 2>/dev/null ; then
+            Logmessages="${Logmessages}${NEWLINE}$*"
+        fi
     else
         # No Logfile, collect in Logmessages
         Logmessages="${Logmessages}${NEWLINE}$*"
