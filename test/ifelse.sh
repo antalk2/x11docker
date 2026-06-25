@@ -122,13 +122,7 @@ yes_or_no() {
     fi
 }
 
-exitcode_yes_or_no() {
-    if [ "$?" = "0" ] ; then
-        echo yes
-    else
-        echo no
-    fi
-}
+exitcode_yes_or_no() { if [ "$?" = "0" ] ; then echo yes ;  else echo no; fi }
 
 #
 # The original

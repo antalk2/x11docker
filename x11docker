@@ -770,6 +770,7 @@ watchmessagefifo() {            # watch for messages coming from inside of conta
     while [ -e "$Cachefolder" ]; do
         IFS= read -r Line <&${FDmessage} || true
         [ "$Line" ] || sleep 2  # sleep for MSYS2/CYGWIN workaround
+
         [ "$Line" ] && Message="${Message}${NEWLINE}${Line}"
         #
         if grep -q -E ":WARNING|:NOTE|:DEBUGNOTE|:VERBOSE|:ERROR|:STDOUT" <<< "$Line" ; then
@@ -2690,7 +2691,7 @@ writeaccess() {                 # check if useruid $1 has write access to folder
     #
     #
     # verbose true or false
-    local verbose=false
+    # local verbose=false
     #
     #
     #
@@ -2707,54 +2708,46 @@ writeaccess() {                 # check if useruid $1 has write access to folder
     dir_perm_flags="${dirVals[2]}"
     dir_owner_uid="$(id -u "$dir_owner_name")"
     #
-    dir_is_user_writable=$(  [ "${dir_perm_flags:2:1}" == "w" ] ; exitcode_yes_or_no )
-    dir_is_group_writable=$( [ "${dir_perm_flags:5:1}" == "w" ] ; exitcode_yes_or_no )
-    dir_is_other_writable=$( [ "${dir_perm_flags:8:1}" == "w" ] ; exitcode_yes_or_no )
+    # dir_is_user_writable=$(  [ "${dir_perm_flags:2:1}" == "w" ] ; exitcode_yes_or_no )
+    # dir_is_group_writable=$( [ "${dir_perm_flags:5:1}" == "w" ] ; exitcode_yes_or_no )
+    # dir_is_other_writable=$( [ "${dir_perm_flags:8:1}" == "w" ] ; exitcode_yes_or_no )
     #
-    # if [ "${dir_perm_flags:2:1}" == "w" ] ; then dir_is_user_writable=yes; else dir_is_user_writable=no ;  fi
-    # if [ "${dir_perm_flags:5:1}" == "w" ] ; then
-    #     dir_is_group_writable=yes
-    # else
-    #     dir_is_group_writable=no
-    # fi
-    #if [ "${dir_perm_flags:8:1}" == "w" ] ; then
-    #    dir_is_other_writable=yes
-    #else
-    #    dir_is_other_writable=no
-    #fi
+    dir_is_user_writable=$(  yes_or_no [ "${dir_perm_flags:2:1}" == "w" ] )
+    dir_is_group_writable=$( yes_or_no [ "${dir_perm_flags:5:1}" == "w" ] )
+    dir_is_other_writable=$( yes_or_no [ "${dir_perm_flags:8:1}" == "w" ] )
     #
-    if $verbose ; then
-        echo "dir_owner_name='$dir_owner_name' dir_owner_uid='$dir_owner_uid'"
-        echo "dir_group_name='$dir_group_name'"
-        echo "dir_perm_flags='$dir_perm_flags'"
-        echo "dir_is_user_writable='$dir_is_user_writable'"
-        echo "dir_is_group_writable='$dir_is_group_writable'"
-        echo "dir_is_other_writable='$dir_is_other_writable'"
-    fi
+    #    if $verbose ; then
+    #        echo "dir_owner_name='$dir_owner_name' dir_owner_uid='$dir_owner_uid'"
+    #        echo "dir_group_name='$dir_group_name'"
+    #        echo "dir_perm_flags='$dir_perm_flags'"
+    #        echo "dir_is_user_writable='$dir_is_user_writable'"
+    #        echo "dir_is_group_writable='$dir_is_group_writable'"
+    #        echo "dir_is_other_writable='$dir_is_other_writable'"
+    #    fi
     #
     # (1) If user matches, return owner-has-write-permission
     if [ "${dir_owner_uid}" = "${userid}" ] ; then
-        if $verbose; then echo "user-matches"; fi
+        # if $verbose; then echo "user-matches"; fi
         [ "${dir_is_user_writable}" == "yes" ] && return 0 || return 1
     fi
     #
     # (2) If userid "$1" has ACL entry, use the effective permission from that.
     acl_user_entry="$(getfacl -pn "${dirpath}" | grep "user:${userid}:")"
     if [ -n "$acl_user_entry" ] ; then
-        if $verbose ; then
-            echo "ACL user_entry='$acl_user_entry'";
-        fi
+        #        if $verbose ; then
+        #            echo "ACL user_entry='$acl_user_entry'";
+        #        fi
         [ "w" = "$(echo "$acl_user_entry" | rev | cut -c2)" ] && return 0 || return 1
     fi
     #
     acl_mask_entry="$(getfacl -pn "${dirpath}" | grep "mask::")"
-    if $verbose ; then
-        if [ -n "$acl_mask_entry" ] ; then
-            echo "ACL mask entry: '$acl_mask_entry'"
-        else
-            echo "ACL mask entry: NA"
-        fi
-    fi
+    #    if $verbose ; then
+    #        if [ -n "$acl_mask_entry" ] ; then
+    #            echo "ACL mask entry: '$acl_mask_entry'"
+    #        else
+    #            echo "ACL mask entry: NA"
+    #        fi
+    #    fi
     #
     # (3) If any group of the user matches the group of the directory or
     #     a group-ACL
@@ -2769,43 +2762,50 @@ writeaccess() {                 # check if useruid $1 has write access to folder
     # userid_group_names : group names surrounded and separated with ':'
     userid_group_names=":$(id -Gn "${userid}" 2>/dev/null | sed -e 's| |:|g' ):"
     ##
-    if [[ "${userid_group_names[*]}" =~ :${dir_group_name}: ]] ; then
-        userid_has_dirs_group=yes
-    else
-        userid_has_dirs_group=no
-    fi
-    if $verbose; then echo "userid_has_dirs_group=$userid_has_dirs_group"; fi
+    # if [[ "${userid_group_names[*]}" =~ :${dir_group_name}: ]] ; then
+    #    userid_has_dirs_group=yes
+    # else
+    #    userid_has_dirs_group=no
+    # fi
+    userid_has_dirs_group=$(
+        yes_or_no [[ "${userid_group_names[*]}" =~ :${dir_group_name}: ]]
+    )
+    
+    # if $verbose; then echo "userid_has_dirs_group=$userid_has_dirs_group"; fi
     #
     #
     # ACL group:GID: entries for userid
     userid_group_id_re="^group:\\($(  id -G  "${userid}" 2>/dev/null | sed -e 's/ /\\|/g' )\\):"
     userid_acl_group_id_entries="$(getfacl -pn "${dirpath}" | grep -e "${userid_group_id_re}")"
-    if $verbose; then
-        echo "userid_group_id_re='$userid_group_id_re'"
-        echo "userid_acl_group_id_entries=$userid_acl_group_id_entries"
-    fi
+    # if $verbose; then
+    #    echo "userid_group_id_re='$userid_group_id_re'"
+    #    echo "userid_acl_group_id_entries=$userid_acl_group_id_entries"
+    # fi
     #
-    if [ -n "${userid_acl_group_id_entries}" ] ; then
-        userid_has_acl_groups=yes
-    else
-        userid_has_acl_groups=no
-    fi
+    # if [ -n "${userid_acl_group_id_entries}" ] ; then
+    #     userid_has_acl_groups=yes
+    # else
+    #     userid_has_acl_groups=no
+    # fi
+    #
+    userid_has_acl_groups=$( yes_or_no [ -n "${userid_acl_group_id_entries}" ] )
     #
     if [ "${userid_has_dirs_group}" = "yes" ] || [ "${userid_has_acl_groups}" = "yes" ] ; then
-        if $verbose; then echo "Have matching group"; fi
+        # if $verbose; then echo "Have matching group"; fi
         if [ -n "$acl_mask_entry" ] ; then
-            if $verbose; then echo "Have acl_mask_entry=$acl_mask_entry"; fi
+            # if $verbose; then echo "Have acl_mask_entry=$acl_mask_entry"; fi
             if [ "w" = "$(echo "$acl_mask_entry" | rev | cut -c2)" ] ; then
-                if $verbose; then echo "acl_mask_entry allows 'w'"; fi
+                # if $verbose; then echo "acl_mask_entry allows 'w'"; fi
                 #
-                if [ "${userid_has_dirs_group}" = "yes"  ]; then
-                    [[ "${dir_is_group_writable}" = "yes" ]]  && return 0
+                if     [ "${userid_has_dirs_group}" = "yes" ]  \
+                   &&  [ "${dir_is_group_writable}" = "yes" ]  ; then
+                    return 0
                 fi
                 #
                 if [ "${userid_has_acl_groups}" = "yes" ] ; then
-                    if $verbose; then echo "Does any group ACL permit w?"; fi
+                    # if $verbose; then echo "Does any group ACL permit w?"; fi
                     n_permits="$(echo "${userid_acl_group_id_entries}" | rev | cut -c2 | grep -c w)"
-                    if $verbose; then echo "n_permits=$n_permits"; fi
+                    # if $verbose; then echo "n_permits=$n_permits"; fi
                     if [ "${n_permits}" != "0" ] ; then
                         return 0
                     fi
@@ -2814,20 +2814,23 @@ writeaccess() {                 # check if useruid $1 has write access to folder
                 return 1
                 #
             else
-                if $verbose; then echo "acl_mask_entry disallows 'w'"; fi
+                # if $verbose; then echo "acl_mask_entry disallows 'w'"; fi
                 return 1
             fi
         else
-            if $verbose; then echo "No acl_mask_entry (and thus no group ACLs)"; fi
-            if [ "${userid_has_dirs_group}" = "yes"  ]; then
-                [[ "${dir_is_group_writable}" = "yes" ]]  && return 0 || return 1
+            # if $verbose; then echo "No acl_mask_entry (and thus no group ACLs)"; fi
+            if    [ "${userid_has_dirs_group}" = "yes"  ]  \
+               && [ "${dir_is_group_writable}" = "yes"  ]  ; then
+                return 0
+            else
+                return 1
             fi
         fi
     fi
     #
     #
     # (4) writable by others?
-    [ "${dir_is_other_writable}" = "yes" ]       && return 0
+    if [ "${dir_is_other_writable}" = "yes" ] ; then return 0 ; fi
     #
     # (5)  else access is denied.
     return 1
