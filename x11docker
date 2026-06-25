@@ -1341,9 +1341,9 @@ get_ppid() {
 
 
 #
-# function check_parent_sshd()
+# function check_parent_sshd() : Check whether pid $1 runs in SSH session
 #
-check_parent_sshd() {           # check whether pid $1 runs in SSH session
+check_parent_sshd() {
     $Myps ax -o pid,comm | awk '$1 ~ /'$(get_ppid "${1:-}")'/ { SUM += $2 } END { print SUM } ' | grep -q "sshd"
 }
 
