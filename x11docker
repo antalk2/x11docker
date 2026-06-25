@@ -1175,7 +1175,13 @@ waitfortheend() {               # wait for end of x11docker session
     case "$Usemkfifo" in
         yes)
             while rocknroll; do
-                bash -c "read -n1 <${FDtimetosaygoodbye}" && saygoodbye timetosaygoodbyefifo || sleep 1
+                # Read a single character, and also call saygoodbye to
+                # write into the same fifo.
+                if bash -c "read -n1 <${FDtimetosaygoodbye}" ; then
+                    saygoodbye timetosaygoodbyefifo
+                else
+                    sleep 1
+                fi
             done
             ;;
         no|"") # Reading from fifo fails on Windows, workaround
