@@ -1195,12 +1195,12 @@ waitfortheend() {               # wait for end of x11docker session
 }
 
 #
-# function watchpidlist()
+# function watchpidlist() : watch list of important pids
 #
-watchpidlist() {                # watch list of important pids
+watchpidlist() {
     #
-    # terminate x11docker if a PID in $Watchpidlist terminates
-    # serves mainly watching X server, Wayland compositor, container and hostexe
+    # Terminate x11docker if a PID in $Watchpidlist terminates.
+    # Serves mainly watching X server, Wayland compositor, container and hostexe.
     #
     # echo PIDs to watch into >{FDwatchpid} (setonwatchpidlist())
     #
