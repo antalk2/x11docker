@@ -776,6 +776,7 @@ watchmessagefifo() {
     trap '' SIGINT
     #
     while [ -e "$Cachefolder" ]; do
+        #
         IFS= read -r Line <&${FDmessage} || true
         if [ -z "$Line" ] ; then sleep 2 ; fi  # sleep for MSYS2/CYGWIN workaround
 
