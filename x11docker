@@ -11577,19 +11577,31 @@ setup_fifo() {
             ;;
     esac
 
-  # used by waitfortheend()
-  exec {FDtimetosaygoodbye}<>"$Timetosaygoodbyefifo"
+    # used by waitfortheend()
+    exec {FDtimetosaygoodbye}<>"$Timetosaygoodbyefifo"
+    #
+    # ^^^comment:
+    #
+    # https://www.gnu.org/software/bash/manual/html_node/Redirections.html
+    #
+    # The redirection operator   [n]<>word
+    # opens the file whose name is the expansion of word
+    # for both reading and writing on file descriptor n
+    #
+    # Note: we never write to FDtimetosaygoodbye, we only read it.
+    #       All writing goes to "$Timetosaygoodbyefifo" (in saygoodbye())
+    #
 
-  # Start watching important pids, e.g. xinit, container.
-  #
-  exec {FDwatchpid}<>"$Watchpidfifo"
-  watchpidlist & storepid $! watchpidlist
+    # Start watching important pids, e.g. xinit, container.
+    #
+    exec {FDwatchpid}<>"$Watchpidfifo"
+    watchpidlist & storepid $! watchpidlist
 
-  # Start watching for messages out of container
-  exec {FDmessage}<>"$Messagefifo"
-  watchmessagefifo & storepid $! watchmessagefifo
+    # Start watching for messages out of container
+    exec {FDmessage}<>"$Messagefifo"
+    watchmessagefifo & storepid $! watchmessagefifo
 
-  return 0
+    return 0
 }
 
 setup_verbosity() {             # options --verbose, --stdout, --stderr
