@@ -2463,6 +2463,15 @@ myrealpath() {                  # real path of possible symlink
 #
 # function waitforlogentry( application, logfile, keyword, error_keywords, time_to_wait=60 )
 #
+#  - Wait for keyword ($3) in logfile ($2) of application ($1)
+#  - error() on timeout and error_keywords in logfile
+#  - return success if found keyword in logfile
+#  - return failure (1) if rocknroll return non-zero (Timetosaygoodbye)
+#
+#  Uses linearly increasing sleep times: we are just waiting for
+#  "ready" entries, not watching long-running processes for a long
+#  time.
+#
 # Examples:
 #  waitforlogentry "start_xcontainer()" "$Xinitlogfile"      "X server container is ready"
 #  waitforlogentry containerrc          \$Storeinfofile      containerrootrc=ready  ''                       infinity
@@ -2471,86 +2480,112 @@ myrealpath() {                  # real path of possible symlink
 #  waitforlogentry 'start_container()'   $Xinitlogfile        'xinitrc is ready'     "$Xiniterrorcodes"
 #  waitforlogentry xpra                  $Xinitlogfile        "xinitrc is ready"     ""                       infinity
 #
-waitforlogentry() {  # wait for keyword $3 in logfile $2 of application $1
-  # $1 is the application we are waiting for to be ready
-  # $2 points to logfile
-  # $3 keyword to wait for (May contain space, used as a grep pattern)
-  # $4 possible error keywords
-  # $5 time to wait in seconds or infinity. default: 60
+waitforlogentry() {
 
-  local StartTime CurrentTime ElapsedTime Count=0 SleepTime
-  local Errorkeys="${4:-}" Errorkey
-  local TimeToWait="${5:-60}"
-  local Error=
-  local application="${1:-}"
-  local logfile="${2:-}"
-  local keyword="${3:-}"
-  local logfile_basename="$(basename "${logfile}")"
+    local application="${1:-}"  # $1 is the application we are waiting
+                                # for to be ready
 
-  StartTime="$(date +%s || true)"
-  StartTime="${StartTime:-0}"
-  
-  if [ "$TimeToWait" = "infinity" ] ; then
-      TimeToWait=32000 ; # 8.888 hours. 32400 would be 9 hours.
-  fi
+    local logfile="${2:-}"      # $2 points to logfile
 
-  debugnote "$(trim_to_mark \
+    local keyword="${3:-}"      # $3 keyword to wait for (May contain
+                                # space, used as a "grep -q" pattern)
+
+    local Errorkeys="${4:-}"    # $4 possible error keywords.
+                                # Empty or extended regexp.
+                                # Used in 'grep -i -E "$Errorkeys"'
+
+    local TimeToWait="${5:-60}" # $5 time to wait in seconds or
+                                # infinity. default: 60
+
+    if [ "$TimeToWait" = "infinity" ] ; then
+        TimeToWait=32000 ; # 8.888 hours. 32400 would be 9 hours.
+    fi
+
+    local StartTime CurrentTime ElapsedTime
+
+    # SleepTime is approx linearly increasing on repeats
+    local Count=0 SleepTime
+
+    local Errorkey
+    local Error=
+    local logfile_basename="$(basename "${logfile}")"
+
+    StartTime="$(date +%s || true)"
+    StartTime="${StartTime:-0}"
+
+    debugnote "$(trim_to_mark \
         "|waitforlogentry(): ${application}:
          : Waiting for logentry \"${keyword}\" in ${logfile_basename}"
          )"
 
-  while ! grep -q "${keyword}" <"${logfile}" ; do
-    Count="$(( Count + 1 ))"
-    CurrentTime="$(date +%s ||:)"
-    CurrentTime="${CurrentTime:-0}"
-    ElapsedTime="$(( CurrentTime - StartTime ))"
-    SleepTime="$(( Count / 10 ))"
+    while ! grep -q "${keyword}" <"${logfile}" ; do
+        Count="$(( Count + 1 ))"
 
-    if [ "$SleepTime" = "0" ] ; then  SleepTime="0.5" ; fi
+        CurrentTime="$(date +%s || true)"
+        CurrentTime="${CurrentTime:-0}"
+        ElapsedTime="$(( CurrentTime - StartTime ))"
 
-    mysleep "$SleepTime"
+        SleepTime="$(( Count / 10 ))"
+        if [ "$SleepTime" = "0" ] ; then  SleepTime="0.5" ; fi
 
-    if [ "$ElapsedTime" -gt "10" ] ; then
-        debugnote "$(trim_to_mark \
+        mysleep "$SleepTime"
+
+        ## Report after 10 sec of waiting.
+        if [ "$ElapsedTime" -gt "10" ] ; then
+            debugnote "$(trim_to_mark \
            "|waitforlogentry(): ${application}:
             : Waiting since ${ElapsedTime}s
             : for log entry \"${keyword}\" in ${logfile_basename}"
          )"
-    fi
+        fi
 
-    if [ "$ElapsedTime" -gt "$TimeToWait" ] ; then
-        error  "$(trim_to_mark \
+        # error if TimeToWait seconds have elapsed
+        if [ "$ElapsedTime" -gt "$TimeToWait" ] ; then
+            error  "$(trim_to_mark \
             "|waitforlogentry(): ${application}:
              : Timeout waiting for entry \"${keyword}\" in ${logfile_basename}
              |  Last lines of ${logfile_basename}:"
              )${NEWLINE}$(tail -n15 "${logfile}")"
-    fi
-    
-    if [ "$Errorkeys" ] ; then
-        Errorkey="$(grep -i -E "$Errorkeys" <"${logfile}")" || true
-        #
-        if [ -n "$Errorkey" ] ; then
-            error "$(trim_to_bar \
+        fi
+
+        # error if Errorkeys matches to content of logfile
+        if [ "$Errorkeys" ] ; then
+            Errorkey="$(grep -i -E "$Errorkeys" <"${logfile}")" || true
+            #
+            if [ -n "$Errorkey" ] ; then
+                error "$(trim_to_bar \
               "|waitforlogentry(): ${application}: Found error message in logfile:
                |  <'$Errorkey'>
                |
                |  Context in logfile ${logfile_basename}:"
                )${NEWLINE}$(grep -C7 "$Errorkey" "${logfile}" )"
-            # ---
+                # ---
+            fi
         fi
-    fi
 
-    rocknroll || {
-      debugnote "waitforlogentry(): ${application}: Stopped waiting for ${keyword} in ${logfile_basename} due to terminating signal."
-      Error=1
-      break
-    }
-  done
-  #
-  [ "$Error" ] && return 1
-  #
-  debugnote "waitforlogentry(): ${application}: Found log entry \"${keyword}\" in ${logfile_basename}."
-  return 0
+        # break loop on Timetosaygoodbye
+        if ! rocknroll ; then
+            debugnote "$(trim_to_mark \
+                  "|waitforlogentry(): ${application}:
+                   : Stopped waiting for ${keyword} in ${logfile_basename}
+                   : due to terminating signal."
+                   )"
+            Error=1
+            break
+        fi
+    done
+    #
+    # Early return due to Timetosaygoodbye
+    if [ "$Error" ] ; then
+        return 1
+    fi
+    #
+    # Normal return, found keyword
+    debugnote  "$(trim_to_mark \
+              "|waitforlogentry(): ${application}:
+               : Found log entry \"${keyword}\" in ${logfile_basename}."
+              )"
+    return 0
 }
 
 #
