@@ -678,11 +678,11 @@ error() {                       # show error message and exit
 
   # output to X dialogbox if not running in terminal
   # shellcheck disable=SC2086
-  [ "$Runsinterminal" = "no" ]       \
-      && [ "$Silent" = "no" ]        \
-      && export ${Hostxenv:-DISPLAY} \
-      && alertbox "x11docker ERROR" "$Message" &
-
+  if     [ "$Runsinterminal" = "no" ]  \
+      && [ "$Silent"         = "no" ]  ; then
+      export ${Hostxenv:-DISPLAY}
+      alertbox "x11docker ERROR" "$Message" &
+  fi
   finish
   stacktrace
 }
