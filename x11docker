@@ -2522,7 +2522,8 @@ waitforlogentry() {  # wait for keyword $3 in logfile $2 of application $1
         error  "$(trim_to_mark \
             "|waitforlogentry(): ${application}:
              : Timeout waiting for entry \"${keyword}\" in ${logfile_basename}
-             |  Last lines of ${logfile_basename}:")${NEWLINE}$(tail -n15 "${logfile}")"
+             |  Last lines of ${logfile_basename}:"
+             )${NEWLINE}$(tail -n15 "${logfile}")"
     fi
     
     [ "$Errorkeys" ] && {
