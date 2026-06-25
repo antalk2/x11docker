@@ -750,15 +750,18 @@ traperror() {                   # trap ERR: --debug: Output for 'set -o errtrace
 }
 
 # function verbose()
-verbose() {                     # show verbose messages
+# Show verbose messages
+verbose() {
     # only logfile notes here, terminal output is done with tail in setup_verbosity()
     logentry "x11docker[$(timestamp)]: $*${NEWLINE}"
 }
 
 # function warning()
-warning() {                     # show warning messages
-    [ "$Verbose" = "yes" ] \
-        || echo "${Colyellow}x11docker WARNING:${Colnorm} $*${NEWLINE}" >&${FDstderr}
+# Show warning messages
+warning() {
+    if [ "$Verbose" != "yes" ] ; then
+        echo "${Colyellow}x11docker WARNING:${Colnorm} $*${NEWLINE}" >&${FDstderr}
+    fi
     #
     logentry "x11docker WARNING: $*${NEWLINE}"
 }
