@@ -700,11 +700,11 @@ logentry() {                    # write into logfile
         #
         # Try to emit current message. Append to Logmessages on failure.
         if ! echo "$*" >> "$Messagelogfile" 2>/dev/null ; then
-            Logmessages="${Logmessages}${NEWLINE}$*"
+            Logmessages+="${NEWLINE}$*"
         fi
     else
         # No Logfile, collect in Logmessages
-        Logmessages="${Logmessages}${NEWLINE}$*"
+        Logmessages+="${NEWLINE}$*"
     fi
 }
 
