@@ -1,15 +1,15 @@
 # -*- conf -*-
 
-disable=SC3043 # (warning): In POSIX sh, 'local' is undefined.
-disable=SC3037 # (warning): In POSIX sh, echo flags are undefined.
-disable=SC3011 # (warning): In POSIX sh, here-strings are undefined.
-disable=SC3044 # (warning): In POSIX sh, 'declare' is undefined.
-disable=SC3005 # (warning): In POSIX sh, arithmetic for loops are undefined.
-disable=SC3018 # (warning): In POSIX sh, ++ is undefined.
-disable=SC3060 # (warning): In POSIX sh, string replacement is undefined.
-disable=SC3003 # (warning): In POSIX sh, $'..' is undefined.
-disable=SC3045 # (warning): In POSIX sh, printf -v is undefined.
-disable=SC3057 # (warning): In POSIX sh, string indexing is undefined.
-disable=SC3014 # (warning): In POSIX sh, == in place of = is undefined.
+# disable=SC3043 # (warning): In POSIX sh, 'local' is undefined.
+# disable=SC3037 # (warning): In POSIX sh, echo flags are undefined.
+# disable=SC3011 # (warning): In POSIX sh, here-strings are undefined.
+# disable=SC3044 # (warning): In POSIX sh, 'declare' is undefined.
+# disable=SC3005 # (warning): In POSIX sh, arithmetic for loops are undefined.
+# disable=SC3018 # (warning): In POSIX sh, ++ is undefined.
+# disable=SC3060 # (warning): In POSIX sh, string replacement is undefined.
+# disable=SC3003 # (warning): In POSIX sh, $'..' is undefined.
+# disable=SC3045 # (warning): In POSIX sh, printf -v is undefined.
+# disable=SC3057 # (warning): In POSIX sh, string indexing is undefined.
+# disable=SC3014 # (warning): In POSIX sh, == in place of = is undefined.
 
-disable=SC2177 # (warning): 'time' is undefined for compound commands, time sh -c instead.
+# disable=SC2177 # (warning): 'time' is undefined for compound commands, time sh -c instead.
