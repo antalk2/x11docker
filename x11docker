@@ -3223,17 +3223,17 @@ cleanup() {                     # --cleanup : check for non-removed containers a
             for Line in $Orphanedcontainers; do
                 #
                 Containerinspect="$(unpriv_backend "$Backendbin inspect '$Line'" 2>/dev/null)"
-                [ -n "$Containerinspect" ] && {
+                if [ -n "$Containerinspect" ] ; then
                     # Get longHexId
                     Containerid="$(parse_inspect "$Containerinspect" "Id")"
                     #
                     # Replace the original identifier with the longHexId in Orphanedcontainers
                     Orphanedcontainers="$(sed "s%$Line%$Containerid%" <<< "$Orphanedcontainers")"
                     true
-                } || {
+                else
                     # Remove original identifier from Orphanedcontainers
                     Orphanedcontainers="$(sed s/$Line// <<< "$Orphanedcontainers")"
-                }
+                fi
             done
             Orphanedcontainers="$(sort <<< "$Orphanedcontainers" | uniq)"
             ;;
