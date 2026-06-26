@@ -1226,7 +1226,7 @@ watchpidlist() {
 
     while rocknroll; do
         # check for new Pid once a second
-        read -t1 Pid <&${FDwatchpid} || true
+        read -r -t1 Pid <&${FDwatchpid} || true
         #
         if [ "$Usemkfifo" = "no" ] ; then  sleep 2 ; fi  # read does not wait if not a fifo
         #
