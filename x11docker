@@ -2320,7 +2320,7 @@ convertpath() {                 # convert unix and windows paths
 
     # Remove possible already given mountpoint
     # used_global: Winsubmount
-    Path="${Path#$Winsubmount}" # removes prefix Winsubmount from Path
+    Path="${Path#"$Winsubmount"}" # removes prefix Winsubmount from Path
 
     ## Separate "/c/" and "c:" from Path to Drive as lowercase letter (or "" if missing)
     local Drive=
