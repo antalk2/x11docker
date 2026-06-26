@@ -841,7 +841,8 @@ watchmessagefifo() {
 #
 finish() {      # trap EXIT routine to clean up background processes and cache
     #
-    local Pid Name Zeit Exitcode Pid1pid="" Watchmessagefifopid="" Count Xpid1pid
+    local Pid Name Zeit Exitcode Pid1pid="" Count Xpid1pid
+    # local Watchmessagefifopid=""
 
     # Do not finish() in subshell, just give signal to all other
     # processes and terminate subshell.
@@ -912,11 +913,12 @@ finish() {      # trap EXIT routine to clean up background processes and cache
     # Check if container is still running -> docker stop
     case "$BackendKind" in
         docker|podman|nerdctl)
-            containerisrunning && {
+            if containerisrunning ; then
                 Debugmode="yes"
                 debugnote  "$(trim_to_bar \
-             "|finish(): Container still running. Executing 'docker stop'.
-              |  Will wait up to 15 seconds for docker to finish." )"
+                   "|finish(): Container still running. Executing 'docker stop'.
+                    |  Will wait up to 15 seconds for docker to finish."
+                    )"
                 #
                 unpriv_backend "$Backendbin stop $g_Containername" >> "$Containerlogfile" 2>&1
 
@@ -925,22 +927,27 @@ finish() {      # trap EXIT routine to clean up background processes and cache
                     containerisrunning || break
                     debugnote "finish(): Waiting for container to terminate ..."
                     sleep 1
-                    [ 15 -lt $(($(date +%s) - $Zeit)) ] && break
+                    # [ 15 -lt $(($(date +%s) - $Zeit)) ] && break
+                    # SC2004 (style): $/${} is unnecessary on arithmetic variables.
+                    [ 15 -lt $(($(date +%s) - Zeit)) ] && break
                 done
 
-                containerisrunning && {
+                if containerisrunning ; then
                     Exitcode="64"
                     debugnote "$(trim_to_bar \
-              "|finish(): Container did not terminate as it should.
-               |  Will not clean cache to avoid file permission issues.
-               |  You can remove the new container with command:
-               |    docker rm -f $g_Containername
-               |  Afterwards, remove cache files with:
-               |    rm -R $Cachefolder
-               |  or let x11docker do the cleanup work for you:
-               |    x11docker --cleanup" )"
-                } || debugnote "finish(): Container terminated successfully"
-            }
+                       "|finish(): Container did not terminate as it should.
+                        |  Will not clean cache to avoid file permission issues.
+                        |  You can remove the new container with command:
+                        |    docker rm -f $g_Containername
+                        |  Afterwards, remove cache files with:
+                        |    rm -R $Cachefolder
+                        |  or let x11docker do the cleanup work for you:
+                        |    x11docker --cleanup"
+                        )"
+                else
+                    debugnote "finish(): Container terminated successfully"
+                fi
+            fi
             ;;
     esac
 
@@ -1016,17 +1023,17 @@ finish_sigint() {               # trap SIGINT to activate debug mode on finish()
     local Pid1pid  X11dockerpid
     X11dockerpid="$(storeinfo_dump_sh x11dockerpid)"
     Debugmode="yes"
-    [ "$$" = "$X11dockerpid" ] && {
+    if [ "$$" = "$X11dockerpid" ] ; then
         debugnote "Received SIGINT"
         storeinfo_add_kv_sh error=130
         finish
-        :
-    } || {
+        true
+    else
         debugnote "Received SIGINT in subshell $SHLVL: $$"
         kill -s SIGINT "$X11dockerpid"
         trap - EXIT
         exit 130
-    }
+    fi
 }
 
 # function saygoodbye()
@@ -1211,7 +1218,7 @@ watchpidlist() {
     #
     # echo PIDs to watch into >{FDwatchpid} (setonwatchpidlist())
     #
-    local Pid= local_Containername= Line= Watchpidlist=
+    local Pid="" local_Containername="" Line""= Watchpidlist=""
     local ListOfLines
     trap '' SIGINT
 
