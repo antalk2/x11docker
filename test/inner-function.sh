@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# 1. Bash does allow inner functionsm but they are globally visible.
+# 1. Bash does allow inner functions, but they are globally visible.
 # 2. Parenthesis, like   `( commands )`, runs commands in a subshell.
 #
 
@@ -9,7 +9,7 @@ xouter() {
     echo "in xouter"
     local a
     local b=2
-    function xinner() (
+    xinner() (
         echo "in xinner"
         c="$1"
         #

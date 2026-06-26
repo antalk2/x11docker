@@ -1,6 +1,7 @@
 #!/bin/bash
 
-Myps=ps
+Myps="ps"
+
 get_ppid() {
     local pid_to_check="${1:-empty_pid}"
     local res=''

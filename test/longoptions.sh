@@ -1,5 +1,8 @@
+#!/bin/bash
 
+# shellcheck disable=SC2034
 X11DOCKER_TESTING=1
+# shellcheck disable=SC1091
 . ../x11docker
 
 L1="$(trim_to_bar \
@@ -14,8 +17,15 @@ L1="$(trim_to_bar \
      |"   )"
 
 # drop comments
+# shellcheck disable=SC2001
 L2=$(echo "$L1" | sed -e 's/#.*//')
 # list of words, comma-separated. Add initial comma to match original
+# shellcheck disable=SC2001
+#
+# shellcheck disable=SC2086 # (info): Double quote to prevent globbing
+#                             and word splitting. We do want word
+#                             splitting here. Not globbing, though.
+#
 L2=",$(echo $L2  | sed -e 's/[ ][ ]*/,/g')"
 
 longoptions_collect() {
@@ -30,10 +40,17 @@ longoptions_collect() {
     L1="$(trim_to_bar "$1"  )"
     #
     # drop comments
+    # shellcheck disable=SC2001
     L2=$(echo "$L1" | sed -e 's/#.*//')
     #
     # List of words, comma-separated.
     # Add initial comma to match original
+    # shellcheck disable=SC2001
+    #
+    # shellcheck disable=SC2086 # (info): Double quote to prevent globbing
+    #                             and word splitting. We do want word
+    #                             splitting here. Not globbing, though.
+    #
     L2=",$(echo $L2  | sed -e 's/[ ][ ]*/,/g')"
     #
     echo "${L2}"

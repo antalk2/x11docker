@@ -20,13 +20,9 @@ false ; echo $?
 echo ret
 
 ret(){
-    return $1
+    return "$1"
 }
 
-! ret 13 ; echo $?   # 0
-! ! ret 21 ; echo $? # 21
+!     ret 13   ; echo $? # 0
+! !   ret 21   ; echo $? # 21
 ! ( ! ret 11 ) ; echo $? # 1
-
-
-
-

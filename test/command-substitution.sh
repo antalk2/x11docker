@@ -52,100 +52,104 @@ check_version() {
     fi    
 }
 
-actual=$(echo $BASH_VERSION | cut -d. -f1-2)
+actual=$(echo "${BASH_VERSION}" | cut -d. -f1-2)
 required="5.3"
 if check_version "${actual}"  "${required}"  ; then
-    ${ local X=12345 ; echo $X; }
+     # shellcheck disable=SC2016
+    echo ' ${ local X=12345 ; echo $X; } # Should work'
 else
-    echo "BASH_VERSION $BASH_VERSION does not support command substitution using braces: "'${ local X=12345 ; echo $X; }'
+    echo "BASH_VERSION $BASH_VERSION does not support"
+    # shellcheck disable=SC2016
+    echo " command substitution using braces: "'${ local X=12345 ; echo $X; }'
     echo "    This needs at least version $required"
 fi
 
-
-
-#
-# Using a function
-#
-rw_mode_to_mount_mode() {
-    local Readwritemode="$1"
-    case "${Readwritemode}" in
-        ":ro") echo -n ",readonly" ;;
-        ":rw") echo -n "" ;;
-        *)
-            echo "warning: unexpected value in rw_mode_to_mount_mode($1)" >&2 ;
-            return 1
-         ;;
-    esac
-    return 0
-}
-
-Readwritemode_mount4="$( rw_mode_to_mount_mode  "$Readwritemode" )"
-
-echo "v4 '${Readwritemode_mount4}'"
-
-strict() {
-    local res
-    local x
-    (
-        set -e
-        "${@}"
-        res=$?
-        if [ "$res" != "0" ] ; then
-            {
-                echo "error: strict( ${1} ) caught exit code $res"
-                for x in "${@}" ; do
-                    echo "    arg: '$x'"
-                done
-                echo "  Exiting"
-            } >&2
-            exit $res
-        fi
-    )
-}
-
-die(){
-    echo "die: $*"  >&2
-    exit 1
-}
-
-warn(){
-    echo "warn: $*"  >&2
-}
-
-
-
-echo "Expect warning"
-Readwritemode_mount4b="$( rw_mode_to_mount_mode  "xx$Readwritemode" )"
-echo "v4b '${Readwritemode_mount4b}'"
-
-echo "Expect ',readonly'"
-Readwritemode_mount4c="$( strict rw_mode_to_mount_mode  ":ro" )"
-echo "v4c '${Readwritemode_mount4c}'"
-
-echo "Expect ''"
-Readwritemode_mount4d="$( strict rw_mode_to_mount_mode  ":rw" )"
-echo "v4d '${Readwritemode_mount4d}'"
-
-echo "Expect error"
-Readwritemode_mount4d="$( strict rw_mode_to_mount_mode  ":xxx" )"
-echo "v4d '${Readwritemode_mount4d}'"
-
-echo -e "\n4d Expect die"
-Readwritemode_mount4d="$( rw_mode_to_mount_mode ":xxx" )"  || warn "jaj"
-echo "v4d '${Readwritemode_mount4d}'"
-
-set -e
-
-echo -e "\n4e Expect Failed"
-if Readwritemode_mount4e="$( rw_mode_to_mount_mode ":xxx" )" ; then
-    echo "OK"
-else
-    echo "Failed"
-fi
-
-echo -e "\n4f Expect OK"
-if Readwritemode_mount4f="$( x=5; rw_mode_to_mount_mode ":ro" )" ; then
-    echo "OK, '$Readwritemode_mount4f'"
-else
-    echo "Failed"
-fi
+# 
+# 
+# #
+# # Using a function
+# #
+# rw_mode_to_mount_mode() {
+#     local Readwritemode="$1"
+#     case "${Readwritemode}" in
+#         ":ro") echo -n ",readonly" ;;
+#         ":rw") echo -n "" ;;
+#         *)
+#             echo "warning: unexpected value in rw_mode_to_mount_mode($1)" >&2 ;
+#             return 1
+#          ;;
+#     esac
+#     return 0
+# }
+# 
+# Readwritemode_mount4="$( rw_mode_to_mount_mode  "$Readwritemode" )"
+# 
+# echo "v4 '${Readwritemode_mount4}'"
+# 
+# strict() {
+#     local res
+#     local x
+#     (
+#         set -e
+#         "${@}"
+#         res=$?
+#         if [ "$res" != "0" ] ; then
+#             {
+#                 echo "error: strict( ${1} ) caught exit code $res"
+#                 for x in "${@}" ; do
+#                     echo "    arg: '$x'"
+#                 done
+#                 echo "  Exiting"
+#             } >&2
+#             exit $res
+#         fi
+#     )
+# }
+# 
+# die(){
+#     echo "die: $*"  >&2
+#     exit 1
+# }
+# 
+# warn(){
+#     echo "warn: $*"  >&2
+# }
+# 
+# 
+# 
+# echo "Expect warning"
+# Readwritemode_mount4b="$( rw_mode_to_mount_mode  "xx$Readwritemode" )"
+# echo "v4b '${Readwritemode_mount4b}'"
+# 
+# echo "Expect ',readonly'"
+# Readwritemode_mount4c="$( strict rw_mode_to_mount_mode  ":ro" )"
+# echo "v4c '${Readwritemode_mount4c}'"
+# 
+# echo "Expect ''"
+# Readwritemode_mount4d="$( strict rw_mode_to_mount_mode  ":rw" )"
+# echo "v4d '${Readwritemode_mount4d}'"
+# 
+# echo "Expect error"
+# Readwritemode_mount4d="$( strict rw_mode_to_mount_mode  ":xxx" )"
+# echo "v4d '${Readwritemode_mount4d}'"
+# 
+# echo -e "\n4d Expect die"
+# Readwritemode_mount4d="$( rw_mode_to_mount_mode ":xxx" )"  || warn "jaj"
+# echo "v4d '${Readwritemode_mount4d}'"
+# 
+# set -e
+# 
+# echo -e "\n4e Expect Failed"
+# if Readwritemode_mount4e="$( rw_mode_to_mount_mode ":xxx" )" ; then
+#     echo "OK"
+# else
+#     echo "Failed"
+# fi
+# 
+# echo -e "\n4f Expect OK"
+# if Readwritemode_mount4f="$( x=5; rw_mode_to_mount_mode ":ro" )" ; then
+#     echo "OK, '$Readwritemode_mount4f'"
+# else
+#     echo "Failed"
+# fi
+# 
