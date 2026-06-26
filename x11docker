@@ -1942,12 +1942,21 @@ wincmd() {
 #  - If no pair found, the return value is (???), and Hostipwindows
 #    is not changed from its incoming value.
 #
+#  - Note: the return value is used, may be important.
+#
 mswindowsipcheck() {            # get WSL host IP and Windows host ip
     # thanks to @eyespore in https://github.com/mviereck/x11docker/issues/557
 
     local Hostips Mswindowsips Hostcidr Hostprefix Mswindowsnetwork Hostnetwork
     # global: Hostip Hostipwindows
 
+    # Hostips:  Firstly collect all valid IPv4 addresses of the WSL2
+    # distribution, excluding virtual interfaces created by Docker,
+    # Podman, or other container/network tools:
+    #
+    # These IPs will later be used to determine which one is in the
+    # same subnet as the Windows host.
+    #
     Hostips=$(
         ip -4 addr show scope global \
             | awk '/inet / { if ($0 !~ /(docker|br-|veth|cni|podman)/) print $2 }'
@@ -1957,6 +1966,14 @@ mswindowsipcheck() {            # get WSL host IP and Windows host ip
         note "mswindowsipcheck(): Failed to check Linux host IPs"
         return 1
     fi
+
+    #
+    # Mswindowsips :
+    #
+    #    Since WSL can directly invoke Windows executables, we can use
+    #    ipconfig.exe to obtain the IPv4 addresses of the Windows
+    #    host:
+    #
 
     # In awk, NF is a predefined variable whose value is the number of
     #            fields in the current record.
@@ -1975,6 +1992,8 @@ mswindowsipcheck() {            # get WSL host IP and Windows host ip
         note "mswindowsipcheck(): Failed to check Windows host IPs"
         return 1
     fi
+    #  Mswindowsips : These IPs will then be used to find the Windows
+    #    ↔ WSL IP pair that resides in the same subnet.
 
     if ! command -v ipcalc >/dev/null ; then
         note "$(trim_to_bar \
@@ -1983,6 +2002,13 @@ mswindowsipcheck() {            # get WSL host IP and Windows host ip
           )"
         return 1
     fi
+    # Note: ipcalc is used to check the subnet ranges. This is a
+    # third-party tool. If you want to avoid using external utilities,
+    # it is also possible to implement the subnet calculation and
+    # comparison logic manually within the script.
+
+    # Finally, we iterate through the WSL2 and Windows IPs to find a
+    # matching pair in the same subnet:
 
     # https://tldp.org/LDP/abs/html/refcards.html#AEN22664
     # https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
@@ -2010,10 +2036,15 @@ mswindowsipcheck() {            # get WSL host IP and Windows host ip
             fi
         done
     done
+    # Once a matching pair is found, the global variables `Hostip` (WSL
+    # IP) and `Hostipwindows` (Windows IP) are set. These can then be used
+    # to establish xoverip connections and configure the appropriate
+    # xhost permissions.
 }
 
 #### file routines
 
+#
 # convertpath_split_Readwritemode( Readwritemode_out, Path_out,  Path )
 #
 # If the last 3 characters of Path starts with ":",
