@@ -2091,30 +2091,6 @@ convertpath_split_Readwritemode() {
     esac
 }
 
-# This version has many `cut` calls.
-convertpath_split_Drive_v1() {
-    declare -n x1_Drive_out="$1"
-    declare -n x1_Path_out="$2"
-    local Path_in="$3"
-    #
-    ## Separate drive prefix,  '/c/'  or 'C:/' .
-    if [ "$(cut -c1,3 <<< "${Path_in}/")" = "//" ] ; then
-        # Given format is /c/xxx
-        x1_Drive_out="$(cut -c2  <<< "$Path_in")" # c
-        x1_Path_out="$(cut  -c3- <<< "$Path_in")" # /xxx
-        # x1_Path_out="${Path_in:-"/"}" # << we already had "/" at (1-based) character 3
-    elif [ "$(cut -c2 <<< "$Path_in")" = ":" ] ; then
-        # Given format is C:/xxx
-        x1_Drive_out="$(cut -c1  <<< "$Path_in")" # C
-        x1_Path_out="$( cut -c3- <<< "$Path_in")" # /xxx
-        # We only tested "^.[:]" here, so Path may be empty.
-        # If Path is empty, change it to "/"
-        x1_Path_out="${x1_Path_out:-"/"}"
-    fi
-    #
-    x1_Drive_out="${x1_Drive_out,}" # change drive to lowercase
-}
-
 #
 # local Drive
 # local Path
