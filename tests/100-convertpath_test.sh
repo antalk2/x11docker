@@ -89,6 +89,36 @@ test_convertpath_split_Readwritemode_rr() {
     assert_same "/some/path:rr"   "${Path_out}"
 }
 
+test_convertpath_split_Drive() {
+    #
+    local Path
+    local Drive
+    convertpath_split_Drive Drive Path "/c/path2"
+    assert_same "c"      "${Drive}" "Drive of /c/path2"
+    assert_same "/path2" "${Path}"  "Path  of /c/path2"
+    #
+    local Path
+    local Drive
+    convertpath_split_Drive Drive Path "C:/path2"
+    assert_same "c"      "${Drive}" "Drive of C:/path2"
+    assert_same "/path2" "${Path}"  "Path  of C:/path2"
+    #
+    local Path
+    local Drive
+    convertpath_split_Drive Drive Path "/path2"
+    assert_same ""       "${Drive}" "Drive of /path2"
+    assert_same "/path2" "${Path}"  "Path  of /path2"
+    #
+    #
+    local Path
+    local Drive
+    convertpath_split_Drive Drive Path "C:"
+    assert_same "c"      "${Drive}" "Drive of C:"
+    assert_same "/"      "${Path}"  "Path  of C:"
+    #
+}
+
+
 test_convertpath_share() {
     #
     # If mode is "share"
