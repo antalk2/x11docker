@@ -10,3 +10,7 @@ shellcheck-dash:
 
 shellcheck-sh:
 	for f in *.sh ; do printf "\n=== %s\n"  "shellcheck $$f"  ;  shellcheck --norc --shell=sh $$f ; done
+
+
+sh-compat:
+	./sh-compat.bash
