@@ -3124,7 +3124,9 @@ buildimage() {                  # --build: build image from x11docker repository
     #
     # Check image name, prepend 'x11docker/' is missing
     local_Imagename="${1:-}"
-    grep -q "x11docker" <<< "$local_Imagename" || local_Imagename="x11docker/$local_Imagename"
+    if ! grep -q "x11docker" <<< "$local_Imagename" ; then
+        local_Imagename="x11docker/$local_Imagename"
+    fi
     flat_Imagename="$(tr / - <<< "$local_Imagename")"
     #
     # remote and local paths
