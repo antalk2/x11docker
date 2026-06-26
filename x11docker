@@ -1766,6 +1766,8 @@ storeinfo_test() {
 #
 # - Old entry for `key` is removed.
 #
+# Requires storeinfo_test and storeinfo_drop
+#
 storeinfo_add_kv() {
     [ -e "$Storeinfofile" ] || return 1
     local key_and_value="${1:-}"
@@ -6976,6 +6978,8 @@ create_xinitrc() {
     declare -f disable_xhost
     declare -f makecookie
     declare -f rocknroll
+    # declare -f storeinfo_test
+    # declare -f storeinfo_drop
     # declare -f storeinfo_add_kv
     # declare -f storeinfo_dump
     declare -f saygoodbye
@@ -9416,6 +9420,8 @@ exec 1>>$(convertpath share "$Containerlogfile") 2>&1
 "
 
   declare -f storeinfo_dump
+  declare -f storeinfo_test
+  declare -f storeinfo_drop
   declare -f storeinfo_add_kv
   declare -f rocknroll
   echo "$Messagefifofuncs"
@@ -9864,6 +9870,8 @@ create_cmdrc() {                # This script runs as unprivileged user in conta
     echo "#! /bin/sh
 # Created startscript for cmdrc containing final container command
 
+$(declare -f storeinfo_test)
+$(declare -f storeinfo_drop)
 $(declare -f storeinfo_add_kv)
 $(declare -f saygoodbye)
 $(declare -f waitfortheend)
