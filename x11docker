@@ -1705,13 +1705,13 @@ parse_inspect() {               # parse json of inspect output using python
 
 
 #
-# function storeinfo()
+# function storeinfo() : Store some information for later use
 #
 #   Uses file `"$Storeinfofile"`
 #
 #   Used a lot.
 #
-storeinfo() {                   # store some information for later use
+storeinfo() {
     # store and provide pieces of information
     # replace entry if codeword is already present
     # Store as codeword=string:
