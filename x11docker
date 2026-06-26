@@ -1846,20 +1846,22 @@ storeinfo_add_kv_sh() {
 #
 rmcr() {
     # convert stdin if $1 is empty. Otherwise convert file $1.
-    case "${1:-}" in
-        "")
-            sed    "s/$(printf "\r")//g"
-            # Q: is there a reason we do not use
-            #       tr -d '\r'
-            #    instead?
-            # A: Maybe started with the in-place editing version,
-            #    and tr cannot do that.
-            ;;
-        *)
-            # Inplace edit $filepath. This branch is not actually used.
-            sed -i "s/$(printf "\r")//g"  "${1:-}"
-            ;;
-    esac
+    #case "${1:-}" in
+    #    "")
+    #
+    sed    "s/$(printf "\r")//g"
+    #
+    #        # Q: is there a reason we do not use
+    #        #       tr -d '\r'
+    #        #    instead?
+    #        # A: Maybe started with the in-place editing version,
+    #        #    and tr cannot do that.
+    #        ;;
+    #    *)
+    #        # Inplace edit $filepath. This branch is not actually used.
+    #        sed -i "s/$(printf "\r")//g"  "${1:-}"
+    #        ;;
+    #esac
 }
 
 #
