@@ -3228,11 +3228,13 @@ cleanup() {                     # --cleanup : check for non-removed containers a
                     Containerid="$(parse_inspect "$Containerinspect" "Id")"
                     #
                     # Replace the original identifier with the longHexId in Orphanedcontainers
+                    # shellcheck disable=SC2001 # (style): See if you can use ${variable//search/replace} instead.
                     Orphanedcontainers="$(sed "s%$Line%$Containerid%" <<< "$Orphanedcontainers")"
                     true
                 else
                     # Remove original identifier from Orphanedcontainers
-                    Orphanedcontainers="$(sed s/$Line// <<< "$Orphanedcontainers")"
+                    # shellcheck disable=SC2001 # (style): See if you can use ${variable//search/replace} instead.
+                    Orphanedcontainers="$(sed "s/$Line//" <<< "$Orphanedcontainers")"
                 fi
             done
             Orphanedcontainers="$(sort <<< "$Orphanedcontainers" | uniq)"
