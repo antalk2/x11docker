@@ -2057,7 +2057,7 @@ mswindowsipcheck() {            # get WSL host IP and Windows host ip
 #
 convertpath_split_Readwritemode() {
     ##
-    ## Note: Local name for namerefs has to differ from tha name
+    ## Note: Local name for namerefs has to differ from the name
     ## passed in.  Here we use the prefix `x1_` for this reason.
     ##
     declare -n x1_Readwritemode_out="$1"
@@ -2077,12 +2077,13 @@ convertpath_split_Readwritemode() {
     case "$x1_Readwritemode_out" in
         ":ro"|":rw") return 0 ;;
         *)
-            warning "$(printf "%s\n%s\n%s"                                                    \
-                             "convertpath_split_Readwritemode:"                               \
-                             "   Path='$Path_in' has ':..' suffix '${x1_Readwritemode_out}'," \
-                             "   that is neither ':ro', nor ':rw'"                            \
-                             "   Note: NOT removing suffix and emitting Readwritemode=':rw'"  \
-                             )"
+            warning "$(trim_to_bar \
+                "|convertpath_split_Readwritemode:
+                 |   Path='$Path_in' has ':..' suffix '${x1_Readwritemode_out}',
+                 |   that is neither ':ro', nor ':rw'
+                 |   Note: NOT removing suffix and emitting Readwritemode=':rw'"
+                 )"
+            #
             x1_Readwritemode_out=":rw"
             x1_Path_out="$Path_in"
             return 1
