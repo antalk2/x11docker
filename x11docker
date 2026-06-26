@@ -3383,40 +3383,43 @@ installer() {                   # --install, --update, --update-master, --remove
 
   ### FIXME: (--update)
   ### maybe not install additional files if x11docker is owned by user
-  local Key1= Key2= Oldversion= Newversion= Format= Prefix
+  local Key1="" Key2="" Oldversion="" Newversion="" Format="" Prefix
 
   Prefix="/usr/local"
 
   case "${1:-}" in
-    --remove-oldprefix)
-      Prefix="/usr"
-    ;;
-    *)
-      [ -x "/usr/bin/x11docker" ] && warning "Option ${1:-}: Detected x11docker installation in /usr/bin
-  Since version 7.6.0 x11docker defaults to ${Prefix}/bin instead.
-  If this was a custom installation without your package manager,
-  you can remove the old installation as root with:
-rm    /usr/bin/x11docker
-rm -R /usr/share/doc/x11docker
-rm    /usr/share/man/man1/x11docker.1.gz
-  or with x11docker option --remove-oldprefix"
-    ;;
+      --remove-oldprefix)
+          Prefix="/usr"
+          ;;
+      *)
+          if [ -x "/usr/bin/x11docker" ] ; then
+              warning "$(trim_to_bar \
+                "|Option ${1:-}: Detected x11docker installation in /usr/bin
+                 |  Since version 7.6.0 x11docker defaults to ${Prefix}/bin instead.
+                 |  If this was a custom installation without your package manager,
+                 |  you can remove the old installation as root with:
+                 |rm    /usr/bin/x11docker
+                 |rm -R /usr/share/doc/x11docker
+                 |rm    /usr/share/man/man1/x11docker.1.gz
+                 |  or with x11docker option --remove-oldprefix"
+                 )"
+              ;;
   esac
 
-  [ "$Startuser" != "root" ] && {
-    case "$Winsubsystem" in
-      CYGWIN|MSYS2) ;;
-      *)
-        case "$Installerarg" in
-          diff) ;;
+  if [ "$Startuser" != "root" ] ; then
+      case "$Winsubsystem" in
+          CYGWIN|MSYS2) ;;
           *)
-            error "Must run as root to install, update or remove x11docker system wide."
-            return 1
-          ;;
-        esac
-      ;;
-    esac
-  }
+              case "$Installerarg" in
+                  diff) ;;
+                  *)
+                      error "Must run as root to install, update or remove x11docker system wide."
+                      return 1
+                      ;;
+              esac
+              ;;
+      esac
+  fi
 
   # Preparing
   case "${1:-}" in
