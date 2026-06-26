@@ -2299,7 +2299,10 @@ convertpath() {                 # convert unix and windows paths
         case "$Mode" in
             unix|subsystem|windows)
                 echo "$Path" ;
-                debugnote "convertpath() $Mode: Docker volumes do not have a specified path on host: $Path"
+                debugnote "$(trim_to_mark \
+                    "|convertpath() $Mode:
+                     : Docker volumes do not have a specified path on host: $Path"
+                     )"
                 ;;
             volume)
                 ## docker volume to volume?
@@ -2307,14 +2310,20 @@ convertpath() {                 # convert unix and windows paths
                 ## Looks like:  "'/path1':'/path2':ro"
                 ##
                 ## Examples: grep 'convertpath volume'
-                ## docker   --volume $(convertpath volume "$Persistanthomevolume" "$Containeruserhomebasefolder")"
+                ## docker   --volume $(convertpath volume "$Persistanthomevolume"
+                ##                                        "$Containeruserhomebasefolder")"
                 ## docker   --device $(convertpath volume "$Line")"
                 ##
                 echo "'$Path':'${containerpath_arg:-/$Path}'${Readwritemode}"
                 ;;
             mount)
                 ##
-                echo "type=volume,source='$Path',target='${containerpath_arg:-/$Path}'${Readwritemode_mount}"
+                echo "$(trim_to_mark \
+                           "|type=volume
+                            :,source='$Path'
+                            :,target='${containerpath_arg:-/$Path}'
+                            :${Readwritemode_mount}"
+                      )"
                 ;;
             container)      echo "${containerpath_arg:-/$Path}" ;;
         esac
@@ -2326,9 +2335,19 @@ convertpath() {                 # convert unix and windows paths
     if [ "$Createcontaineruser" != "no" ] ; then     # global Createcontaineruser
         if [ "$Sharehome" != "host" ] ; then         # global Sharehome
             #                                        # global Containeruserhome
-            if [ -n "$Containeruserhome" ] && grep -q "^$Containeruserhome" <<< "$Path" ; then
-                # Containerpath="$(sed "s%^$Containeruserhome%/home.host%" <<< "$Containerpath")"
-                Containerpath="${Containerpath/#"$Containeruserhome"/\/home.host}" # replace prefix
+            if        [ -n "$Containeruserhome" ] \
+               && grep -q "^$Containeruserhome" <<< "$Path" ; then
+                #
+                # Replace prefix $Containeruserhome with /home.host
+                #
+                # Containerpath="$(
+                #       sed "s%^$Containeruserhome%/home.host%" <<< "$Containerpath"
+                # )"
+                #
+                local old="${Containerpath}"
+                local prefix="${Containeruserhome}"
+                local replacement="/home.host"
+                Containerpath="${old/#"$prefix"/"$replacement"}"
             fi
         fi
         #
@@ -2346,10 +2365,17 @@ convertpath() {                 # convert unix and windows paths
     if [ -z "$Winsubsystem" ] ; then
         case "$Mode" in
             unix|subsystem) echo "$Path" ;;
-            windows)    warning "convertpath(): Nonsense path conversion $Mode: $Path" ; return 1 ;;
-            #volume)    echo "'$Path':'${containerpath_arg:-$Path}'$Readwritemode" ;;
-            #container) echo "${containerpath_arg:-$Path}" ;;
-            volume)     echo "'$Path':'${containerpath_arg:-$Containerpath}'${Readwritemode}" ;;
+            windows)
+                warning "convertpath(): Nonsense path conversion $Mode: $Path" ;
+                return 1
+                ;;
+            #
+            # volume)    echo "'$Path':'${containerpath_arg:-$Path}'$Readwritemode" ;;
+            # container) echo "${containerpath_arg:-$Path}" ;;
+            #
+            volume)
+                echo "'$Path':'${containerpath_arg:-$Containerpath}'${Readwritemode}"
+                ;;
             mount)
                 printf "%s"                                              \
                        "type=bind"                                       \
@@ -2362,7 +2388,7 @@ convertpath() {                 # convert unix and windows paths
         return 0
     fi
 
-    
+    # Only on WSL1
     case "$Winsubsystem" in
         WSL1)
             if [ -z "$Drive" ] ; then # no drive letter
@@ -2375,9 +2401,11 @@ convertpath() {                 # convert unix and windows paths
                                 warning "$(trim_to_bar \
                             "|Request of Windows path to path within WSL:
                              |  $Path
-                             |  Write access from Windows host to WSL files can damage the WSL file system.
+                             |  Write access from Windows host to WSL files
+                             : can damage the WSL file system.
                              |  Read-only access is ok.
-                             |  Option --share: You can add :ro to the path to allow read-only access.
+                             |  Option --share: You can add :ro to the path
+                             : to allow read-only access.
                              |  Example: --share='$Path:ro'" )"
                             fi
                         }
@@ -11900,6 +11928,11 @@ longoptions_collect() {
     L2=$(echo "$L1" | sed -e 's/#.*//')
     #
     # List of words, comma-separated.
+    # 
+    # shellcheck disable=SC2086 # (info): Double quote to prevent globbing
+    #                             and word splitting. We do want word
+    #                             splitting here. Not globbing, though.
+    #
     # Add initial comma to match original
     L2=",$(echo $L2  | sed -e 's/[ ][ ]*/,/g'  )"
     #
