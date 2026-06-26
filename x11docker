@@ -2661,11 +2661,30 @@ waitforlogentry() {
 #
 # function writeaccess( useruid, folderPath )
 #
-# Examples:
-#   writeaccess "$Containeruseruid" "$Persistanthomevolume"
-#   writeaccess "$Hostuseruid"      "$Cachebasefolder"
-#
 # writeaccess 1000 test1 ; echo $?
+#
+#
+# Examples:
+#
+#   writeaccess "$Containeruseruid" "$Persistanthomevolume" # (ex1)
+#   writeaccess "$Hostuseruid"      "$Cachebasefolder"      # (ex2)
+#
+#  Q: Would it not be simpler to use something like `unpriv [ -w $path_to_filder ]` ?
+#
+#  A: Since `unpriv` changes to "$Hostuser" if necessary, this
+#     probably covers the case in (ex2).
+#     Hostuser can be set by --hostuser
+#
+#     Concerning (ex1):   "$Containeruser" defaults to Hostuser,
+#      this is covered by unpriv.
+#
+#     For a non-default (Containeruser, --user): we are asking if a
+#     user inside the container can write a directory (probably outside).
+#     Probably depends on: (1) the user running docker, (2) mapping, is it readonly?
+#     (3) relation of  Containeruser inside and ...
+#
+#     For a reliable answer it might be more practical to ask it from
+#     within the container.
 #
 #
 # https://linux.die.net/man/5/acl
