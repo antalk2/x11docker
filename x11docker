@@ -1800,14 +1800,20 @@ storeinfo_add_kv() {
 # Remove carriage return to translate DOS/Windows newlines into UNIX
 # newlines
 #
-#  Usage1: cat $filepath | rmcr # result on stdout
-#  Usage2: rmcr $filepath       # inplace edit $filepath Never used in this way
+#  Usage1: cat  $filepath | rmcr # result on stdout
+#  Usage2: rmcr $filepath        # inplace edit $filepath Never used in this way
+#
+#   Warning: rmcr is redefined and/or unset in some places!
+#
 #
 rmcr() {
     # convert stdin if $1 is empty. Otherwise convert file $1.
     case "${1:-}" in
         "")
             sed    "s/$(printf "\r")//g"
+            # Q: is there a reason we do not use
+            #       tr -d '\r'
+            #    instead?
             ;;
         *)
             # Inplace edit $filepath. This branch is not actually used.
