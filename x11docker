@@ -1711,6 +1711,84 @@ parse_inspect() {               # parse json of inspect output using python
 #
 #   Used a lot.
 #
+
+#
+# storeinfo_dump( key ) : Get value for a key
+#
+#  - stdout: Value corresponding to key. May be empty.
+#  - return
+#      - If Storeinfofile does not exist: 1
+#      - on success: ?
+#      - if key not found: ? 
+#
+storeinfo_dump() {
+    [ -e "$Storeinfofile" ] || return 1
+    #
+    local key="${1:-}"
+    #
+    # dump entry : find line, drop key
+    grep      "^${key}="   "$Storeinfofile" \
+      | sed "s/^${key}=//"
+}
+
+#
+# storeinfo_drop( key )
+#
+storeinfo_drop() {
+    [ -e "$Storeinfofile" ] || return 1
+    #
+    local key="${1:-}"
+    #
+    # note: sed -i causes file permission issues if called
+    #       in container in Cygwin, compare ticket #187
+    #       chmod 666 for $Sharefolder could probably fix that. (FIXME)
+    #
+    # Delete entry: remove line matching to key
+    sed -i  "/^${key}=/d" "$Storeinfofile"
+}
+
+#
+# storeinfo_test( key )
+#
+#  return 1 if not found
+#
+storeinfo_test() {
+    [ -e "$Storeinfofile" ] || return 1
+    local key="${1:-}"
+    # test line matching to key
+    grep -q  "^${key}="   "$Storeinfofile"
+}
+
+#
+# storeinfo_add_kv( key_and_value ) : Store a "key=value" in "$Storeinfofile"
+#
+# $1: key_and_value : "key=value"
+#
+# - Old entry for `key` is removed.
+#
+storeinfo_add_kv() {
+    [ -e "$Storeinfofile" ] || return 1
+    local key_and_value="${1:-}"
+    #
+    # store entry  key=value
+    debugnote "storeinfo(): ${key_and_value}"
+    #
+    local key
+    key="$(echo "${key_and_value}" | cut -d= -f1)"
+    #
+    # drop possible old entry :
+    #
+    # Q: Why test? Why not just drop it?
+    # A: Maybe grep is faster, and most of the time there is no entry
+    #    to delete.
+    #
+    if storeinfo_test "${key}" ; then
+        storeinfo_drop "${key}"
+    fi
+    # Store value
+    echo "${key_and_value}"           >> "$Storeinfofile"
+}
+
 storeinfo() {
     # store and provide pieces of information
     # replace entry if codeword is already present
@@ -1734,31 +1812,10 @@ storeinfo() {
     #
     local key="${2:-}"
     case "${1:-}" in
-        dump)
-            # dump entry : find line, drop key
-            grep    "^${key}="   "$Storeinfofile" \
-            | sed "s/^${key}=//"
-            ;;
-        drop)
-            # delete entry: remove line matching to key
-            sed -i  "/^${key}=/d" "$Storeinfofile"
-            ;;
-        test)
-            # test line matching to key
-            grep -q  "^${key}="   "$Storeinfofile"
-            ;;
-        #
-        *)
-            # store entry  key=value
-            debugnote "storeinfo(): ${1:-}"
-            key="$(echo "${1:-}" | cut -d= -f1)"
-            # drop possible old entry :
-            if grep -q  "^${key}="     "$Storeinfofile" ; then
-                sed -i "/^${key}=/d"   "$Storeinfofile"
-            fi
-            # Store value
-            echo "${1:-}"           >> "$Storeinfofile"
-            ;;
+        dump) storeinfo_dump "${key}" ;;
+        drop) storeinfo_drop "${key}" ;;
+        test) storeinfo_test "${key}" ;;
+        *)    storeinfo_add_kv "${1:-}" ;;
     esac
 }
 
