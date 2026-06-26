@@ -1934,46 +1934,79 @@ wincmd() {
 # Set global Hostip and Hostipwindows
 #  based on output from "ip -4 addr" and "ipconfig.exe"
 #
+#  Looks at the host and windows IP addresses, looks for a pair
+#  where Hostip and Winip look at the same network address.
+#
+#  - On success, Hostip and Hostipwindows contain the matching pair found.
+#  - return 1 if could not get IP addresses of ipcalc is missing.
+#  - If no pair found, the return value is (???), and Hostipwindows
+#    is not changed from its incoming value.
+#
 mswindowsipcheck() {            # get WSL host IP and Windows host ip
     # thanks to @eyespore in https://github.com/mviereck/x11docker/issues/557
 
     local Hostips Mswindowsips Hostcidr Hostprefix Mswindowsnetwork Hostnetwork
     # global: Hostip Hostipwindows
 
-    Hostips=$(ip -4 addr show scope global | awk '/inet / { if ($0 !~ /(docker|br-|veth|cni|podman)/) print $2 }')
+    Hostips=$(
+        ip -4 addr show scope global \
+            | awk '/inet / { if ($0 !~ /(docker|br-|veth|cni|podman)/) print $2 }'
+    )
+
     if [[ -z "$Hostips" ]]; then 
         note "mswindowsipcheck(): Failed to check Linux host IPs"
         return 1
     fi
 
-    Mswindowsips=$(ipconfig.exe | grep -i 'IPv4' | awk '{print $NF}' | tr -d '\r')
+    # In awk, NF is a predefined variable whose value is the number of
+    #            fields in the current record.
+    #         So awk '{print $NF}' prints the last field (of the line)
+    #
+    # Q: What is the difference between   `| tr -d '\r'`   and `| rmcr`   ?
+    # A: (1) rmcr has multiple definitions, can be  rmcr() { cat; }
+    # A: (2) Maybe there is a subtle differemce betweeen `| tr -d '\r'`
+    #        and `sed "s/$(printf "\r")//g"` (used in rmcr) ?
+    #
+    Mswindowsips=$(
+        ipconfig.exe | grep -i 'IPv4' | awk '{print $NF}' | tr -d '\r'
+    )
+
     if [[ -z "$Mswindowsips" ]]; then 
         note "mswindowsipcheck(): Failed to check Windows host IPs"
         return 1
     fi
 
-    command -v ipcalc >/dev/null || {
+    if ! command -v ipcalc >/dev/null ; then
         note "$(trim_to_bar \
          "|mswindowsipcheck(): command ipcalc not found.
-          |  Please install ipcalc" )"
+          |  Please install ipcalc"
+          )"
         return 1
-    }
+    fi
 
     # https://tldp.org/LDP/abs/html/refcards.html#AEN22664
     # https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
     # ${string%substring}	Strip shortest match of $substring from back of $string
     # ${string#substring}	Strip shortest match of $substring from front of $string
+    #
     for Hostcidr in $Hostips; do
-        Hostip="${Hostcidr%/*}"      # set global Hostip
-        Hostprefix="${Hostcidr#*/}"
+        # set global Hostip
+        Hostip="${Hostcidr%/*}"     # n.n.n.n/24 -> n.n.n.n
+        Hostprefix="${Hostcidr#*/}" # n.n.n.n/24 -> 24
 
         for Winip in $Mswindowsips; do
+            # ipcalc  [options] ADDRESS[[/]NETMASK] [NETMASK]
+            #    -n --nocolor Don't display ANSI color codes
+            #
+            # Mswindowsnetwork and Hostnetwork are adresses in the form 192.168.0.0/24
+            # (The non-significant bits of IP addresses zeroed out)
+            # 
             Mswindowsnetwork=$(ipcalc -n "$Winip/$Hostprefix"  | grep Network | awk '{print $2}')
             Hostnetwork=$(ipcalc      -n "$Hostip/$Hostprefix" | grep Network | awk '{print $2}')
 
             if [[ "$Mswindowsnetwork" == "$Hostnetwork" ]]; then
                 Hostipwindows=$Winip      # set global Hostipwindows
-                break 2 # break 2 loops
+                break 2 # break 2 loops # Why not return 0 here?
             fi
         done
     done
