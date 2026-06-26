@@ -31,4 +31,4 @@ lib/bashunit:
 
 
 shellcheck:
-	shellcheck x11docker
+	shellcheck --shell=bash x11docker

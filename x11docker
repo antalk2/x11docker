@@ -94,13 +94,14 @@ yes_or_no() { if "${@}" ; then echo yes ; else echo no ; fi }
 
 
 
-echodbg()  { >/dev/stderr echo $'\e[0;36m'"DBG  $@"$'\e[0m'; }
+# echodbg()  { >/dev/stderr echo $'\e[0;36m'"DBG  $@"$'\e[0m'; }
+echodbg()  { >/dev/stderr printf  '\e[0;36m%s\e[0m\n' "DBG  $*" ; }
 
 stacktrace() {
     local i=1 line file func
     echo >&2 "--- stacktrace begin ---"
     while read -r line func file < <(caller $i); do
-        echo >&2 "${file}:${line}: level[$i]  $func(): $(sed -n ${line}p $file)"
+        echo >&2 "${file}:${line}: level[$i]  $func(): $(sed -n "${line}p" "$file")"
         ((i++))
     done
     echo >&2 "--- stacktrace end ---"
@@ -122,20 +123,26 @@ stacktrace2() {
 # This will report args and stdout of calls to F, prefixed with "SPY_STDOUT"
 #
 SPY_STDOUT() {
-    local tmpfile1="$(mktemp -t file_1_XXXXXX)"
+    local tmpfile1
+    tmpfile1="$(mktemp -t file_1_XXXXXX)"
     "${@}" 1>"$tmpfile1"
-    local exitCode=${PIPESTATUS[0]}
-    local stdout="$(< "$tmpfile1")"
+    #
+    local exitCode
+    exitCode=${PIPESTATUS[0]}
+    #
+    local stdout
+    stdout="$(< "$tmpfile1")"
+    #
     unlink "$tmpfile1"
     echo "SPY_STDOUT args:   $*"         >&2
     echo "SPY_STDOUT stdout: ${stdout}"  >&2
     echo "${stdout}"
-    return $exitCode
+    return "$exitCode"
 }
 
 ## function usage()
 usage() {                       # --help: show usage information
-    echo "$(trim_to_bar \
+    trim_to_bar \
      "|
       |x11docker: Run GUI applications and desktop environments in containers.
       |           Supports docker and podman, rootful or rootless.
@@ -518,11 +525,11 @@ usage() {                       # --help: show usage information
            |                       Preserves ~/.local/share/x11docker from option --home.
            |     --remove-oldprefix   Before version 7.6.0 x11docker installed itself
            |                       into /usr/bin. Now it installs into /usr/local/bin.
-           |                       Use --remove-oldprefix to remove /usr/bin installations.")"
+           |                       Use --remove-oldprefix to remove /usr/bin installations."
         ;;
     esac
 
-    echo "$(trim_to_bar \
+    trim_to_bar \
       "|
        |Exit codes:
        |  0:     Success
@@ -532,14 +539,14 @@ usage() {                       # --help: show usage information
        |
        |x11docker version: $Version
        |Please report issues and get help at: https://github.com/mviereck/x11docker
-       |")"
+       |"
 }
 
 
 
 ## function license()
 license() {                     # --license: show license (MIT)
-    echo "$(trim_to_bar \
+    trim_to_bar \
       '|
        |MIT License
        |
@@ -561,7 +568,7 @@ license() {                     # --license: show license (MIT)
        |AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
        |LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
        |OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-       |SOFTWARE.')"
+       |SOFTWARE.'
 }
 
 #### messages
@@ -638,7 +645,7 @@ alertbox() {                    # X alert box with title $1 and message $2
 #
 debugnote() {                   # show debug output $*
     if [ "$Debugmode" = "yes" ] && [ "$Verbose" != "yes" ] ; then
-        echo "${Colblue}DEBUGNOTE[$(timestamp)]:${Colnorm} $*" >&${FDstderr}
+        echo "${Colblue}DEBUGNOTE[$(timestamp)]:${Colnorm} $*" >&"${FDstderr}"
     fi
     #
     logentry "DEBUGNOTE[$(timestamp)]: $*"
@@ -1548,14 +1555,23 @@ makecookie() {                  # bake a cookie
     #
     #
     # mcookie 2>/dev/null || echo $RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM | cut -b1-32
-    mcookie 2>/dev/null || {
-        printf "%02x" $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256))
-        printf "%02x" $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256))
-        printf "%02x" $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256))
-        printf "%02x" $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256))
-        printf "\n"
+    if  mcookie 2>/dev/null ; then
         true
-    }
+    elif which head md5sum 2>/dev/null ; then
+        head -200 /dev/urandom | md5sum | cut -b1-32
+        true
+    else
+        # SC3028 (error): In dash, RANDOM is not supported.
+        # SC2004 (style): $/${} is unnecessary on arithmetic variables.
+        #
+        # printf "%02x" $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256))
+        # printf "%02x" $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256))
+        # printf "%02x" $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256))
+        # printf "%02x" $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256))
+        # printf "\n"
+        #
+        false
+    fi
 }
 
 #
@@ -7494,7 +7510,7 @@ create_xinitrc() {
 }
 
 disable_xhost() {               # remove any access to X server granted by xhost
-  local Line= Environment
+  local Line="" Environment
   Environment="${1:-"DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY"}"
   xtool --check xhost || return 1
   xtool "env $Environment xhost 2>&1 | tail -n +2  /dev/stdin" | while read -r Line ; do  # read all but the first line (header)
