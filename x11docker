@@ -2091,7 +2091,8 @@ convertpath_split_Readwritemode() {
     esac
 }
 
-convertpath_split_Drive_v1(){
+# This version has many `cut` calls.
+convertpath_split_Drive_v1() {
     declare -n x1_Drive_out="$1"
     declare -n x1_Path_out="$2"
     local Path_in="$3"
