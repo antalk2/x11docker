@@ -41,14 +41,14 @@ echo "result: '$x' expect: no"
 
 
 #
-# Variant 1b: uses '$*`.
+# Variant 1b: uses "${@}"
 #
 
 echo
 echo "*** yes_or_no1b ***"
 
 yes_or_no1b() {
-    if $* ; then
+    if "${@}" ; then
         echo yes
     else
         echo no
@@ -70,6 +70,18 @@ dir_perm_flags="01234-"
 x=$(yes_or_no1b [ "${dir_perm_flags:5:1}" == "w" ]  )
 echo "dp result: '$x' expect: no"
 
+if true ; then
+    ## $* uses IFS!
+    #
+    dir_perm_flags="01234w"
+    x=$(IFS= yes_or_no1b [ "${dir_perm_flags:5:1}" == "w" ]  )
+    echo "IFS result: '$x' expect: yes"
+    #
+    dir_perm_flags="01234w"
+    x=$(IFS= yes_or_no1b [ "${dir_perm_flags:5:1}" == "@" ]  )
+    echo "IFS result: '$x' expect: no"
+    #
+fi
 
 
 #
@@ -115,7 +127,7 @@ echo "result: '$x' expect: yes"
 #
 
 yes_or_no() {
-    if $* ; then
+    if "${@}" ; then
         echo yes
     else
         echo no
@@ -138,10 +150,10 @@ fi
 #
 
 variable=$(yes_or_no [ "one" = "two" ] )
-echo "res '$variable'"
+echo "res '$variable' expect: no"
 
 variable=$(yes_or_no [ "one" = "one" ] )
-echo "res '$variable'"
+echo "res '$variable' expect: yes"
 
 dir_perm_flags='drwxrwxrwx'
 
@@ -158,7 +170,4 @@ dir_is_user_writable=$( exitcode_yes_or_no )
 
 
 dir_is_user_writable=$( [ "${dir_perm_flags:2:1}" == "w" ] ; exitcode_yes_or_no )
-
-
-
 

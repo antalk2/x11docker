@@ -78,7 +78,7 @@ exitcode_yes_or_no() { if [ "$?" = "0" ] ; then echo yes ; else  echo no ; fi }
 #
 # echo yes or echo no depending on exitcode of $*
 #
-yes_or_no() { if $* ; then echo yes ; else echo no ; fi }
+yes_or_no() { if "${@}" ; then echo yes ; else echo no ; fi }
 
 
 #
