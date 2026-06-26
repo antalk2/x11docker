@@ -1888,7 +1888,7 @@ version_less_than() {
     #  ( a <= b ) && ( a != b )
     local a="${1:-}"
     local b="${2:-}"
-    { version_less_equal "${a}" "${b}" } && [ "${a}" != "${b}" ]
+    { version_less_equal "${a}" "${b}" ; } && [ "${a}" != "${b}" ]
 }
 
 #
