@@ -142,7 +142,8 @@ SPY_STDOUT() {
 
 ## function usage()
 usage() {                       # --help: show usage information
-    trim_to_bar \
+    # brace to help shellcheck parsing the following block.
+    { trim_to_bar \
      "|
       |x11docker: Run GUI applications and desktop environments in containers.
       |           Supports docker and podman, rootful or rootless.
@@ -506,12 +507,13 @@ usage() {                       # --help: show usage information
       |     --cleanup         Clean up orphaned containers and cache files. Those
       |                       can remain if x11docker still runs on system shutdown.
       |                       Terminates currently running x11docker containers, too.
-      |                       Regards (only) option --backend=BACKEND.")"
+      |                       Regards (only) option --backend=BACKEND."
+     }
 
     case "$Packagedversion" in
     yes) ;;
     *) 
-        echo "$(trim_to_bar \
+        trim_to_bar \
           "|
            |Installation options (need root permissions):
            |     --install         Install x11docker from current folder.
