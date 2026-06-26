@@ -1866,18 +1866,38 @@ unspecialstring() {
 }
 
 #
-# function verlt()
+# function version_less_than() : a < b for dot-separated version numbers
 #
-verlt() {                       # version number check $1 less than $2
-    [ "${1:-}" = "${2:-}" ] && return 1 || { verlte "${1:-}" "${2:-}" && return 0 || return 1 ; }
+# was: verlt
+#
+# return 0 or 1
+#
+version_less_than() {
+    #
+    # [ "${1:-}" = "${2:-}" ] && return 1 ||
+    #    { version_less_equal "${1:-}" "${2:-}" && return 0 || return 1 ; }
+    #
+    #  ( a <= b ) && ( a != b )
+    local a="${1:-}"
+    local b="${2:-}"
+    { version_less_equal "${a}" "${b}" } && [ "${a}" != "${b}" ]
 }
 
 #
-# function verlte()
+# function version_less_equal(a,b) : a <= b for dot-separated version numbers
 #
-verlte() {                      # version number check $1 less than or equal $2
+# was: verlte
+#
+# return 0 or 1
+#
+version_less_equal() {
+    local a="${1:-}"
+    local b="${2:-}"
+    #
     # sort -V : natural sort of (version) numbers within text
-    [  "${1:-}" = "$(echo -e "${1:-}\n${2:-}" | sort -V | head -n1)" ] && return 0 || return 1
+    local the_smaller_one="$(echo -e "${a}\n${b}" | sort -V | head -n1)"
+    #
+    [ "${a}" = "${the_smaller_one}" ] # the result
 }
 
 #
@@ -4762,7 +4782,7 @@ check_xcontainer() {            # option --xc: check backend, rootless and image
       Xcontaineroptionsconsole="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "options_console")"
       Xcontainertools="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "tools")"
       Xcontainerversion="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "version")"
-      verlt "$Xcontainerversion" "$Xcontainerversionlatest" && note "Option --xc: Please update image x11docker/xserver
+      version_less_than "$Xcontainerversion" "$Xcontainerversionlatest" && note "Option --xc: Please update image x11docker/xserver
   with 'docker pull x11docker/xserver'."
     ;;
     no)
@@ -4824,7 +4844,7 @@ check_xdepends() {              # check dependencies on host for X server option
   # Wayland
   case "${1:-}" in
     --xpra-xwayland|--xpra2-xwayland|--weston-xwayland|--xwayland|--satellite|--weston|--kwin|--kwin-xwayland|--hostwayland)
-      [ "$Nvidiaversion" ] && verlt "$Nvidiaversion" "470" && {
+      [ "$Nvidiaversion" ] && version_less_than "$Nvidiaversion" "470" && {
         $Message "${1:-}: Closed source NVIDIA driver $Nvidiaversion < version 470.x does not support Wayland.
   You would need NVIDIA driver>=v470.x and Xwayland>=21.1.2"
         Return=1
@@ -5503,7 +5523,7 @@ check_xserver() {               # check chosen X server, auto-choose X server
 
   grep -q -i "GNOME" <<< "$XDG_CURRENT_DESKTOP" && {
     Gnomeversion="$(gnome-shell --version)"
-    [ "$Gnomeversion" ] && verlt "$Gnomeversion" "GNOME Shell 3.38" && {
+    [ "$Gnomeversion" ] && version_less_than "$Gnomeversion" "GNOME Shell 3.38" && {
       case "$Xserver" in
         --hostdisplay|--xorg) ;;
         *)
@@ -5526,7 +5546,7 @@ check_xserver() {               # check chosen X server, auto-choose X server
     yes|direct)
       [ "$Nvidiaversion" ] && case "$Xserver" in
         --xpra-xwayland|--xpra2-xwayland|--weston-xwayland|--xwayland|--satellite|--weston|--kwin|--kwin-xwayland|--hostwayland)
-          verlt "$Nvidiaversion" "470" && note "Option $Xserver --gpu: Your system uses closed source NVIDIA
+          version_less_than "$Nvidiaversion" "470" && note "Option $Xserver --gpu: Your system uses closed source NVIDIA
   driver version $Nvidiaversion.
   GPU support might work only with options --hostdisplay and --xorg.
   Consider to use free open source driver nouveau instead.
@@ -5700,7 +5720,7 @@ check_xserver() {               # check chosen X server, auto-choose X server
         yes) Satelliteversion="0.8.1" ;;
         no)
           Satelliteversion="$(xwayland-satellite -version | cut -c2-)"
-          verlt "$Satelliteversion" "0.8.1" && warning "Option $Xserver: You have xwayland-satellite
+          version_less_than "$Satelliteversion" "0.8.1" && warning "Option $Xserver: You have xwayland-satellite
   version v$Satelliteversion. Please update to at least v0.8.1
   or provide image x11docker/xserver.
   Otherwise some setup like cookie authentication
@@ -6070,7 +6090,7 @@ path=$Xwaylandwrapper" >> "$Westonini"
         yes)
           Xrandremulation="-force-xrandr-emulation"
           Decorate="-decorate"
-          verlt "$Xcontainerversion" "2.0" && Xrandremulation="" && Decorate=""
+          version_less_than "$Xcontainerversion" "2.0" && Xrandremulation="" && Decorate=""
         ;;
         no)
           Xwayland -help 2>&1 | grep -q "force-xrandr-emulation" && Xrandremulation="-force-xrandr-emulation"
@@ -6151,7 +6171,7 @@ $Xwaylandoptions \\
     ;;
 
     --satellite)
-      verlt "$Satelliteversion" "0.8.1" && {
+      version_less_than "$Satelliteversion" "0.8.1" && {
         Xcommand="$(get_xpath xwayland-satellite) :$Newdisplaynumber"
       } || {
         Xcommand="$(get_xpath xwayland-satellite) :$Newdisplaynumber $Xserveroptions"
@@ -7943,9 +7963,9 @@ check_runtime() {               # option --runtime
     sysbox-runc)
       store_runoption_env "SYSBOX_HONOR_CAPS=TRUE"
       check_optionset "--runtime=sysbox-runc" "--alsa --webcam" ||:
-      verlt "$(uname -r)" "5.12" && error "Option --runtime=sysbox-runc needs at least
+      version_less_than "$(uname -r)" "5.12" && error "Option --runtime=sysbox-runc needs at least
   Linux kernel version >=5.12"
-      verlt "$(sysbox-runc -v | grep version | tr -d ' \t'| cut -d: -f2)" "0.5" && error "Option --runtime=sysbox-runc needs at least
+      version_less_than "$(sysbox-runc -v | grep version | tr -d ' \t'| cut -d: -f2)" "0.5" && error "Option --runtime=sysbox-runc needs at least
   Sysbox version >=0.5.0"
     ;;
     *)
@@ -13457,7 +13477,7 @@ check_options_messages() {      # some messages depending on options, but not ch
       # --gpu=iglx
       [ "$Sharegpu" = "iglx" ] && [ "$Xcontainer_option" = "no" ] && [ -e "/var/log/Xorg.0.log" ] && {
         Xorgversion="$(grep -m1 xorg-server </var/log/Xorg.0.log | cut -d: -f2 | cut -d' ' -f1)"
-        [ -z "$Nvidiaversion" ] && [ -n "$Xorgversion" ] && verlt "$Xorgversion" "1.20.8" && note "Options --xorg --gpu=iglx: 
+        [ -z "$Nvidiaversion" ] && [ -n "$Xorgversion" ] && version_less_than "$Xorgversion" "1.20.8" && note "Options --xorg --gpu=iglx: 
   It seems you have Xorg v$Xorgversion. iGLX is known to have a bug
   in Xorg<v1.20.8. --gpu=iglx may fail and give black content."
       }
