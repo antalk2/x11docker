@@ -2355,12 +2355,12 @@ convertpath() {                 # convert unix and windows paths
                 ;;
             mount)
                 ##
-                echo "$(trim_to_mark \
-                           "|type=volume
-                            :,source='$Path'
-                            :,target='${containerpath_arg:-/$Path}'
-                            :${Readwritemode_mount}"
-                      )"
+                trim_to_mark \
+                      "|type=volume
+                       :,source='$Path'
+                       :,target='${containerpath_arg:-/$Path}'
+                       :${Readwritemode_mount}"
+                #
                 ;;
             container)      echo "${containerpath_arg:-/$Path}" ;;
         esac
