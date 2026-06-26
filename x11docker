@@ -673,8 +673,8 @@ error() {                       # show error message and exit
   # output to logfile
   logentry "$(printf "%s\n" "x11docker ERROR: $Message")"
   saygoodbye error
-  storeinfo test error && waitfortheend
-  storeinfo error=64
+  storeinfo_test error && waitfortheend
+  storeinfo_add_kv error=64
 
   # output to X dialogbox if not running in terminal
   # shellcheck disable=SC2086
@@ -745,7 +745,7 @@ traperror() {                   # trap ERR: --debug: Output for 'set -o errtrace
        |  ${4:-}
        |  ${3:-} - ${5:-}" )"
     #
-    storeinfo error=64
+    storeinfo_add_kv error=64
     saygoodbye traperror
 }
 
@@ -896,7 +896,7 @@ finish() {      # trap EXIT routine to clean up background processes and cache
     done < <(tac "$Storepidfile" 2>/dev/null)
 
     # --pulseaudio: unload module
-    Pulseaudiomoduleid="$(storeinfo dump pulseaudiomoduleid)"
+    Pulseaudiomoduleid="$(storeinfo_dump pulseaudiomoduleid)"
     [ "$Pulseaudiomoduleid" ] && unpriv "pactl unload-module '$Pulseaudiomoduleid'"
 
     # --xc --xoverip: remove possible internal network
@@ -945,15 +945,15 @@ finish() {      # trap EXIT routine to clean up background processes and cache
         checkpid "$Pid" && {
             # should never happen
             warning "Failed to terminate pid $Pid ($Name): $(pspid "$Pid" || true)"
-            storeinfo error=64
+            storeinfo_add_kv error=64
         }
     done < <(tac "$Storepidfile" 2>/dev/null)
 
-    Exitcode=$(storeinfo dump error)
+    Exitcode=$(storeinfo_dump error)
     Exitcode="${Exitcode:-0}"
     debugnote "x11docker exit code: $Exitcode"
-    storeinfo test cmdexitcode && {
-        Exitcode=$(storeinfo dump cmdexitcode)
+    storeinfo_test cmdexitcode && {
+        Exitcode=$(storeinfo_dump cmdexitcode)
         debugnote "CMD exit code: $Exitcode"
     }
 
@@ -1007,11 +1007,11 @@ finish() {      # trap EXIT routine to clean up background processes and cache
 #
 finish_sigint() {               # trap SIGINT to activate debug mode on finish()
     local Pid1pid  X11dockerpid
-    X11dockerpid="$(storeinfo dump x11dockerpid)"
+    X11dockerpid="$(storeinfo_dump x11dockerpid)"
     Debugmode="yes"
     [ "$$" = "$X11dockerpid" ] && {
         debugnote "Received SIGINT"
-        storeinfo error=130
+        storeinfo_add_kv error=130
         finish
         :
     } || {
@@ -1042,13 +1042,13 @@ checkpid() {                    # check if PID $1 is active
 # function containerisrunning()
 #
 containerisrunning() {          # check if container is running
-    storeinfo test containerid || return 1
+    storeinfo_test containerid || return 1
     case "$Dockervm" in
         no)
-            checkpid      "$(storeinfo dump pid1pid)"
+            checkpid      "$(storeinfo_dump pid1pid)"
             ;;
         moby|desktop)
-            unpriv_backend "$Backendbin inspect '$(storeinfo dump containerid)'" \
+            unpriv_backend "$Backendbin inspect '$(storeinfo_dump containerid)'" \
                            >/dev/null 2>&1
             ;;
     esac
@@ -1789,35 +1789,35 @@ storeinfo_add_kv() {
     echo "${key_and_value}"           >> "$Storeinfofile"
 }
 
-storeinfo() {
-    # store and provide pieces of information
-    # replace entry if codeword is already present
-    # Store as codeword=string:
-    #   $1 codeword=string
-    # Dump stored string:
-    #   $1 dump
-    #   #2 codeword
-    # Drop stored string:
-    #   $1 drop
-    #   #2 codeword
-    # Test for codeword: (return 1 if not found)
-    #   $1 test
-    #   $2 codeword
-    #
-    # note: sed -i causes file permission issues if called
-    #       in container in Cygwin, compare ticket #187
-    #       chmod 666 for $Sharefolder could probably fix that. (FIXME)
-    #
-    [ -e "$Storeinfofile" ] || return 1
-    #
-    local key="${2:-}"
-    case "${1:-}" in
-        dump) storeinfo_dump "${key}" ;;
-        drop) storeinfo_drop "${key}" ;;
-        test) storeinfo_test "${key}" ;;
-        *)    storeinfo_add_kv "${1:-}" ;;
-    esac
-}
+# storeinfo() {
+#     # store and provide pieces of information
+#     # replace entry if codeword is already present
+#     # Store as codeword=string:
+#     #   $1 codeword=string
+#     # Dump stored string:
+#     #   $1 dump
+#     #   #2 codeword
+#     # Drop stored string:
+#     #   $1 drop
+#     #   #2 codeword
+#     # Test for codeword: (return 1 if not found)
+#     #   $1 test
+#     #   $2 codeword
+#     #
+#     # note: sed -i causes file permission issues if called
+#     #       in container in Cygwin, compare ticket #187
+#     #       chmod 666 for $Sharefolder could probably fix that. (FIXME)
+#     #
+#     [ -e "$Storeinfofile" ] || return 1
+#     #
+#     local key="${2:-}"
+#     case "${1:-}" in
+#         dump) storeinfo_dump "${key}" ;;
+#         drop) storeinfo_drop "${key}" ;;
+#         test) storeinfo_test "${key}" ;;
+#         *)    storeinfo_add_kv "${1:-}" ;;
+#     esac
+# }
 
 #
 # function rmcr( filepath )
@@ -4171,7 +4171,7 @@ setup_sound_pulseaudio() {      # option --pulseaudio: set up pulseaudio connect
       #Pulseaudiomoduleid="$(unpriv "pactl load-module libpipewire-module-protocol-native socket='$Pulseaudiosocket' 2>&1 ||:")" # fails with pipewire
 
       isint "$Pulseaudiomoduleid" && {
-        storeinfo "pulseaudiomoduleid=$Pulseaudiomoduleid"
+        storeinfo_add_kv "pulseaudiomoduleid=$Pulseaudiomoduleid"
         store_runoption_env "PULSE_SERVER=unix:$(convertpath share "$Pulseaudiosocket")"
         Setcookie="yes"
       } || {
@@ -5721,7 +5721,7 @@ check_xserver() {               # check chosen X server, auto-choose X server
   esac
 
   [ "$Autochooseserver" = "yes" ] && note "Using X server option $Xserver"
-  storeinfo "xserver=$Xserver"
+  storeinfo_add_kv "xserver=$Xserver"
 
   return 0
 }
@@ -6959,66 +6959,81 @@ exit 0
 
   return 0
 }
-create_xinitrc() {              # create xinitrc: set up X environment, create cookies
-  echo "#! /bin/sh"
-  declare -f cookiebaker
-  declare -f strlenhex
-  declare -f pspid
-  declare -f disable_xhost
-  declare -f makecookie
-  declare -f rocknroll
-  declare -f storeinfo
-  declare -f saygoodbye
-  echo "$Messagefifofuncs"
-  case "$Xcontainer_option" in
-    yes)
-      echo           "storepid() { : ; }"
-      echo           "unpriv() {"
-      echo           '  eval "${1:-}"'
-      echo           "}"
-    ;;
-    no)
-      declare -f storepid
-      declare -f unpriv
-      echo           "Unpriv='$Unpriv'"
-    ;;
-  esac
-  echo               "xtool() {"
-  echo               '  [ "${1:-}" = "--check" ] && command -v "${2:-}" && return'
-  echo               '  eval ${1:-}'
-  echo               "}"
-  echo               "getscreensize() {"
-  echo               "  CurrentXaxis=\"\$(xrandr | grep primary | cut -d' ' -f4 | cut -dx -f1 )\""
-  echo               "  CurrentYaxis=\"\$(xrandr | grep primary | cut -d' ' -f4 | cut -dx -f2 | cut -d+ -f1)\""
-  echo               "}"
-  echo               "checkscreensize() {"
-  echo               "  getscreensize"
-  echo               "  [ \"\$Xaxis\" = \"\$CurrentXaxis\" ] || return 1"
-  echo               "  [ \"\$Yaxis\" = \"\$CurrentYaxis\" ] || return 1"
-  echo               "  return 0"
-  echo               "}"
-  echo               "getprimary() {"
-  echo               "  xrandr | grep -q primary || xrandr --output \$(xrandr | grep ' connected' | head -n1 | cut -d' ' -f1) --primary"
-  echo               "  echo \$(xrandr | grep primary | cut -d' ' -f1)"
-  echo               "}"
-  echo               ""
 
-  echo               "Messagefile='$Messagefifo'"
-  echo               "Output=\"\$(getprimary)\""
-  echo               "Storeinfofile='$Storeinfofile'"
-  echo               "Storepidfile='$Storepidfile'"
-  echo               "Timetosaygoodbyefile='$Timetosaygoodbyefile'"
-  echo               ""
-  echo               "export PATH='${PATH:-}'"
-  echo               ""
-  echo               "Cookie=''"
-  echo               "Line=''"
-  echo               "Var=''"
-  echo               ""
+# create xinitrc: set up X environment, create cookies
+create_xinitrc() {
+    echo "#! /bin/sh"
+    #
+    # declare -f FUNNAME emits the definition of FUNNAME. This is how
+    #       unmodified functions are shared with the emitted scripts.
+    #
+    #       Note: we start from bash, yet as for /bin/sh
+    #             May need to check portability of these functions.
+    #
+    declare -f cookiebaker
+    declare -f strlenhex
+    declare -f pspid
+    declare -f disable_xhost
+    declare -f makecookie
+    declare -f rocknroll
+    # declare -f storeinfo_add_kv
+    # declare -f storeinfo_dump
+    declare -f saygoodbye
+    #
+    # Stuff that differs from the main x11docker script:
+    #
+    echo "$Messagefifofuncs"
+    #
+    case "$Xcontainer_option" in
+        yes)
+            echo           "storepid() { : ; }"
+            echo           "unpriv() {"
+            echo           '  eval "${1:-}"'
+            echo           "}"
+            ;;
+        no)
+            declare -f storepid
+            declare -f unpriv
+            echo           "Unpriv='$Unpriv'"
+            ;;
+    esac
+    #
+    echo               "xtool() {"
+    echo               '  [ "${1:-}" = "--check" ] && command -v "${2:-}" && return'
+    echo               '  eval ${1:-}'
+    echo               "}"
+    echo               "getscreensize() {"
+    echo               "  CurrentXaxis=\"\$(xrandr | grep primary | cut -d' ' -f4 | cut -dx -f1 )\""
+    echo               "  CurrentYaxis=\"\$(xrandr | grep primary | cut -d' ' -f4 | cut -dx -f2 | cut -d+ -f1)\""
+    echo               "}"
+    echo               "checkscreensize() {"
+    echo               "  getscreensize"
+    echo               "  [ \"\$Xaxis\" = \"\$CurrentXaxis\" ] || return 1"
+    echo               "  [ \"\$Yaxis\" = \"\$CurrentYaxis\" ] || return 1"
+    echo               "  return 0"
+    echo               "}"
+    echo               "getprimary() {"
+    echo               "  xrandr | grep -q primary || xrandr --output \$(xrandr | grep ' connected' | head -n1 | cut -d' ' -f1) --primary"
+    echo               "  echo \$(xrandr | grep primary | cut -d' ' -f1)"
+    echo               "}"
+    echo               ""
 
-  echo               "echo 'Running xinitrc'"
-  echo               "debugnote 'Running xinitrc'"
-  echo               ""
+    echo               "Messagefile='$Messagefifo'"
+    echo               "Output=\"\$(getprimary)\""
+    echo               "Storeinfofile='$Storeinfofile'"
+    echo               "Storepidfile='$Storepidfile'"
+    echo               "Timetosaygoodbyefile='$Timetosaygoodbyefile'"
+    echo               ""
+    echo               "export PATH='${PATH:-}'"
+    echo               ""
+    echo               "Cookie=''"
+    echo               "Line=''"
+    echo               "Var=''"
+    echo               ""
+
+    echo               "echo 'Running xinitrc'"
+    echo               "debugnote 'Running xinitrc'"
+    echo               ""
 
   case "$Xserver" in
     --weston|--kwin|--hostwayland)
@@ -7325,7 +7340,7 @@ create_xinitrc() {              # create xinitrc: set up X environment, create c
   [ "$Xfishtank" = "yes" ] && echo "xfishtank -nomenu & storepid \$! xfishtank"
 
   echo               "echo 'xinitrc: xinitrc is ready'"
-  #echo               "storeinfo xinitrc=ready"
+  #echo               "storeinfo_add_kv xinitrc=ready"
   echo               ""
 
   # --clipboard
@@ -7370,6 +7385,7 @@ create_xinitrc() {              # create xinitrc: set up X environment, create c
 
   return 0
 }
+
 disable_xhost() {               # remove any access to X server granted by xhost
   local Line= Environment
   Environment="${1:-"DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY"}"
@@ -7425,20 +7441,20 @@ store_newxenv() {               # store display variables
     Newdisplay="${Newdisplay//"XCONTAINERIP"/"$Xcontainerip"}"
     #
   # create $Newxenv: collection of environment variables to access new X from host (e.g. in xinitrc)
-  [ "$Newdisplay" ]                   && storeinfo "DISPLAY=$Newdisplay"                 && Newxenv="$Newxenv DISPLAY=$Newdisplay"
-  [ "$Xauthentication" != "no" ]      && storeinfo "XAUTHORITY=$Xclientcookie"           && Newxenv="$Newxenv XAUTHORITY=$Xclientcookie"
+  [ "$Newdisplay" ]                   && storeinfo_add_kv "DISPLAY=$Newdisplay"                 && Newxenv="$Newxenv DISPLAY=$Newdisplay"
+  [ "$Xauthentication" != "no" ]      && storeinfo_add_kv "XAUTHORITY=$Xclientcookie"           && Newxenv="$Newxenv XAUTHORITY=$Xclientcookie"
   case "$Newwaylandsocket" in
     "")
-      [ "$Sharehostwayland" = "yes" ] && storeinfo "WAYLAND_DISPLAY=$Hostwaylandsocket"  && Newxenv="$Newxenv WAYLAND_DISPLAY=$Hostwaylandsocket"
+      [ "$Sharehostwayland" = "yes" ] && storeinfo_add_kv "WAYLAND_DISPLAY=$Hostwaylandsocket"  && Newxenv="$Newxenv WAYLAND_DISPLAY=$Hostwaylandsocket"
     ;;
     *)
-                                         storeinfo "WAYLAND_DISPLAY=$Newwaylandsocket"   && Newxenv="$Newxenv WAYLAND_DISPLAY=$Newwaylandsocket"
+                                         storeinfo_add_kv "WAYLAND_DISPLAY=$Newwaylandsocket"   && Newxenv="$Newxenv WAYLAND_DISPLAY=$Newwaylandsocket"
     ;;
   esac
   [ "$Setupwayland" = "yes" ] && for Line in $Waylandtoolkitenv ; do                        Newxenv="$Newxenv $Line" ; done
-  [ -n "$XDG_RUNTIME_DIR" ]           && storeinfo "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"    && Newxenv="$Newxenv XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
+  [ -n "$XDG_RUNTIME_DIR" ]           && storeinfo_add_kv "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"    && Newxenv="$Newxenv XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
   Newxenv="$(awk '{$1=$1;print}' <<< " $Newxenv ")" # Remove superfluous whitespaces
-  storeinfo "Xenv=$Newxenv"
+  storeinfo_add_kv "Xenv=$Newxenv"
 
   # X / Wayland environment variables for container
   case "$Xserver" in
@@ -7768,7 +7784,7 @@ check_backend() {               # options --backend, --rootless
     host)  # BackendKind_host
       warning "Option --backend=host provides no isolation at all.
   It only provides an X server for a host application."
-      storeinfo "containerrootrc=ready"
+      storeinfo_add_kv "containerrootrc=ready"
       Sharefoldercontainer="$Sharefolder"
       # --dbus, --hostdbus, --init
       check_optionset "--backend=$BackendKind" "--alsa --cap-default --group-add --hostipc --ipc --limit --home --name --network --newprivileges --no-entrypoint --no-setup \
@@ -7861,7 +7877,7 @@ check_image() {                 # get some image information
       Containeruser="${Imageuser:-root}"
     ;;
   esac
-  storeinfo "containeruser=$Containeruser"
+  storeinfo_add_kv "containeruser=$Containeruser"
 
   # Check ENTRYPOINT
   Imageentrypoint="$(parse_inspect "$Imageinspect" "Config" "Entrypoint")"
@@ -8238,7 +8254,7 @@ check_containeruser() {         # check container user (also option --user)
   }
   [ -z "$Containeruserpassword" ] && Containeruserpassword='$6$Mj$WtcqpZ7JFegW4.0Br1WM0NJcNSxVxUQXgVLxGEV5uD3ib3jWGvIM3FNg2Gcj8e//mI06yhgfZ79WoNHGVtaYw1' # password: x11docker
 
-  storeinfo containeruser="$Containeruser"
+  storeinfo_add_kv containeruser="$Containeruser"
   store_runoption_env "USER=$Containeruser"
   debugnote "container user: $Containeruser $Containeruseruid:$Containerusergid $Containeruserhosthome"
   Containerusergroups="$Containerusergroups $Containerusergroup"
@@ -8326,7 +8342,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
     docker|podman|nerdctl)
       Backendcommand="$Backendcommand \\
   --name $g_Containername"
-      storeinfo "containername=$g_Containername"
+      storeinfo_add_kv "containername=$g_Containername"
     ;;
   esac
 
@@ -9120,7 +9136,7 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
   $Wikipackagesimage"
       }
       verbose "--init: Found init binary: ${Initbinaryfile:-(none)}"
-      [ "$Initbinaryfile" ] && storeinfo "tini=$Initbinaryfile"
+      [ "$Initbinaryfile" ] && storeinfo_add_kv "tini=$Initbinaryfile"
     ;;
     systemd)
       Stopsignal="SIGRTMIN+3"
@@ -9399,7 +9415,8 @@ exec 5>&1 6>&2
 exec 1>>$(convertpath share "$Containerlogfile") 2>&1
 "
 
-  declare -f storeinfo
+  declare -f storeinfo_dump
+  declare -f storeinfo_add_kv
   declare -f rocknroll
   echo "$Messagefifofuncs"
 
@@ -9408,7 +9425,7 @@ Messagefile=$(convertpath share "$Messagefifo")
 Storeinfofile='$(convertpath share "$Storeinfofile")'
 Timetosaygoodbyefile=$(convertpath share "$Timetosaygoodbyefile")
 
-Containeruser=\"\$(storeinfo dump containeruser)\"
+Containeruser=\"\$(storeinfo_dump containeruser)\"
 Containeruserhome='$Containeruserhome'
 
 debugnote 'Running containerrootrc: Setup as root in container'
@@ -9550,7 +9567,7 @@ $Runasroot
 
   echo "
 rocknroll || exit 64
-storeinfo containerrootrc=ready   # signal for containerrc
+storeinfo_add_kv containerrootrc=ready   # signal for containerrc
 #exec 1>&5 2>&6
 "
 
@@ -9623,7 +9640,8 @@ $(declare -f mysleep)
 $(declare -f pspid)
 $(declare -f rocknroll)
 $(declare -f saygoodbye)
-$(declare -f storeinfo)
+$(declare -f storeinfo_dump)
+$(declare -f storeinfo_test)
 $(declare -f storepid)
 $(declare -f waitforlogentry)
 $Messagefifofuncs
@@ -9673,7 +9691,7 @@ verbose \"containerrc: Container system:
 
     echo "
 # USER and HOME
-Containeruser='$(storeinfo dump containeruser)'
+Containeruser='$(storeinfo_dump containeruser)'
 export USER=\"\$Containeruser\"
 "
 
@@ -9789,7 +9807,7 @@ export XDG_RUNTIME_DIR=/tmp/XDG_RUNTIME_DIR
     echo "
 export TERM=xterm
 
-storeinfo test locale && export LANG=\"\$(storeinfo dump locale)\"
+storeinfo_test locale && export LANG=\"\$(storeinfo_dump locale)\"
 
 [ -e \"$Hostlocaltimefile\" ]                   || export TZ=$Hostutctime
 [ \"\$(date -Ihours)\" != \"$(date -Ihours)\" ] && export TZ=$Hostutctime
@@ -9838,6 +9856,7 @@ verbose \"Container environment:
   } >> "$Containerrc"
   return 0
 }
+
 create_cmdrc() {                # This script runs as unprivileged user in container and starts the final command
   local Line
 
@@ -9845,7 +9864,7 @@ create_cmdrc() {                # This script runs as unprivileged user in conta
     echo "#! /bin/sh
 # Created startscript for cmdrc containing final container command
 
-$(declare -f storeinfo)
+$(declare -f storeinfo_add_kv)
 $(declare -f saygoodbye)
 $(declare -f waitfortheend)
 $(declare -f rocknroll)
@@ -9885,7 +9904,7 @@ $Line
     esac
 
     echo "
-storeinfo cmdexitcode=\$?
+storeinfo_add_kv cmdexitcode=\$?
 "
     [ "$Checkforopenwindow" = "yes" ] && echo "waitfortheend"
     echo "
@@ -10044,7 +10063,7 @@ echo \"\$Locales\" | grep -q \"\$Langland.utf8\"  && Langcontainer=\"\$Langland.
 }
 
 [ \"\$Langcontainer\" ] && {
-  storeinfo locale=\"\$Langcontainer\"
+  storeinfo_add_kv locale=\"\$Langcontainer\"
   echo \"LANG=\$Langcontainer\" > /etc/default/locale
 } || {
   note 'Option --lang: Desired locale for '$Line' not found and not generated.'
@@ -10829,11 +10848,11 @@ $(rmcr < "$Containerlogfile" | uniq )"
           Containerip="$(parse_inspect "$Containerinspect" "NetworkSettings" "Networks" "$Xcnetworkname" "IPAddress")"
         ;;
       esac
-      storeinfo "containerip=$Containerip"
+      storeinfo_add_kv "containerip=$Containerip"
 
       # Get ID of container
       Containerid="$(parse_inspect "$Containerinspect" "Id")"
-      storeinfo "containerid=$Containerid"
+      storeinfo_add_kv "containerid=$Containerid"
 
       # --init=systemd cgroupv2
       [ "$g_Remountcgroup" = "yes" ] && {
@@ -10863,7 +10882,7 @@ $(tail "$Containerlogfile")"
       }
     ;;
   esac
-  storeinfo "pid1pid=$Pid1pid"
+  storeinfo_add_kv "pid1pid=$Pid1pid"
 
   # Check log for startup failure
   Failure="$(rmcr < "$Containerlogfile" | grep -v grep | grep -E 'OCI runtime exec' ||:)"
@@ -10926,13 +10945,13 @@ start_compositor() {            # start Wayland compositor Weston or KWin
     no)
       unpriv  "$Compositorcommand \
         >> '$Compositorlogfile'  2>&1 & echo compositorpid=\$! >> '$Storeinfofile'"
-      Compositorpid="$(storeinfo dump compositorpid)"
+      Compositorpid="$(storeinfo_dump compositorpid)"
     ;;
   esac
 
-  storeinfo "compositorpid=$Compositorpid"
+  storeinfo_add_kv "compositorpid=$Compositorpid"
   waitforlogentry "start_compositor()" "$Compositorlogfile" "$Compositorkeyword" "$Compositorerrorcodes"
-  setonwatchpidlist "$(storeinfo dump compositorpid)" compositor
+  setonwatchpidlist "$(storeinfo_dump compositorpid)" compositor
 
   case "$Xserver" in
     --xpra-xwayland|--xpra2-xwayland)  # hide weston window
@@ -10945,12 +10964,12 @@ start_xcontainer() {            # --xc
   local Containerinspect Xpid1pid
 
   read Xcontainerid< <(unpriv_xcbackend "$Xcontainercommand" 2>> $Xinitlogfile)
-  storeinfo "Xcontainerid=$Xcontainerid"
+  storeinfo_add_kv "Xcontainerid=$Xcontainerid"
   Containerinspect="$(unpriv_xcbackend "$Xcontainerbackend inspect $Xcontainername" 2>> $Xinitlogfile | rmcr)"
   [ -n "$Containerinspect" ] && [ "$Containerinspect" != "[]" ] && {
     Xcontainerip="$(parse_inspect "$Containerinspect" "NetworkSettings" "IPAddress")"
     Xcontainerip="${Xcontainerip:-$Xcontainername}"
-    storeinfo "Xcontainerip=$Xcontainerip"
+    storeinfo_add_kv "Xcontainerip=$Xcontainerip"
     Xpid1pid="$(parse_inspect "$Containerinspect" "State" "Pid")"
     setonwatchpidlist "$Xpid1pid" "Xcontainerpid1"
   } || {
@@ -11100,10 +11119,10 @@ $(tail "$Xpraclientlogfile")"
 }
 start_pulseaudiotcp() {         # option --pulseaudio=tcp: load Pulseaudio TCP module authenticated with container IP
   local Containerip
-  Containerip="$(storeinfo dump containerip)"
+  Containerip="$(storeinfo_dump containerip)"
   Pulseaudiomoduleid="$(unpriv "pactl load-module module-native-protocol-tcp  port=$Pulseaudioport auth-ip-acl=${Containerip:-"127.0.0.1"}" )"
   [ "$Pulseaudiomoduleid" ] && {
-    storeinfo "pulseaudiomoduleid=$Pulseaudiomoduleid"
+    storeinfo_add_kv "pulseaudiomoduleid=$Pulseaudiomoduleid"
   } || note "Option --pulseaudio: command pactl failed.
   Is pulseaudio running at all on your host?
   You can try option --alsa instead."
@@ -11619,9 +11638,9 @@ $Hostuserhome/.cache/x11docker/symlink
   # libc timezone file
   [ -e "$Hostlocaltimefile" ] && cp "$Hostlocaltimefile" "$Containerlocaltimefile"
 
-  storeinfo "cache=$Cachefolder"
-  storeinfo "stdout=$Cmdstdoutlogfile"
-  storeinfo "stderr=$Cmdstderrlogfile"
+  storeinfo_add_kv "cache=$Cachefolder"
+  storeinfo_add_kv "stdout=$Cmdstdoutlogfile"
+  storeinfo_add_kv "stderr=$Cmdstderrlogfile"
 
   return 0
 }
@@ -11679,7 +11698,7 @@ setup_fifo() {
         # storepid PID codename
         #
         cat <&0 >>"$Cmdstdinfifo" & storepid $! catstdin
-        storeinfo "stdin=$Cmdstdinfifo"
+        storeinfo_add_kv "stdin=$Cmdstdinfifo"
     fi
 
     case "$Usemkfifo" in
@@ -15610,7 +15629,7 @@ main() {
       verbose "Generated sshenv:${NEWLINE}$(nl -ba <$Sshenvscript)"
   fi
 
-  storeinfo "x11dockerpid=$$"    # store pid of x11docker
+  storeinfo_add_kv "x11dockerpid=$$"    # store pid of x11docker
 
   (
       # Values for the debugnote below
@@ -15711,8 +15730,8 @@ main() {
 
     # start container
     start_container
-    Pid1pid="$(storeinfo dump pid1pid)"
-    Containerip="$(storeinfo dump containerip)"
+    Pid1pid="$(storeinfo_dump pid1pid)"
+    Containerip="$(storeinfo_dump containerip)"
 
     # --xoverip -listen tcp: Use xhost instead of XAUTHORITY
     case "$Xoverip" in
@@ -15783,7 +15802,7 @@ $(cat $Storepidfile)"
     esac
     case "$Showdisplayenvironment" in                                             # --printenv
       "") ;;
-      yes) storeinfo dump Xenv ;;
+      yes) storeinfo_dump Xenv ;;
       *)
           # Newxenv_cr : Like Newxenv, but with newlines. Was global,
           #     never set, only used here.
@@ -15793,15 +15812,15 @@ $(cat $Storepidfile)"
     esac
     case "$Showcontainerid" in                                                    # --printid
       "") ;;
-      yes) storeinfo dump containerid ;;
-      *)   unpriv "storeinfo dump containerid > '$Showcontainerid'" || error "Option --printid: Invalid file $Showcontainerid" ;;
+      yes) storeinfo_dump containerid ;;
+      *)   unpriv "storeinfo_dump containerid > '$Showcontainerid'" || error "Option --printid: Invalid file $Showcontainerid" ;;
     esac
     case "$Showcontainerpid1pid" in                                               # --printpid1
       "") ;;
       yes) echo "$Pid1pid" ;;
       *)   unpriv "echo '$Pid1pid' > '$Showcontainerpid1pid'"       || error "Option --printcontainerpid1pid: Invalid file $Showcontainerpid1pid" ;;
     esac
-    storeinfo "x11docker=ready"
+    storeinfo_add_kv "x11docker=ready"
   } <&0 & storepid $! containershell
 
   rocknroll || return 1
