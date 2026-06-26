@@ -14414,8 +14414,12 @@ declare_variables() {           # declare global variables
   Xpraborder=""
 
   # Xpracontainerenv :  environment variables
+  #
+  # Note: The entries go through escapestring(), which does not handle
+  #       single-quote characters.
+  #
   Xpracontainerenv=""; printf -v Xpracontainerenv "%s"      \
-                              "UBUNTU_MENUPROXY=''"         \
+                              'UBUNTU_MENUPROXY=""'         \
                               " QT_X11_NO_NATIVE_MENUBAR=1" \
                               " MWNOCAPTURE=true"           \
                               " MWNO_RIT=true"              \
