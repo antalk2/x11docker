@@ -3213,6 +3213,10 @@ cleanup() {                     # --cleanup : check for non-removed containers a
             Orphanedcontainers="$(unpriv_backend "$Backendbin ps -a" | grep x11docker_X | rev | cut -d' ' -f1 | rev)"
             #
             # Make Orphanedcontainers  space-separated
+            #
+            # shellcheck disable=SC2086 # (info): Double quote to
+            # prevent globbing and word splitting. We do want word splitting here.
+            #
             Orphanedcontainers="$(env IFS='' echo $Orphanedcontainers)"
 
             # check for double entries name/id, check for already non-existing containers
