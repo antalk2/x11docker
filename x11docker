@@ -1943,7 +1943,8 @@ version_less_equal() {
     local b="${2:-}"
     #
     # sort -V : natural sort of (version) numbers within text
-    local the_smaller_one="$(echo -e "${a}\n${b}" | sort -V | head -n1)"
+    local the_smaller_one
+    the_smaller_one="$(echo -e "${a}\n${b}" | sort -V | head -n1)"
     #
     [ "${a}" = "${the_smaller_one}" ] # the result
 }
