@@ -2306,7 +2306,7 @@ convertpath() {                 # convert unix and windows paths
             # Note: ${parameter#pattern} removes prefix of parameter
             #       matching pattern
             #
-            echo "${Sharefoldercontainer}${Path#$Sharefolder}"
+            echo "${Sharefoldercontainer}${Path#"$Sharefolder"}"
             return 0
         fi
     fi
