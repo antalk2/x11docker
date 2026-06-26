@@ -3241,36 +3241,43 @@ cleanup() {                     # --cleanup : check for non-removed containers a
             ;;
     esac
 
-  [ -z "$Orphanedcontainers$Orphanedfolders" ] && {
-    note "No orphaned containers or cache files found. good luck!"
-  } || {
-    note "Found orphaned containers:
-$Orphanedcontainers"
-    note "Found orphaned folders in $Cachebasefolder:
-$Orphanedfolders"
+    if [ -z "$Orphanedcontainers$Orphanedfolders" ] ; then
+        note "No orphaned containers or cache files found. good luck!"
+    else
+        note "Found orphaned containers:${NEWLINE}$Orphanedcontainers"
+        note "Found orphaned folders in $Cachebasefolder:${NEWLINE}$Orphanedfolders"
 
-    for Line in $Orphanedfolders ; do
-        [ -d "$Cachebasefolder/$Line/share" ] \
-            && [ ! -s "$Cachebasefolder/$Line/share/timetosaygoodbye" ] \
-            && {
-            note "Found possibly active container for cache dir $Line.
-  Will summon it to terminate itself."
+        for Line in $Orphanedfolders ; do
+            if     [   -d "$Cachebasefolder/$Line/share"                  ] \
+                       && [ ! -s "$Cachebasefolder/$Line/share/timetosaygoodbye" ] ; then
+                #
+                note "$(trim_to_bar \
+              "|Found possibly active container for cache dir $Line.
+               |  Will summon it to terminate itself."
+               )"
+                #
+                echo timetosaygoodbye >> "$Cachebasefolder/$Line/share/timetosaygoodbye"
+            fi
+        done
+
+        if [ -n "$Orphanedfolders" ] ; then
+            sleep 3
+        fi
+
+        if [ -n "$Orphanedcontainers" ] ; then
+            note "Removing containers with: $Backendbin rm -f $Orphanedcontainers"
+            unpriv_backend "$Backendbin rm -f $Orphanedcontainers" 2>&1
+        fi
+
+        if [ -n "$Orphanedfolders" ] ; then
+            note "Removing cache files with: rm -R -f $Orphanedfolders"
             #
-            echo timetosaygoodbye >> "$Cachebasefolder/$Line/share/timetosaygoodbye"
-        }
-    done
-
-    [ -n "$Orphanedfolders" ] && sleep 3
-
-    [ -n "$Orphanedcontainers" ] && {
-      note "Removing containers with: $Backendbin rm -f $Orphanedcontainers"
-      unpriv_backend "$Backendbin rm -f $Orphanedcontainers" 2>&1
-    }
-    [ -n "$Orphanedfolders" ] && {
-      note "Removing cache files with: rm -R -f $Orphanedfolders"
-      rm -R -f $Orphanedfolders 2>&1
-    }
-  }
+            # shellcheck disable=SC2086 # (info): Double quote to
+            #      prevent globbing and word splitting.
+            #      Word splitting is ecpected here.
+            rm -R -f $Orphanedfolders 2>&1
+        fi
+  fi
 
   # remove internal networks
   case "$BackendKind" in
@@ -3288,13 +3295,16 @@ $Orphanedfolders"
   rm -Rf -v "${Cachebasefolder:-NONSENSE}"/*
 
   note "Removing cache base folder with: rmdir -v \"$Cachebasefolder\""
-  cd # Leave Cachebasefolder
+  cd  || error "cd (without argument) failed"  # Leave Cachebasefolder
 
-  [ "$(basename "$Cachebasefolder")" = x11docker ] \
-      && rmdir -v "$Cachebasefolder"  \
-          || warning "Did not succeed in removing cache folder
-  '$Cachebasefolder'
-  Please run 'x11docker --cleanup' as root."
+  if [ "$(basename "$Cachebasefolder")" = x11docker ] ; then
+      rmdir -v "$Cachebasefolder"
+  else
+      warning "$(printf "%s\n"                               \
+               "Did not succeed in removing cache folder"    \
+               "  '$Cachebasefolder'"                        \
+               "  Please run 'x11docker --cleanup' as root." )"
+  fi
 
   case "$BackendKind" in
     docker)
