@@ -720,7 +720,7 @@ logentry() {                    # write into logfile
 note() {
     # Only show notice messages if not Verbose ?
     if [ "$Verbose" != "yes" ] ; then
-        echo "${Colgreen}x11docker note:${Colnorm} $*${NEWLINE}" >&${FDstderr}
+        echo "${Colgreen}x11docker note:${Colnorm} $*${NEWLINE}" >&"${FDstderr}"
     fi
     #
     logentry  "x11docker note: $*${NEWLINE}"
@@ -767,7 +767,7 @@ verbose() {
 # Show warning messages
 warning() {
     if [ "$Verbose" != "yes" ] ; then
-        echo "${Colyellow}x11docker WARNING:${Colnorm} $*${NEWLINE}" >&${FDstderr}
+        echo "${Colyellow}x11docker WARNING:${Colnorm} $*${NEWLINE}" >&"${FDstderr}"
     fi
     #
     logentry "x11docker WARNING: $*${NEWLINE}"
@@ -841,7 +841,7 @@ watchmessagefifo() {
 #
 finish() {      # trap EXIT routine to clean up background processes and cache
     #
-    local Pid Name Zeit Exitcode Pid1pid= Watchmessagefifopid= Count Xpid1pid
+    local Pid Name Zeit Exitcode Pid1pid="" Watchmessagefifopid="" Count Xpid1pid
 
     # Do not finish() in subshell, just give signal to all other
     # processes and terminate subshell.
