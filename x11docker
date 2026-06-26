@@ -3138,32 +3138,43 @@ buildimage() {                  # --build: build image from x11docker repository
     # Well, assume "$1" was "xxx-x11docker". Then we did not prepend "x11docker/",
     # and ended up with "[...]dockerfile-xxx-x11docker[...]"
     #
-    grep -q "dockerfile-x11docker-" <<< "$Wwwpath"   \
-        || error "Option --build: x11docker only supports building of
-  images provided at x11docker repository https://github.com/mviereck"
+    if ! grep -q  "dockerfile-x11docker-" <<< "$Wwwpath" ; then
+        error "$( trim_to_bar \
+               "|Option --build: x11docker only supports building of
+                |  images provided at x11docker repository https://github.com/mviereck"
+                )"
+    fi
     #
     mkdir -p "$Buildpath"
-    cd "$Buildpath"
-    download || error "Option --build: Please install 'curl' or 'wget' to allow a download"
+    cd "$Buildpath" || error "Could not cd to Buildpath"
+
+    if ! download ; then
+        error "Option --build: Please install 'curl' or 'wget' to allow a download"
+    fi
     #
     note "Download of $Wwwpath/Dockerfile"
-    download "$Wwwpath/Dockerfile" "$Buildpath/Dockerfile"   \
-        || error "Option --build: Did not find a Dockerfile for $local_Imagename
-  at $Wwwpath
-  Option --build only supports Dockerfiles from https://github.com/mviereck.
-  For other sources please download Dockerfile and use 'docker build'."
+    if ! download "$Wwwpath/Dockerfile" "$Buildpath/Dockerfile"  ; then
+        error "$(trim_to_bar \
+               "|Option --build: Did not find a Dockerfile for $local_Imagename
+                |  at $Wwwpath
+                |  Option --build only supports Dockerfiles from https://github.com/mviereck.
+                |  For other sources please download Dockerfile and use 'docker build'."
+                )"
+    fi
     #
-    [ "$local_Imagename" = "x11docker/xserver" ] && {
+    if [ "$local_Imagename" = "x11docker/xserver" ] ; then
         note "Download of $Wwwpath/XlibNoSHM.c"
-        download "$Wwwpath/XlibNoSHM.c" "$Buildpath/XlibNoSHM.c"  \
-            || error "Option --build: Downloading XlibNoSHM.c failed."
-    }
+        if ! download "$Wwwpath/XlibNoSHM.c" "$Buildpath/XlibNoSHM.c"  ; then
+            error "Option --build: Downloading XlibNoSHM.c failed."
+        fi
+    fi
     #
     note "Building $local_Imagename"
-    unpriv_backend "$Backendbin build -t $local_Imagename $Buildpath" \
-        || error "Option --build: Building image '$local_Imagename' failed."
+    if ! unpriv_backend "$Backendbin build -t $local_Imagename $Buildpath" ; then
+        error "Option --build: Building image '$local_Imagename' failed."
+    fi
     #
-    cd "${HOME:-/tmp}"
+    cd "${HOME:-/tmp}"  || error "Could not cd to HOME or /tmp"
     rm -rf "$Buildpath"
     return 0
 }
