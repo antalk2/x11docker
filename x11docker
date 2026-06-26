@@ -1363,7 +1363,7 @@ get_ppid() {
 #
 check_parent_sshd() {
     $Myps ax -o pid,comm    \
-        | awk '$1 ~ /'$(get_ppid "${1:-}")'/ { SUM += $2 } END { print SUM } ' \
+        | awk '$1 ~ /'"$(get_ppid "${1:-}")"'/ { SUM += $2 } END { print SUM } ' \
         | grep -q "sshd"
 }
 
@@ -1601,8 +1601,11 @@ makecookie() {                  # bake a cookie
 #
 mygetent() {                    # custom getent command
     # fixes #477 #496
-    command -v getent >/dev/null 2>&1 && getent "$1" "$2" || \
-            grep "^${2:-NOENTRY}:" < "/etc/${1:-NOFILESPECIFIED}"
+    if command -v getent >/dev/null 2>&1 ; then
+        getent "$1" "$2"
+    else
+        grep "^${2:-NOENTRY}:" < "/etc/${1:-NOFILESPECIFIED}"
+    fi
 }
 
 #
@@ -1635,6 +1638,7 @@ parse_inspect() {               # parse json of inspect output using python
     local Parserscript
     local Jsonstring Keystring Output
     local EXPR
+    # shellcheck disable=SC2089 # (warning): Quotes/backslashes will be treated literally. Use an array.
     local SINGLE_QUOTE="'"
 
     [[ "$Jqbin" ]] && {
@@ -1670,10 +1674,11 @@ parse_inspect() {               # parse json of inspect output using python
         return
     }
 
-  ##
-  ## Replacement using trim_to_bar(), intercepted single quotes and ${SINGLE_QUOTE}
-  ##
-  Parserscript="#! $Pythonbin$(trim_to_mark \
+    ##
+    ## Replacement using trim_to_bar(), intercepted single quotes and ${SINGLE_QUOTE}
+    ##
+    # shellcheck disable=SC2090 # (warning): Quotes/backslashes in this variable will not be respected.
+    Parserscript="#! $Pythonbin$(trim_to_mark \
       '|
        |import json,sys
        |
@@ -1728,7 +1733,7 @@ parse_inspect() {               # parse json of inspect output using python
       | $Pythonbin - "$@" \
       || warning "$(trim_to_bar \
              "|parse_inspect(): Error while parsing json for
-              |  ${2:-} ${3:-} ${4:-} ${5:-} ${6:-} (Line $BASH_LINENO)" )"
+              |  ${2:-} ${3:-} ${4:-} ${5:-} ${6:-} (Line ${BASH_LINENO[0]})" )"
   #
 }
 
