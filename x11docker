@@ -2697,7 +2697,7 @@ mkfile() {                      # create file $1 owned by $Hostuser
 #  ...
 #
 mkfolder() {                    # create folder $1 owned by $Hostuser
-    local Step Path= Return=
+    local Step Path="" Return=""
     #
     # Work recursively
     #
@@ -2720,9 +2720,9 @@ myrealpath() {                  # real path of possible symlink
     # No args is a failure
     [ -z "$*" ] && return 1
     # If have realpath, use that.
-    command -v realpath >/dev/null && {
+    if command -v realpath >/dev/null ; then
         realpath "$*"
-    } || {
+    else
         # Otherwise complain if it is a symlink
         [ -h "$*" ] && warning "$(trim_to_bar \
            "|  Could not check for symbolic links.
@@ -2733,7 +2733,7 @@ myrealpath() {                  # real path of possible symlink
         # and emit the path unmodified
         echo "$*"   ### FIXME: Maybe workaround with ls
         return 1
-    }
+    fi
 }
 
 #
@@ -2784,7 +2784,8 @@ waitforlogentry() {
 
     local Errorkey
     local Error=
-    local logfile_basename="$(basename "${logfile}")"
+    local logfile_basename
+    logfile_basename="$(basename "${logfile}")"
 
     StartTime="$(date +%s || true)"
     StartTime="${StartTime:-0}"
