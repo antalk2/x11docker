@@ -2571,7 +2571,8 @@ createmountopt() {
       *)                 Rw="" ;;
   esac
   #
-  local eFile="$(escapestring "$File")"
+  local eFile
+  eFile="$(escapestring "$File")"
   #
   case "$Modus" in
       # 
