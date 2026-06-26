@@ -1,5 +1,5 @@
 
-.PHONY: test all TAGS
+.PHONY: test all TAGS shellcheck
 
 
 all:
@@ -28,3 +28,7 @@ lib/bashunit:
 	wget https://bashunit.com/install.sh
 	bash install.sh
 	-rm install.sh
+
+
+shellcheck:
+	shellcheck x11docker
