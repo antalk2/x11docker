@@ -3042,14 +3042,11 @@ writeaccess() {                 # check if useruid $1 has write access to folder
     # userid_group_names : group names surrounded and separated with ':'
     userid_group_names=":$(id -Gn "${userid}" 2>/dev/null | sed -e 's| |:|g' ):"
     ##
-    # if [[ "${userid_group_names[*]}" =~ :${dir_group_name}: ]] ; then
-    #    userid_has_dirs_group=yes
-    # else
-    #    userid_has_dirs_group=no
-    # fi
-    userid_has_dirs_group=$(
-        yes_or_no [[ "${userid_group_names[*]}" =~ :${dir_group_name}: ]]
-    )
+    if [[ "${userid_group_names[*]}" =~ :${dir_group_name}: ]] ; then
+       userid_has_dirs_group=yes
+    else
+       userid_has_dirs_group=no
+    fi
     
     # if $verbose; then echo "userid_has_dirs_group=$userid_has_dirs_group"; fi
     #
