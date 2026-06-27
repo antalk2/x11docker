@@ -4296,120 +4296,152 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
 } # create_clipboardrc
 
 
-setup_gpu() {                   # option --gpu: share /dev/dri and check nvidia driver
-  # Easiest case: share /dev/dri.
-  # Works for open source MESA drivers on host and in image.
-  # Debian packages for MESA drivers in image: libgl1-mesa-dri, libglx-mesa0
-  #
-  # Closed source NVIDIA drivers does not integrate well within linux.
-  # Instead, free nouveau driver is a better choice, or no NVIDIA hardware at all.
-  # Possibilities:
-  # - Install NVIDIA driver in image. It must be the very same version as on your host.
-  #   The image is not portable anymore.
-  # - x11docker can install NVIDIA driver on the fly in running container. See notes below.
-  #
-  # g  $Nvidiainstallerfile   nvidia driver file to install in container in containerrootrc
-  # g  $Nvidiaversion  nvidia driver version on host
+#
+# function setup_gpu() : option --gpu: share /dev/dri and check nvidia
+#                        driver
+#
+setup_gpu() {
+    #
+    # Easiest case: share /dev/dri.
+    # Works for open source MESA drivers on host and in image.
+    # Debian packages for MESA drivers in image: libgl1-mesa-dri, libglx-mesa0
+    #
+    # Closed source NVIDIA drivers does not integrate well within linux.
+    # Instead, free nouveau driver is a better choice, or no NVIDIA hardware at all.
+    # Possibilities:
+    # - Install NVIDIA driver in image. It must be the very same version as on your host.
+    #   The image is not portable anymore.
+    # - x11docker can install NVIDIA driver on the fly in running container. See notes below.
+    #
+    # g  $Nvidiainstallerfile   nvidia driver file to install in container in containerrootrc
+    # g  $Nvidiaversion  nvidia driver version on host
 
-  local Gpudevice Drivername
+    local Gpudevice Drivername
 
-  Containerusergroups="$Containerusergroups video render"
+    Containerusergroups="$Containerusergroups video render"
 
-  # share device files
-  while read -r Gpudevice ; do
-    store_runoption_volume "$Gpudevice"
-  done < <(devicelist_gpu)
+    # share device files
+    while read -r Gpudevice ; do
+        store_runoption_volume "$Gpudevice"
+    done < <(devicelist_gpu)
 
-  # NVIDIA
-  # check for closed source nvidia driver on host, provide automated installation, warn about disadvantages
-  [ -z "$Nvidiaversion" ] && return 0
+    # NVIDIA
+    #
+    # Check for closed source nvidia driver on host, provide automated
+    # installation, warn about disadvantages
+    #
+    if [ -z "$Nvidiaversion" ] ; then  return 0 ; fi
 
-  { [ "$Runtime" = "nvidia" ] || [ -n "$Nvidiainstallerfile" ] ; } && {
-    case "$Xserver" in
-      --xorg|--hostdisplay) ;;
-      *)
-        note "Option --gpu: Acceleration with NVIDIA might work
-  with option --xorg and option --hostdisplay only.
-  Though, some configuration mit allow Wayland based accelerated X servers.
-  Compare https://wiki.debian.org/NvidiaGraphicsDrivers#Wayland"
-      ;;
-    esac
-  }
+    if  [ "$Runtime" = "nvidia" ] || [ -n "$Nvidiainstallerfile" ] ; then
+        case "$Xserver" in
+            --xorg|--hostdisplay) ;;
+            *)
+                note "$(trim_to_bar \
+                      "|Option --gpu: Acceleration with NVIDIA might work
+                       |  with option --xorg and option --hostdisplay only.
+                       |  Though, some configuration mit allow Wayland based accelerated X servers.
+                       |  Compare https://wiki.debian.org/NvidiaGraphicsDrivers#Wayland"
+                       )"
+                ;;
+        esac
+    fi
 
-  [ "$Runtime" = "nvidia" ] && {
-    debugnote "NVIDIA: Option --runtime=nvidia: Skipping driver installation."
+    if [ "$Runtime" = "nvidia" ] ; then
+        debugnote "NVIDIA: Option --runtime=nvidia: Skipping driver installation."
+        Nvidiainstallerfile=""
+        return 0
+    fi
+
+    if [ -e "$Nvidiainstallerfile" ] ; then
+        debugnote "$(trim_to_bar \
+                   "|NVIDIA: Found proprietary closed source NVIDIA driver installer
+                    |  $Nvidiainstallerfile"
+                    )"
+        #
+        if [ "$Containersetup" = "no" ] ; then
+            note "$(trim_to_bar \
+                  "|Options --no-setup --gpu: Cannot install NVIDIA driver
+                   |  with option --no-setup. Fallback: Disabling option --gpu"
+                   )"
+            #
+            check_fallback
+            Sharegpu="no"
+            return 1
+        fi
+        
+        if [ "$Capdropall" = "yes" ] ; then
+            warning "$(trim_to_bar \
+                     "|Option --gpu: Installing NVIDIA driver in container
+                      |  requires container privileges that x11docker would drop otherwise.
+                      |  Though, they are still within default docker capabilities."
+                      )"
+        fi
+
+        Allownewprivileges="yes"
+        store_runoption_cap CHOWN
+        store_runoption_cap FOWNER
+
+        note "$(trim_to_bar \
+              "|Option --gpu: x11docker will install NVIDIA driver in container.
+               |  You can provide images with pre-installed drivers to speed up container start.
+               |  Compare: https://github.com/mviereck/x11docker/wiki/NVIDIA-driver-support-for-docker-container"
+               )"
+
+        if [ "$Xcontainer_option" = "yes" ] ; then
+
+            waitforlogentry "start_xcontainer()"          \
+                            "$Xinitlogfile"               \
+                            "X server container is ready" \
+                || return 1
+            
+            note "Option --gpu: Installing NVIDIA driver in X container."
+
+            unpriv_xcbackend                 \
+                "$(trim_to_mark              \
+                  "|$Xcontainerbackend exec
+                   : --tty --privileged
+                   : --user=root
+                   : $Xcontainername
+                   : bash $Sharefolder/nvidia_installer"
+                   )"                       \
+                   >> "$Xinitlogfile" 2>&1  \
+                   || note 'ERROR: NVIDIA driver installation in X container failed.'
+        fi
+        return 0
+    fi
+
     Nvidiainstallerfile=""
+
+    note "$(trim_to_bar \
+          "|Option --gpu: You are using the closed source NVIDIA driver.
+           |  GPU acceleration will only work if you have installed the very same driver
+           |  version in image. That makes images less portable.
+           |  It is recommended to use free open source nouveau driver on host instead.
+           |  Ask NVIDIA corporation to at least publish their closed source API,
+           |  or even better to actively support open source driver nouveau.
+           |
+           |  To use the GPU without NVIDIA driver in container, you can use 
+           |  less performant option --gpu=iglx (--xorg only)."
+           |
+           |  note "Option --gpu: x11docker can try to automatically install NVIDIA driver
+           |  version $Nvidiaversion in container on every container startup.
+           |  Drawbacks: Container startup is a bit slower and its security will be reduced.
+           |
+           |  You can look here for a driver installer file:
+           |    https://www.nvidia.com/Download/index.aspx
+           |    https://http.download.nvidia.com/
+           |  A direct download URL is probably:
+           |    https://http.download.nvidia.com/XFree86/Linux-x86_64/$Nvidiaversion/NVIDIA-Linux-x86_64-$Nvidiaversion.run
+           |  If you got a driver, store it at one of the following locations:
+           |    $Localsharedir/
+           |    /usr/local/share/x11docker/
+           |
+           |  Be aware that the version number must match exactly the version on host.
+           |  The file name must begin with 'NVIDIA', contain the version number $Nvidiaversion
+           |  and end with suffix '.run'."
+           )"
+    #
     return 0
-  }
-
-  [ -e "$Nvidiainstallerfile" ] && {
-    debugnote "NVIDIA: Found proprietary closed source NVIDIA driver installer
-  $Nvidiainstallerfile"
-    [ "$Containersetup" = "no" ] && {
-      note "Options --no-setup --gpu: Cannot install NVIDIA driver
-  with option --no-setup. Fallback: Disabling option --gpu"
-      check_fallback
-      Sharegpu="no"
-      return 1
-    }
-    [ "$Capdropall" = "yes" ] && warning "Option --gpu: Installing NVIDIA driver in container
-  requires container privileges that x11docker would drop otherwise.
-  Though, they are still within default docker capabilities."
-    Allownewprivileges="yes"
-    store_runoption_cap CHOWN
-    store_runoption_cap FOWNER
-
-    note "Option --gpu: x11docker will install NVIDIA driver in container.
-  You can provide images with pre-installed drivers to speed up container start.
-  Compare: https://github.com/mviereck/x11docker/wiki/NVIDIA-driver-support-for-docker-container"
-
-    [ "$Xcontainer_option" = "yes" ] && {
-      waitforlogentry "start_xcontainer()" "$Xinitlogfile" "X server container is ready" || return 1
-      note "Option --gpu: Installing NVIDIA driver in X container."
-
-      unpriv_xcbackend "$(trim_to_mark \
-                         "|$Xcontainerbackend exec
-                          : --tty --privileged
-                          : --user=root
-                          : $Xcontainername
-                          : bash $Sharefolder/nvidia_installer"
-                          )"      \
-          >> "$Xinitlogfile" 2>&1 \
-          || note 'ERROR: NVIDIA driver installation in X container failed.'
-    }
-    return 0
-  }
-
-  Nvidiainstallerfile=""
-
-  note "Option --gpu: You are using the closed source NVIDIA driver.
-  GPU acceleration will only work if you have installed the very same driver
-  version in image. That makes images less portable.
-  It is recommended to use free open source nouveau driver on host instead.
-  Ask NVIDIA corporation to at least publish their closed source API,
-  or even better to actively support open source driver nouveau.
-
-  To use the GPU without NVIDIA driver in container, you can use 
-  less performant option --gpu=iglx (--xorg only)."
-
-  note "Option --gpu: x11docker can try to automatically install NVIDIA driver
-  version $Nvidiaversion in container on every container startup.
-  Drawbacks: Container startup is a bit slower and its security will be reduced.
-
-  You can look here for a driver installer file:
-    https://www.nvidia.com/Download/index.aspx
-    https://http.download.nvidia.com/
-  A direct download URL is probably:
-    https://http.download.nvidia.com/XFree86/Linux-x86_64/$Nvidiaversion/NVIDIA-Linux-x86_64-$Nvidiaversion.run
-  If you got a driver, store it at one of the following locations:
-    $Localsharedir/
-    /usr/local/share/x11docker/
-
-  Be aware that the version number must match exactly the version on host.
-  The file name must begin with 'NVIDIA', contain the version number $Nvidiaversion
-  and end with suffix '.run'."
-
-  return 0
 }
 
 setup_hostdbus() {              # option --hostdbus: connect to host DBus session daemon.
