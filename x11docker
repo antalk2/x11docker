@@ -3875,7 +3875,7 @@ check_windowmanager() {
     if  [ "$Windowmanagermode" = "none" ] ; then return 0 ; fi
     
     if grep -q "$Windowmanagercommand" <<< "$Wm_not_recommended" ; then 
-        note "$(trim_to_bar
+        note "$(trim_to_bar \
               "|Option --wm: Window manager $Windowmanagercommand
                |  is not recommended. Please install a recommended one:
                |    $Wm_recommended_nodesktop_light
