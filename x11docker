@@ -1566,10 +1566,10 @@ makecookie() {                  # bake a cookie
     # mcookie 2>/dev/null || echo $RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM | cut -b1-32
     if  mcookie 2>/dev/null ; then
         true
-    elif which head md5sum 2>/dev/null ; then
+    elif [ -e /dev/urandom ] && which head md5sum 2>/dev/null ; then
         head -200 /dev/urandom | md5sum | cut -b1-32
         true
-    else
+    elif [ "$RANDOM" ] && [ "$RANDOM" !=  "$RANDOM" ] ; then
         # SC3028 (error): In dash, RANDOM is not supported.
         # SC2004 (style): $/${} is unnecessary on arithmetic variables.
         #
@@ -1579,6 +1579,8 @@ makecookie() {                  # bake a cookie
         # printf "%02x" $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256)) $(($RANDOM % 256))
         # printf "\n"
         #
+        true
+    else
         false
     fi
 }
