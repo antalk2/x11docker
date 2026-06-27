@@ -4028,7 +4028,9 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
        |  # $2  credentials to access 2. X server and/or Wayland compositor
        |  # $3  selection to use (primary or clipboard)
        |  # $4  set to noloop if you want to run only once without a loop
-       |  # Credentials look like "DISPLAY=:0 XAUTHORITY=~/.Xauthority WAYLAND_DISPLAY=wayland-1 XDG_RUNTIME_DIR=/run/user/1000"
+       |  #
+       |  # Credentials look like
+       |  #   "DISPLAY=:0 XAUTHORITY=~/.Xauthority WAYLAND_DISPLAY=wayland-1 XDG_RUNTIME_DIR=/run/user/1000"
        |
        |  local Selection SelectionW SelectionX
        |  local TargetsW TargetsX ImagetargetW ImagetargetX
@@ -4047,20 +4049,27 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
        |    primary)
        |      SelectionX="-selection primary"
        |      SelectionW="--primary"
-       |      env \$X1auth wl-paste -p >/dev/null 2>&1 || Wprimary1=no
-       |      env \$X2auth wl-paste -p >/dev/null 2>&1 || Wprimary2=no
-       |      [ -z \"\$Wprimary1\$Wprimary2\" ] && CopyW=yes
-       |      [ -z "$WAYLAND_DISPLAY" ]         && CopyW=""
-       |      CopyX="yes"
-       |      [ -z "$DISPLAY" ]                 && CopyX=""
+       |      #
+       |      # wl-paste : sudo apt install wl-clipboard
+       |      env \$X1auth wl-paste --primary >/dev/null 2>&1 || Wprimary1=no
+       |      env \$X2auth wl-paste --primary >/dev/null 2>&1 || Wprimary2=no
+       |      #
+       |      if [ -n "$WAYLAND_DISPLAY" ] && [ -z \"\$Wprimary1\$Wprimary2\" ] ; then
+       |         # Neither Wprimary1, nor Wprimary2 is "no" (both empty)
+       |         CopyW=yes ;
+       |      else
+       |         CopyW=""
+       |      fi
+       |
+       |      if [ -n "$DISPLAY"         ] ; then CopyX="yes";  else CopyX="" ; fi
        |    ;;
+       |
        |    clipboard)
        |      SelectionX="-selection clipboard"
        |      SelectionW=""
-       |      CopyW="yes"
-       |      [ -z "$WAYLAND_DISPLAY" ] && CopyW=""
-       |      CopyX="yes"
-       |      [ -z "$DISPLAY" ]         && CopyX=""
+       |
+       |      if [ -n "$WAYLAND_DISPLAY" ] ; then CopyW="yes" ; else CopyW="" ; fi
+       |      if [ -n "$DISPLAY"         ] ; then CopyX="yes" ; else CopyX="" ; fi
        |    ;;
        |  esac
        |'
@@ -4164,9 +4173,9 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
       echo '    # Mytest [ "'$Mytest'" ] && sleep 5'
   fi
 
-      '|  done
-       |}
-       |# end of clipexchange
+  trim_to_bar \
+      '|  done # while rocknroll
+       |} # clipexchange
        |
        |'
   ###########
@@ -4175,11 +4184,11 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
       yes) # bidirectional
           trim_to_bar \
               '|
-               |clipexchange "$X1auth" "$X2auth" clipboard &
-               |#clipexchange "$X1auth" "$X2auth" primary &
+               |clipexchange  "$X1auth" "$X2auth" clipboard &
+               |#clipexchange "$X1auth" "$X2auth" primary   &
                |mysleep 1.4
-               |clipexchange "$X2auth" "$X1auth" clipboard &
-               |#clipexchange "$X2auth" "$X1auth" primary &
+               |clipexchange  "$X2auth" "$X1auth" clipboard &
+               |#clipexchange "$X2auth" "$X1auth" primary   &
                |#
                |'
           ;;
@@ -4187,20 +4196,22 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
       c2h) # only container to host
           trim_to_bar \
               '|
-               |clipexchange "$X2auth" "$X1auth" clipboard &
-               |#clipexchange "$X2auth" "$X1auth" primary &
+               |clipexchange  "$X2auth" "$X1auth" clipboard &
+               |#clipexchange "$X2auth" "$X1auth" primary   &
                |'
           ;;
 
       h2c) # only container to host
           trim_to_bar \
               '|
-               |clipexchange "$X1auth" "$X2auth" clipboard &
-               |#clipexchange "$X1auth" "$X2auth" primary &
+               |clipexchange  "$X1auth" "$X2auth" clipboard &
+               |#clipexchange "$X1auth" "$X2auth" primary   &
                |'
           ;;
 
       cmv)
+          # cmv as in "CTRL+META+V"
+          #
           # Always container to host, only with super + alt + v host
           # to container ### FIXME no wayland support here
           #
@@ -4228,6 +4239,19 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
                |  Control+Mod2+Mod4 + v
                |"
                |
+               |    # Xcontainer_option="'$Xcontainer_option'"
+               |    # Xserver="'$Xserver'"
+               |    # is_wayland=$( case  "$Xserver" in --weston|--weston-xwayland) echo yes ;; *) echo no ;; esac )
+               |    # Setupwayland="'$Setupwayland'"
+               |    # use_bindkey=$( if [ "$Xcontainer_option" = yes ]
+               |    #                && [ "$is_wayland"        = yes ]
+               |    #                && [ "$Setupwayland"      = yes ] ; then echo yes ; else echo no; fi )
+               |    #
+               |    # if [ $use_bindkey = yes ]
+               |    # then env $X2auth bindkey '$Clipboardrc'                   & Xbindkeyspid=$!
+               |    # else env $X2auth xbindkeys -n -f <(echo "$Xbindkeycodes") & Xbindkeyspid=$!
+               |    # fi
+               |
                |    # Xcontainer_option
                |    case "'$Xcontainer_option'" in
                |      yes)
@@ -4242,15 +4266,12 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
                |              esac
                |              ;;
                |
-               |           *)
-               |              env $X2auth xbindkeys -n -f <(echo "$Xbindkeycodes") & Xbindkeyspid=$!
-               |              ;;
+               |           *)          env $X2auth xbindkeys -n -f <(echo "$Xbindkeycodes") & Xbindkeyspid=$! ;;
                |        esac # Xserver
-               |      ;;
-               |
-               |      no)
-               |                   env $X2auth xbindkeys -n -f <(echo "$Xbindkeycodes") & Xbindkeyspid=$!
-               |      ;;
+               |        ;;
+               |      #
+               |      no)              env $X2auth xbindkeys -n -f <(echo "$Xbindkeycodes") & Xbindkeyspid=$! ;;
+               |      #
                |    esac # Xcontainer_option
                |
                |    # wait for the end
