@@ -2749,7 +2749,7 @@ myrealpath() {                  # real path of possible symlink
 }
 
 #
-# function waitforlogentry( application, logfile, keyword, error_keywords, time_to_wait=60 )
+# function waitforlogentry_sh( application, logfile, keyword, error_keywords, time_to_wait=60 )
 #
 #  - Wait for keyword ($3) in logfile ($2) of application ($1)
 #  - error() on timeout and error_keywords in logfile
@@ -2761,14 +2761,14 @@ myrealpath() {                  # real path of possible symlink
 #  time.
 #
 # Examples:
-#  waitforlogentry "start_xcontainer()" "$Xinitlogfile"      "X server container is ready"
-#  waitforlogentry containerrc          \$Storeinfofile      containerrootrc=ready  ''                       infinity
-#  waitforlogentry "start_compositor()" "$Compositorlogfile" "$Compositorkeyword"   "$Compositorerrorcodes"
-#  waitforlogentry tailstdout           "$Storeinfofile"      "x11docker=ready"      ""                       infinity
-#  waitforlogentry 'start_container()'   $Xinitlogfile        'xinitrc is ready'     "$Xiniterrorcodes"
-#  waitforlogentry xpra                  $Xinitlogfile        "xinitrc is ready"     ""                       infinity
+#  waitforlogentry_sh "start_xcontainer()" "$Xinitlogfile"      "X server container is ready"
+#  waitforlogentry_sh containerrc          \$Storeinfofile      containerrootrc=ready  ''                       infinity
+#  waitforlogentry_sh "start_compositor()" "$Compositorlogfile" "$Compositorkeyword"   "$Compositorerrorcodes"
+#  waitforlogentry_sh tailstdout           "$Storeinfofile"      "x11docker=ready"      ""                       infinity
+#  waitforlogentry_sh 'start_container()'   $Xinitlogfile        'xinitrc is ready'     "$Xiniterrorcodes"
+#  waitforlogentry_sh xpra                  $Xinitlogfile        "xinitrc is ready"     ""                       infinity
 #
-waitforlogentry() {
+waitforlogentry_sh() {
 
     local application="${1:-}"  # $1 is the application we are waiting
                                 # for to be ready
@@ -2803,7 +2803,7 @@ waitforlogentry() {
     StartTime="${StartTime:-0}"
 
     debugnote "$(trim_to_mark \
-        "|waitforlogentry(): ${application}:
+        "|waitforlogentry_sh(): ${application}:
          : Waiting for logentry \"${keyword}\" in ${logfile_basename}"
          )"
 
@@ -2822,7 +2822,7 @@ waitforlogentry() {
         ## Report after 10 sec of waiting.
         if [ "$ElapsedTime" -gt "10" ] ; then
             debugnote "$(trim_to_mark \
-           "|waitforlogentry(): ${application}:
+           "|waitforlogentry_sh(): ${application}:
             : Waiting since ${ElapsedTime}s
             : for log entry \"${keyword}\" in ${logfile_basename}"
          )"
@@ -2831,7 +2831,7 @@ waitforlogentry() {
         # error if TimeToWait seconds have elapsed
         if [ "$ElapsedTime" -gt "$TimeToWait" ] ; then
             error  "$(trim_to_mark \
-            "|waitforlogentry(): ${application}:
+            "|waitforlogentry_sh(): ${application}:
              : Timeout waiting for entry \"${keyword}\" in ${logfile_basename}
              |  Last lines of ${logfile_basename}:"
              )${NEWLINE}$(tail -n15 "${logfile}")"
@@ -2843,7 +2843,7 @@ waitforlogentry() {
             #
             if [ -n "$Errorkey" ] ; then
                 error "$(trim_to_bar \
-              "|waitforlogentry(): ${application}: Found error message in logfile:
+              "|waitforlogentry_sh(): ${application}: Found error message in logfile:
                |  <'$Errorkey'>
                |
                |  Context in logfile ${logfile_basename}:"
@@ -2855,7 +2855,7 @@ waitforlogentry() {
         # break loop on Timetosaygoodbye
         if ! rocknroll ; then
             debugnote "$(trim_to_mark \
-                  "|waitforlogentry(): ${application}:
+                  "|waitforlogentry_sh(): ${application}:
                    : Stopped waiting for ${keyword} in ${logfile_basename}
                    : due to terminating signal."
                    )"
@@ -2871,7 +2871,7 @@ waitforlogentry() {
     #
     # Normal return, found keyword
     debugnote  "$(trim_to_mark \
-              "|waitforlogentry(): ${application}:
+              "|waitforlogentry_sh(): ${application}:
                : Found log entry \"${keyword}\" in ${logfile_basename}."
               )"
     return 0
@@ -4393,7 +4393,7 @@ setup_gpu() {
 
         if [ "$Xcontainer_option" = "yes" ] ; then
 
-            waitforlogentry "start_xcontainer()"          \
+            waitforlogentry_sh "start_xcontainer()"          \
                             "$Xinitlogfile"               \
                             "X server container is ready" \
                 || return 1
@@ -9866,9 +9866,10 @@ store_runoption_volume() {  # store volume/device for docker command
     Path="$(convertpath subsystem "${ARG1}")"
     Readwritemode="$(echo "${ARG1}" | rev | cut -c1-3 | rev)"
     [ "$Readwritemode" = ":ro" ] || Readwritemode=""
-    Path="$(convertpath subsystem "${ARG1}")"
-    Readwritemode="$(echo "${ARG1}" | rev | cut -c1-3 | rev)"
-    [ "$Readwritemode" = ":ro" ] || Readwritemode=""
+    #
+    ## Path="$(convertpath subsystem "${ARG1}")"
+    ## Readwritemode="$(echo "${ARG1}" | rev | cut -c1-3 | rev)"
+    ## [ "$Readwritemode" = ":ro" ] || Readwritemode=""
     #
     case "${Path:0:1}" in
         "/") # path on host
@@ -10253,7 +10254,12 @@ $(declare -f saygoodbye)
 $(declare -f storeinfo_dump_sh)
 $(declare -f storeinfo_test_sh)
 $(declare -f storepid)
-$(declare -f waitforlogentry)
+
+$(declare -f trim_to_bar_filter)
+$(declare -f trim_to_bar)
+$(declare -f trim_to_mark)
+$(declare -f ws_colon_is_continuation_filter)
+$(declare -f waitforlogentry_sh)
 $Messagefifofuncs
 
 Messagefile=$(convertpath share "$Messagefifo")
@@ -10261,7 +10267,7 @@ Storeinfofile=$(convertpath share "$Storeinfofile")
 Storepidfile=$Sharefoldercontainer/store.pids
 Timetosaygoodbyefile=$(convertpath share "$Timetosaygoodbyefile")
 
-waitforlogentry containerrc \$Storeinfofile containerrootrc=ready '' infinity
+waitforlogentry_sh containerrc \$Storeinfofile containerrootrc=ready '' infinity
 debugnote 'Running containerrc: Unprivileged user commands in container'
 
 verbose \"containerrc: Container system:
@@ -11562,7 +11568,7 @@ start_compositor() {            # start Wayland compositor Weston or KWin
   esac
 
   storeinfo_add_kv_sh "compositorpid=$Compositorpid"
-  waitforlogentry "start_compositor()" "$Compositorlogfile" "$Compositorkeyword" "$Compositorerrorcodes"
+  waitforlogentry_sh "start_compositor()" "$Compositorlogfile" "$Compositorkeyword" "$Compositorerrorcodes"
   setonwatchpidlist "$(storeinfo_dump_sh compositorpid)" compositor
 
   case "$Xserver" in
@@ -11591,7 +11597,7 @@ $(tail "$Xinitlogfile")"
     return 1
   }
 
-  waitforlogentry "start_xcontainer()" "$Xinitlogfile" "X server container is ready" || return 1
+  waitforlogentry_sh "start_xcontainer()" "$Xinitlogfile" "X server container is ready" || return 1
 
   return 0
 }
@@ -12401,12 +12407,12 @@ setup_verbosity() {             # options --verbose, --stdout, --stderr
 
   [ "$Showcontaineroutput" = "yes" ]    && {
     {
-      waitforlogentry tailstdout "$Storeinfofile" "x11docker=ready" ""  infinity ||:
+      waitforlogentry_sh tailstdout "$Storeinfofile" "x11docker=ready" ""  infinity ||:
       trap '' SIGINT
       tail --pid="$$" -n +1 -f "$Cmdstdoutlogfile"     2>/dev/null ||:
     } &
     {
-      waitforlogentry tailstderr "$Storeinfofile" "x11docker=ready" ""  infinity ||:
+      waitforlogentry_sh tailstderr "$Storeinfofile" "x11docker=ready" ""  infinity ||:
       trap '' SIGINT
       tail --pid="$$" -n +1 -f "$Cmdstderrlogfile" >&2 2>/dev/null ||:
     } &
@@ -14860,7 +14866,7 @@ declare_variables() {           # declare global variables
   # Cleanxhost : --clean-xhost: remove xhost access policies on host X
   Cleanxhost="no"
 
-  # Compositorerrorcodes : pattern used in waitforlogentry start_compositor() ...
+  # Compositorerrorcodes : pattern used in waitforlogentry_sh start_compositor() ...
   #
   Compositorerrorcodes="Failed to process Wayland|failed to create display|] fatal:"
 
@@ -16315,7 +16321,7 @@ main() {
     # Thus docker runs in this subshell after X server is ready to accept connections.
 
     # wait for X to be ready
-    waitforlogentry 'start_container()' $Xinitlogfile 'xinitrc is ready' "$Xiniterrorcodes"
+    waitforlogentry_sh 'start_container()' $Xinitlogfile 'xinitrc is ready' "$Xiniterrorcodes"
 
     # softlink (or socat) to X or Wayland unix socket in container                           # --xc
     case "$Xcontainer_option" in
@@ -16456,7 +16462,7 @@ $(nl -ba <$Xinitrc)"
   case "$Xserver" in
     --xpra*)
       {
-        waitforlogentry xpra $Xinitlogfile "xinitrc is ready" '' infinity
+        waitforlogentry_sh xpra $Xinitlogfile "xinitrc is ready" '' infinity
         rocknroll && start_xpra                                                   # --xpra, --xpra-xwayland
       } & storepid $! xpraloop
     ;;
