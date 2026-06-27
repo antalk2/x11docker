@@ -3398,6 +3398,7 @@ installer() {                   # --install, --update, --update-master, --remove
     local Key1="" Key2="" Oldversion="" Newversion="" Format="" Prefix
     local codeload_url_prefix=""
     local raw_url_prefix=""
+    local the_unpacked_dir=""
 
     Prefix="/usr/local"
 
@@ -3469,10 +3470,12 @@ installer() {                   # --install, --update, --update-master, --remove
             fi
 
             if [ -d       "/tmp/x11docker-install" ] ; then  rm -R "/tmp/x11docker-install" ; fi
-            if ! mkdir -p "/tmp/x11docker-install" ; then
+            if ! mkdir -p "/tmp/x11docker-install"   ; then
                 error "Could not create /tmp/x11docker-install."
                 return 1
             fi
+            #
+            # Now "/tmp/x11docker-install" is empty.
             if ! cd    "/tmp/x11docker-install" ; then
                 error "Could not create or cd to /tmp/x11docker-install."
                 return 1
@@ -3527,76 +3530,104 @@ installer() {                   # --install, --update, --update-master, --remove
                     ;;
             esac
 
-      note "Extracting $Format archive."
-      case "$Format" in
-        zip)    unzip   "x11docker-update.$Format" ;;
-        tar.gz) tar xzf "x11docker-update.$Format" ;;
-      esac || {
-        error "Failed to extract $Format archive."
-        return 1
-      }
-      echo ""
-      cd "/tmp/x11docker-install/$(ls -l | grep drwx | rev | cut -d' ' -f1 | rev)" || {
-        error "Could not cd to /tmp/x11docker-update/$(ls -l | grep drwx | rev | cut -d' ' -f1 | rev)"
-        return 1
-      }
-    ;;
-  esac
+            note "Extracting $Format archive."
+            case "$Format" in
+                zip)    unzip   "x11docker-update.$Format" ;;
+                tar.gz) tar xzf "x11docker-update.$Format" ;;
+            esac || {
+                error "Failed to extract $Format archive."
+                return 1
+            }
+            echo ""
+            #
+            # Note: we are in "/tmp/x11docker-install".
+            #
+            # The only subdirectory comes from unpacking the archive.
+            # It is the single directory line (ls -l | grep drwx)
+            # Assuming no space in its name, the name is the last word in that line.
+            #
+            the_unpacked_dir="$(ls -l | grep drwx | rev | cut -d' ' -f1 | rev)"
+            if ! cd "/tmp/x11docker-install/${the_unpacked_dir}"
+            then
+                error "Could not cd to /tmp/x11docker-update/${the_unpacked_dir}"
+                return 1
+            fi
+            ;;
+    esac # Preparing.
+    # We are in "/tmp/x11docker-install/${the_unpacked_dir}"
 
-  # New version number
-  case "${1:-}" in
-    --install|--update|--update-master)
-      Newversion="$(bash "$(pwd)/x11docker" --version)"
-    ;;
-  esac
-
-  # Changelog excerpt
-  case "${1:-}" in
-    --update)
-      echo "$Oldversion" | grep -q beta && {
-        note "You are switching from master branch to stable releases.
-  To get latest master beta version, use option --update-master instead"
-        Key1="\[${Newversion}\]"
-        Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
-      } || {
-        Key1="\[${Newversion}\]"
-        Key2="\[${Oldversion}\]"
-        [ "$Newversion" = "$Oldversion" ] && {
-          Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
-          note "Version $Newversion was already installed before this update.
-  If you want the latest beta version from master branch, use --update-master."
-        }
-        [ -z "$Oldversion" ] && Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
-      }
-    ;;
-    --update-master)
-      echo "$Oldversion" | grep -q beta && {
-        Key1="\[Unreleased\]"
-        Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
-      } || {
-        Key1="\[Unreleased\]"
-        Key2="\[${Oldversion}\]"
-        [ -z "$Oldversion" ] && Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
-      }
-    ;;
-  esac
-  case "${1:-}" in
-    --update|--update-master)
-      note "Excerpt of x11docker changelog:
-$(sed -n "/${Key1}/,/${Key2}/p" "CHANGELOG.md" | head -n-1)"
-    ;;
-  esac
-
-  # Show diff
-  [ "$Installerarg" = "diff" ] && {
+    # New version number
     case "${1:-}" in
-      --update|--update-master)
-        note "Difference of installed version to new version:
-  $ diff -u -s -Z '$(command -v x11docker)' '$(pwd)/x11docker'
-$(diff -u -s -Z "$(command -v x11docker)" "$(pwd)/x11docker" 2>&1 | sed "s/^+.*/${Colgreenbg}\0${Colnorm}/ ; s/^-.*/${Colredbg}\0${Colnorm}/ ; s/^@.*/${Coluline}\0${Colnorm}/")"
-      ;;
+        --install|--update|--update-master)
+            Newversion="$(bash "$(pwd)/x11docker" --version)"
+            ;;
     esac
-  }
+
+    # Changelog excerpt
+    case "${1:-}" in
+        --update)
+            if echo "$Oldversion" | grep -q beta ; then
+                note "$(trim_to_bar \
+                      "|You are switching from master branch to stable releases.
+                       |  To get latest master beta version, use option --update-master instead"
+                       )"
+                #
+                # Note: Key1 and Key2 are address patterns for a `sed` call below.
+                #
+                Key1="\[${Newversion}\]"
+                Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
+            else
+                Key1="\[${Newversion}\]"
+                Key2="\[${Oldversion}\]"
+                if [ "$Newversion" = "$Oldversion" ] ; then
+                    Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
+                    note "$(trim_to_bar \
+                          "|Version $Newversion was already installed before this update.
+                           |  If you want the latest beta version from master branch, use --update-master."
+                           )"
+                fi
+                if [ -z "$Oldversion" ] ; then
+                    Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
+                fi
+            fi
+            ;;
+
+        --update-master)
+            if echo "$Oldversion" | grep -q beta ; then
+                Key1="\[Unreleased\]"
+                Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
+            else
+                Key1="\[Unreleased\]"
+                Key2="\[${Oldversion}\]"
+                if [ -z "$Oldversion" ] ; then
+                    Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
+                fi
+            fi
+            ;;
+    esac
+
+    case "${1:-}" in
+        --update|--update-master)
+            note "Excerpt of x11docker changelog:${NEWLINE}$(
+               sed -n "/${Key1}/,/${Key2}/p" "CHANGELOG.md" | head -n-1
+               )"
+            ;;
+    esac
+
+    # Show diff
+    if [ "$Installerarg" = "diff" ] ; then
+        case "${1:-}" in
+            --update|--update-master)
+                note "$(printf "%s\n%s\n%s"                                       \
+                 "Difference of installed version to new version:"                \
+                 "  $ diff -u -s -Z '$(command -v x11docker)' '$(pwd)/x11docker'" \
+                 "$(  diff -u -s -Z "$(command -v x11docker)" "$(pwd)/x11docker" 2>&1 \
+                      | sed "s/^+.*/${Colgreenbg}\0${Colnorm}/ ; s/^-.*/${Colredbg}\0${Colnorm}/ ; s/^@.*/${Coluline}\0${Colnorm}/"
+                      )"
+                   )"
+                ;;
+        esac
+    fi
 
   # Doing
   [ -z "$Installerarg" ] && case "${1:-}" in
