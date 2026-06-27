@@ -3427,11 +3427,14 @@ installer() {                   # --install, --update, --update-master, --remove
   # Preparing
   case "${1:-}" in
     --install)
-      [ -f "./x11docker" ]             || {
-        error "File x11docker not found in current folder.
-  Try 'x11docker --update' instead."
+      if [ ! -f "./x11docker" ]   ; then
+          error "$(trim_to_bar \
+           "|File x11docker not found in current folder.
+            |  Try 'x11docker --update' instead."
+            )"
         return 1
-      }
+      fi
+
       [ -x "${Prefix}/bin/x11docker" ] && {
         warning "x11docker seems to be installed already
   at ${Prefix}/bin/x11docker.
