@@ -3405,7 +3405,8 @@ installer() {                   # --install, --update, --update-master, --remove
                  |rm    /usr/share/man/man1/x11docker.1.gz
                  |  or with x11docker option --remove-oldprefix"
                  )"
-              ;;
+              fi
+          ;;
   esac
 
   if [ "$Startuser" != "root" ] ; then
