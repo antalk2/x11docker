@@ -4007,190 +4007,266 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
           ;;
   esac
 
-# shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
-[ "$Mytest" ] && echo 'echo "
-$X1auth
-$X2auth"'
+  # shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
+  if [ "$Mytest" ] ; then
+      trim_to_bar \
+          '|echo
+           |echo "$X1auth"
+           |echo "$X2auth"
+           |'
+  fi
 
-# shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
-  echo '
-clipexchange() {
-  # Send clipboard content of one X server or Wayland compositor
-  # to another X server and/or Wayland compositor and update on changes.
-  # Run function twice with switched credentials to sync the clipboards.
-  # Runs in a loop except $4 is set
-  # $1  credentials to access 1. X server and/or Wayland compositor
-  # $2  credentials to access 2. X server and/or Wayland compositor
-  # $3  selection to use (primary or clipboard)
-  # $4  set to noloop if you want to run only once without a loop
-  # Credentials look like "DISPLAY=:0 XAUTHORITY=~/.Xauthority WAYLAND_DISPLAY=wayland-1 XDG_RUNTIME_DIR=/run/user/1000"
+  # shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
+  trim_to_bar \
+      '|
+       |clipexchange() {
+       |  # Send clipboard content of one X server or Wayland compositor
+       |  # to another X server and/or Wayland compositor and update on changes.
+       |  # Run function twice with switched credentials to sync the clipboards.
+       |  # Runs in a loop except $4 is set
+       |  # $1  credentials to access 1. X server and/or Wayland compositor
+       |  # $2  credentials to access 2. X server and/or Wayland compositor
+       |  # $3  selection to use (primary or clipboard)
+       |  # $4  set to noloop if you want to run only once without a loop
+       |  # Credentials look like "DISPLAY=:0 XAUTHORITY=~/.Xauthority WAYLAND_DISPLAY=wayland-1 XDG_RUNTIME_DIR=/run/user/1000"
+       |
+       |  local Selection SelectionW SelectionX
+       |  local TargetsW TargetsX ImagetargetW ImagetargetX
+       |  local Clip ClipW ClipX
+       |  local Clipold ClipoldW2 ClipoldX2
+       |  local CopyW CopyX
+       |  local Wprimary1 Wprimary2
+       |  local Noloop
+       |
+       |  Selection="${3:-}"
+       |  Noloop="${4:-}"
+       |
+       |  export DISPLAY= WAYLAND_DISPLAY=
+       |  export ${1:-}
+       |  case "$Selection" in
+       |    primary)
+       |      SelectionX="-selection primary"
+       |      SelectionW="--primary"
+       |      env \$X1auth wl-paste -p >/dev/null 2>&1 || Wprimary1=no
+       |      env \$X2auth wl-paste -p >/dev/null 2>&1 || Wprimary2=no
+       |      [ -z \"\$Wprimary1\$Wprimary2\" ] && CopyW=yes
+       |      [ -z "$WAYLAND_DISPLAY" ]         && CopyW=""
+       |      CopyX="yes"
+       |      [ -z "$DISPLAY" ]                 && CopyX=""
+       |    ;;
+       |    clipboard)
+       |      SelectionX="-selection clipboard"
+       |      SelectionW=""
+       |      CopyW="yes"
+       |      [ -z "$WAYLAND_DISPLAY" ] && CopyW=""
+       |      CopyX="yes"
+       |      [ -z "$DISPLAY" ]         && CopyX=""
+       |    ;;
+       |  esac
+       |'
 
-  local Selection SelectionW SelectionX
-  local TargetsW TargetsX ImagetargetW ImagetargetX
-  local Clip ClipW ClipX
-  local Clipold ClipoldW2 ClipoldX2
-  local CopyW CopyX
-  local Wprimary1 Wprimary2
-  local Noloop
+  ############
+  
+  # shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
+  trim_to_bar \
+      '|
+       |  while rocknroll; do
+       |    export DISPLAY= WAYLAND_DISPLAY=
+       |    export ${1:-}
+       |
+       |    # check for image clip
+       |    [ "$CopyW" ] && TargetsW="$(wl-paste --list-types $SelectionW)" 
+       |    [ "$CopyX" ] && TargetsX="$(xclip -out            $SelectionX -t TARGETS)"
+       |    grep -q "image/png" <<< "$TargetsW" && ImagetargetW="-t image/png" || ImagetargetW=""
+       |    grep -q "image/png" <<< "$TargetsX" && ImagetargetX="-t image/png" || ImagetargetX=""
+       |
+       |    # read content of $Selection of X server $1
+       |    [ "$CopyW" ] && ClipW="$(wl-paste   $SelectionW $ImagetargetW | base64 -i)"
+       |    [ "$CopyX" ] && ClipX="$(xclip -out $SelectionX $ImagetargetX | base64 -i)"
+       |
+       |    # check for new clip
+       |    [ -n "$ClipW" ] && [ "$ClipW" != "$Clipold" ] && Clip="$ClipW"
+       |    [ -n "$ClipX" ] && [ "$ClipX" != "$Clipold" ] && Clip="$ClipX"
+       |
+       |    # fill empty clipboards to prevent odd issues
+       |    case "$Selection" in
+       |      clipboard)
+       |        { [ -z "$ClipW" ] || [ -z "$ClipX" ] ; } && {
+       |          [ -z "$Clip" ]  && Clip="$(base64 -i <<< "x11docker")"
+       |          [ -z "$ClipW" ] && [ "$CopyW" ] && base64 -d -i <<< "$Clip" | wl-copy   $SelectionW && Clipold="$Clip"
+       |          [ -z "$ClipX" ] && [ "$CopyX" ] && base64 -d -i <<< "$Clip" | xclip -in $SelectionX && Clipold="$Clip"
+       |        }
+       |      ;;
+       |    esac
+       |'
+  #############
 
-  Selection="${3:-}"
-  Noloop="${4:-}"
+  if [ "$Mytest" ] ; then
+      # shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
+      trim_to_bar \
+          '|
+           |# Mytest
+           |echo "
+           |Selection $Selection
+           |ClipX:    $ClipX $(base64 -d -i <<< "$ClipX")  D:$DISPLAY
+           |ClipW:    $ClipW $(base64 -d -i <<< "$ClipW")  D:$WAYLAND_DISPLAY
+           |Clipold:  $Clipold $(base64 -d -i <<< "$Clipold")
+           |Clip:     $Clip $(base64 -d -i <<< "$Clip")
+           |"
+           |'
+  else
+      trim_to_bar \
+          '|
+           |# Mytest (elided)
+           |'
+  fi
+  
+  trim_to_bar \
+      '|
+       |
+       |    if [ -n "$Clip" ] && [ "$(base64 -d -i  <<< "$Clip")" != "$(base64 -d -i <<< "$Clipold")" ] ; then
+       |      Clipold="$Clip"
+       |      export DISPLAY= WAYLAND_DISPLAY=
+       |      export ${2:-}
+       |
+       |      # check existing content of target clipboard of $2
+       |      [ -n "$WAYLAND_DISPLAY" ] && ClipoldW2="$(wl-paste   $SelectionW $Imagetarget | base64 -i)"
+       |      [ -n "$DISPLAY" ]         && ClipoldX2="$(xclip -out $SelectionX $Imagetarget | base64 -i)"
+       |
+       |      # send only to clipboard of other X server if it has different content. Important to keep highlighting of text for primary/middle mouse click.
+       |      [ "$ClipoldW2" != "$Clip" ] && [ -n "$WAYLAND_DISPLAY" ] && base64 -d -i <<< "$Clip" | wl-copy   $SelectionW $Imagetarget
+       |      [ "$ClipoldX2" != "$Clip" ] && [ -n "$DISPLAY" ]         && base64 -d -i <<< "$Clip" | xclip -in $SelectionX $Imagetarget
+       |
+       |'
+  ##
 
-  export DISPLAY= WAYLAND_DISPLAY=
-  export ${1:-}
-  case "$Selection" in
-    primary)
-      SelectionX="-selection primary"
-      SelectionW="--primary"
-      env \$X1auth wl-paste -p >/dev/null 2>&1 || Wprimary1=no
-      env \$X2auth wl-paste -p >/dev/null 2>&1 || Wprimary2=no
-      [ -z \"\$Wprimary1\$Wprimary2\" ] && CopyW=yes
-      [ -z "$WAYLAND_DISPLAY" ]         && CopyW=""
-      CopyX="yes"
-      [ -z "$DISPLAY" ]                 && CopyX=""
-    ;;
-    clipboard)
-      SelectionX="-selection clipboard"
-      SelectionW=""
-      CopyW="yes"
-      [ -z "$WAYLAND_DISPLAY" ] && CopyW=""
-      CopyX="yes"
-      [ -z "$DISPLAY" ]         && CopyX=""
-    ;;
-  esac
+  if [ "$Mytest" ] ; then
+      echo '      [ "'$Mytest'" ] && echo "SEND $Selection to ${2:-} : V.$(base64 -d -i <<< "$Clip").V"'
+  else
+      echo '      # Mytest [ "'$Mytest'" ] && echo "SEND $Selection to ${2:-} : V.$(base64 -d -i <<< "$Clip").V"'
+  fi
 
-  while rocknroll; do
-    export DISPLAY= WAYLAND_DISPLAY=
-    export ${1:-}
+  trim_to_bar \
+      '|    fi # if [ -n Clip ]
+       '
 
-    # check for image clip
-    [ "$CopyW" ] && TargetsW="$(wl-paste --list-types $SelectionW)" 
-    [ "$CopyX" ] && TargetsX="$(xclip -out            $SelectionX -t TARGETS)"
-    grep -q "image/png" <<< "$TargetsW" && ImagetargetW="-t image/png" || ImagetargetW=""
-    grep -q "image/png" <<< "$TargetsX" && ImagetargetX="-t image/png" || ImagetargetX=""
+  trim_to_bar \
+      '|
+       |    [ "$Noloop" ] && break
+       |
+       |    # wait a bit to avoid high CPU usage and to reduce Wayland window flickering
+       |    mysleep 1
+       '
 
-    # read content of $Selection of X server $1
-    [ "$CopyW" ] && ClipW="$(wl-paste   $SelectionW $ImagetargetW | base64 -i)"
-    [ "$CopyX" ] && ClipX="$(xclip -out $SelectionX $ImagetargetX | base64 -i)"
+  if [ "$Mytest" ] ; then
+      echo '    [ "'$Mytest'" ] && sleep 5'
+  else
+      echo '    # Mytest [ "'$Mytest'" ] && sleep 5'
+  fi
 
-    # check for new clip
-    [ -n "$ClipW" ] && [ "$ClipW" != "$Clipold" ] && Clip="$ClipW"
-    [ -n "$ClipX" ] && [ "$ClipX" != "$Clipold" ] && Clip="$ClipX"
-
-    # fill empty clipboards to prevent odd issues
-    case "$Selection" in
-      clipboard)
-        { [ -z "$ClipW" ] || [ -z "$ClipX" ] ; } && {
-          [ -z "$Clip" ]  && Clip="$(base64 -i <<< "x11docker")"
-          [ -z "$ClipW" ] && [ "$CopyW" ] && base64 -d -i <<< "$Clip" | wl-copy   $SelectionW && Clipold="$Clip"
-          [ -z "$ClipX" ] && [ "$CopyX" ] && base64 -d -i <<< "$Clip" | xclip -in $SelectionX && Clipold="$Clip"
-        }
-      ;;
-    esac
-
-    [ "'$Mytest'" ] && echo "
-Selection $Selection
-ClipX:    $ClipX $(base64 -d -i <<< "$ClipX")  D:$DISPLAY
-ClipW:    $ClipW $(base64 -d -i <<< "$ClipW")  D:$WAYLAND_DISPLAY
-Clipold:  $Clipold $(base64 -d -i <<< "$Clipold")
-Clip:     $Clip $(base64 -d -i <<< "$Clip")
-"
-
-    [ -n "$Clip" ] && [ "$(base64 -d -i  <<< "$Clip")" != "$(base64 -d -i <<< "$Clipold")" ] && {
-      Clipold="$Clip"
-      export DISPLAY= WAYLAND_DISPLAY=
-      export ${2:-}
-
-      # check existing content of target clipboard of $2
-      [ -n "$WAYLAND_DISPLAY" ] && ClipoldW2="$(wl-paste   $SelectionW $Imagetarget | base64 -i)"
-      [ -n "$DISPLAY" ]         && ClipoldX2="$(xclip -out $SelectionX $Imagetarget | base64 -i)"
-
-      # send only to clipboard of other X server if it has different content. Important to keep highlighting of text for primary/middle mouse click.
-      [ "$ClipoldW2" != "$Clip" ] && [ -n "$WAYLAND_DISPLAY" ] && base64 -d -i <<< "$Clip" | wl-copy   $SelectionW $Imagetarget
-      [ "$ClipoldX2" != "$Clip" ] && [ -n "$DISPLAY" ]         && base64 -d -i <<< "$Clip" | xclip -in $SelectionX $Imagetarget
-
-      [ "'$Mytest'" ] && echo "SEND $Selection to ${2:-} : V.$(base64 -d -i <<< "$Clip").V"
-    }
-
-    [ "$Noloop" ] && break
-
-    # wait a bit to avoid high CPU usage and to reduce Wayland window flickering
-    mysleep 1
-    [ "'$Mytest'" ] && sleep 5
-  done
-}'
-
+      '|  done
+       |}
+       |# end of clipexchange
+       |
+       |'
+  ###########
+  
   case "$Shareclipboard" in
-    yes) # bidirectional
-      echo '
-clipexchange "$X1auth" "$X2auth" clipboard &
-#clipexchange "$X1auth" "$X2auth" primary &
-mysleep 1.4
-clipexchange "$X2auth" "$X1auth" clipboard &
-#clipexchange "$X2auth" "$X1auth" primary &
-'
-    ;;
-    c2h) # only container to host
-      echo '
-clipexchange "$X2auth" "$X1auth" clipboard &
-#clipexchange "$X2auth" "$X1auth" primary &
-'
-    ;;
-    h2c) # only container to host
-      echo '
-clipexchange "$X1auth" "$X2auth" clipboard &
-#clipexchange "$X1auth" "$X2auth" primary &
-'
-    ;;
-    cmv) # always container to host, only with super + alt + v host to container ### FIXME no wayland support here
-      echo '
-case "${1:-}" in
-  cmv) # recursive call with xbindkeys or bindkey
-    [ "'$Mytest'" ] && echo "CTRL+META+V"
-    clipexchange "$X1auth" "$X2auth" clipboard noloop
-    #clipexchange "$X1auth" "$X2auth" primary   noloop
-  ;;
-
-  "") # first call in xinitrc, run bindkey tools
-    clipexchange "$X2auth" "$X1auth" clipboard &
-    #clipexchange "$X2auth" "$X1auth" primary &
-
-    Xbindkeycodes="
-\"bash '$Clipboardrc' cmv\"
-  m:0x54 + c:55
-  Control+Mod2+Mod4 + v
-"
-    case "'$Xcontainer_option'" in
-      yes)
-        case "'$Xserver'" in
-          --weston|--weston-xwayland)
-            case "'$Setupwayland'" in
-              yes) env $X2auth bindkey '$Clipboardrc'                   & Xbindkeyspid=$! ;;
-              no)  env $X2auth xbindkeys -n -f <(echo "$Xbindkeycodes") & Xbindkeyspid=$! ;;
-            esac
+      yes) # bidirectional
+          trim_to_bar \
+              '|
+               |clipexchange "$X1auth" "$X2auth" clipboard &
+               |#clipexchange "$X1auth" "$X2auth" primary &
+               |mysleep 1.4
+               |clipexchange "$X2auth" "$X1auth" clipboard &
+               |#clipexchange "$X2auth" "$X1auth" primary &
+               |#
+               |'
           ;;
-          *)
-                   env $X2auth xbindkeys -n -f <(echo "$Xbindkeycodes") & Xbindkeyspid=$!
-          ;;
-        esac
-      ;;
-      no)
-                   env $X2auth xbindkeys -n -f <(echo "$Xbindkeycodes") & Xbindkeyspid=$!
-      ;;
-    esac
 
-    # wait for the end
-    case "'$Usemkfifo'" in
-      yes) read Var <'$Timetosaygoodbyefifo' ;;
-      no)  while rocknroll; do sleep 1; done ;;
-    esac
-    kill $Xbindkeyspid
-  ;;
-esac
-'
-    ;;
+      c2h) # only container to host
+          trim_to_bar \
+              '|
+               |clipexchange "$X2auth" "$X1auth" clipboard &
+               |#clipexchange "$X2auth" "$X1auth" primary &
+               |'
+          ;;
+
+      h2c) # only container to host
+          trim_to_bar \
+              '|
+               |clipexchange "$X1auth" "$X2auth" clipboard &
+               |#clipexchange "$X1auth" "$X2auth" primary &
+               |'
+          ;;
+
+      cmv)
+          # Always container to host, only with super + alt + v host
+          # to container ### FIXME no wayland support here
+          #
+          trim_to_bar \
+              '|
+               |case "${1:-}" in
+               |  cmv) # recursive call with xbindkeys or bindkey
+               |       [ "'$Mytest'" ] && echo "CTRL+META+V" # Mytest
+               |       clipexchange "$X1auth" "$X2auth" clipboard noloop
+               |       #clipexchange "$X1auth" "$X2auth" primary   noloop
+               |  ;;
+               |
+               |  "") # first call in xinitrc, run bindkey tools
+               |    clipexchange "$X2auth" "$X1auth" clipboard &
+               |    #clipexchange "$X2auth" "$X1auth" primary &
+               |
+               |# Xbindkeycodes will passed to xbindkeys.
+               |# Has 3 rows: (1) command, (2) state and keycode as reported by the tool xev.
+               |# (3) the keysyms associated with the given keycodes.
+               |# See https://wiki.archlinux.org/title/Xbindkeys
+               |#
+               |    Xbindkeycodes="
+               |\"bash '$Clipboardrc' cmv\"
+               |  m:0x54 + c:55
+               |  Control+Mod2+Mod4 + v
+               |"
+               |
+               |    # Xcontainer_option
+               |    case "'$Xcontainer_option'" in
+               |      yes)
+               |        # Xserver
+               |        case "'$Xserver'" in
+               |           --weston|--weston-xwayland)
+               |              #
+               |              # Setupwayland
+               |              case "'$Setupwayland'" in
+               |                  yes) env $X2auth bindkey '$Clipboardrc'                   & Xbindkeyspid=$! ;;
+               |                  no)  env $X2auth xbindkeys -n -f <(echo "$Xbindkeycodes") & Xbindkeyspid=$! ;;
+               |              esac
+               |              ;;
+               |
+               |           *)
+               |              env $X2auth xbindkeys -n -f <(echo "$Xbindkeycodes") & Xbindkeyspid=$!
+               |              ;;
+               |        esac # Xserver
+               |      ;;
+               |
+               |      no)
+               |                   env $X2auth xbindkeys -n -f <(echo "$Xbindkeycodes") & Xbindkeyspid=$!
+               |      ;;
+               |    esac # Xcontainer_option
+               |
+               |    # wait for the end
+               |    case "'$Usemkfifo'" in
+               |      yes) read Var <'$Timetosaygoodbyefifo' ;;
+               |      no)  while rocknroll; do sleep 1; done ;;
+               |    esac
+               |    kill $Xbindkeyspid
+               |  ;;
+               |esac # $1
+               |'
+          ;;
   esac
-}
+  #
+} # create_clipboardrc
+
 
 setup_gpu() {                   # option --gpu: share /dev/dri and check nvidia driver
   # Easiest case: share /dev/dri.
