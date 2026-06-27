@@ -3951,13 +3951,25 @@ check_windowmanager() {
   return 0
 }
 
-clean_xhost() {                 # option --clean-xhost: disable xhost policies on host X
-  [ -z "$Hostdisplay" ] && note "Option --clean-xhost: No host X display found." && return 1
-  [ -z "$Hostxauthority" ] && warning "Option --clean-xhost: You host X server does not provide
-  an authentication cookie in \$XAUTHORITY.
-  Host applications started after xhost cleanup might fail to start."
-  echo "Option --clean-xhost:" >> "$Xinitlogfile"
-  disable_xhost "DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority" >> "$Xinitlogfile" 2>&1
+clean_xhost() {
+    #
+    # option --clean-xhost: disable xhost policies on host X
+    #
+    if [ -z "$Hostdisplay" ] ; then
+        note "Option --clean-xhost: No host X display found."
+        return 1
+    fi
+    #
+    if [ -z "$Hostxauthority" ] ; then
+        warning "$(trim_to_bar \
+                 "|Option --clean-xhost: You host X server does not provide
+                  |  an authentication cookie in \$XAUTHORITY.
+                  |  Host applications started after xhost cleanup might fail to start."
+                  )"
+    fi
+    #
+    echo "Option --clean-xhost:" >> "$Xinitlogfile"
+    disable_xhost "DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority" >> "$Xinitlogfile" 2>&1
 }
 
 create_clipboardrc() {          # option --clipboard: create shareclipboard script
