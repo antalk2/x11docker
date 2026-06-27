@@ -3895,37 +3895,57 @@ check_windowmanager() {
                   )"
     fi
 
-  # command adjustment for some host window managers
-  case "$(basename "$(cut -d' ' -f1 <<< "$Windowmanagercommand")")" in
-    cinnamon|cinnamon-session) Windowmanagercommand="cinnamon --sm-disable";;
-    compiz) # if none, create minimal config to have usable window decoration and can move windows
-      [ -e "$Hostuserhome/.config/compiz-1/compizconfig/Default.ini" ] || {
-        mkfolder "$Hostuserhome/.config/compiz-1/compizconfig"
-        mkfile "$Hostuserhome/.config/compiz-1/compizconfig/Default.ini"
-        echo '[core]
-s0_active_plugins = core;composite;opengl;decor;resize;move;
-' >> "$Hostuserhome/.config/compiz-1/compizconfig/Default.ini"
-      }  ;;
-    enlightenment|e17|e16|e19|e20|e) Windowmanagercommand="enlightenment_start" ;;
-    matchbox) Windowmanagercommand="matchbox-window-manager"  ;;
-    mate|mate-session) Windowmanagercommand="mate-session -f" ;;
-    mate-wm) Windowmanagercommand="marco --sm-disable"  ;;
-    openbox)
-      Windowmanagercommand="openbox --sm-disable"
-      [ -e "/etc/xdg/openbox/rc.xml" ] && {
-        cp /etc/xdg/openbox/rc.xml "$Sharefolder/openbox-nomenu.rc"
-        sed -i /ShowMenu/d         "$Sharefolder/openbox-nomenu.rc"
-        sed -i s/NLIMC/NLMC/       "$Sharefolder/openbox-nomenu.rc"
-        Windowmanagercommand="$Windowmanagercommand --config-file '$Sharefolder/openbox-nomenu.rc'"
-      }
-    ;;
-  esac
+    # command adjustment for some host window managers
+    case "$(basename "$(cut -d' ' -f1 <<< "$Windowmanagercommand")")" in
+        cinnamon|cinnamon-session)
+            # Override 'cinnamon-session' and also any args provided elsewhere
+            Windowmanagercommand="cinnamon --sm-disable"
+            ;;
 
-  case "$Windowmanagermode" in
-    host) # Windowmanagermode_host
-      xtool --check "wmctrl" ||:
-    ;;
-  esac
+        compiz)
+            # If none, create minimal config to have usable window
+            # decoration and can move windows
+            (
+                local ccdir="$Hostuserhome/.config/compiz-1/compizconfig"
+                if [ ! -e    "${ccdir}/Default.ini" ] ; then
+                    mkfolder "${ccdir}"
+                    mkfile   "${ccdir}/Default.ini"
+                    trim_to_bar \
+                        '|[core]
+                         |s0_active_plugins = core;composite;opengl;decor;resize;move;
+                         |' >> "${ccdir}/Default.ini"
+                fi
+            )
+        ;;
+
+        enlightenment|e17|e16|e19|e20|e)
+            Windowmanagercommand="enlightenment_start"
+            ;;
+        matchbox)
+            Windowmanagercommand="matchbox-window-manager"
+            ;;
+        mate|mate-session)
+            Windowmanagercommand="mate-session -f"
+            ;;
+        mate-wm)
+            Windowmanagercommand="marco --sm-disable"
+            ;;
+        openbox)
+            Windowmanagercommand="openbox --sm-disable"
+            if [ -e "/etc/xdg/openbox/rc.xml" ] ; then
+                cp /etc/xdg/openbox/rc.xml "$Sharefolder/openbox-nomenu.rc"
+                sed -i /ShowMenu/d         "$Sharefolder/openbox-nomenu.rc" # disable ShowMenu
+                sed -i s/NLIMC/NLMC/       "$Sharefolder/openbox-nomenu.rc" # hide the Iconify button
+                Windowmanagercommand="$Windowmanagercommand --config-file '$Sharefolder/openbox-nomenu.rc'"
+            fi
+            ;;
+    esac
+
+    case "$Windowmanagermode" in
+        host) # Windowmanagermode_host
+            xtool --check "wmctrl" || true
+            ;;
+    esac
 
   note "Using host window manager: ${Windowmanagercommand:-"(none)"}"
   return 0
