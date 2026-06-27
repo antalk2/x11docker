@@ -3513,7 +3513,7 @@ installer() {                   # --install, --update, --update-master, --remove
                         return 1
                     fi
                     #
-                    # shellcheck disable=SC2002 (style): Useless cat.
+                    # shellcheck disable=SC2002 # (style): Useless cat.
                     Releaseversion="v$(
                             cat "CHANGELOG.md"     \
                             | grep "## \["         \
