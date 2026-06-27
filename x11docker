@@ -4142,9 +4142,16 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
        |      [ -n "$WAYLAND_DISPLAY" ] && ClipoldW2="$(wl-paste   $SelectionW $Imagetarget | base64 -i)"
        |      [ -n "$DISPLAY" ]         && ClipoldX2="$(xclip -out $SelectionX $Imagetarget | base64 -i)"
        |
-       |      # send only to clipboard of other X server if it has different content. Important to keep highlighting of text for primary/middle mouse click.
-       |      [ "$ClipoldW2" != "$Clip" ] && [ -n "$WAYLAND_DISPLAY" ] && base64 -d -i <<< "$Clip" | wl-copy   $SelectionW $Imagetarget
-       |      [ "$ClipoldX2" != "$Clip" ] && [ -n "$DISPLAY" ]         && base64 -d -i <<< "$Clip" | xclip -in $SelectionX $Imagetarget
+       |      # send only to clipboard of other X server if it has different content.
+       |      # Important to keep highlighting of text for primary/middle mouse click.
+       |
+       |      if [ "$ClipoldW2" != "$Clip" ] && [ -n "$WAYLAND_DISPLAY" ] ; then
+       |             base64 -d -i <<< "$Clip" | wl-copy   $SelectionW $Imagetarget
+       |      fi
+       |
+       |      if [ "$ClipoldX2" != "$Clip" ] && [ -n "$DISPLAY"         ] ; then
+       |             base64 -d -i <<< "$Clip" | xclip -in $SelectionX $Imagetarget
+       |      fi
        |
        |'
   ##
