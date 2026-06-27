@@ -3629,73 +3629,97 @@ installer() {                   # --install, --update, --update-master, --remove
         esac
     fi
 
-  # Doing
-  [ -z "$Installerarg" ] && case "${1:-}" in
-    --install|--update|--update-master)
-      note "Installing x11docker to ${Prefix}/bin"
-      cp "x11docker" "${Prefix}/bin/" || {
-        error "Could not copy x11docker to ${Prefix}/bin"
-        return 1
-      }
-      chmod 755 "${Prefix}/bin/x11docker" || {
-        error "Could not set executable bit on x11docker"
-        return 1
-      }
-      chown "root:root" "${Prefix}/bin/x11docker" || {
-        warning "Could not set ownership 'root:root' to '${Prefix}/bin/x11docker'"
-      }
+    # Doing
+    if [ -z "$Installerarg" ] ; then
+        case "${1:-}" in
+            --install|--update|--update-master)
+                note "Installing x11docker to ${Prefix}/bin"
+                cp "x11docker" "${Prefix}/bin/" || {
+                    error "Could not copy x11docker to ${Prefix}/bin"
+                    return 1
+                }
+                chmod 755 "${Prefix}/bin/x11docker" || {
+                    error "Could not set executable bit on x11docker"
+                    return 1
+                }
+                chown "root:root" "${Prefix}/bin/x11docker" || {
+                    warning "Could not set ownership 'root:root' to '${Prefix}/bin/x11docker'"
+                }
 
-      note "Installing icon for x11docker with xdg-icon-resource"
-      xdg-icon-resource install --context apps --novendor --mode system --size 64 "$(pwd)/x11docker.png" "x11docker" || {
-        note "Could not install icon for x11docker.
-  Is 'xdg-icon-resource' (xdg-utils) installed on your system?"
-      }
+                note "Installing icon for x11docker with xdg-icon-resource"
+                if ! xdg-icon-resource install               \
+                     --context apps --novendor --mode system \
+                     --size 64                               \
+                     "$(pwd)/x11docker.png" "x11docker" ;
+                then
+                    note "$(trim_to_bar \
+                          "|Could not install icon for x11docker.
+                           |  Is 'xdg-icon-resource' (xdg-utils) installed on your system?"
+                           )"
+                fi
 
-      note "Storing README.md, CHANGELOG.md and LICENSE.txt in
-  ${Prefix}/share/doc/x11docker"
-      mkdir -p "${Prefix}/share/doc/x11docker" && {
-        cp "README.md"    "${Prefix}/share/doc/x11docker/"
-        cp "CHANGELOG.md" "${Prefix}/share/doc/x11docker/"
-        cp "LICENSE.txt"  "${Prefix}/share/doc/x11docker/"
-      } || {
-        note "Error while creating /usr/share/doc/x11docker"
-      }
+                note "$(trim_to_bar \
+                      "|Storing README.md, CHANGELOG.md and LICENSE.txt in
+                       |  ${Prefix}/share/doc/x11docker"
+                       )"
+                #
+                if mkdir -p "${Prefix}/share/doc/x11docker" ; then
+                    cp "README.md"    "${Prefix}/share/doc/x11docker/"
+                    cp "CHANGELOG.md" "${Prefix}/share/doc/x11docker/"
+                    cp "LICENSE.txt"  "${Prefix}/share/doc/x11docker/"
+                else
+                    note "Error while creating /usr/share/doc/x11docker"
+                fi
 
-      note "Storing man page in ${Prefix}/share/man/man1/x11docker.1.gz"
-      command -v gzip >/dev/null && {
-        gzip -c "x11docker.man" > "${Prefix}/share/man/man1/x11docker.1.gz"
-      } || {
-        note "Error storing man page."
-      }
+                note "Storing man page in ${Prefix}/share/man/man1/x11docker.1.gz"
+                if command -v gzip >/dev/null ; then
+                    gzip -c "x11docker.man" > "${Prefix}/share/man/man1/x11docker.1.gz"
+                else
+                    note "Error storing man page."
+                fi
 
-      note "Installed x11docker version $Newversion"
-    ;;
-    --remove|--remove-oldprefix)
-      note "Removing x11docker from your system."
-      [ "${1:-}" = "--remove" ] && [ -n "$Backendbin" ] && {
-        note "Running --cleanup"
-        cleanup
-      }
-      [ -x "${Prefix}/bin/x11docker"   ]               && rm -v    "${Prefix}/bin/x11docker"
-      [ -e "${Prefix}/share/doc/x11docker" ]           && rm -v -R "${Prefix}/share/doc/x11docker"
-      [ -e "${Prefix}/share/man/man1/x11docker.1.gz" ] && rm -v    "${Prefix}/share/man/man1/x11docker.1.gz"
-      [ "${1:-}" = "--remove" ] && xdg-icon-resource uninstall --size 64 "x11docker" ||:
-      note "Will not remove files in your home folder.
-  There might be files left in \$HOME/.local/share/x11docker
-  The symbolic link \$HOME/x11docker might exist, too.
-  The cache folder \$HOME/.cache/x11docker should be removed already."
-    ;;
-  esac
+                note "Installed x11docker version $Newversion"
+                ;;
 
-  # Cleanup
-  case "${1:-}" in
-    --update|--update-master)
-      note "Removing downloaded temporary files."
-      cd ~
-      rm -R "/tmp/x11docker-install"
-    ;;
-  esac
-  note "Ready."
+            --remove|--remove-oldprefix)
+                note "Removing x11docker from your system."
+                if [ "${1:-}" = "--remove" ] && [ -n "$Backendbin" ] ; then
+                    note "Running --cleanup"
+                    cleanup
+                fi
+      
+                if [ -x   "${Prefix}/bin/x11docker"   ] ; then
+                    rm -v "${Prefix}/bin/x11docker"
+                fi
+                if [ -e      "${Prefix}/share/doc/x11docker" ] ; then
+                    rm -v -R "${Prefix}/share/doc/x11docker"
+                fi
+                if [ -e      "${Prefix}/share/man/man1/x11docker.1.gz" ] ; then
+                    rm -v    "${Prefix}/share/man/man1/x11docker.1.gz"
+                fi
+                if [ "${1:-}" = "--remove" ] ; then
+                    xdg-icon-resource uninstall --size 64 "x11docker" || true
+                fi
+                
+                note  "$(trim_to_bar \
+                       "|Will not remove files in your home folder.
+                        |  There might be files left in \$HOME/.local/share/x11docker
+                        |  The symbolic link \$HOME/x11docker might exist, too.
+                        |  The cache folder \$HOME/.cache/x11docker should be removed already."
+                        )"
+                ;;
+        esac
+    fi
+
+    # Cleanup
+    case "${1:-}" in
+        --update|--update-master)
+            note "Removing downloaded temporary files."
+            cd ~
+            rm -R "/tmp/x11docker-install"
+            ;;
+    esac
+    note "Ready."
 }
 
 # mkpasswd( Password ) : Create a salted password suitable for
