@@ -3396,6 +3396,8 @@ installer() {                   # --install, --update, --update-master, --remove
     ### FIXME: (--update)
     ### maybe not install additional files if x11docker is owned by user
     local Key1="" Key2="" Oldversion="" Newversion="" Format="" Prefix
+    local codeload_url_prefix=""
+    local raw_url_prefix=""
 
     Prefix="/usr/local"
 
@@ -3491,27 +3493,39 @@ installer() {                   # --install, --update, --update-master, --remove
                 return 1
             fi
             
-      case "${1:-}" in
-        --update-master)
-          note "Downloading latest x11docker master version from github."
-          download "https://codeload.github.com/mviereck/x11docker/$Format/master" "x11docker-update.$Format"           || {
-            error "Failed to download x11docker from github."
-            return 1
-          }
-        ;;
-        --update)
-          download "https://raw.githubusercontent.com/mviereck/x11docker/master/CHANGELOG.md" "CHANGELOG.md"            || {
-            error "Failed to download CHANGELOG.md from github."
-            return 1
-          }
-          Releaseversion="v$(cat "CHANGELOG.md" | grep "## \[" | grep -v 'Unreleased' | head -n1 | cut -d[ -f2 | cut -d] -f1)"
-          note "Downloading latest x11docker release $Releaseversion from github."
-          download "https://codeload.github.com/mviereck/x11docker/$Format/$Releaseversion" "x11docker-update.$Format"  || {
-            error "Failed to download x11docker from github."
-            return 1
-          }
-        ;;
-      esac
+            codeload_url_prefix="https://codeload.github.com/mviereck/x11docker"
+            raw_url_prefix="https://raw.githubusercontent.com/mviereck/x11docker"
+            case "${1:-}" in
+                --update-master)
+                    note "Downloading latest x11docker master version from github."
+                    if ! download "${codeload_url_prefix}/$Format/master" "x11docker-update.$Format" ; then
+                        error "Failed to download x11docker from github."
+                        return 1
+                    fi
+                    ;;
+                --update)
+                    if ! download "${raw_url_prefix}/master/CHANGELOG.md" "CHANGELOG.md" ; then
+                        error "Failed to download CHANGELOG.md from github."
+                        return 1
+                    fi
+                    #
+                    Releaseversion="v$(
+                            cat "CHANGELOG.md"     \
+                            | grep "## \["         \
+                            | grep -v 'Unreleased' \
+                            | head -n1             \
+                            | cut -d[ -f2          \
+                            | cut -d] -f1
+                            )"
+                    #
+                    note "Downloading latest x11docker release $Releaseversion from github."
+                    if ! download "${codeload_url_prefix}/$Format/$Releaseversion" "x11docker-update.$Format" ;
+                    then
+                        error "Failed to download x11docker from github."
+                        return 1
+                    fi
+                    ;;
+            esac
 
       note "Extracting $Format archive."
       case "$Format" in
