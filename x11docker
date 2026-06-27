@@ -3466,18 +3466,23 @@ installer() {                   # --install, --update, --update-master, --remove
                 return 1
             fi
         
-      download || {
-        error "Neither wget nor curl found. Need 'wget' or 'curl' for download.
-  Please install wget or curl."
-        return 1
-      }
-      command -v unzip >/dev/null && Format="zip"
-      command -v tar >/dev/null   && Format="tar.gz"
-      [ "$Format" ] || {
-        error "Cannot extract archive. Please install 'unzip' or 'tar'."
-        return 1
-      }
+            if ! download ; then
+                error "$(trim_to_bar \
+                       "|Neither wget nor curl found. Need 'wget' or 'curl' for download.
+                        |Please install wget or curl."
+                       )"
+                return 1
+            fi
 
+            if   command -v tar   >/dev/null ; then
+                Format="tar.gz"
+            elif command -v unzip >/dev/null ; then
+                Format="zip"
+            else
+                error "Cannot extract archive. Please install 'unzip' or 'tar'."
+                return 1
+            fi
+            
       case "${1:-}" in
         --update-master)
           note "Downloading latest x11docker master version from github."
