@@ -4129,6 +4129,7 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
            |'
   fi
   
+  # shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
   trim_to_bar \
       '|
        |
