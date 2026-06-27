@@ -3399,6 +3399,7 @@ installer() {                   # --install, --update, --update-master, --remove
     local codeload_url_prefix=""
     local raw_url_prefix=""
     local the_unpacked_dir=""
+    local colorize_diff_patterns
 
     Prefix="/usr/local"
 
@@ -3618,11 +3619,16 @@ installer() {                   # --install, --update, --update-master, --remove
     if [ "$Installerarg" = "diff" ] ; then
         case "${1:-}" in
             --update|--update-master)
-                note "$(printf "%s\n%s\n%s"                                       \
-                 "Difference of installed version to new version:"                \
-                 "  $ diff -u -s -Z '$(command -v x11docker)' '$(pwd)/x11docker'" \
+                colorize_diff_patterns="$(trim_to_mark \
+                       "|s/^+.*/${Colgreenbg}\0${Colnorm}/
+                        :; s/^-.*/${Colredbg}\0${Colnorm}/
+                        :; s/^@.*/${Coluline}\0${Colnorm}/"
+                )"
+                note "$(printf "%s\n%s\n%s"                                           \
+                 "Difference of installed version to new version:"                    \
+                 "  $ diff -u -s -Z '$(command -v x11docker)' '$(pwd)/x11docker'"     \
                  "$(  diff -u -s -Z "$(command -v x11docker)" "$(pwd)/x11docker" 2>&1 \
-                      | sed "s/^+.*/${Colgreenbg}\0${Colnorm}/ ; s/^-.*/${Colredbg}\0${Colnorm}/ ; s/^@.*/${Coluline}\0${Colnorm}/"
+                      | sed "${colorize_diff_patterns}"
                       )"
                    )"
                 ;;
