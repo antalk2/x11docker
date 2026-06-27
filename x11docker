@@ -3733,23 +3733,34 @@ installer() {                   # --install, --update, --update-master, --remove
 #                        Containeruserpassword
 #
 mkpasswd() {
-  local Password Salt
+    local Password Salt perlScript
 
-  Password="${1:-}"
+    Password="${1:-}"
 
-  command -v perl >/dev/null || {
-      error "$(trim_to_bar \
+    if ! command -v perl >/dev/null ; then
+        error "$(trim_to_bar \
           "|Option --password: command 'perl' not found.
            |  perl is needed to generate an encrypted password." )"
-      #
-      return 1
-  }
+        #
+        return 1
+    fi
 
-  Salt="$(LC_ALL=C base64 <<< "$RANDOM" | cut -c1-2)" # 2 characters
+    Salt="$(LC_ALL=C base64 <<< "$RANDOM" | cut -c1-2)" # 2 characters
 
-  Password=$(perl -le 'my $Salt=shift; my $Password=shift; print crypt($Password, "\$6\$".$Salt."\$")' "$Salt" "$Password")
+    perlScript="$(trim_to_mark \
+               '| my $Salt     = shift;
+                : my $Password = shift;
+                : print crypt( $Password, "\$6\$".$Salt."\$" )'
+               )"
 
-  Containeruserpassword="$Password"
+    Password=$(perl -le           \
+                    "$perlScript" \
+                    "$Salt"       \
+                    "$Password"
+            )
+
+    # Store result in global variable:
+    Containeruserpassword="$Password"
 }
 
 # function set_password()
