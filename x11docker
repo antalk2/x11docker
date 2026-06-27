@@ -4156,6 +4156,7 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
        |'
   ##
 
+  # shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
   if [ "$Mytest" ] ; then
       echo '      [ "'$Mytest'" ] && echo "SEND $Selection to ${2:-} : V.$(base64 -d -i <<< "$Clip").V"'
   else
@@ -4166,6 +4167,7 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
       '|    fi # if [ -n Clip ]
        '
 
+  # shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
   trim_to_bar \
       '|
        |    [ "$Noloop" ] && break
@@ -4187,6 +4189,7 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
        |'
   ###########
   
+  # shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
   case "$Shareclipboard" in
       yes) # bidirectional
           trim_to_bar \
@@ -4241,12 +4244,12 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
                |# See https://wiki.archlinux.org/title/Xbindkeys
                |#
                |    Xbindkeycodes="
-               |\"bash '$Clipboardrc' cmv\"
+               |\"bash '"$Clipboardrc"' cmv\"
                |  m:0x54 + c:55
                |  Control+Mod2+Mod4 + v
                |"
                |
-               |    # Xcontainer_option="'$Xcontainer_option'"
+               |    # Xcontainer_option="'"$Xcontainer_option"'"
                |    # Xserver="'$Xserver'"
                |    # is_wayland=$( case  "$Xserver" in --weston|--weston-xwayland) echo yes ;; *) echo no ;; esac )
                |    # Setupwayland="'$Setupwayland'"
@@ -4255,12 +4258,12 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
                |    #                && [ "$Setupwayland"      = yes ] ; then echo yes ; else echo no; fi )
                |    #
                |    # if [ $use_bindkey = yes ]
-               |    # then env $X2auth bindkey '$Clipboardrc'                   & Xbindkeyspid=$!
+               |    # then env $X2auth bindkey '"$Clipboardrc"'                 & Xbindkeyspid=$!
                |    # else env $X2auth xbindkeys -n -f <(echo "$Xbindkeycodes") & Xbindkeyspid=$!
                |    # fi
                |
                |    # Xcontainer_option
-               |    case "'$Xcontainer_option'" in
+               |    case "'"$Xcontainer_option"'" in
                |      yes)
                |        # Xserver
                |        case "'$Xserver'" in
@@ -4268,7 +4271,7 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
                |              #
                |              # Setupwayland
                |              case "'$Setupwayland'" in
-               |                  yes) env $X2auth bindkey '$Clipboardrc'                   & Xbindkeyspid=$! ;;
+               |                  yes) env $X2auth bindkey   '"$Clipboardrc"'               & Xbindkeyspid=$! ;;
                |                  no)  env $X2auth xbindkeys -n -f <(echo "$Xbindkeycodes") & Xbindkeyspid=$! ;;
                |              esac
                |              ;;
@@ -4283,7 +4286,7 @@ create_clipboardrc() {          # option --clipboard: create shareclipboard scri
                |
                |    # wait for the end
                |    case "'$Usemkfifo'" in
-               |      yes) read Var <'$Timetosaygoodbyefifo' ;;
+               |      yes) read Var <'"$Timetosaygoodbyefifo"' ;;
                |      no)  while rocknroll; do sleep 1; done ;;
                |    esac
                |    kill $Xbindkeyspid
@@ -4316,7 +4319,8 @@ setup_gpu() {
     # g  $Nvidiainstallerfile   nvidia driver file to install in container in containerrootrc
     # g  $Nvidiaversion  nvidia driver version on host
 
-    local Gpudevice Drivername
+    local Gpudevice
+    # unused: local Drivername
 
     Containerusergroups="$Containerusergroups video render"
 
@@ -4422,8 +4426,10 @@ setup_gpu() {
            |
            |  To use the GPU without NVIDIA driver in container, you can use 
            |  less performant option --gpu=iglx (--xorg only)."
-           |
-           |  note "Option --gpu: x11docker can try to automatically install NVIDIA driver
+           )"
+           
+    note "$(trim_to_bar \
+          "|Option --gpu: x11docker can try to automatically install NVIDIA driver
            |  version $Nvidiaversion in container on every container startup.
            |  Drawbacks: Container startup is a bit slower and its security will be reduced.
            |
@@ -4464,6 +4470,17 @@ setup_hostdbus() {
                  "|Option --hostdbus: DBUS_SESSION_BUS_ADDRESS is empty.
                   |  Creating abstract DBus socket with dbus-launch."
                   )"
+            #
+            # shellcheck disable=SC2046 # (warning): Quote this to prevent word splitting.
+            #
+            # dbus-launch prints something like this:
+            # ----
+            # BUS_SESSION_BUS_ADDRESS=unix:path=/tmp/dbus-VkoZJLt5tw,guid=b7d98da083a765f5550aced26a3fec3c
+            # DBUS_SESSION_BUS_PID=1911329
+            # DBUS_SESSION_BUS_WINDOWID=65011713
+            # ----
+            # We do need word splitting for the assignments to occur individually.
+            #
             export $(dbus-launch)
         else
             note "$(trim_to_bar \
