@@ -4526,65 +4526,102 @@ setup_hostdbus() {
     return 0
 } # setup_hostdbus
 
-setup_printer() {               # option --printer: connect to cups printer server
-  # Default CUPS setups create a unix socket /run/cups/cups.sock as given from 'lpstat -H'.
-  # Sharing this socket and pointing environment variable CUPS_SERVER to it serves most cases.
-  # Possible CUPS network setups need to allow access from container, see note below.
-  local Cupsserver=
+#
+# function setup_hostdbus() : option --printer: connect to cups
+#                             printer server
+#
+setup_printer() {
+    #
+    # - Default CUPS setups create a unix socket /run/cups/cups.sock
+    #   as given from 'lpstat -H'.
+    #
+    # - Sharing this socket and pointing environment variable
+    #   CUPS_SERVER to it serves most cases.
+    #
+    # - Possible CUPS network setups need to allow access from
+    #   container, see note below.
+    #
+    local Cupsserver=
 
-  command -v lpstat >/dev/null || {
-    note "Option --printer: command lpstat not found.
-  Is cups printer server installed on your system?
-  Error: Cannot share access to printer."
-    Sharecupsmode=""
-    return 1
-  }
-
-  case "$Sharecupsmode" in
-    auto)
-      Sharecupsmode="socket"
-      [ "$Snapsupport" = "yes" ]      && Sharecupsmode="tcp"
-      [ "$Runtime" = "kata-runtime" ] && Sharecupsmode="tcp"
-      #[ "$Runtime" = "sysbox-runc" ]  && Sharecupsmode="tcp"
-    ;;
-  esac
-
-  case "$Sharecupsmode" in
-    tcp)
-      Cupsserver="$Hostip:631"
-      [ "$g_Network" = "none" ] && {
-        note "Option --printer=tcp does not work without network access.
-  Consider to enable option -I, --network."
-        check_fallback
+    if ! command -v lpstat >/dev/null ; then
+        note "$(trim_to_bar \
+              "|Option --printer: command lpstat not found.
+               |  Is cups printer server installed on your system?
+               |  Error: Cannot share access to printer."
+               )"
+        Sharecupsmode=""
         return 1
-      }
-    ;;
-    socket) Cupsserver="$(lpstat -H)" ;;
-  esac
+    fi
 
-  grep -q ":" <<< "$Cupsserver" && {
-    [ "$(cut -d: -f1 <<< "$Cupsserver")" = "localhost" ] && Cupsserver="$Hostip:$(cut -d: -f2 <<< "$Cupsserver")"
-    [ "$(cut -d: -f1 <<< "$Cupsserver")" = "127.0.0.1" ] && Cupsserver="$Hostip:$(cut -d: -f2 <<< "$Cupsserver")"
-    note "Option --printer: Network setup for CUPS detected.
-  Server address: $Cupsserver
-  You may need to allow container access in /etc/cups/cupsd.conf, e.g.:
+    case "$Sharecupsmode" in
+        auto)
+            Sharecupsmode="socket"
+            if [ "$Snapsupport" = "yes"      ] ; then Sharecupsmode="tcp" ; fi
+            if [ "$Runtime" = "kata-runtime" ] ; then Sharecupsmode="tcp" ; fi
+            #if [ "$Runtime" = "sysbox-runc" ] ; then Sharecupsmode="tcp" ; fi
+            ;;
+    esac
 
-Port 631
-<Location />
-  # Allow remote access...
-  Order allow,deny
-  Allow 172.17.0.*
-  Allow 172.20.0.*
-  Allow 127.0.0.1
-</Location>
+    case "$Sharecupsmode" in
+        tcp)
+            Cupsserver="$Hostip:631"
+            if [ "$g_Network" = "none" ] ; then
+                note "$(trim_to_bar \
+                      "|Option --printer=tcp does not work without network access.
+                       |  Consider to enable option -I, --network."
+                       )"
+                check_fallback
+                return 1
+            fi
+            ;;
+        socket)
+            Cupsserver="$(lpstat -H)" # e.g. /run/cups/cups.sock
+            ;;
+    esac
 
-Also you need to allow network access for each printer in a CUPS GUI."
-  }
+    #
+    # Why not `if [ "$Sharecupsmode" = tcp ] ; then`
+    #
+    if grep -q ":" <<< "$Cupsserver" ; then
+        #
+        # "localhost:631" -> "$Hostip:631"
+        #
+        case  "$(cut -d: -f1 <<< "$Cupsserver")" in
+            "localhost"|"127.0.0.1")
+                Cupsserver="$Hostip:$(cut -d: -f2 <<< "$Cupsserver")"
+                ;;
+        esac
+        #
+        note  "$(trim_to_bar \
+               "|Option --printer: Network setup for CUPS detected.
+                |  Server address: $Cupsserver
+                |  You may need to allow container access in /etc/cups/cupsd.conf, e.g.:
+                |
+                |Port 631
+                |<Location />
+                |  # Allow remote access...
+                |  Order allow,deny
+                |  Allow 172.17.0.*
+                |  Allow 172.20.0.*
+                |  Allow 127.0.0.1
+                |</Location>
+                |
+                |Also you need to allow network access for each printer in a CUPS GUI."
+                )"
+    fi
 
-  [ "$Cupsserver" ]    && store_runoption_env "CUPS_SERVER=$Cupsserver"
-  [ -e "$Cupsserver" ] && {
-    [ "$(dirname "$Cupsserver")" = "/run/cups" ] && store_runoption_volume "/run/cups" || store_runoption_volume "$Cupsserver"
-  }
+    if [ -n "$Cupsserver" ] ; then
+        store_runoption_env "CUPS_SERVER=$Cupsserver"
+    fi
+
+    if [ -e "$Cupsserver" ] ; then
+        # ^ It is a file-system (non--abstract) socket
+        #
+        if [ "$(dirname "$Cupsserver")" = "/run/cups" ]
+        then store_runoption_volume "/run/cups"   # share "/run/cups"
+        else store_runoption_volume "$Cupsserver" # Only share the socket
+        fi
+    fi
 
   return 0
 }
