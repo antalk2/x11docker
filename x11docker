@@ -1480,24 +1480,34 @@ devicelist_input() {            # print list of input devices
 }
 
 #
-# function download()
+# function download( URL, output_file )
 #
-download() {                    # download file at URL $1 and store it in file $2
+# Usage:
+#   download URL output_file # Download file at URL and store it in output_file
+#   download                 # Test if at least one of curl and wget is available
+#
+#    return 1 if neither curl or wget found.
+#
+download() {
     # Uses wget or curl. If both are missing, returns 1.
     # With no arguments it checks for curl/wget without downloading.
     # Download follows redirects.
     #
-    local Downloader=
-    command -v wget >/dev/null && Downloader="wget"
-    command -v curl >/dev/null && Downloader="curl"
-    [ "$Downloader" ] || return 1 # false (Downloader is "" --> Failure)
-    [ "${1:-}" ]      || return 0 # true
-    #
+    local Downloader=""
+    if   command -v curl >/dev/null ; then  Downloader="curl"
+    elif command -v wget >/dev/null ; then  Downloader="wget"
+    else                              return 1 ; fi
+
+    if [ -z "${1:-}" ] ; then
+        # Just testing Downloader availability. Success.
+        return 0
+    fi
+
     case "$Downloader" in
         wget) wget    "${1:-}"        -O       "${2:-}" || return 1 ;;
         curl) curl -L "${1:-}" --fail --output "${2:-}" || return 1 ;;
     esac
-    return $?
+    return $? # Can only be 0
 }
 
 #
