@@ -3775,7 +3775,8 @@ set_password() {
   if [ "$Password" = "INTERACTIVE" ] ; then
       read -rs -p "$(trim_to_bar \
           "|Please type in a new container user password
-           |that will be set for host user '$(id -u -n)'. (chars are invisible): " )" \
+           |that will be set for host user '$(id -u -n)'. (chars are invisible): "
+           )" \
            Password
       #
       echo ""
