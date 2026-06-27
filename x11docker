@@ -4366,7 +4366,16 @@ setup_gpu() {                   # option --gpu: share /dev/dri and check nvidia 
     [ "$Xcontainer_option" = "yes" ] && {
       waitforlogentry "start_xcontainer()" "$Xinitlogfile" "X server container is ready" || return 1
       note "Option --gpu: Installing NVIDIA driver in X container."
-      unpriv_xcbackend "$Xcontainerbackend exec --tty --privileged --user=root $Xcontainername bash $Sharefolder/nvidia_installer" >> "$Xinitlogfile" 2>&1 || note 'ERROR: NVIDIA driver installation in X container failed.'
+
+      unpriv_xcbackend "$(trim_to_mark \
+                         "|$Xcontainerbackend exec
+                          : --tty --privileged
+                          : --user=root
+                          : $Xcontainername
+                          : bash $Sharefolder/nvidia_installer"
+                          )"      \
+          >> "$Xinitlogfile" 2>&1 \
+          || note 'ERROR: NVIDIA driver installation in X container failed.'
     }
     return 0
   }
