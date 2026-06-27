@@ -4444,59 +4444,87 @@ setup_gpu() {
     return 0
 }
 
-setup_hostdbus() {              # option --hostdbus: connect to host DBus session daemon.
-  warning "Option --hostdbus: Connecting container to host DBus degrades
-  container isolation. Container applications might send malicious requests."
-  Dbusrunsession="no"
+#
+# function setup_hostdbus() : option --hostdbus: connect to host DBus
+#                             session daemon.
+#
+setup_hostdbus() {
 
-  [ "$DBUS_SESSION_BUS_ADDRESS" ] || {
-    # no running DBus session?
-    command -v dbus-launch >/dev/null && {
-      note "Option --hostdbus: DBUS_SESSION_BUS_ADDRESS is empty.
-  Creating abstract DBus socket with dbus-launch."
-      export $(dbus-launch)
-    } || {
-      note "Option --hostdbus: Is DBus running on host?
-  Did not find an active session and did not find dbus-launch.
-  DBUS_SESSION_BUS_ADDRESS is empty.
-  $Wikipackages"
-      check_fallback
-      return 1
-    }
-  }
+    warning "$(trim_to_bar \
+             "|Option --hostdbus: Connecting container to host DBus degrades
+              |  container isolation. Container applications might send malicious requests."
+              )"
 
-  grep -q "unix:path" <<< "$DBUS_SESSION_BUS_ADDRESS" && {
-    # DBus socket file
-    case "$Runtime" in
-      kata-runtime)
-        note "Option --hostdbus with a unix socket is not possible
-  with --runtime=$Runtime."
-        check_fallback
-        return 1
-      ;;
-      *)
+    Dbusrunsession="no"
+
+    if [ -z "$DBUS_SESSION_BUS_ADDRESS" ] ; then
+        # no running DBus session?
+        if command -v dbus-launch >/dev/null ; then
+            note"$(trim_to_bar \
+                 "|Option --hostdbus: DBUS_SESSION_BUS_ADDRESS is empty.
+                  |  Creating abstract DBus socket with dbus-launch."
+                  )"
+            export $(dbus-launch)
+        else
+            note "$(trim_to_bar \
+                  "|Option --hostdbus: Is DBus running on host?
+                   |  Did not find an active session and did not find dbus-launch.
+                   |  DBUS_SESSION_BUS_ADDRESS is empty.
+                   |  $Wikipackages"
+                   )"
+            check_fallback
+            return 1
+        fi
+    fi
+
+    if grep -q "unix:path" <<< "$DBUS_SESSION_BUS_ADDRESS" ; then
+        # DBus socket file
+        case "$Runtime" in
+            kata-runtime)
+                note "$(trim_to_bar \
+                      "|Option --hostdbus with a unix socket is not possible
+                       |  with --runtime=$Runtime."
+                       )"
+                check_fallback
+                return 1
+                ;;
+            *)
+                store_runoption_env "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS"
+                #
+                # For some reason we do not cut "unix:path=/run/user/1000/bus" at '=',
+                # but at the first "/", which we lose in cut, and reinsert after.
+                #
+                store_runoption_volume "/$( cut -d/ -f2- <<<"$DBUS_SESSION_BUS_ADDRESS" )"
+                ;;
+        esac
+    fi
+
+    if grep -q "unix:abstract" <<< "$DBUS_SESSION_BUS_ADDRESS" ; then
+        #
+        # DBus abstract socket (dbus-launch)
         store_runoption_env "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS"
-        store_runoption_volume "/$(cut -d/ -f2- <<<"$DBUS_SESSION_BUS_ADDRESS")"
-      ;;
-    esac
-  }
-
-  grep -q "unix:abstract" <<< "$DBUS_SESSION_BUS_ADDRESS" && {
-    # DBus abstract socket (dbus-launch)
-    store_runoption_env "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS"
-    [ "${DBUS_SESSION_BUS_PID:-}" ]      && store_runoption_env  "${DBUS_SESSION_BUS_PID:-}"
-    [ "${DBUS_SESSION_BUS_WINDOWID:-}" ] && store_runoption_env  "${DBUS_SESSION_BUS_WINDOWID:-}"
-    [ "$g_Network" != "host" ] && { # g_Network_host
-      note "Option --hostdbus: Did not find a DBus session socket file
-  but an abstract unix socket. To allow access for container,
-  x11docker needs insecure option '--network=host'.
-  Sharing host dbus will fail."
-      check_fallback
-      return 1
-    }
-  }
-  return 0
-}
+        #
+        if [ -n "${DBUS_SESSION_BUS_PID:-}"      ] ; then
+            store_runoption_env  "${DBUS_SESSION_BUS_PID:-}"
+        fi
+        #
+        if [ -n "${DBUS_SESSION_BUS_WINDOWID:-}" ] ; then
+            store_runoption_env  "${DBUS_SESSION_BUS_WINDOWID:-}"
+        fi
+        
+        if [ "$g_Network" != "host" ] ; then  # g_Network_host
+            note  "$(trim_to_bar \
+                   "|Option --hostdbus: Did not find a DBus session socket file
+                    |  but an abstract unix socket. To allow access for container,
+                    |  x11docker needs insecure option '--network=host'.
+                    |  Sharing host dbus will fail."
+                    )"
+            check_fallback
+            return 1
+        fi
+    fi
+    return 0
+} # setup_hostdbus
 
 setup_printer() {               # option --printer: connect to cups printer server
   # Default CUPS setups create a unix socket /run/cups/cups.sock as given from 'lpstat -H'.
