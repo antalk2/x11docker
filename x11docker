@@ -3513,6 +3513,7 @@ installer() {                   # --install, --update, --update-master, --remove
                         return 1
                     fi
                     #
+                    # shellcheck disable=SC2002 (style): Useless cat.
                     Releaseversion="v$(
                             cat "CHANGELOG.md"     \
                             | grep "## \["         \
@@ -3547,10 +3548,13 @@ installer() {                   # --install, --update, --update-master, --remove
             # It is the single directory line (ls -l | grep drwx)
             # Assuming no space in its name, the name is the last word in that line.
             #
-            the_unpacked_dir="$(ls -l | grep drwx | rev | cut -d' ' -f1 | rev)"
-            if ! cd "/tmp/x11docker-install/${the_unpacked_dir}"
+            # SC2010 (warning): Don't use ls | grep.
+            # the_unpacked_dir="$(ls -l | grep drwx | rev | cut -d' ' -f1 | rev)"
+            #
+            the_unpacked_dir="$( find . -maxdepth 1 -type d -name 'x11docker*'  -exec basename {} \; )"
+            if ! cd "/tmp/x11docker-install/${the_unpacked_dir:-MISSING}"
             then
-                error "Could not cd to /tmp/x11docker-update/${the_unpacked_dir}"
+                error "Could not cd to /tmp/x11docker-update/${the_unpacked_dir:-MISSING}"
                 return 1
             fi
             ;;
@@ -3721,7 +3725,7 @@ installer() {                   # --install, --update, --update-master, --remove
     case "${1:-}" in
         --update|--update-master)
             note "Removing downloaded temporary files."
-            cd ~
+            cd ~ || error "cd ~ FAILED in installer()"
             rm -R "/tmp/x11docker-install"
             ;;
     esac
@@ -3747,6 +3751,8 @@ mkpasswd() {
 
     Salt="$(LC_ALL=C base64 <<< "$RANDOM" | cut -c1-2)" # 2 characters
 
+    # shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes.
+    #                             Good. We do not want them to in perlScript.
     perlScript="$(trim_to_mark \
                '| my $Salt     = shift;
                 : my $Password = shift;
@@ -3798,71 +3804,96 @@ set_password() {
 }
 
 #### host integration features
-check_windowmanager() {         # option --wm: search a host window manager
-  # check --wm arguments, adjust mode
-  case "$Xcontainer_option" in
-    yes)
-      case "$Windowmanagermode" in
-        auto|host) # Windowmanagermode_host
-          Windowmanagermode="host"  # Windowmanagermode_host
-          Windowmanagercommand="openbox --sm-disable" ;;
-        *) Windowmanagermode="none" ;;
-      esac
-      return 0
-    ;;
-  esac
 
-  case "$Windowmanagermode" in
-    ""|none)
-      Windowmanagermode="none"
-      return 0
-    ;;
-    auto)
-      Windowmanagermode="host" # Windowmanagermode_host
-      [ -n "$Windowmanagercommand" ] && {
-        command -v "$(cut -d' ' -f1 <<< "$Windowmanagercommand")" >/dev/null && {
-          Windowmanagermode="host" # Windowmanagermode_host
-        } || {
-          note "Option --wm: Did not find command on host: $Windowmanagercommand
-  Fallback: Searching for another window manager."
-          check_fallback
-          Windowmanagercommand=""
-        }
-      }
-    ;;
-    host) ;;
-  esac
-  [ "$Windowmanagermode" = "none" ] && return 0
+# function check_windowmanager()    # option --wm: search a host window manager
+check_windowmanager() {
+    #
+    # check --wm arguments, adjust mode
+    case "$Xcontainer_option" in
+        yes)
+            case "$Windowmanagermode" in
+                auto|host)                    # Windowmanagermode_host
+                    Windowmanagermode="host"  # Windowmanagermode_host
+                    Windowmanagercommand="openbox --sm-disable"
+                    ;;
+                *)
+                    Windowmanagermode="none"
+                    ;;
+            esac
+            return 0
+            ;;
+    esac
 
-  # Find a host window manager
-  [ "$Windowmanagercommand" ] || for Windowmanagercommand in $Wm_all WM_NOT_FOUND; do
-    command -v "$Windowmanagercommand" >/dev/null && break
-  done
+    case "$Windowmanagermode" in
+        ""|none)
+            Windowmanagermode="none"
+            return 0
+            ;;
+        auto)
+            Windowmanagermode="host"           # Windowmanagermode_host
+            if [ -n "$Windowmanagercommand" ] ; then
+                if command -v "$(cut -d' ' -f1 <<< "$Windowmanagercommand")" >/dev/null ; then
+                    # Windowmanagercommand is available on host
+                    Windowmanagermode="host"   # Windowmanagermode_host
+                else
+                    note "$(trim_to_bar \
+                          "|Option --wm: Did not find command on host: $Windowmanagercommand
+                           |  Fallback: Searching for another window manager."
+                           )"
+                    check_fallback
+                    Windowmanagercommand=""
+                fi
+            fi
+            ;;
+        host) ;;
+    esac
 
-  [ "$Windowmanagercommand" = "WM_NOT_FOUND" ] && {
-    Windowmanagercommand=""
-    note "Option --wm: No host window manager found.
-    Please install a supported one. Recommended:
-  $Wm_recommended_nodesktop_light
-  Fallback: Setting --wm=none"
-    check_fallback
-    Windowmanagermode="none"
-  }
-  [ "$Windowmanagermode" = "none" ] && return 0
-  grep -q "$Windowmanagercommand" <<< "$Wm_not_recommended" && {
-    note "Option --wm: Window manager $Windowmanagercommand
-  is not recommended. Please install a recommended one:
-    $Wm_recommended_nodesktop_light
-    $Wm_recommended_desktop_light"
-  }
+    if [ "$Windowmanagermode" = "none" ] ; then return 0 ; fi
 
-  [ "$Xtest" = "yes" ] && warning "Options --xtest --wm: Did not disable X extension XTEST
-  for X server $Xserver.
-  If your host window manager '$Windowmanagercommand' can start applications
-  on its own (for example with a context menu), container applications
-  can abuse this to run and remotely control host applications.
-  If you provide content of X server $Xserver over network to others,
-  they may take control over your host system!"
+    # Find a host window manager
+    if [ -z "$Windowmanagercommand" ] ; then
+        for Windowmanagercommand in $Wm_all WM_NOT_FOUND; do
+            if command -v "$Windowmanagercommand" >/dev/null ; then
+                break # found
+            fi
+        done
+    fi
+
+    if [ "$Windowmanagercommand" = "WM_NOT_FOUND" ] ; then
+        Windowmanagercommand=""
+        note "$(trim_to_bar \
+              "|Option --wm: No host window manager found.
+               |    Please install a supported one. Recommended:
+               |  $Wm_recommended_nodesktop_light
+               |  Fallback: Setting --wm=none"
+               )"
+        #
+        check_fallback
+        Windowmanagermode="none"
+    fi
+    #
+    if  [ "$Windowmanagermode" = "none" ] ; then return 0 ; fi
+    
+    if grep -q "$Windowmanagercommand" <<< "$Wm_not_recommended" ; then 
+        note "$(trim_to_bar
+              "|Option --wm: Window manager $Windowmanagercommand
+               |  is not recommended. Please install a recommended one:
+               |    $Wm_recommended_nodesktop_light
+               |    $Wm_recommended_desktop_light"
+               )"
+    fi
+
+    if [ "$Xtest" = "yes" ] ; then
+        warning "$(trim_to_bar \
+                 "|Options --xtest --wm: Did not disable X extension XTEST
+                  |  for X server $Xserver.
+                  |  If your host window manager '$Windowmanagercommand' can start applications
+                  |  on its own (for example with a context menu), container applications
+                  |  can abuse this to run and remotely control host applications.
+                  |  If you provide content of X server $Xserver over network to others,
+                  |  they may take control over your host system!"
+                  )"
+    fi
 
   # command adjustment for some host window managers
   case "$(basename "$(cut -d' ' -f1 <<< "$Windowmanagercommand")")" in
