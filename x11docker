@@ -3972,26 +3972,46 @@ clean_xhost() {
     disable_xhost "DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority" >> "$Xinitlogfile" 2>&1
 }
 
+#
+# Write content of the file to stdout.
+#
 create_clipboardrc() {          # option --clipboard: create shareclipboard script
-  echo "#! /usr/bin/env bash
-$(declare -f rocknroll)
-$(declare -f mysleep)
-Timetosaygoodbyefile='$Timetosaygoodbyefile'"
-[ -n "$Hostdisplay" ]                                         && echo "X1auth='DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority'"
-[ -z "$Hostdisplay" ] && [ -n "$Hostwaylandsocket" ]          && echo "X1auth=\"\$X1auth WAYLAND_DISPLAY=$Hostwaylandsocket XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR\""
-[ -n "$Newdisplay" ]                                          && echo "X2auth='DISPLAY=$Newdisplay  XAUTHORITY=$Xclientcookie'"
-case "$Xserver" in
-  --weston)
-                                                                 echo "X2auth=\"\$X2auth WAYLAND_DISPLAY=$Newwaylandsocket  XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR\""
-  ;;
-  --weston-xwayland)
-    [ "$Desktopmode" = "yes" ] && [ "$Setupwayland" = "yes" ] && echo "X2auth=\"\$X2auth WAYLAND_DISPLAY=$Newwaylandsocket  XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR\""
-  ;;
-esac
+  echo "#! /usr/bin/env bash"
+  declare -f rocknroll
+  declare -f mysleep
+  echo "Timetosaygoodbyefile='$Timetosaygoodbyefile'"
+
+  if [ -n "$Hostdisplay" ] ; then
+      # When X1auth is eval-ed, will set DISPLAY and XAUTHORITY to the
+      # values we have here.
+      echo "X1auth='DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority'"
+  elif [ -n "$Hostwaylandsocket" ] ; then
+      # Will extend the value of X1auth, so that eval $X1auth will set WAYLAND_DISPLAY and XDG_RUNTIME_DIR
+      # Not sure what are we extending, since the DISPLAY branch was not run.
+      echo "X1auth=\"\$X1auth WAYLAND_DISPLAY=$Hostwaylandsocket XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR\""
+  fi
+
+  if [ -n "$Newdisplay" ] ; then
+      echo "X2auth='DISPLAY=$Newdisplay  XAUTHORITY=$Xclientcookie'"
+  fi
+
+  case "$Xserver" in
+      --weston)
+          echo "X2auth=\"\$X2auth WAYLAND_DISPLAY=$Newwaylandsocket  XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR\""
+          ;;
+      --weston-xwayland)
+          if [ "$Desktopmode" = "yes" ] && [ "$Setupwayland" = "yes" ] ; then
+              echo "X2auth=\"\$X2auth WAYLAND_DISPLAY=$Newwaylandsocket  XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR\""
+          fi
+          ;;
+  esac
+
+# shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
 [ "$Mytest" ] && echo 'echo "
 $X1auth
 $X2auth"'
 
+# shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
   echo '
 clipexchange() {
   # Send clipboard content of one X server or Wayland compositor
