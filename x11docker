@@ -39,7 +39,7 @@ trim_to_bar_filter() {
     sed -e 's/^[ \t]*|//'
 }
 trim_to_bar() {
-    echo -n "${1}" | trim_to_bar_filter
+    printf "%s" "${1}" | trim_to_bar_filter
 }
 
 #
@@ -65,7 +65,7 @@ ws_colon_is_continuation_filter() {
 # previous line (dropping the mathin part). The result is passed through trim_to_bar_filter.
 #
 trim_to_mark() {
-    echo -n "${1}" \
+    printf "%s" "${1}" \
         | ws_colon_is_continuation_filter \
         | trim_to_bar_filter
 }
