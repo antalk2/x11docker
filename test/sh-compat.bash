@@ -18,11 +18,48 @@ generated_file="sh-compat-generated.sh"
 
 set -x
 {
-    echo Storeinfofile="sh-compat-generated-store.info"
+    # storeinfo
+    echo 'Storeinfofile="sh-compat-generated-store.info"'
     declare -f storeinfo_dump_sh
     declare -f storeinfo_drop_sh
     declare -f storeinfo_test_sh
     declare -f storeinfo_add_kv_sh
+
+    #
+    # create_xinitrc()
+    # ----------------
+    #
+    # cookiebaker
+    declare -f cookiebaker
+    declare -f strlenhex
+
+    echo 'Myps="ps"'
+    declare -f pspid
+    declare -f disable_xhost
+
+    echo '# shellcheck disable=SC3028 # (error): In dash, RANDOM is not supported.'
+    declare -f makecookie
+
+    echo Timetosaygoodbyefile="Timetosaygoodbyefile.txt"
+    echo Timetosaygoodbyefifo="Timetosaygoodbye.fifo"
+    declare -f rocknroll
+    declare -f saygoodbye
+
+    #
+    # create_containerrc()
+    #   -> waitforlogentry_sh()
+    #
+    declare -f trim_to_bar_filter
+    declare -f trim_to_bar
+    declare -f trim_to_mark
+    declare -f ws_colon_is_continuation_filter
+    declare -f waitforlogentry_sh
+
+
 } > "$generated_file"
 
-shellcheck --shell=sh --norc "$generated_file"
+# shellcheck --shell=dash --norc "$generated_file"
+shellcheck --shell=sh --exclude=SC3043 --norc "$generated_file"
+
+
+# SC3043 (warning): In POSIX sh, 'local' is undefined.
