@@ -8316,6 +8316,15 @@ store_newxenv() {               # store display variables
 # --nocheck : Set Check to "no". Usexcontainer fallback is "yes".
 #   Neither : ??? Usexcontainer fallback is "no". Do run the_command.
 #
+#  { note|debugnote|verbose|warning|error | --quiet }
+#        Set "Message" used for messages.
+#        Only --quiet is actually used.
+#        The default is ":" for --nocheck, "note" otherwise.
+#
+#  the_command  The command to run as
+#               unpriv_xcbackend "$Xcontainerbackend exec $Xcontainername ${the_command}"
+#          or   unpriv "${the_command}"
+#
 xtool() {
     local Tool Toolinfo Usexcontainer
     local Check=
