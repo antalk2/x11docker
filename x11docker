@@ -3951,9 +3951,11 @@ check_windowmanager() {
   return 0
 }
 
+# function clean_xhost() : option --clean-xhost: disable xhost
+#                          policies on host X
+#
 clean_xhost() {
     #
-    # option --clean-xhost: disable xhost policies on host X
     #
     if [ -z "$Hostdisplay" ] ; then
         note "Option --clean-xhost: No host X display found."
@@ -3969,148 +3971,208 @@ clean_xhost() {
     fi
     #
     echo "Option --clean-xhost:" >> "$Xinitlogfile"
-    disable_xhost "DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority" >> "$Xinitlogfile" 2>&1
+    disable_xhost "DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority" \
+                  >> "$Xinitlogfile" 2>&1
 }
 
 #
-# Write content of the file to stdout.
+# create_clipboardrc() : option --clipboard: create shareclipboard
+#                        script
 #
-create_clipboardrc() {          # option --clipboard: create shareclipboard script
-  echo "#! /usr/bin/env bash"
-  declare -f rocknroll
-  declare -f mysleep
-  echo "Timetosaygoodbyefile='$Timetosaygoodbyefile'"
+# - Writes content of the file to stdout.
+#
+create_clipboardrc() {
+    #
+    # FIXME: clipboardrc expects bash. Why?
+    #
+    echo "#! /usr/bin/env bash"
+    declare -f rocknroll
+    declare -f mysleep
+    echo "Timetosaygoodbyefile='$Timetosaygoodbyefile'"
 
-  if [ -n "$Hostdisplay" ] ; then
-      # When X1auth is eval-ed, will set DISPLAY and XAUTHORITY to the
-      # values we have here.
-      echo "X1auth='DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority'"
-  elif [ -n "$Hostwaylandsocket" ] ; then
-      # Will extend the value of X1auth, so that eval $X1auth will set WAYLAND_DISPLAY and XDG_RUNTIME_DIR
-      # Not sure what are we extending, since the DISPLAY branch was not run.
-      echo "X1auth=\"\$X1auth WAYLAND_DISPLAY=$Hostwaylandsocket XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR\""
-  fi
+    if [ -n "$Hostdisplay" ] ; then
+        # When X1auth is eval-ed, will set DISPLAY and XAUTHORITY to the
+        # values we have here.
+        echo "X1auth='DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority'"
+    elif [ -n "$Hostwaylandsocket" ] ; then
+        #
+        # Will extend the value of X1auth, so that eval $X1auth will
+        # also set WAYLAND_DISPLAY and XDG_RUNTIME_DIR
+        #
+        # Not sure what are we extending, since the DISPLAY branch was
+        # not run.
+        #
+        trim_to_mark \
+            "|X1auth=
+             :\"
+             :\$X1auth
+             : WAYLAND_DISPLAY=$Hostwaylandsocket
+             : XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR
+             :\""
+    fi
 
-  if [ -n "$Newdisplay" ] ; then
-      echo "X2auth='DISPLAY=$Newdisplay  XAUTHORITY=$Xclientcookie'"
-  fi
+    if [ -n "$Newdisplay" ] ; then
+        echo "X2auth='DISPLAY=$Newdisplay  XAUTHORITY=$Xclientcookie'"
+    fi
 
-  case "$Xserver" in
-      --weston)
-          echo "X2auth=\"\$X2auth WAYLAND_DISPLAY=$Newwaylandsocket  XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR\""
-          ;;
-      --weston-xwayland)
-          if [ "$Desktopmode" = "yes" ] && [ "$Setupwayland" = "yes" ] ; then
-              echo "X2auth=\"\$X2auth WAYLAND_DISPLAY=$Newwaylandsocket  XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR\""
-          fi
-          ;;
-  esac
+    case "$Xserver" in
 
-  # shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
-  if [ "$Mytest" ] ; then
-      trim_to_bar \
-          '|echo
-           |echo "$X1auth"
-           |echo "$X2auth"
-           |'
-  fi
+        --weston)
+            trim_to_mark \
+                "|X2auth=
+                 :\"
+                 :\$X2auth
+                 : WAYLAND_DISPLAY=$Newwaylandsocket
+                 : XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR
+                 :\""
+            ;;
 
-  # shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
-  trim_to_bar \
-      '|
-       |clipexchange() {
-       |  # Send clipboard content of one X server or Wayland compositor
-       |  # to another X server and/or Wayland compositor and update on changes.
-       |  # Run function twice with switched credentials to sync the clipboards.
-       |  # Runs in a loop except $4 is set
-       |  # $1  credentials to access 1. X server and/or Wayland compositor
-       |  # $2  credentials to access 2. X server and/or Wayland compositor
-       |  # $3  selection to use (primary or clipboard)
-       |  # $4  set to noloop if you want to run only once without a loop
-       |  #
-       |  # Credentials look like
-       |  #   "DISPLAY=:0 XAUTHORITY=~/.Xauthority WAYLAND_DISPLAY=wayland-1 XDG_RUNTIME_DIR=/run/user/1000"
-       |
-       |  local Selection SelectionW SelectionX
-       |  local TargetsW TargetsX ImagetargetW ImagetargetX
-       |  local Clip ClipW ClipX
-       |  local Clipold ClipoldW2 ClipoldX2
-       |  local CopyW CopyX
-       |  local Wprimary1 Wprimary2
-       |  local Noloop
-       |
-       |  Selection="${3:-}"
-       |  Noloop="${4:-}"
-       |
-       |  export DISPLAY= WAYLAND_DISPLAY=
-       |  export ${1:-}
-       |  case "$Selection" in
-       |    primary)
-       |      SelectionX="-selection primary"
-       |      SelectionW="--primary"
-       |      #
-       |      # wl-paste : sudo apt install wl-clipboard
-       |      env \$X1auth wl-paste --primary >/dev/null 2>&1 || Wprimary1=no
-       |      env \$X2auth wl-paste --primary >/dev/null 2>&1 || Wprimary2=no
-       |      #
-       |      if [ -n "$WAYLAND_DISPLAY" ] && [ -z \"\$Wprimary1\$Wprimary2\" ] ; then
-       |         # Neither Wprimary1, nor Wprimary2 is "no" (both empty)
-       |         CopyW=yes ;
-       |      else
-       |         CopyW=""
-       |      fi
-       |
-       |      if [ -n "$DISPLAY"         ] ; then CopyX="yes";  else CopyX="" ; fi
-       |    ;;
-       |
-       |    clipboard)
-       |      SelectionX="-selection clipboard"
-       |      SelectionW=""
-       |
-       |      if [ -n "$WAYLAND_DISPLAY" ] ; then CopyW="yes" ; else CopyW="" ; fi
-       |      if [ -n "$DISPLAY"         ] ; then CopyX="yes" ; else CopyX="" ; fi
-       |    ;;
-       |  esac
-       |'
+        --weston-xwayland)
+            if [ "$Desktopmode" = "yes" ] && [ "$Setupwayland" = "yes" ] ; then
+                trim_to_mark \
+                    "|X2auth=
+                     :\"
+                     :\$X2auth
+                     : WAYLAND_DISPLAY=$Newwaylandsocket
+                     : XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR
+                     :\""
+            fi
+            ;;
+    esac
+
+    # shellcheck disable=SC2016 # (info): Expressions don't expand in
+    #                             single quotes
+    if [ "$Mytest" ] ; then
+        trim_to_bar \
+            '|echo
+             |echo "$X1auth"
+             |echo "$X2auth"
+             |'
+    fi
+
+    # shellcheck disable=SC2016 # (info): Expressions don't expand in
+    #                             single quotes
+    trim_to_bar \
+        '|
+         |clipexchange() {
+         |  # Send clipboard content of one X server or Wayland compositor
+         |  # to another X server and/or Wayland compositor and update on changes.
+         |  # Run function twice with switched credentials to sync the clipboards.
+         |  # Runs in a loop except $4 is set
+         |  # $1  credentials to access 1. X server and/or Wayland compositor
+         |  # $2  credentials to access 2. X server and/or Wayland compositor
+         |  # $3  selection to use (primary or clipboard)
+         |  # $4  set to "noloop" if you want to run only once without a loop
+         |  #
+         |  # Credentials look like
+         |  #   "DISPLAY=:0 XAUTHORITY=~/.Xauthority WAYLAND_DISPLAY=wayland-1 XDG_RUNTIME_DIR=/run/user/1000"
+         |
+         |  local Selection SelectionW   SelectionX
+         |  local             TargetsW     TargetsX
+         |  local         ImagetargetW ImagetargetX
+         |  local Clip           ClipW        ClipX
+         |  local Clipold    ClipoldW2    ClipoldX2
+         |  local                CopyW        CopyX
+         |  local Wprimary1
+         |  local Wprimary2
+         |  local Noloop
+         |
+         |  Selection="${3:-}"
+         |  Noloop="${4:-}"
+         |
+         |  export DISPLAY="" WAYLAND_DISPLAY=""
+         |  export ${1:-} # evaluate "$X1auth" or "$X2auth"
+         |
+         |  case "$Selection" in
+         |    primary)
+         |      SelectionX="-selection primary"
+         |      SelectionW="--primary"
+         |      #
+         |      # wl-paste : sudo apt install wl-clipboard
+         |      #
+         |      env \$X1auth wl-paste --primary >/dev/null 2>&1 || Wprimary1=no
+         |      env \$X2auth wl-paste --primary >/dev/null 2>&1 || Wprimary2=no
+         |      #
+         |      if [ -n "$WAYLAND_DISPLAY" ] && [ -z \"\$Wprimary1\$Wprimary2\" ] ; 
+         |         # Neither Wprimary1, nor Wprimary2 is "no" (both empty)
+         |                                     then CopyW=yes ;  else CopyW="" ; fi
+         |
+         |      if [ -n "$DISPLAY"         ] ; then CopyX=yes ;  else CopyX="" ; fi
+         |    ;;
+         |
+         |    clipboard)
+         |      SelectionX="-selection clipboard"
+         |      SelectionW=""
+         |
+         |      if [ -n "$WAYLAND_DISPLAY" ] ; then CopyW="yes" ; else CopyW="" ; fi
+         |      if [ -n "$DISPLAY"         ] ; then CopyX="yes" ; else CopyX="" ; fi
+         |    ;;
+         |  esac
+         |'
 
   ############
   
-  # shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
+  # shellcheck disable=SC2016 # (info): Expressions don't expand in
+  #                             single quotes
   trim_to_bar \
       '|
        |  while rocknroll; do
-       |    export DISPLAY= WAYLAND_DISPLAY=
+       |
+       |    # Why export after already exported above?
+       |    # Why export in each loop?
+       |    export DISPLAY="" WAYLAND_DISPLAY=""
        |    export ${1:-}
        |
-       |    # check for image clip
-       |    [ "$CopyW" ] && TargetsW="$(wl-paste --list-types $SelectionW)" 
-       |    [ "$CopyX" ] && TargetsX="$(xclip -out            $SelectionX -t TARGETS)"
-       |    grep -q "image/png" <<< "$TargetsW" && ImagetargetW="-t image/png" || ImagetargetW=""
-       |    grep -q "image/png" <<< "$TargetsX" && ImagetargetX="-t image/png" || ImagetargetX=""
+       |    # Check for image clip
+       |    if [ "$CopyW" ] ; then TargetsW="$(wl-paste --list-types $SelectionW)"  ; fi
+       |    if [ "$CopyX" ] ; then TargetsX="$(xclip -out            $SelectionX -t TARGETS)" ; fi
        |
-       |    # read content of $Selection of X server $1
-       |    [ "$CopyW" ] && ClipW="$(wl-paste   $SelectionW $ImagetargetW | base64 -i)"
-       |    [ "$CopyX" ] && ClipX="$(xclip -out $SelectionX $ImagetargetX | base64 -i)"
+       |    if grep -q "image/png" <<< "$TargetsW" ;
+       |    then  ImagetargetW="-t image/png"      ;
+       |    else  ImagetargetW=""                  ; fi
        |
-       |    # check for new clip
-       |    [ -n "$ClipW" ] && [ "$ClipW" != "$Clipold" ] && Clip="$ClipW"
-       |    [ -n "$ClipX" ] && [ "$ClipX" != "$Clipold" ] && Clip="$ClipX"
+       |    if grep -q "image/png" <<< "$TargetsX" ;
+       |    then  ImagetargetX="-t image/png"      ;
+       |    else  ImagetargetX=""                  ; fi
        |
-       |    # fill empty clipboards to prevent odd issues
+       |    # Read content of $Selection of X server $1
+       |    if [ "$CopyW" ] ; then ClipW="$(wl-paste   $SelectionW $ImagetargetW | base64 -i)" ; fi
+       |    if [ "$CopyX" ] ; then ClipX="$(xclip -out $SelectionX $ImagetargetX | base64 -i)" ; fi
+       |
+       |    # Check for new clip
+       |    if [ -n "$ClipW" ] && [ "$ClipW" != "$Clipold" ] ; then Clip="$ClipW" ; fi
+       |    if [ -n "$ClipX" ] && [ "$ClipX" != "$Clipold" ] ; then Clip="$ClipX" ; fi
+       |
+       |    # Fill empty clipboards to prevent odd issues
        |    case "$Selection" in
        |      clipboard)
-       |        { [ -z "$ClipW" ] || [ -z "$ClipX" ] ; } && {
-       |          [ -z "$Clip" ]  && Clip="$(base64 -i <<< "x11docker")"
-       |          [ -z "$ClipW" ] && [ "$CopyW" ] && base64 -d -i <<< "$Clip" | wl-copy   $SelectionW && Clipold="$Clip"
-       |          [ -z "$ClipX" ] && [ "$CopyX" ] && base64 -d -i <<< "$Clip" | xclip -in $SelectionX && Clipold="$Clip"
-       |        }
+       |        if [ -z "$ClipW" ] || [ -z "$ClipX" ] ; then
+       |
+       |          if [ -z "$Clip" ]  ; then
+       |                Clip="$(base64 -i <<< "x11docker")"
+       |          fi
+       |
+       |          if [ -z "$ClipW" ] && [ -n "$CopyW" ] ; then
+       |               if  base64 -d -i <<< "$Clip" | wl-copy   $SelectionW ; then
+       |                   Clipold="$Clip"
+       |               fi
+       |          fi
+       |
+       |          if [ -z "$ClipX" ] && [ -n "$CopyX" ] ; then
+       |              if base64 -d -i <<< "$Clip" | xclip -in $SelectionX ; then
+       |                  Clipold="$Clip"
+       |              fi
+       |          fi
+       |
+       |        fi
        |      ;;
        |    esac
        |'
   #############
 
   if [ "$Mytest" ] ; then
-      # shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
+      # shellcheck disable=SC2016 # (info): Expressions don't expand
+      #                             in single quotes
       trim_to_bar \
           '|
            |# Mytest
