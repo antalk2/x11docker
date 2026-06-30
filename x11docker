@@ -5024,51 +5024,65 @@ setup_vaapi() {
     # VA-API and VDPAU #443
     # Infos at https://wiki.archlinux.org/title/Hardware_video_acceleration
 
-    # check VA-API driver on host
+    # Check VA-API driver on host
     if [ -z "${LIBVA_DRIVER_NAME:-}" ] ; then
-        LIBVA_DRIVER_NAME="$(xtool "vainfo 2>&1 | grep drv_video.so | rev | cut -d/ -f1 | rev" ||:)"
+        LIBVA_DRIVER_NAME="$(xtool "vainfo 2>&1 | grep drv_video.so | rev | cut -d/ -f1 | rev" || : )"
         LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME%"_drv_video.so"}"
     fi
 
-  # Guess driver based on kernel modules if vainfo is not available
-  [ -z "$LIBVA_DRIVER_NAME" ] && {
-    lspci -k | grep -q -e amdgpu -e radeon && {
-      LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME:-radeonsi}"
-    }
-    lspci -k | grep -q nouveau && {
-      LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME:-nouveau}"
-    }
-    lspci -k | grep -q nvidia && {
-      LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME:-nvidia}"
-      note "Option --gpu: Enabling VA-API video decoding support
-  with NVIDIA NVDECODE. If you want to use NVIDIA VDPAU instead,
-  please run x11docker with '--env LIBVA_DRIVER_NAME=vdpau'
-  or set the variable globally with 'export LIBVA_DRIVER_NAME=vdpau'."
-    }
-    lspci -k | grep -q i915 && {
-      [ -n "${DRI_PRIME:-}" ] || {
-        LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME:-i965}"
-        note "Option --gpu: Enabling VA-API intel driver i965.
-  If you want to use the newer iHD intel driver instead,
-  please run x11docker with '--env LIBVA_DRIVER_NAME=iHD'
-  or set the variable globally with 'export LIBVA_DRIVER_NAME=iHD'."
-      }
-    }
-  }
-  case "${LIBVA_DRIVER_NAME:-}" in
-    radeonsi|r600) VDPAU_DRIVER="${VDPAU_DRIVER:-radeonsi}" ;;
-    i965|iHD)      VDPAU_DRIVER="${VDPAU_DRIVER:-va_gl}" ;;
-    nouveau)       VDPAU_DRIVER="${VDPAU_DRIVER:-nouveau}" ;;
-    nvidia|vdpau)  VDPAU_DRIVER="${VDPAU_DRIVER:-nvidia}" ;;
-    "") note "Option --gpu: Could not estimate drivers for VA-API and VDPAU
-  video decoding acceleration support. This will likely fail in container." ;; 
-  esac
-  [ -n "${LIBVA_DRIVER_NAME:-}" ] && store_runoption_env "LIBVA_DRIVER_NAME=${LIBVA_DRIVER_NAME:-}"
-  [ -n "${VDPAU_DRIVER:-}" ]      && store_runoption_env "VDPAU_DRIVER=${VDPAU_DRIVER:-}"
-  [ -n "${DRI_PRIME:-}" ]         && store_runoption_env "DRI_PRIME=${DRI_PRIME:-1}"
+    # Guess driver (LIBVA_DRIVER_NAME) based on kernel modules if
+    #       vainfo is not available
+    #
+    if [ -z "$LIBVA_DRIVER_NAME" ] ; then
+        if lspci -k | grep -q -e amdgpu -e radeon ; then
+            LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME:-radeonsi}"
+        elif lspci -k | grep -q nouveau           ; then
+            LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME:-nouveau}"
+        elif lspci -k | grep -q nvidia            ; then
+            LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME:-nvidia}"
+            #
+            note "$(trim_to_bar \
+               "|Option --gpu: Enabling VA-API video decoding support
+                |  with NVIDIA NVDECODE. If you want to use NVIDIA VDPAU instead,
+                |  please run x11docker with '--env LIBVA_DRIVER_NAME=vdpau'
+                |  or set the variable globally with 'export LIBVA_DRIVER_NAME=vdpau'."
+                )"
+            #
+        elif lspci -k | grep -q i915 &&  [ -z "${DRI_PRIME:-}" ] ; then
+            LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME:-i965}"
+            note "$(trim_to_bar \
+                  "|Option --gpu: Enabling VA-API intel driver i965.
+                   |  If you want to use the newer iHD intel driver instead,
+                   |  please run x11docker with '--env LIBVA_DRIVER_NAME=iHD'
+                   |  or set the variable globally with 'export LIBVA_DRIVER_NAME=iHD'."
+                   )"
+        fi
+    fi
 
-  return 0
+    case "${LIBVA_DRIVER_NAME:-}" in
+        radeonsi|r600) VDPAU_DRIVER="${VDPAU_DRIVER:-radeonsi}" ;;
+        i965|iHD)      VDPAU_DRIVER="${VDPAU_DRIVER:-va_gl}"    ;;
+        nouveau)       VDPAU_DRIVER="${VDPAU_DRIVER:-nouveau}"  ;;
+        nvidia|vdpau)  VDPAU_DRIVER="${VDPAU_DRIVER:-nvidia}"   ;;
+        "")
+            note  "$(trim_to_bar \
+                   "|Option --gpu: Could not estimate drivers for VA-API and VDPAU
+                    |  video decoding acceleration support. This will likely fail in container."
+                    )"
+            ;;
+    esac
+
+    # Save the results using store_runoption_env
+    #
+    # FIXME: Providing default values after checking nonempty (-n) is confusing
+    #
+    [ -n "${LIBVA_DRIVER_NAME:-}" ] && store_runoption_env "LIBVA_DRIVER_NAME=${LIBVA_DRIVER_NAME:-}"
+    [ -n "${VDPAU_DRIVER:-}" ]      && store_runoption_env "VDPAU_DRIVER=${VDPAU_DRIVER:-}"
+    [ -n "${DRI_PRIME:-}" ]         && store_runoption_env "DRI_PRIME=${DRI_PRIME:-1}"
+
+    return 0
 }
+
 
 setup_webcam() {                # option --webcam: share webcam devices
   # Webcam devices appear as /dev/video* files.
