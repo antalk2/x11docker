@@ -4298,10 +4298,10 @@ create_clipboardrc() {
                |  ;;
                |
                |  "") # first call in xinitrc, run bindkey tools
-               |    clipexchange "$X2auth" "$X1auth" clipboard &
-               |    #clipexchange "$X2auth" "$X1auth" primary &
+               |    clipexchange  "$X2auth" "$X1auth" clipboard &
+               |    #clipexchange "$X2auth" "$X1auth" primary   &
                |
-               |# Xbindkeycodes will passed to xbindkeys.
+               |# Xbindkeycodes will be passed to xbindkeys.
                |# Has 3 rows: (1) command, (2) state and keycode as reported by the tool xev.
                |# (3) the keysyms associated with the given keycodes.
                |# See https://wiki.archlinux.org/title/Xbindkeys
