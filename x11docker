@@ -4998,22 +4998,38 @@ setup_sound_pulseaudio() {
   fi
 
   return 0
-}
+} # setup_sound_pulseaudio()
 
-setup_vaapi() {                 # option --gpu: setup for VAAPI and VDPAU video decoding acceleration
-  # support for prime-run / discrete NVIDIA card #394
-  [ -n "$__NV_PRIME_RENDER_OFFLOAD" ] && DRI_PRIME="1" && store_runoption_env "__NV_PRIME_RENDER_OFFLOAD=$__NV_PRIME_RENDER_OFFLOAD"
-  [ -n "$__VK_LAYER_NV_optimus" ]     && DRI_PRIME="1" && store_runoption_env "__VK_LAYER_NV_optimus=$__VK_LAYER_NV_optimus"
-  [ -n "$__GLX_VENDOR_LIBRARY_NAME" ] && DRI_PRIME="1" && store_runoption_env "__GLX_VENDOR_LIBRARY_NAME=$__GLX_VENDOR_LIBRARY_NAME"
+#
+# function setup_vaapi() : option --gpu: setup for VAAPI and VDPAU
+#                          video decoding acceleration
+#
+setup_vaapi() {
 
-  # VA-API and VDPAU #443
-  # Infos at https://wiki.archlinux.org/title/Hardware_video_acceleration
+    # Support for prime-run / discrete NVIDIA card #394
+    if [ -n "$__NV_PRIME_RENDER_OFFLOAD" ] ; then
+        DRI_PRIME="1"
+        store_runoption_env "__NV_PRIME_RENDER_OFFLOAD=$__NV_PRIME_RENDER_OFFLOAD"
+    fi
+    if [ -n "$__VK_LAYER_NV_optimus" ] ; then
+        DRI_PRIME="1"
+        store_runoption_env "__VK_LAYER_NV_optimus=$__VK_LAYER_NV_optimus"
+    fi
+    if [ -n "$__GLX_VENDOR_LIBRARY_NAME" ] ; then
+        DRI_PRIME="1"
+        store_runoption_env "__GLX_VENDOR_LIBRARY_NAME=$__GLX_VENDOR_LIBRARY_NAME"
+    fi
 
-  # check VA-API driver on host
-  [ -z "${LIBVA_DRIVER_NAME:-}" ] && {
-    LIBVA_DRIVER_NAME="$(xtool "vainfo 2>&1 | grep drv_video.so | rev | cut -d/ -f1 | rev" ||:)"
-    LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME%"_drv_video.so"}"
-  }
+
+    # VA-API and VDPAU #443
+    # Infos at https://wiki.archlinux.org/title/Hardware_video_acceleration
+
+    # check VA-API driver on host
+    if [ -z "${LIBVA_DRIVER_NAME:-}" ] ; then
+        LIBVA_DRIVER_NAME="$(xtool "vainfo 2>&1 | grep drv_video.so | rev | cut -d/ -f1 | rev" ||:)"
+        LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME%"_drv_video.so"}"
+    fi
+
   # Guess driver based on kernel modules if vainfo is not available
   [ -z "$LIBVA_DRIVER_NAME" ] && {
     lspci -k | grep -q -e amdgpu -e radeon && {
