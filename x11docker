@@ -4706,32 +4706,52 @@ setup_printer() {
   return 0
 }
 
-setup_sound_alsa() {            # option --alsa: share sound devices
-  # Sound with ALSA is directly supported by the kernel and only needs to share devices in /dev/snd.
-  # libasound2 in image is recommended.
-  # The desired sound card can be specified with environment variable ALSA_CARD. See card name in 'aplay -l'.
-  # Further documentation at https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio
+#
+# function setup_sound_alsa() : option --alsa: share sound devices
+#
+setup_sound_alsa() {
+    #
+    # Sound with ALSA is directly supported by the kernel and only
+    # needs to share devices in /dev/snd.
+    #
+    # libasound2 in image is recommended.
+    #
+    # The desired sound card can be specified with environment
+    # variable ALSA_CARD. See card name in 'aplay -l'.
+    #
+    # Further documentation at
+    # https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio
 
-  warning "Option --alsa: ALSA sound degrades container isolation.
-  Sharing device files in /dev/snd, container gains access to sound hardware.
-  Container applications can catch audio output and microphone input."
+    warning "$(trim_to_bar \
+        "|Option --alsa: ALSA sound degrades container isolation.
+         |Sharing device files in /dev/snd, container gains access to sound hardware.
+         |Container applications can catch audio output and microphone input."
+         )"
 
-  [ "$Alsacard" ] && store_runoption_env "ALSA_CARD=$Alsacard"
+    if [ "$Alsacard" ] ; then store_runoption_env "ALSA_CARD=$Alsacard" ; fi
 
-  pgrep pulseaudio >/dev/null && note "Option --alsa: It seems that pulseaudio is running
-  on your host. Pulseaudio can interfere with ALSA sound.
-  Host sound may not work while container is playing sound and vice versa.
-  Alternative: with pulseaudio on host and in image, use option --pulseaudio."
+    if pgrep pulseaudio >/dev/null ; then
+        note "$(trim_to_bar \
+           "|Option --alsa: It seems that pulseaudio is running
+            |  on your host. Pulseaudio can interfere with ALSA sound.
+            |  Host sound may not work while container is playing sound and vice versa.
+            |  Alternative: with pulseaudio on host and in image, use option --pulseaudio."
+            )"
+    fi
 
-  [ -d /dev/snd ] && store_runoption_volume "/dev/snd" || {
-    warning "Option --alsa: /dev/snd not found.
-  Sound support not possible."
-    check_fallback
-    Sharealsa="no"
-    return 1
-  }
+    if [ -d /dev/snd ] ; then
+        store_runoption_volume "/dev/snd"
+     else
+         warning "$(trim_to_bar \
+            "|Option --alsa: /dev/snd not found.
+             |  Sound support not possible."
+             )"
+         check_fallback
+         Sharealsa="no"
+         return 1
+    fi
 
-  Containerusergroups="$Containerusergroups audio"
+    Containerusergroups="$Containerusergroups audio"
 
   return 0
 }
