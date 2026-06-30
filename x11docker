@@ -8312,102 +8312,206 @@ store_newxenv() {               # store display variables
 #              [ { note|debugnote|verbose|warning|error | --quiet } ]
 #              "the_command"
 #
+# --check   : Only check, do not run
+# --nocheck : Set Check to "no". Usexcontainer fallback is "yes".
+#   Neither : ??? Usexcontainer fallback is "no". Do run the_command.
+#
 xtool() {
-  local Tool Toolinfo Usexcontainer Check= Nocheck= Message the_command
+    local Tool Toolinfo Usexcontainer
+    local Check=
 
-  Message="note"
-  case "${1:-}" in
-    --check)       Check="yes" ;  Message="note" ; shift ;;
-    --nocheck)     Check="no"  ;  Message=":"    ; shift ;;
-  esac
+    # Nocheck is unused
+    # local Nocheck=
 
-  case "${1:-}" in
-      note|debugnote|verbose|warning|error)
-          Message="${1:-}"
-          shift
-          ;;
-      --quiet)
-          Message=":"
-          shift
-          ;;
-  esac
+    local Message
+    local the_command
 
-  the_command="${1:-}"
-  #
-  # extract tool from "env a=b tool args"
-  Tool="$(sed 's/\S*\(=\|env \)\S*//g ; s/^ *//' <<< "${the_command}" | cut -d' ' -f1)"
+    Message="note"
+    case "${1:-}" in
+        --check)       Check="yes" ;  Message="note" ; shift ;;
+        --nocheck)     Check="no"  ;  Message=":"    ; shift ;;
+        *)
+            Check="" # Or should it be "no"?
+            Message="note"
+            ;;
+    esac
 
-  case "$Tool" in
-    cvt)       Toolinfo="x11docker uses cvt to create a set of screen resolutions
-  that can be seen and set by tools like xrandr." ;;
-    setxkbmap|xkbcomp) Toolinfo="x11docker uses setxkbmap and xkbcomp to set the keyboard
-  in new X server to same as on host or specified with --keymap." ;;
-    socat)     Toolinfo="socat allows to set up TCP access to X unix sockets." ;;
-    vainfo)    Toolinfo="vainfo helps to configure VAAPI video decoding support." ;;
-    wl-copy|wl-paste) Toolinfo="x11docker uses wl-copy and wl-paste for Wayland clipboard support." ;;
-    wmctrl)    Toolinfo="x11docker uses wmctrl to configure window managers
-  to provide one virtual desktop only." ;;
-    xauth)     Toolinfo="xauth creates and adjusts X authentication cookies." ;;
-    xbindkeys) Toolinfo="xbindkeys intercepts SUPER+v or ALT+v for option --clipboard." ;;
-    xclip)     Toolinfo="xclip is needed for option --clipboard." ;;
-    xdpyinfo)  Toolinfo="xdpyinfo provides some information about the host X server.
-  It tells x11docker about dpi and installed extensions like MIT-SHM." ;;
-    xdotool)   Toolinfo="x11docker uses xdotool to hide the weston window
-  that is used in background for --xpra-xwayland." ;;
-    xeyes)     Toolinfo="xeyes shows eyes following your mouse cursor. 
-  The xeyes X window can provide focus for --clipboard=cmv." ;;
-    xlogo)     Toolinfo="xlogo shows the X11 logo in an X11 window. 
-  This window can provide focus for --clipboard=cmv." ;;
-    xfishtank) Toolinfo="xfishtank shows a fish tank with --xfishtank." ;;
-    xhost)     Toolinfo="xhost controls network access to X. x11docker uses it to disable
-  undesired network access, or to allow some with option --xhost=ARG." ;;
-    xinit)     Toolinfo="xinit serves to properly start and stop most X servers." ;;
-    xrandr)    Toolinfo="xrandr allows to check or set the screen size (option --size).
-  with --xorg it also helps at options --rotate and --scale." ;;
-    xwininfo)  Toolinfo="x11docker needs xwininfo for option --checkwindow
-  to get a list of currently open windows." ;;
-  esac
+    case "${1:-}" in
+        note|debugnote|verbose|warning|error)
+            Message="${1:-}"
+            shift
+            ;;
+        --quiet)
+            Message=":"
+            shift
+            ;;
+    esac
 
-  case "$Xcontainer_option" in
-    yes)
-      Usexcontainer="yes"
-      echo "$Xcontainertools" | grep -w -q "$Tool" || {
-        $Message "Option --xc: Please update image x11docker/xserver.
-  Did not find command '$Tool' in image. Will try to run '$Tool' on host"
-        Usexcontainer="no"
-      }
-    ;;
-    no)
-      Usexcontainer="no"
-    ;;
-  esac
-  [ "$Check" = "no" ] && Usexcontainer="${Usexcontainer:-yes}"
-  Usexcontainer="${Usexcontainer:-no}" # in case xinitrc already runs in X container.
-  verbose "xtool(): (use xc $Usexcontainer): ${the_command}"
-  case "$Usexcontainer" in
-    no)
-      command -v "$Tool" >/dev/null || {
-        $Message "xtool(): Command '$Tool' not found on host. Please install $Tool.
-  $Toolinfo
-  $Wikipackagesimage"
-        return 1
-      }
-    ;;
-  esac
+    the_command="${1:-}"
+    #
+    # extract tool from "env a=b tool args"
+    #
+    # Step1: remove NonSpaces*(=|env )NonSpaces*
+    # Step2: remove intial spaces
+    # Step3: keep the word before the first space
+    Tool="$(sed 's/\S*\(=\|env \)\S*//g ; s/^ *//' <<< "${the_command}" | cut -d' ' -f1)"
 
-  [ "$Check" = "yes" ] && return 0
+    #
+    # set Toolinfo (used in Please install... message)
+    #
+    case "$Tool" in
+        cvt)
+            # man cvt - calculate VESA CVT mode lines
+            Toolinfo="$(trim_to_bar \
+                     "|x11docker uses cvt to create a set of screen resolutions
+                      |  that can be seen and set by tools like xrandr."
+                      )" ;;
+        setxkbmap|xkbcomp)
+            Toolinfo="$(trim_to_bar \
+                     "|x11docker uses setxkbmap and xkbcomp to set the keyboard
+                      |  in new X server to same as on host or specified with --keymap."
+                      )"
+            ;;
+        socat)
+            Toolinfo="socat allows to set up TCP access to X unix sockets."
+            ;;
+        vainfo)
+            # man vainfo - display information from VA API driver
+            Toolinfo="vainfo helps to configure VAAPI video decoding support."
+            ;;
+        wl-copy|wl-paste)
+            Toolinfo="$(trim_to_bar \
+                     "|x11docker uses wl-copy and wl-paste for Wayland clipboard support."
+                      )"
+            ;;
+        wmctrl)
+            Toolinfo="$(trim_to_bar \
+                     "|x11docker uses wmctrl to configure window managers
+                      |  to provide one virtual desktop only."
+                      )"
+            ;;
+        xauth)
+            Toolinfo="xauth creates and adjusts X authentication cookies."
+            ;;
+        xbindkeys)
+            Toolinfo="xbindkeys intercepts SUPER+v or ALT+v for option --clipboard."
+            ;;
+        xclip)
+            Toolinfo="xclip is needed for option --clipboard."
+            ;;
+        xdpyinfo)
+            Toolinfo="$(trim_to_bar \
+                    "|xdpyinfo provides some information about the host X server.
+                     |  It tells x11docker about dpi and installed extensions like MIT-SHM."
+                     )"
+            ;;
+        xdotool)
+            Toolinfo="$(trim_to_bar \
+                    "|x11docker uses xdotool to hide the weston window
+                     |  that is used in background for --xpra-xwayland."
+                     )"
+            ;;
+        xeyes)
+            Toolinfo="$(trim_to_bar \
+                    "|xeyes shows eyes following your mouse cursor. 
+                     |  The xeyes X window can provide focus for --clipboard=cmv."
+                     )"
+            ;;
+        xlogo)
+            Toolinfo="$(trim_to_bar \
+                    "|xlogo shows the X11 logo in an X11 window. 
+                     |  This window can provide focus for --clipboard=cmv."
+                     )"
+            ;;
+        xfishtank)
+            Toolinfo="xfishtank shows a fish tank with --xfishtank."
+            ;;
+        xhost)
+            Toolinfo="$(trim_to_bar \
+                    "|xhost controls network access to X. x11docker uses it to disable
+                     |  undesired network access, or to allow some with option --xhost=ARG."
+                     )"
+            ;;
+        xinit)
+            Toolinfo="xinit serves to properly start and stop most X servers."
+            ;;
+        xrandr)
+            Toolinfo="$(trim_to_bar \
+                    "|xrandr allows to check or set the screen size (option --size).
+                     |  with --xorg it also helps at options --rotate and --scale."
+                     )"
+            ;;
+        xwininfo)
+            Toolinfo="$(trim_to_bar \
+                    "|x11docker needs xwininfo for option --checkwindow
+                     |  to get a list of currently open windows."
+                     )"
+            ;;
+    esac
 
-  case "$Usexcontainer" in
-    yes)
-      unpriv_xcbackend "$Xcontainerbackend exec $Xcontainername ${the_command}"
-    ;;
-    no)
-      unpriv "${the_command}"
-    ;;
-  esac
+    #
+    # set Usexcontainer
+    #
+    case "$Xcontainer_option" in
+        yes)
+            Usexcontainer="yes"
+            if ! echo "$Xcontainertools" | grep -w -q "$Tool" ; then
+                $Message "$(trim_to_bar \
+                   "|Option --xc: Please update image x11docker/xserver.
+                    |  Did not find command '$Tool' in image. Will try to run '$Tool' on host"
+                    )"
+                Usexcontainer="no"
+            fi
+            ;;
+        no)
+            Usexcontainer="no"
+            ;;
+    esac
 
-  return $?
-}
+    if [ "$Check" = "no" ] ; then
+        Usexcontainer="${Usexcontainer:-yes}"
+    else
+        # Check in yes|""
+        # Only checking (?)
+        Usexcontainer="${Usexcontainer:-no}" # in case xinitrc already runs in X container.
+    fi
+    verbose "xtool(): (use xc $Usexcontainer): ${the_command}"
+
+    #
+    # Check tool availability on host
+    #
+    case "$Usexcontainer" in
+        no)
+            if ! command -v "$Tool" >/dev/null ; then
+                $Message  "$(trim_to_bar \
+                    "|xtool(): Command '$Tool' not found on host. Please install $Tool.
+                     |  $Toolinfo
+                     |  $Wikipackagesimage"
+                     )"
+                return 1
+            fi
+            ;;
+    esac
+
+    if [ "$Check" = "yes" ] ; then
+        # Only cheking
+        return 0
+    fi
+
+    #
+    # Run the tool
+    #
+    case "$Usexcontainer" in
+        yes)
+            unpriv_xcbackend "$Xcontainerbackend exec $Xcontainername ${the_command}"
+            ;;
+        no)
+            unpriv "${the_command}"
+            ;;
+    esac
+    return $?
+} # end xtool()
+
 
 #### backend command setup
 check_backend() {               # options --backend, --rootless
