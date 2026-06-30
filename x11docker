@@ -8253,7 +8253,48 @@ store_newxenv() {               # store display variables
   
   return 0
 }
-xtool() {                       # run X tool command in X container if available, otherwise on host
+
+
+#
+# function xtool() :
+#
+# Run X tool command in X container if available, otherwise on host
+#
+# Examples:
+#   xtool --check "wmctrl"
+#   xtool "vainfo 2>&1 | grep drv_video.so
+#   Xrandroutput="$(xtool "xrandr" ||:)"
+#   xtool --check cvt && ...
+#   Modeline="$(xtool "cvt '$Xaxis' '$Yaxis'" | tail -n1 | cut -d' ' -f2-)"
+#   xtool --check --quiet xinit || { ... }
+#   xtool --check --quiet xdotool || { ... }
+#   xtool --check --quiet xeyes
+#   xtool --check --quiet xlogo
+#   xtool --check --quiet xfishtank
+#   Xdpyinfooutput="$(xtool "xdpyinfo 2>> $Xinitlogfile" ||:)"
+#   xtool --check setxkbmap
+#   xtool --check xhost
+#   xtool "env $Environment xhost 2>&1 | tail -n +2  /dev/stdin" | while read -r Line ; do ...
+#   xtool "env $Environment xhost -'$Line'"
+#   xtool "env $Environment xhost -"
+#   xtool "env $Environment xhost 2>&1 | wc -l"
+#   xtool "env $Environment xhost 2>&1" | grep -q "access control disabled"
+#   xtool "xdotool windowunmap 0x$(printf '%x\n' $(grep 'window id' "$Compositorlogfile" | rev | cut -d' ' -f1 | rev))"
+#   xtool --check "xauth"
+#   xtool --nocheck "env LD_PRELOAD= xdpyinfo 2>>$Xinitlogfile | grep -q MIT-SHM"
+#   xtool --check --quiet xdpyinfo
+#   xtool --check xbindkeys
+#   xtool --check xclip
+#   xtool --check wl-copy
+#   xtool --check xrandr
+#   xtool --check xwininfo
+#   xtool --check "xhost"
+#
+#   xtool "env DISPLAY=:$Newdisplaynumber XAUTHORITY=$Xclientcookie xhost +INET:$Containerip"
+#
+#   
+#
+xtool() {
   local Tool Toolinfo Usexcontainer Check= Nocheck= Message
 
   Message="note"
