@@ -4251,7 +4251,8 @@ create_clipboardrc() {
        |'
   ###########
   
-  # shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
+  # shellcheck disable=SC2016 # (info): Expressions don't expand in
+  #                             single quotes
   case "$Shareclipboard" in
       yes) # bidirectional
           trim_to_bar \
