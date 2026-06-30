@@ -8308,36 +8308,34 @@ store_newxenv() {               # store display variables
 #
 #   xtool "env DISPLAY=:$Newdisplaynumber XAUTHORITY=$Xclientcookie xhost +INET:$Containerip"
 #
-#   
+# Usage: xtool [ { --check | --nocheck } ]
+#              [ { note|debugnote|verbose|warning|error | --quiet } ]
+#              "the_command"
 #
 xtool() {
-  local Tool Toolinfo Usexcontainer Check= Nocheck= Message
+  local Tool Toolinfo Usexcontainer Check= Nocheck= Message the_command
 
   Message="note"
   case "${1:-}" in
-    --check)
-      Check="yes"
-      shift
-    ;;
-    --nocheck)
-      Check="no"
-      Message=":"
-      shift
-    ;;
-  esac
-  case "${1:-}" in
-    note|debugnote|verbose|warning|error)
-      Message="${1:-}"
-      shift
-    ;;
-    --quiet)
-      Message=":"
-      shift
-    ;;
+    --check)       Check="yes" ;  Message="note" ; shift ;;
+    --nocheck)     Check="no"  ;  Message=":"    ; shift ;;
   esac
 
+  case "${1:-}" in
+      note|debugnote|verbose|warning|error)
+          Message="${1:-}"
+          shift
+          ;;
+      --quiet)
+          Message=":"
+          shift
+          ;;
+  esac
+
+  the_command="${1:-}"
+  #
   # extract tool from "env a=b tool args"
-  Tool="$(sed 's/\S*\(=\|env \)\S*//g ; s/^ *//' <<< "${1:-}" | cut -d' ' -f1)"
+  Tool="$(sed 's/\S*\(=\|env \)\S*//g ; s/^ *//' <<< "${the_command}" | cut -d' ' -f1)"
 
   case "$Tool" in
     cvt)       Toolinfo="x11docker uses cvt to create a set of screen resolutions
@@ -8385,7 +8383,7 @@ xtool() {
   esac
   [ "$Check" = "no" ] && Usexcontainer="${Usexcontainer:-yes}"
   Usexcontainer="${Usexcontainer:-no}" # in case xinitrc already runs in X container.
-  verbose "xtool(): (use xc $Usexcontainer): ${1:-}"
+  verbose "xtool(): (use xc $Usexcontainer): ${the_command}"
   case "$Usexcontainer" in
     no)
       command -v "$Tool" >/dev/null || {
@@ -8401,10 +8399,10 @@ xtool() {
 
   case "$Usexcontainer" in
     yes)
-      unpriv_xcbackend "$Xcontainerbackend exec $Xcontainername ${1:-}"
+      unpriv_xcbackend "$Xcontainerbackend exec $Xcontainername ${the_command}"
     ;;
     no)
-      unpriv "${1:-}"
+      unpriv "${the_command}"
     ;;
   esac
 
