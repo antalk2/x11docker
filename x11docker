@@ -4867,25 +4867,15 @@ setup_sound_pulseaudio() {
     if [ "$Pulseaudiomode" = "auto" ] ; then
         Pulseaudiomode="socket"
         #
-        # Adjustments, only if "auto"
+        # Adjust, only if "auto"
         #
-        if [ "$Containeruser" != "$Hostuser" ] ; then
-            Pulseaudiomode="tcp"
-        fi
-        #
-        if [ "$Runtime" = "kata-runtime" ] ; then
-            Pulseaudiomode="tcp"
-        fi
-        #
-        if [ "$Runtime" = "sysbox-runc" ] ; then
-            Pulseaudiomode="tcp"
-        fi
-        #
-        if [ "$Snapsupport" = "yes" ] ; then
-            Pulseaudiomode="tcp"
-        fi
-        #
-        if unpriv 'LC_ALL=C pactl info | grep -q "User Name: pulse"' ; then
+        if    [ "$Containeruser" != "$Hostuser" ] \
+           || [ "$Runtime" = "kata-runtime" ]     \
+           || [ "$Runtime" = "sysbox-runc" ]      \
+           || [ "$Snapsupport" = "yes" ]          \
+           ||  unpriv 'LC_ALL=C pactl info | grep -q "User Name: pulse"' \
+           ;
+        then
             Pulseaudiomode="tcp"
         fi
         #
@@ -4967,34 +4957,49 @@ setup_sound_pulseaudio() {
             [ "$Lowerport" ] || Lowerport=33000
             [ "$Upperport" ] || Upperport=60000
             while : ; do
+                # Choose a random port number
                 Pulseaudioport="$(shuf -i $Lowerport-$Upperport -n1)"
+                # Break if the port number is not in use
                 ss -lpn | grep -q ":$Pulseaudioport " || break
             done
 
-      [ -e "$Hostuserhome/.config/pulse/cookie" ] && cp "$Hostuserhome/.config/pulse/cookie" "$Pulseaudiocookie" || note "Option --pulseaudio: Did not find cookie
-  $Hostuserhome/.config/pulse/cookie"
-      store_runoption_env "PULSE_SERVER=tcp:$Hostip:$Pulseaudioport"
-      Setcookie="yes"
-    ;;
-    host)
-      Pulseaudiosocket="$(unpriv "env LC_ALL=C pactl info" | grep 'Server String' |rev|cut -d' ' -f1|rev)"
-      store_runoption_env "PULSE_SERVER=unix:/tmp/pulseaudio.socket.host"
-      Setcookie="yes"
-    ;;
-  esac
+            if [ -e "$Hostuserhome/.config/pulse/cookie" ] ; then
+                cp "$Hostuserhome/.config/pulse/cookie" "$Pulseaudiocookie"
+            else
+                note "$(trim_to_bar \
+                      "|Option --pulseaudio: Did not find cookie
+                       |  $Hostuserhome/.config/pulse/cookie"
+                       )"
+            fi
 
-  [ "$Setcookie" = "yes" ] && {
-    [ -e "$Hostuserhome/.config/pulse/cookie" ] && {
-      cp "$Hostuserhome/.config/pulse/cookie" "$Pulseaudiocookie"
-      store_runoption_env "PULSE_COOKIE=$(convertpath share "$Pulseaudiocookie")"
-    } || {
-      note "Option --pulseaudio: Did not find cookie
-  $Hostuserhome/.config/pulse/cookie"
-    }
-  }
+            store_runoption_env "PULSE_SERVER=tcp:$Hostip:$Pulseaudioport"
+            Setcookie="yes"
+            ;;
+
+        host)
+            Pulseaudiosocket="$(
+                unpriv "env LC_ALL=C pactl info" | grep 'Server String' |rev|cut -d' ' -f1|rev
+            )"
+            store_runoption_env "PULSE_SERVER=unix:/tmp/pulseaudio.socket.host"
+            Setcookie="yes"
+            ;;
+    esac # "$Pulseaudiomode"
+
+    if [ "$Setcookie" = "yes" ] ; then
+        if [ -e "$Hostuserhome/.config/pulse/cookie" ] ; then
+            cp "$Hostuserhome/.config/pulse/cookie" "$Pulseaudiocookie"
+            store_runoption_env "PULSE_COOKIE=$(convertpath share "$Pulseaudiocookie")"
+        else
+            note "$(trim_to_bar \
+                  "|Option --pulseaudio: Did not find cookie
+                   |  $Hostuserhome/.config/pulse/cookie"
+                   )"
+        fi
+  fi
 
   return 0
 }
+
 setup_vaapi() {                 # option --gpu: setup for VAAPI and VDPAU video decoding acceleration
   # support for prime-run / discrete NVIDIA card #394
   [ -n "$__NV_PRIME_RENDER_OFFLOAD" ] && DRI_PRIME="1" && store_runoption_env "__NV_PRIME_RENDER_OFFLOAD=$__NV_PRIME_RENDER_OFFLOAD"
