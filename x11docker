@@ -5083,21 +5083,26 @@ setup_vaapi() {
     return 0
 }
 
+# function setup_webcam() : option --webcam: share webcam devices
+setup_webcam() {
+    # Webcam devices appear as /dev/video* files.
+    # Unprivileged users need to be in group video.
+    # (This works only if webcam is plugged in before container starts.
+    # Hotplug support would have to be different.)
+    local Webcamdevice
 
-setup_webcam() {                # option --webcam: share webcam devices
-  # Webcam devices appear as /dev/video* files.
-  # Unprivileged users need to be in group video.
-  # (This works only if webcam is plugged in before container starts.
-  # Hotplug support would have to be different.)
-  local Webcamdevice
-
-  [ "$Sharewebcam" = "yes" ] && warning "Option --webcam: Container applications might look
-  at you and also might take screenshots of your Desktop."
+    if [ "$Sharewebcam" = "yes" ] ; then
+        warning "$(trim_to_bar \
+          "|Option --webcam: Container applications might look
+           |  at you and also might take screenshots of your Desktop."
+           )"
+    fi
 
   while read -r Webcamdevice ; do
     store_runoption_volume "$Webcamdevice"
   done < <(find /dev/video* -maxdepth 0 2>/dev/null || note "Option --webcam: No webcam devices /dev/video* found.
   Webcam in container will fail.")
+
   Containerusergroups="$Containerusergroups video"
 
   # at least cheese and gnome-ring need some device information from udev.
