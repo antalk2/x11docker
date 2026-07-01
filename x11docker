@@ -5075,12 +5075,15 @@ setup_vaapi() {
     esac
 
     # Save the results using store_runoption_env
-    #
-    # FIXME: Providing default values after checking nonempty (-n) is confusing
-    #
-    [ -n "${LIBVA_DRIVER_NAME:-}" ] && store_runoption_env "LIBVA_DRIVER_NAME=${LIBVA_DRIVER_NAME:-}"
-    [ -n "${VDPAU_DRIVER:-}" ]      && store_runoption_env "VDPAU_DRIVER=${VDPAU_DRIVER:-}"
-    [ -n "${DRI_PRIME:-}" ]         && store_runoption_env "DRI_PRIME=${DRI_PRIME:-1}"
+    if [ -n "${LIBVA_DRIVER_NAME:-}" ] ; then
+        store_runoption_env "LIBVA_DRIVER_NAME=${LIBVA_DRIVER_NAME}"
+    fi
+    if [ -n "${VDPAU_DRIVER:-}" ] ; then
+        store_runoption_env "VDPAU_DRIVER=${VDPAU_DRIVER}"
+    fi
+    if [ -n "${DRI_PRIME:-}" ] ; then
+        store_runoption_env "DRI_PRIME=${DRI_PRIME}"
+    fi
 
     return 0
 }
