@@ -5286,7 +5286,9 @@ check_newxenv()  {
                 no)
                     Newdisplay=":$Newdisplaynumber"
                     Newxlock="/tmp/.X$Newdisplaynumber-lock"
-                    if [ -n "$(find "$Newxsocket" "$Newxlock" 2>/dev/null)" ] ; then
+                    #
+                    #
+                    if [ -e "$Newxsocket" ] || [ -e "$Newxlock" ] ; then
                         error "Display $Newdisplay is already in use."
                     fi
                     ;;
