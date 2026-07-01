@@ -4846,7 +4846,9 @@ setup_sound_pulseaudio() {
     #
     # g  $Pulseaudioport    TCP port
     #
-    local Lowerport= Upperport= Setcookie=
+    local Lowerport=""
+    local Upperport=""
+    local Setcookie=""
 
     if ! command -v pactl >/dev/null ; then
         note "$(trim_to_bar \
@@ -4953,12 +4955,12 @@ setup_sound_pulseaudio() {
             ;;
 
         tcp)
-            read Lowerport Upperport < /proc/sys/net/ipv4/ip_local_port_range 2>/dev/null
+            read -r Lowerport Upperport < /proc/sys/net/ipv4/ip_local_port_range 2>/dev/null
             [ "$Lowerport" ] || Lowerport=33000
             [ "$Upperport" ] || Upperport=60000
             while : ; do
                 # Choose a random port number
-                Pulseaudioport="$(shuf -i $Lowerport-$Upperport -n1)"
+                Pulseaudioport="$(shuf -i "${Lowerport}-${Upperport}" -n1)"
                 # Break if the port number is not in use
                 ss -lpn | grep -q ":$Pulseaudioport " || break
             done
