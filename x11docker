@@ -5100,12 +5100,16 @@ setup_webcam() {
 
   while read -r Webcamdevice ; do
     store_runoption_volume "$Webcamdevice"
-  done < <(find /dev/video* -maxdepth 0 2>/dev/null || note "Option --webcam: No webcam devices /dev/video* found.
-  Webcam in container will fail.")
+  done < <(  find /dev/video* -maxdepth 0 2>/dev/null \
+                 || note "$(trim_to_bar \
+                     "|Option --webcam: No webcam devices /dev/video* found.
+                      |  Webcam in container will fail."
+                      )"
+          )
 
   Containerusergroups="$Containerusergroups video"
 
-  # at least cheese and gnome-ring need some device information from udev.
+  # At least cheese and gnome-ring need some device information from udev.
   store_runoption_volume "/run/udev/data:ro"
   return 0
 }
