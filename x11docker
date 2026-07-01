@@ -5120,25 +5120,43 @@ setup_webcam() {
 }
 
 #### X server setup
-check_newxenv()  {              # find free display
-  local Line Newwaylandnumber
-  # find free display number
-  [ "$Newdisplaynumber" ] || {
-    Newdisplaynumber="0"
-    while :; do
-      [ -n "$(find "/tmp/.X11-unix/X$Newdisplaynumber" "/tmp/.X$Newdisplaynumber-lock" 2>/dev/null)" ] || break
-      case "$Xserver" in
-        --xwin|--runx) Newdisplaynumber="$((RANDOM / 10 + 200))" ;;
-        *)             Newdisplaynumber="$((Newdisplaynumber + 1))" ;;
-      esac
-    done
-    Newwaylandnumber="0"
-    while :; do
-      Newwaylandnumber="$((Newwaylandnumber + 1))"
-      [ -n "$(find "$XDG_RUNTIME_DIR/wayland-$Newwaylandnumber" 2>/dev/null)" ] || break
-    done
-  }
-  echo "$Newdisplaynumber" >> "$Numbersinusefile"
+#
+# function check_newxenv() : Find a free display number
+#
+check_newxenv()  {
+    local Line Newwaylandnumber
+    # Find free display number
+    #
+    #
+    if [ -z "$Newdisplaynumber" ] ; then
+        Newdisplaynumber="0"
+        #
+        while : ; do
+            #
+            if [        ! -e "/tmp/.X11-unix/X$Newdisplaynumber" ] \
+                   && [ ! -e "/tmp/.X$Newdisplaynumber-lock"     ] ;
+            then break ; fi
+            #
+            case "$Xserver" in
+                --xwin|--runx)
+                    # Try a random value. Why?
+                    Newdisplaynumber="$((RANDOM / 10 + 200))"
+                    ;;
+                *)
+                    # Try the next one
+                    Newdisplaynumber="$((Newdisplaynumber + 1))"
+                    ;;
+            esac
+        done
+        #
+        Newwaylandnumber="0"
+        while : ; do
+            Newwaylandnumber="$((Newwaylandnumber + 1))"
+            if [ ! -e "$XDG_RUNTIME_DIR/wayland-$Newwaylandnumber" ] ;
+            then break ; fi
+        done
+    fi
+    echo "$Newdisplaynumber" >> "$Numbersinusefile"
 
   # --xoverip
   [ -z "$Xoverip" ] && {
