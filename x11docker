@@ -5158,154 +5158,155 @@ check_newxenv()  {
     fi
     echo "$Newdisplaynumber" >> "$Numbersinusefile"
 
-  # --xoverip
-  [ -z "$Xoverip" ] && {
-    case "$Dockervm" in
-      moby)
-        Xoverip="listentcp"
-      ;;
-      desktop)
-        note "Option --xoverip is enabled to allow Docker Desktop VM."
-        Xoverip="listentcp"
-      ;;
-    esac
-    case "$Runtime" in
-      kata-runtime)
-          note "$(trim_to_bar \
-                "|Option --runtime=$Runtime works only with X over IP.
-                 |  Enabling option --xoverip."
-                 )"
-          Xoverip="listentcp"
-      ;;
-    esac
-    case "$Xserver" in
-      --xwin|--runx)
-        Xoverip="listentcp"
-        [ "$g_Network" = "none" ] && {
-            note "$(trim_to_bar \
-                  "|Option $Xserver needs network access.
-                   |  Enabling option -I, --network."
-                   )"
-            check_fallback
-            g_Network=""
-        }
-      ;;
-      --hostdisplay)
-        [ "$Hostxoverip" = "yes" ] && {
-            note "$(trim_to_bar \
-                  "|Option $Xserver needs --xoverip because host X server
-                   |  DISPLAY==$Hostdisplay uses X over TCP/IP. Enabling option --xoverip."
-                   )"
-          Xoverip="listentcp"
-        }
-      ;;
-    esac
-  }
-  case "$Xoverip" in
-    yes)
-      case "$Xserver" in
-        --hostdisplay)
-          grep -q -- '^:' <<< "$Hostdisplay" && Xoverip="socat" || Xoverip="listentcp"
-        ;;
-        *)
-          Xoverip="listentcp"
-        ;;
-      esac
-    ;;
-  esac
-  Xoverip="${Xoverip:-no}"
-  case "$Xoverip" in
-    socat|listentcp)
-      case "$BackendKind" in
-        docker|podman|nerdctl)
-          case "$Xcontainer_option" in
-            yes)
-            ;;
-            no)
-                [ "$g_Network" = "none" ] && error "$(trim_to_bar \
-                   "|Option --xoverip needs network access.
-                    |  Please enable option -I, --network.
-                    |  Alternatively provide image x11docker/xserver (option --xc)
-                    |  to allow an isolated internal network."
-                    )"
-            ;;
-          esac
-        ;;
-      esac
-    ;;
-  esac
-
-  # --xc --xoverip
-  Xcnetworkname="x11docker_X${Newdisplaynumber}_network_${Cachenumber}"
-
-  ###
-
-  # set $Newdisplay (DISPLAY of container) and $Newxsocket
-  case "$Xserver" in
-    --hostdisplay)
-      case "$Xoverip" in
-        listentcp)
-          [ "$(cut -c1 <<< "$Hostdisplay")" = ":" ] && Newdisplay="${Hostip}${Hostdisplay}" || Newdisplay="$Hostdisplay"  ;;
-        no)
-          Newdisplay="$Hostdisplay"
-          Newdisplaynumber="$(echo "$Newdisplay" | cut -d: -f2 | cut -d. -f1)"
-        ;;
-        socat)
-          case "$Xcontainer_option" in
-            yes) Newdisplay="XCONTAINERIP:$Newdisplaynumber" ;;
-            no)  Newdisplay="$Hostip:$Newdisplaynumber" ;;
-          esac
-        ;;
-      esac
-      Newxsocket="$Hostxsocket"
-    ;;
-    --weston|--kwin|--hostwayland|--tty)
-      Newdisplay=""
-      Newxsocket=""
-      Xclientcookie=""
-      Xservercookie=""
-    ;;
-    *)
-      case "$Xoverip" in
-        socat|listentcp)
-          case "$Xcontainer_option" in
-            yes) 
-              Newdisplay="XCONTAINERIP:$Newdisplaynumber"
-            ;;
-            no)
-              case "$Xserver" in
-                --runx)
-                  Newdisplay="$Hostipwindows:$Newdisplaynumber"
+    # --xoverip
+    if [ -z "$Xoverip" ] ; then
+        case "$Dockervm" in
+            moby)
+                Xoverip="listentcp"
                 ;;
+            desktop)
+                note "Option --xoverip is enabled to allow Docker Desktop VM."
+                Xoverip="listentcp"
+                ;;
+        esac
+
+        case "$Runtime" in
+            kata-runtime)
+                note "$(trim_to_bar \
+                      "|Option --runtime=$Runtime works only with X over IP.
+                       |  Enabling option --xoverip."
+                       )"
+                Xoverip="listentcp"
+                ;;
+        esac
+
+        case "$Xserver" in
+            --xwin|--runx)
+                Xoverip="listentcp"
+                if [ "$g_Network" = "none" ] ; then
+                    note "$(trim_to_bar \
+                          "|Option $Xserver needs network access.
+                           |  Enabling option -I, --network."
+                           )"
+                    check_fallback
+                    g_Network=""
+                fi
+                ;;
+            --hostdisplay)
+                if [ "$Hostxoverip" = "yes" ] ; then
+                    note "$(trim_to_bar \
+                          "|Option $Xserver needs --xoverip because host X server
+                           |  DISPLAY==$Hostdisplay uses X over TCP/IP. Enabling option --xoverip."
+                           )"
+                    Xoverip="listentcp"
+                fi
+                ;;
+        esac
+    fi # [ -z $Xoverip ]
+
+    case "$Xoverip" in
+        yes)
+            case "$Xserver" in
+                --hostdisplay)
+                    if grep -q -- '^:' <<< "$Hostdisplay" ;
+                    then Xoverip="socat"
+                    else Xoverip="listentcp"
+                    fi
+                    ;;
                 *)
-                  Newdisplay="$Hostip:$Newdisplaynumber"
-                ;;
-              esac
+                    Xoverip="listentcp"
+                    ;;
+            esac
             ;;
-          esac
-        ;;
-        no)
-          Newdisplay=":$Newdisplaynumber"
-          Newxlock="/tmp/.X$Newdisplaynumber-lock"
-          [ -n "$(find "$Newxsocket" "$Newxlock" 2>/dev/null)" ] && error "Display $Newdisplay is already in use."
-        ;;
-      esac
-      Newxsocket="/tmp/.X11-unix/X$Newdisplaynumber"
-      # Fix for WSL2g #557, create unix socket file for virtual socket, available only because /tmp/.X11-unix is read-only
-      [ "$X11unixrw" = "no" ] && [ "$Xoverip" = "no" ] && [ "$Xserver" != "--hostdisplay" ] && [ "$Xcontainer_option" = "no" ] && {
-        command -v socat >/dev/null && {
-          Newxsocket="$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber"
-          socat UNIX-LISTEN:${Newxsocket},fork,unlink-close \
-                ABSTRACT-CONNECT:/tmp/.X11-unix/X${Newdisplaynumber} & storepid $! "socat_X$Newdisplaynumber"
-        } || note "$(trim_to_bar \
+    esac
+
+    Xoverip="${Xoverip:-no}" # If did not set it yet, fallback to "no"
+
+    case "$Xoverip" in
+        socat|listentcp)
+            case "$BackendKind" in
+                docker|podman|nerdctl)
+                    case "$Xcontainer_option" in
+                        yes)
+                        ;;
+                        no)
+                            if [ "$g_Network" = "none" ] ; then
+                                error "$(trim_to_bar \
+                                       "|Option --xoverip needs network access.
+                                        |  Please enable option -I, --network.
+                                        |  Alternatively provide image x11docker/xserver (option --xc)
+                                        |  to allow an isolated internal network."
+                                        )"
+                            fi
+                            ;;
+                    esac
+                    ;;
+            esac
+            ;;
+    esac
+
+    # --xc --xoverip
+    Xcnetworkname="x11docker_X${Newdisplaynumber}_network_${Cachenumber}"
+
+    ###
+
+    # set $Newdisplay (DISPLAY of container) and $Newxsocket
+    case "$Xserver" in
+        --hostdisplay)
+            case "$Xoverip" in
+                listentcp) if [ "$(cut -c1 <<< "$Hostdisplay")" = ":" ] ;
+                           then  Newdisplay="${Hostip}${Hostdisplay}"
+                           else  Newdisplay="$Hostdisplay" ; fi  ;;
+                no)              Newdisplay="$Hostdisplay"
+                                 Newdisplaynumber="$(echo "$Newdisplay" | cut -d: -f2 | cut -d. -f1)" ;;
+                socat) case "$Xcontainer_option" in
+                           yes) Newdisplay="XCONTAINERIP:$Newdisplaynumber" ;;
+                           no)  Newdisplay="$Hostip:$Newdisplaynumber"      ;;   esac ;;
+            esac
+            Newxsocket="$Hostxsocket"
+            ;;
+        --weston|--kwin|--hostwayland|--tty)
+            Newdisplay=""
+            Newxsocket=""
+            Xclientcookie=""
+            Xservercookie=""
+            ;;
+        *)
+            case "$Xoverip" in
+                socat|listentcp)
+                    case "$Xcontainer_option" in
+                        yes) Newdisplay="XCONTAINERIP:$Newdisplaynumber"           ;;
+                        no)
+                            case "$Xserver" in
+                                --runx) Newdisplay="$Hostipwindows:$Newdisplaynumber"   ;;
+                                *)      Newdisplay="$Hostip:$Newdisplaynumber"          ;;
+                            esac ;;
+                    esac
+                    ;;
+                no)
+                    Newdisplay=":$Newdisplaynumber"
+                    Newxlock="/tmp/.X$Newdisplaynumber-lock"
+                    if [ -n "$(find "$Newxsocket" "$Newxlock" 2>/dev/null)" ] ; then
+                        error "Display $Newdisplay is already in use."
+                    fi
+                    ;;
+            esac
+            Newxsocket="/tmp/.X11-unix/X$Newdisplaynumber"
+            # Fix for WSL2g #557, create unix socket file for virtual socket, available only because /tmp/.X11-unix is read-only
+            [ "$X11unixrw" = "no" ] && [ "$Xoverip" = "no" ] && [ "$Xserver" != "--hostdisplay" ] && [ "$Xcontainer_option" = "no" ] && {
+                command -v socat >/dev/null && {
+                    Newxsocket="$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber"
+                    socat UNIX-LISTEN:${Newxsocket},fork,unlink-close \
+                          ABSTRACT-CONNECT:/tmp/.X11-unix/X${Newdisplaynumber} & storepid $! "socat_X$Newdisplaynumber"
+                } || note "$(trim_to_bar \
                    "|It seems you are running x11docker on WSL2g.
                     |  Because WSL2g mounts /tmp/.X11-unix read-only, x11docker needs either socat
                     |  for a workaround, so please install socat, or use option --xoverip.
                     |  This start of x11docker is likely to fail."
                     )"
-      }
-    ;;
-  esac
+            }
+            ;;
+    esac
 
   # set $Newwaylandsocket
   case "$Xserver" in
