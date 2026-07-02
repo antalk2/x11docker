@@ -5438,17 +5438,17 @@ check_screensize() {
         fi
     fi
 
-  [ -n "$Screensize" ] && {
-    Xaxis="${Screensize%x*}"
-    Yaxis="${Screensize#*x}"
-  }
+    if [ -n "$Screensize" ] ; then
+        Xaxis="${Screensize%x*}"
+        Yaxis="${Screensize#*x}"
+    fi
 
-  [ -z "$Maxxaxis" ] && {
-    Maxxaxis="1920"
-    Maxyaxis="1200"
-    [ "$Maxxaxis" -lt "${Xaxis:-0}" ] && Maxxaxis="$Xaxis"
-    [ "$Maxyaxis" -lt "${Yaxis:-0}" ] && Maxyaxis="$Yaxis"
-  }
+    if [ -z "$Maxxaxis" ] ; then
+        Maxxaxis="1920"
+        Maxyaxis="1200"
+        [ "$Maxxaxis" -lt "${Xaxis:-0}" ] && Maxxaxis="$Xaxis"
+        [ "$Maxyaxis" -lt "${Yaxis:-0}" ] && Maxyaxis="$Yaxis"
+  fi
 
   # size for windowed desktops, roughly maximized relative to primary monitor
   case "$Xserver" in
