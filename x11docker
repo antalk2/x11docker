@@ -5557,18 +5557,45 @@ check_screensize() {
         Yaxis="$( calculate_floor_a_per_b  "$Yaxis" "$Scaling" )"
     fi
 
-  [ -z "$Screensize" ] && case "$Xserver" in
-    --xorg) ;;  # Xorg autodetects screen size, preset only with option --size
-    --weston-xwayland|--weston|--kwin|--kwin-xwayland)
-      [ -z "$Newxvt" ] && Screensize="${Xaxis}x${Yaxis}"
-    ;;
-    *) Screensize="${Xaxis}x${Yaxis}" ;;
-  esac
+    if [ -z "$Screensize" ] ; then
+        case "$Xserver" in
+            --xorg) ;;  # Xorg autodetects screen size, preset only with option --size
+            --weston-xwayland|--weston|--kwin|--kwin-xwayland)
+                [ -z "$Newxvt" ] && Screensize="${Xaxis}x${Yaxis}"
+                ;;
+            *) Screensize="${Xaxis}x${Yaxis}" ;;
+        esac
+    fi
 
-  xtool --check cvt && {
-    Modeline="$(xtool "cvt '$Xaxis' '$Yaxis'" | tail -n1 | cut -d' ' -f2-)"
-    Modeline="$(echo $Modeline | cut -d_ -f1)\" $(echo $Modeline | cut -d_ -f2- | cut -d' ' -f2-)"
-  }
+    if xtool --check cvt ; then
+        #
+        # `cvt 1920  1200` prints
+        # ----
+        # # 1920x1200 59.88 Hz (CVT 2.30MA) hsync: 74.56 kHz; pclk: 193.25 MHz
+        # Modeline "1920x1200_60.00"  193.25  1920 2056 2256 2592  1200 1203 1209 1245 -hsync +vsync
+        # xxxxxxxxxx^^^^^^^^^xxxxxxx^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  
+        # ----
+        #
+        if false ; then
+            Modeline="$(xtool "cvt '$Xaxis' '$Yaxis'" | tail -n1 | cut -d' ' -f2-)"
+            Modeline="$(echo $Modeline | cut -d_ -f1)\" $(echo $Modeline | cut -d_ -f2- | cut -d' ' -f2-)"
+        else
+            #
+            # Remove the "Modeline " prefix from teh line and the "_60.00" suffix the name.
+            Modeline="$( xtool "cvt '$Xaxis' '$Yaxis'"  | tail -n1 )"
+            #
+            # Tested: test/sed-BRE.sh sed_Modeline_test()
+            #
+            local Modeline_ERE='^Modeline ["]([0-9]+x[0-9]+)(_[0-9.]+)?["]'
+            # RE for the start of a Modeline.
+            #    \1 yields size without quotes.
+            #    \2 is "_60.00", the frequency prefixe with _ (May be empty if not present)
+            #    The rest of the line left as is.
+            #
+            Modeline="$( echo "$Modeline" | sed -E -e "s|${Modeline_ERE}|\"\\1\"|" )"
+        fi
+  fi
+
   verbose "Virtual screen size: $Screensize"
   verbose "Physical screen size:
   $(grep Screen <<< "$Xrandroutput" ||:)"
