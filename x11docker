@@ -6014,7 +6014,8 @@ check_xcontainer() {
 } # check_xcontainer()
 
 #
-# function check_xdepends( arg1 )
+# function check_xdepends( arg1 ) : # check dependencies on host for X
+#                                     server option in arg1
 #
 #  arg1 may be:
 #
@@ -6040,14 +6041,15 @@ check_xcontainer() {
 #    --xpra2*
 #       (and maybe more)
 #
-check_xdepends() {              # check dependencies on host for X server option $1
-  # Return 1 if something is missing or not possible
-  local Return= Message= Xcopt=
+check_xdepends() {
+    # Return 1 if something is missing or not possible
+    #
+    local Return="" Message="" Xcopt=""
 
-  case "$Autochooseserver" in
-    yes) [ "$Printcheck" = "yes" ] && Message="note" || Message="debugnote" ;;
-    no)  Message="note" ;;
-  esac
+    if [ "$Autochooseserver" = yes ] && [ "$Printcheck" != "yes" ] ;
+    then Message="debugnote"
+    else Message="note"
+    fi
 
   [ "${1:-}" = "--tty" ] && return 0
   [ "$Lastcheckedxserver" = "${1:-}" ] && debugnote "Dependencies of ${1:-} already checked: $Lastcheckedxserverresult " && return "$Lastcheckedxserverresult"
