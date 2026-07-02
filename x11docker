@@ -5334,25 +5334,25 @@ check_newxenv()  {
   return 0
 } # check_newxenv()
 
-# check_nvidiainstaller() : option --gpu: look for nvidia driver
-#                           installer file
+# function check_nvidiainstaller() : option --gpu: look for nvidia
+#                                    driver installer file
 #
 # globals in:  Nvidiaversion Localsharedir
 # globals out: Nvidiainstallerfile
 #
 check_nvidiainstaller() {
-  if [ -n "$Nvidiaversion" ] ; then
-      Nvidiainstallerfile="$( find \
+    if [ -n "$Nvidiaversion" ] ; then
+        Nvidiainstallerfile="$( find \
                               /usr/local/share/x11docker/NVIDIA*$Nvidiaversion*.run \
                               $Localsharedir/NVIDIA*$Nvidiaversion*.run             \
                               2>/dev/null                                           \
                               | tail -n1                                            \
                             )"
-    Nvidiainstallerfile="$(myrealpath "$Nvidiainstallerfile" 2>/dev/null)"
-    if [ -n "$Nvidiainstallerfile" ] ; then
-        debugnote "check_nvidiainstaller(): Found NVIDIA installer $Nvidiainstallerfile"
+        Nvidiainstallerfile="$(myrealpath "$Nvidiainstallerfile" 2>/dev/null)"
+        if [ -n "$Nvidiainstallerfile" ] ; then
+            debugnote "check_nvidiainstaller(): Found NVIDIA installer $Nvidiainstallerfile"
+        fi
     fi
-  fi
 }
 
 check_screensize() {            # check physical and virtual screen size (also option --size)
