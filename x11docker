@@ -5783,19 +5783,12 @@ check_xcontainer() {
     # Check if X container should run rootful or rootless (for tty
     # access it must be rootful)
     #
-    case "$Backendrootless" in
-        yes)
-            # not (a||b) == (not a) && (not b)
-            if [ "$Xserver" != "--xorg" ] && [ -z "$Newxvt" ] ; then
-                Xcrootless="yes"
-            else
-                Xcrootless="no"
-            fi
-            ;;
-        no)
-            Xcrootless="no"
-            ;;
-    esac
+    if [ "$Backendrootless" = "yes" ] \
+    && [ "$Xserver" != "--xorg"     ] \
+    && [ -z "$Newxvt"               ] ;
+    then  Xcrootless="yes"
+    else  Xcrootless="no"
+    fi
 
   # check if image x11docker/xserver is available
   case "$Xcontainer_option" in
