@@ -182,32 +182,96 @@ sed_Screen_test() {
     return 0
 }
 
+sed_connected_test() {
+    local mysed="${1:-MISSING-sed}"
+    local ERE2 monitorname_ERE
+    local Line
+    local Maxxaxis Maxyaxis
+    local Xrandroutput="$(trim_to_bar \
+       '|Screen 0: minimum 8 x 8, current 1920 x 1200, maximum 32767 x 32767
+        |DP1 disconnected (normal left inverted right x axis y axis)
+        |HDMI1 disconnected (normal left inverted right x axis y axis)
+        |HDMI2 connected 1920x1200+0+0 (normal left inverted right x axis y axis) 520mm x 330mm
+        |   1920x1200     59.95*+
+        |'
+        )"
+    #
+    # ------------------------------------------------
+    # monitorname_ERE='[^ ]+'
+    monitorname_ERE='[A-Za-z][A-Za-z0-9-]*'
+    #
+    ERE2="^(${monitorname_ERE}) connected ([0-9]+)x([0-9]+)[+].*\$"
+    Line="$( echo "$Xrandroutput" | grep -E -e "${ERE2}"  | head -n1  )"
+    Maxxaxis="$(echo "$Line" | $mysed -E -e "s|${ERE2}|\\2|" )" # 1920
+    Maxyaxis="$(echo "$Line" | $mysed -E -e "s|${ERE2}|\\3|" )" # 1200
+    # ------------------------------------------------
+    if [ "$Maxxaxis" != "1920" ] ; then
+        echo "sed_connected_test() Maxxaxis is not 1920, it is '$Maxxaxis'" >&2
+        echo FAIL
+        return 1
+    fi
+    if [ "$Maxyaxis" != "1200" ] ; then
+        echo "sed_connected_test() Maxyaxis is not 1200" >&2
+        echo FAIL
+        return 1
+    fi
+    echo PASS
+    return 0
+}
 
-for current_sed in "$(command -v sed)" "busybox sed" ; do
+main() {
 
-    echo
-    sed_zero_or_one_BRE="$( get_sed_zero_or_one_BRE     "$current_sed" )"
-    sed_one_or_more_BRE="$( get_sed_one_or_more_BRE     "$current_sed" )"
-    sed_alt_BRE="$(         get_sed_alt_BRE             "$current_sed" )"
-    sed_question_mark_BRE="$(get_sed_question_mark_BRE  "$current_sed" )"
-    sed_plus_BRE="$(         get_sed_plus_BRE           "$current_sed" )"
-    sed_has_E="$(            get_sed_has_E              "$current_sed" )"
-    sed_has_i="$(            get_sed_has_i              "$current_sed" )"
-    sed_Modeline_result="$(  sed_Modeline_test          "$current_sed" )"
-    sed_Screen_result="$(    sed_Screen_test            "$current_sed" )"
-    printf "sed_command: \"%s\"\n"          "$current_sed"
-    printf "sed_version: \"%s\"\n"          "$( $current_sed --version | head -n1 )"
-    printf "\t sed_zero_or_one_BRE   = '%s'\n"   "$sed_zero_or_one_BRE"
-    printf "\t sed_one_or_more_BRE   = '%s'\n"   "$sed_one_or_more_BRE"
-    printf "\t sed_alt_BRE           = '%s'\n"   "$sed_alt_BRE"
-    printf "\t sed_question_mark_BRE = '%s'\n"   "$sed_question_mark_BRE"
-    printf "\t sed_plus_BRE          = '%s'\n"   "$sed_plus_BRE"
-    printf "\t sed -E                = '%s'\n"   "$sed_has_E"
-    printf "\t sed -i                = '%s'\n"   "$sed_has_i"
-    printf "\t sed_Modeline_result   = '%s'\n"   "$sed_Modeline_result"
-    printf "\t sed_Screen_result     = '%s'\n"   "$sed_Screen_result"
+    for current_sed in "$(command -v sed)" "busybox sed" ; do
 
-done
+        echo
+        printf "sed_command: \"%s\"\n"          "$current_sed"
+        printf "sed_version: \"%s\"\n"          "$( $current_sed --version | head -n1 )"
+        #
+        local sed_zero_or_one_BRE
+        sed_zero_or_one_BRE="$( get_sed_zero_or_one_BRE     "$current_sed" )"
+        printf "\t sed_zero_or_one_BRE   = '%s'\n"   "$sed_zero_or_one_BRE"
+        #
+        local sed_one_or_more_BRE
+        sed_one_or_more_BRE="$( get_sed_one_or_more_BRE     "$current_sed" )"
+        printf "\t sed_one_or_more_BRE   = '%s'\n"   "$sed_one_or_more_BRE"
+        #
+        local sed_alt_BRE
+        sed_alt_BRE="$(         get_sed_alt_BRE             "$current_sed" )"
+        printf "\t sed_alt_BRE           = '%s'\n"   "$sed_alt_BRE"
+        #
+        local sed_question_mark_BRE
+        sed_question_mark_BRE="$(get_sed_question_mark_BRE  "$current_sed" )"
+        printf "\t sed_question_mark_BRE = '%s'\n"   "$sed_question_mark_BRE"
+        #
+        local sed_plus_BRE
+        sed_plus_BRE="$(         get_sed_plus_BRE           "$current_sed" )"
+        printf "\t sed_plus_BRE          = '%s'\n"   "$sed_plus_BRE"
+        #
+        local sed_has_E
+        sed_has_E="$(            get_sed_has_E              "$current_sed" )"
+        printf "\t sed -E                = '%s'\n"   "$sed_has_E"
+        #
+        local sed_has_i
+        sed_has_i="$(            get_sed_has_i              "$current_sed" )"
+        printf "\t sed -i                = '%s'\n"   "$sed_has_i"
+        #
+        local sed_Modeline_result
+        sed_Modeline_result="$(  sed_Modeline_test          "$current_sed" )"
+        printf "\t sed_Modeline_result   = '%s'\n"   "$sed_Modeline_result"
+        #
+        local sed_Screen_result
+        sed_Screen_result="$(    sed_Screen_test            "$current_sed" )"
+        printf "\t sed_Screen_result     = '%s'\n"   "$sed_Screen_result"
+        #
+        local sed_connected_result
+        sed_connected_result="$(    sed_connected_test            "$current_sed" )"
+        printf "\t sed_connected_result  = '%s'\n"   "$sed_connected_result"
+        #
+    done
+
+}
+
+main
 
 # Result: We probably only use a GNU sed version,
 #         - Can use -E

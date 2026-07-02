@@ -5410,8 +5410,8 @@ check_screensize() {
     local Line="" Xrandroutput=""
     local mysed
     local ERE1=""
-    local BRE2=""
-    local digits="" monitorname_RE=""
+    local ERE2=""
+    local monitorname_ERE=""
     local is_windowed_desktop=""
 
     if [ -z "$Hostdisplay" ] && [ -n "$Hostwaylandsocket" ] ; then
@@ -5441,6 +5441,7 @@ check_screensize() {
             if [ "${mysed:-MISSING}" = MISSING ] ; then
                 error "Could not locate sed"
             fi
+            # Tested: test/sed-BRE.sh sed_Screen_test()
             # ----------------------------
             ERE1="$(trim_to_mark \
                   '|^Screen ([0-9]+):
@@ -5465,15 +5466,17 @@ check_screensize() {
                 # HDMI2 connected 1920x1200+0+0 (normal left inverted right x axis y axis) 520mm x 330mm
                 # ^^^^^           ^^^^ ^^^^
                 #
-                digits='[0-9][0-9]*'
+                # Tested: test/sed-BRE.sh sed_connected_test()
+                # ------------------------------------------------
+                # monitorname_ERE='[^ ]+'
+                monitorname_ERE='[A-Za-z][A-Za-z0-9-]*'
                 #
-                # monitorname_RE='[^ ][^ ]*'
-                monitorname_RE='[A-Za-z][A-Za-z0-9-]*'
-                BRE2='^\('"${monitorname_RE}"'\) connected \('"${digits}"'\)x\('"${digits}"'\)[+].*$'
-                Line="$( grep -e "${BRE2}" "$Xrandroutput" | head -n1  )"
-                Maxxaxis="$(echo "$Line" | sed  -e "s|${BRE2}|\\\2|" )" # 1920
-                Maxyaxis="$(echo "$Line" | sed  -e "s|${BRE2}|\\\3|" )" # 1200
-
+                ERE2="^(${monitorname_ERE}) connected ([0-9]+)x([0-9]+)[+].*\$"
+                Line="$( echo "$Xrandroutput" | grep -E -e "${ERE2}"  | head -n1  )"
+                Maxxaxis="$(echo "$Line" | $mysed -E -e "s|${ERE2}|\\2|" )" # 1920
+                Maxyaxis="$(echo "$Line" | $mysed -E -e "s|${ERE2}|\\3|" )" # 1200
+                # ------------------------------------------------
+                #
                 # Old version:
                 # 
                 #  Line="$( grep ' connected' <<< "$Xrandroutput" | head -n1 )"
