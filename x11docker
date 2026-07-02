@@ -1577,8 +1577,8 @@ makecookie() {                  # bake a cookie
     # mcookie 2>/dev/null || echo $RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM | cut -b1-32
     if  mcookie 2>/dev/null ; then
         true
-    elif [ -e /dev/urandom ] && which head md5sum 2>/dev/null ; then
-        head -200 /dev/urandom | md5sum | cut -b1-32
+    elif [ -e /dev/urandom ] && command -v md5sum 2>/dev/null ; then
+        head -c 16 /dev/urandom | md5sum | cut -b 1-32
         true
     elif [ "$RANDOM" ] && [ "$RANDOM" !=  "$RANDOM" ] ; then
         # SC3028 (error): In dash, RANDOM is not supported.
