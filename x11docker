@@ -5366,6 +5366,42 @@ check_nvidiainstaller() {
     fi
 }
 
+#
+# function calculate_floor_a_per_b(a,b)
+#
+# Example:   calculate_floor_a_per_b  1000 3   # prints 333
+# Example:   calculate_floor_a_per_b  1000 1.5 # prints 666
+#
+# Note: Used in xinitrc, under /bin/sh
+#
+calculate_floor_a_per_b() {
+    #
+    # sh_compat: Needs_support_for 'local x="${1:-MISSING}"'
+    # sh_compat: Needs_support_for '"${result%.*}"'
+    #
+    local a="${1:-MISSING}"
+    local b="${2:-MISSING}"
+    local result=""
+    #
+    if [ "$a" = "MISSING" ] ; then
+        error "calculate_floor_a_per_b(): arg 'a' is MISSING"
+    fi
+    if [ "$b" = "MISSING" ] ; then
+        error "calculate_floor_a_per_b(): arg 'b' is MISSING"
+    fi
+    #
+    if command -v bc >/dev/null ; then
+        echo "scale=0; $a / $b " | bc
+    elif command -v awk >/dev/null ; then
+        # The original solution.
+        result="$( awk -v a="$a" -v b="$b" 'BEGIN {print (a / b)}' )"
+        result="${result%.*}" # Remove the decimal fraction part.
+        echo "${result}"
+    else
+        error "calculate_floor_a_per_b(): Neither bc nor awk seems to be present."
+    fi
+}
+
 # function check_screensize() : Check physical and virtual screen size
 #                               (also option --size)
 check_screensize() {
@@ -5474,7 +5510,9 @@ check_screensize() {
         case "$Xserver" in
             --xpra*)
                 if [ "$Desktopmode" = "yes" ] ; then
+                    #
                     # Xserver="${Xserver}-desktop" # Add "-desktop" suffix
+                    #
                     is_windowed_desktop="yes"
                 fi
                 ;;
@@ -5490,22 +5528,32 @@ check_screensize() {
             #
             Xaxis="$(( $(( $Xaxis / 8 )) * 8 ))"  # avoid grey edge in Xwayland, needs full byte x width
         fi
+
+        # Remove the "-desktop" suffix.
+        #
+        #    We could have added one above for --xpra*, but now we use
+        #    is_windowed_desktop instead.
+        #
+        #    Is that the only "-desktop" suffix we are removing?
+        #
+        # FIXME:   Do we still need the following line?
+        Xserver="${Xserver%-desktop}"
     }
 
-  [ "$Fullscreen" = "yes" ] && [ -z "$Newxvt" ] && Screensize="${Maxxaxis}x${Maxyaxis}"
+    if [ "$Fullscreen" = "yes" ] && [ -z "$Newxvt" ] ; then
+        Screensize="${Maxxaxis}x${Maxyaxis}"
+    fi
 
-  [ -z "$Xaxis" ] && {
-    Xaxis="$Maxxaxis"
-    Yaxis="$Maxyaxis"
-  }
-
-  # regard scaling (option --scale)
-  [ "$Scaling" ] && {
-    Xaxis="$(awk -v a="$Xaxis" -v b="$Scaling" 'BEGIN {print (a / b)}')"
-    Xaxis="${Xaxis%.*}"
-    Yaxis="$(awk -v a="$Yaxis" -v b="$Scaling" 'BEGIN {print (a / b)}')"
-    Yaxis="${Yaxis%.*}"
-  }
+    if [ -z "$Xaxis" ] ; then
+        Xaxis="$Maxxaxis"
+        Yaxis="$Maxyaxis"
+    fi
+    
+    # Regard scaling (option --scale)
+    if [ "$Scaling" ] ; then
+        Xaxis="$( calculate_floor_a_per_b  "$Xaxis" "$Scaling" )"
+        Yaxis="$( calculate_floor_a_per_b  "$Yaxis" "$Scaling" )"
+    fi
 
   [ -z "$Screensize" ] && case "$Xserver" in
     --xorg) ;;  # Xorg autodetects screen size, preset only with option --size
@@ -7956,6 +8004,8 @@ create_xinitrc() {
     # declare -f storeinfo_dump_sh
     declare -f saygoodbye
     #
+    declare -f calculate_floor_a_per_b
+    #
     # Stuff that differs from the main x11docker script:
     #
     echo "$Messagefifofuncs"
@@ -8200,10 +8250,20 @@ create_xinitrc() {
         echo         "  getscreensize"
         echo         "  Xaxis=\"\$CurrentXaxis\""
         echo         "  Yaxis=\"\$CurrentYaxis\""
-        [ "$Scaling" ] && echo "  Xaxis=\"\$(awk -v a=\"\$Xaxis\" -v b=\"$Scaling\" 'BEGIN {print (a / b)}')\""
-        echo         "  Xaxis=\"\${Xaxis%.*}\""
-        [ "$Scaling" ] && echo "  Yaxis=\"\$(awk -v a=\"\$Yaxis\" -v b=\"$Scaling\" 'BEGIN {print (a / b)}')\""
-        echo         "  Yaxis=\"\${Yaxis%.*}\""
+        #
+        if false ; then
+            [ "$Scaling" ] && echo "  Xaxis=\"\$(awk -v a=\"\$Xaxis\" -v b=\"$Scaling\" 'BEGIN {print (a / b)}')\""
+            echo         "  Xaxis=\"\${Xaxis%.*}\""
+            [ "$Scaling" ] && echo "  Yaxis=\"\$(awk -v a=\"\$Yaxis\" -v b=\"$Scaling\" 'BEGIN {print (a / b)}')\""
+            echo         "  Yaxis=\"\${Yaxis%.*}\""
+        else
+            [ "$Scaling" ] && echo "  Xaxis=\"\$( calculate_floor_a_per_b \"\$Xaxis\" \"$Scaling\" )\""
+            [ "$Scaling" ] && echo "  Yaxis=\"\$( calculate_floor_a_per_b \"\$Yaxis\" \"$Scaling\" )\""
+            # # The following should not be necessary if Xaxis and Yaxis are already integers.
+            # echo         "  Xaxis=\"\${Xaxis%.*}\""
+            # echo         "  Yaxis=\"\${Yaxis%.*}\""
+        fi
+        #
       } || {
         echo         "  Xaxis='$Xaxis'"
         echo         "  Yaxis='$Yaxis'"
