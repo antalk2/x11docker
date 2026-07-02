@@ -5744,44 +5744,57 @@ check_vt() {
 } # check_vt()
 
 
-check_xcontainer() {            # option --xc: check backend, rootless and image x11docker/xserver
-  local Auto= Fail=
+#
+# function check_xcontainer() : option --xc: check backend, rootless
+#                               and image x11docker/xserver
+#
+check_xcontainer() {
+    local Auto="" Fail=""
 
-  if [ "$Xcontainer_option" = "force" ] ; then
-    Xcontainer_option="yes"
-    Xcforce="yes"
-  fi
+    if [ "$Xcontainer_option" = "force" ] ; then
+        Xcontainer_option="yes"
+        Xcforce="yes"
+    fi
 
-  # workaround: X server options not supported by --xc already caught here if they are specified on cli
-  case "$Xserver" in
-    --tty|--hostwayland) ### FIXME allow --hostwayland?
-      check_xdepends "$Xserver" && Xcontainer_option="no"
-    ;;
-  esac
+    # Workaround: X server options not supported by --xc already
+    # caught here if they are specified on cli.
+    case "$Xserver" in
+        --tty|--hostwayland) ### FIXME allow --hostwayland?
+            if check_xdepends "$Xserver" ; then
+                Xcontainer_option="no"
+            fi
+            ;;
+    esac
   
-  [ "$Dockervm" != "no" ] && case "$Xcontainer_option" in
-    auto) Xcontainer_option="no" ;;
-    yes)
-      note "Option --xc is not supported with Docker Desktop VM.
-  Fallback: Disabling option --xc."
-      check_fallback
-      Xcontainer_option="no"
-    ;;
-  esac
+    if [ "$Dockervm" != "no" ] ; then
+        case "$Xcontainer_option" in
+            auto) Xcontainer_option="no" ;;
+            yes)
+                note "$(trim_to_bar \
+                  "|Option --xc is not supported with Docker Desktop VM.
+                   |  Fallback: Disabling option --xc."
+                   )"
+                check_fallback
+                Xcontainer_option="no"
+                ;;
+        esac
+    fi
 
-  # check if X container should run rootful or rootless (for tty access it must be rootful)
-  case "$Backendrootless" in
-    yes)
-        if [ "$Xserver" = "--xorg" ] || [ -n "$Newxvt" ] ; then
+    # Check if X container should run rootful or rootless (for tty
+    # access it must be rootful)
+    #
+    case "$Backendrootless" in
+        yes)
+            if [ "$Xserver" = "--xorg" ] || [ -n "$Newxvt" ] ; then
+                Xcrootless="no"
+            else
+                Xcrootless="yes"
+            fi
+            ;;
+        no)
             Xcrootless="no"
-        else
-            Xcrootless="yes"
-        fi
-    ;;
-    no)
-      Xcrootless="no"
-    ;;
-  esac
+            ;;
+    esac
 
   # check if image x11docker/xserver is available
   case "$Xcontainer_option" in
