@@ -5439,6 +5439,7 @@ check_screensize() {
     fi
 
     if [ -n "$Screensize" ] ; then
+        #  Screensize: "1920x1200"
         Xaxis="${Screensize%x*}"
         Yaxis="${Screensize#*x}"
     fi
@@ -5446,22 +5447,41 @@ check_screensize() {
     if [ -z "$Maxxaxis" ] ; then
         Maxxaxis="1920"
         Maxyaxis="1200"
-        [ "$Maxxaxis" -lt "${Xaxis:-0}" ] && Maxxaxis="$Xaxis"
-        [ "$Maxyaxis" -lt "${Yaxis:-0}" ] && Maxyaxis="$Yaxis"
-  fi
+        # Increase "${Maxyaxis}x${Maxyaxis}" to at least Screensize
+        if [ "$Maxxaxis" -lt "${Xaxis:-0}" ] ; then
+            Maxxaxis="$Xaxis"
+        fi
+        if [ "$Maxyaxis" -lt "${Yaxis:-0}" ] ; then
+            Maxyaxis="$Yaxis"
+        fi
+    fi
 
-  # size for windowed desktops, roughly maximized relative to primary monitor
-  case "$Xserver" in
-    --xpra*) [ "$Desktopmode" = "yes" ] && Xserver="${Xserver}-desktop" ;;
-  esac
-  [ -z "$Screensize" ] && [ -z "$Newxvt" ] && case "$Xserver" in
-    --xephyr|--weston-xwayland|--weston|--kwin|--kwin-xwayland|--nxagent|--xpra*-desktop)
-      Xaxis="$((Maxxaxis-96))"
-      Yaxis="$((Maxyaxis-96))"
-      Xaxis="$(( $(( $Xaxis / 8 )) * 8 ))"  # avoid grey edge in Xwayland, needs full byte x width
-    ;;
-  esac
-  Xserver="${Xserver%-desktop}"
+    # Size for windowed desktops, roughly maximized relative to primary monitor
+    {
+        case "$Xserver" in
+            --xpra*)
+                if [ "$Desktopmode" = "yes" ] ; then
+                    Xserver="${Xserver}-desktop" # Add "-desktop" suffix
+                fi
+                ;;
+        esac
+
+        if [ -z "$Screensize" ] && [ -z "$Newxvt" ] ; then
+            case "$Xserver" in
+                --xephyr|--weston-xwayland|--weston|--kwin|--kwin-xwayland|--nxagent|--xpra*-desktop)
+                    # Leave 2*48 pixels for margin?
+                    Xaxis="$((Maxxaxis-96))"
+                    Yaxis="$((Maxyaxis-96))"
+                    #
+                    Xaxis="$(( $(( $Xaxis / 8 )) * 8 ))"  # avoid grey edge in Xwayland, needs full byte x width
+                    ;;
+            esac
+        fi
+
+        # Remove the "-desktop" suffix. We may have added one above for --xpra*.
+        # Is that the only "-desktop" suffix we are removing?
+        Xserver="${Xserver%-desktop}"
+    }
 
   [ "$Fullscreen" = "yes" ] && [ -z "$Newxvt" ] && Screensize="${Maxxaxis}x${Maxyaxis}"
 
