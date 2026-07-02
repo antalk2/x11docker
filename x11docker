@@ -5749,7 +5749,8 @@ check_vt() {
 #                               and image x11docker/xserver
 #
 check_xcontainer() {
-    local Auto="" Fail=""
+    local Auto=""
+    local Fail=""
 
     if [ "$Xcontainer_option" = "force" ] ; then
         Xcontainer_option="yes"
@@ -5790,45 +5791,99 @@ check_xcontainer() {
     else  Xcrootless="no"
     fi
 
-  # check if image x11docker/xserver is available
-  case "$Xcontainer_option" in
-    no) ;;
-    yes|auto) 
-      case "$BackendKind" in
-        docker|podman|nerdctl)
-          Xcrootless="${Xcrootless:-$Backendrootless}"
-          Xcontainerbackend="$BackendKind"
-          unpriv_xcbackend "$Xcontainerbackend inspect $Xcontainerimage" >/dev/null 2>&1 || Fail="yes"
-        ;;
-        host|proot) # BackendKind_host
-          Xcrootless="no"  unpriv_xcbackend "docker inspect $Xcontainerimage" >/dev/null 2>&1 && Xcontainerbackend="docker" && Xcrootless="no"
-          [ -z "$Xcontainerbackend" ] && {
-            Xcrootless="yes" unpriv_xcbackend "docker inspect $Xcontainerimage" >/dev/null 2>&1 && Xcontainerbackend="docker" && Xcrootless="yes"
-          }
-          [ -z "$Xcontainerbackend" ] && {
-            unpriv_xcbackend "podman inspect $Xcontainerimage" >/dev/null 2>&1 && Xcontainerbackend="podman" && Xcrootless="${Xcrootless:-yes}"
-          }
-          [ "$Xcontainer_option" = "yes" ] && [ -z "$Xcontainerbackend" ] && Xcontainerbackend="docker or podman" && Fail="yes"
-        ;;
-      esac
-    ;;
-    docker)
-      Xcontainerbackend="$Xcontainer_option"
-      [ -z "$Xcrootless" ] && {
-        [ -n "$DOCKER_HOST" ] && Xcrootless="yes" || Xcrootless="no"
-      }
-      unpriv_xcbackend "$Xcontainerbackend inspect $Xcontainerimage" >/dev/null 2>&1 || Fail="yes"
-    ;;
-    podman|nerdctl)
-      Xcontainerbackend="$Xcontainer_option"
-      Xcrootless="${Xcrootless:-yes}" unpriv_xcbackend "$Xcontainerbackend inspect $Xcontainerimage" >/dev/null 2>&1 && Xcrootless="${Xcrootless:-yes}" || Fail="yes"
-      [ "$Fail" = "yes" ] && [ -z "$Xcrootless" ] && [ "$Startuser" = "root" ] && {
-        Fail=""
-        Xcrootless="no"
-        unpriv_xcbackend "$Xcontainerbackend inspect $Xcontainerimage" >/dev/null 2>&1 || Fail="yes"
-      }
-    ;;
-  esac
+    # Check if image x11docker/xserver is available
+    case "$Xcontainer_option" in
+        no) ;;
+        yes|auto) 
+            case "$BackendKind" in
+                #
+                docker|podman|nerdctl)
+                    Xcrootless="${Xcrootless:-$Backendrootless}"
+                    Xcontainerbackend="$BackendKind"
+                    if ! unpriv_xcbackend                              \
+                         "$Xcontainerbackend inspect $Xcontainerimage" \
+                         >/dev/null 2>&1                               ;
+                    then
+                        Fail="yes"
+                    fi
+                    ;;
+                #
+                host|proot) # BackendKind_host
+                    #
+                    if Xcrootless="no"  unpriv_xcbackend           \
+                                 "docker inspect $Xcontainerimage" \
+                                 >/dev/null 2>&1                   ;
+                    then
+                        Xcontainerbackend="docker"
+                        Xcrootless="no"
+                    fi
+                    #
+                    if [ -z "$Xcontainerbackend" ] ; then
+                        if Xcrootless="yes" unpriv_xcbackend           \
+                                     "docker inspect $Xcontainerimage" \
+                                     >/dev/null 2>&1                   ;
+                        then
+                            Xcontainerbackend="docker"
+                            Xcrootless="yes"
+                        fi
+                    fi
+                    #
+                    if [ -z "$Xcontainerbackend" ] ; then
+                        if unpriv_xcbackend                      \
+                               "podman inspect $Xcontainerimage" \
+                               >/dev/null 2>&1                   ;
+                        then
+                            Xcontainerbackend="podman"
+                            Xcrootless="${Xcrootless:-yes}"
+                        fi
+                    fi
+                    #
+                    if [ "$Xcontainer_option" = "yes" ] && [ -z "$Xcontainerbackend" ] ;
+                    then
+                        Xcontainerbackend="docker or podman"
+                        Fail="yes"
+                    fi
+                    ;;
+            esac
+            ;;
+        #
+        docker)
+            Xcontainerbackend="$Xcontainer_option"
+            if [ -z "$Xcrootless" ] ; then
+                if [ -n "$DOCKER_HOST" ] ;
+                then Xcrootless="yes"
+                else Xcrootless="no"
+                fi
+            fi
+            #
+            if ! unpriv_xcbackend                                 \
+                   "$Xcontainerbackend inspect $Xcontainerimage"  \
+                   >/dev/null 2>&1                                ;
+            then Fail="yes"
+            fi
+            ;;
+        #
+        podman|nerdctl)
+            Xcontainerbackend="$Xcontainer_option"
+            #
+            if Xcrootless="${Xcrootless:-yes}" unpriv_xcbackend        \
+                         "$Xcontainerbackend inspect $Xcontainerimage" \
+                         >/dev/null 2>&1                               ;
+            then  Xcrootless="${Xcrootless:-yes}"
+            else  Fail="yes"
+            fi
+            #
+            if [ "$Fail" = "yes" ] && [ -z "$Xcrootless" ] && [ "$Startuser" = "root" ] ; then
+                Fail=""
+                Xcrootless="no"
+                if ! unpriv_xcbackend                               \
+                     "$Xcontainerbackend inspect $Xcontainerimage"  \
+                     >/dev/null 2>&1                                ;
+                then Fail="yes"
+                fi
+            fi
+            ;;
+    esac
 
   [ "$Fail" = "yes" ] && {
     [ "$Xcontainer_option" = "yes" ] && {
