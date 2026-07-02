@@ -5362,6 +5362,7 @@ check_screensize() {
     local BRE1=""
     local BRE2=""
     local digits="" monitorname_RE=""
+    local is_windowed_dekstop=""
 
     if [ -z "$Hostdisplay" ] && [ -n "$Hostwaylandsocket" ] ; then
         verbose "check_screensize(): Skipping check on pure Wayland environment"
@@ -5458,29 +5459,26 @@ check_screensize() {
 
     # Size for windowed desktops, roughly maximized relative to primary monitor
     {
+        is_windowed_dekstop="no"
         case "$Xserver" in
             --xpra*)
                 if [ "$Desktopmode" = "yes" ] ; then
-                    Xserver="${Xserver}-desktop" # Add "-desktop" suffix
+                    # Xserver="${Xserver}-desktop" # Add "-desktop" suffix
+                    is_windowed_dekstop="yes"
                 fi
+                ;;
+            --xephyr|--weston-xwayland|--weston|--kwin|--kwin-xwayland|--nxagent)
+                is_windowed_dekstop="yes"
                 ;;
         esac
 
-        if [ -z "$Screensize" ] && [ -z "$Newxvt" ] ; then
-            case "$Xserver" in
-                --xephyr|--weston-xwayland|--weston|--kwin|--kwin-xwayland|--nxagent|--xpra*-desktop)
-                    # Leave 2*48 pixels for margin?
-                    Xaxis="$((Maxxaxis-96))"
-                    Yaxis="$((Maxyaxis-96))"
-                    #
-                    Xaxis="$(( $(( $Xaxis / 8 )) * 8 ))"  # avoid grey edge in Xwayland, needs full byte x width
-                    ;;
-            esac
+        if [ -z "$Screensize" ] && [ -z "$Newxvt" ] && [ "$is_windowed_dekstop" = "yes" ] ; then
+            # Leave 2*48 pixels for margin?
+            Xaxis="$((Maxxaxis-96))"
+            Yaxis="$((Maxyaxis-96))"
+            #
+            Xaxis="$(( $(( $Xaxis / 8 )) * 8 ))"  # avoid grey edge in Xwayland, needs full byte x width
         fi
-
-        # Remove the "-desktop" suffix. We may have added one above for --xpra*.
-        # Is that the only "-desktop" suffix we are removing?
-        Xserver="${Xserver%-desktop}"
     }
 
   [ "$Fullscreen" = "yes" ] && [ -z "$Newxvt" ] && Screensize="${Maxxaxis}x${Maxyaxis}"
