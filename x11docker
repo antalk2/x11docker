@@ -5785,10 +5785,11 @@ check_xcontainer() {
     #
     case "$Backendrootless" in
         yes)
-            if [ "$Xserver" = "--xorg" ] || [ -n "$Newxvt" ] ; then
-                Xcrootless="no"
-            else
+            # not (a||b) == (not a) && (not b)
+            if [ "$Xserver" != "--xorg" ] && [ -z "$Newxvt" ] ; then
                 Xcrootless="yes"
+            else
+                Xcrootless="no"
             fi
             ;;
         no)
