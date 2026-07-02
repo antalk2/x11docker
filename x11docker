@@ -5360,7 +5360,8 @@ check_nvidiainstaller() {
 check_screensize() {
     local Line="" Xrandroutput=""
     local BRE1=""
-    local digits=""
+    local BRE2=""
+    local digits="" monitorname_RE=""
 
     if [ -z "$Hostdisplay" ] && [ -n "$Hostwaylandsocket" ] ; then
         verbose "check_screensize(): Skipping check on pure Wayland environment"
@@ -5385,15 +5386,6 @@ check_screensize() {
             #       line with \1,\2,\3 giving
             #       screen_number, current_x, current_y
             #
-            # According to (The Open Group Base Specifications Issue
-            # 8, 2024), sed -E (and Extended Regular Expressions)
-            # could be used, but according to (Issue 7, 2018), sed -E
-            # is not provided yet.
-            #
-            # The idea here is: matching the whole line is more
-            # informative to the reader and provides more strict
-            # checking of the input.
-            #
             digits='[0-9][0-9]*'
             BRE1="$(trim_to_mark \
                    '|^Screen \('"${digits}"'\):
@@ -5405,7 +5397,8 @@ check_screensize() {
             Line="$( grep -e "${BRE1}" "$Xrandroutput" | head -n1  )"
             Maxxaxis="$(echo "$Line" | sed  -e "s|${BRE1}|\\\2|" )" # 1920
             Maxyaxis="$(echo "$Line" | sed  -e "s|${BRE1}|\\\3|" )" # 1200
-            
+
+            #  # Old version
             #  # Extract " current 1920 x 1200"
             #  # Line="$(grep current <<< "$Xrandroutput" | head -n1 | cut -d, -f2)"
             #  Maxxaxis="$(echo "$Line" | cut -d' ' -f3)" # 1920
@@ -5413,18 +5406,34 @@ check_screensize() {
             #
             if [ -z "$Maxxaxis" ] ; then
                 # Line = The first line containing ' connected'
-                Line="$( grep ' connected' <<< "$Xrandroutput" | head -n1 )"
                 #
-                # The part before the 1st 'x', the last word.
-                Maxxaxis="$( echo "$Line"                 \
-                             | cut -dx -f1                \
-                             | rev | cut -d' ' -f1 | rev  )"
-                # The part after the first 'x'.
-                # The first word.
-                Maxyaxis="$( echo "$Line"    \
-                             | cut -dx -f2-  \
-                             | cut -d' ' -f1 \
-                             | cut -d+ -f1   )"
+                # Example:
+                # HDMI2 connected 1920x1200+0+0 (normal left inverted right x axis y axis) 520mm x 330mm
+                # ^^^^^           ^^^^ ^^^^
+                #
+                digits='[0-9][0-9]*'
+                #
+                # monitorname_RE='[^ ][^ ]*'
+                monitorname_RE='[A-Za-z][A-Za-z0-9-]*'
+                BRE2='^\('"${monitorname_RE}"'\) connected \('"${digits}"'\)x\('"${digits}"'\)[+].*$'
+                Line="$( grep -e "${BRE2}" "$Xrandroutput" | head -n1  )"
+                Maxxaxis="$(echo "$Line" | sed  -e "s|${BRE2}|\\\2|" )" # 1920
+                Maxyaxis="$(echo "$Line" | sed  -e "s|${BRE2}|\\\3|" )" # 1200
+
+                # Old version:
+                # 
+                #  Line="$( grep ' connected' <<< "$Xrandroutput" | head -n1 )"
+                #  #
+                #  # The part before the 1st 'x', the last word.
+                #  Maxxaxis="$( echo "$Line"                 \
+                #               | cut -dx -f1                \
+                #               | rev | cut -d' ' -f1 | rev  )"
+                #  # The part after the first 'x'.
+                #  # The first word.
+                #  Maxyaxis="$( echo "$Line"    \
+                #               | cut -dx -f2-  \
+                #               | cut -d' ' -f1 \
+                #               | cut -d+ -f1   )"
             fi
         fi
     fi
