@@ -5784,6 +5784,16 @@ check_xcontainer() {
     # Check if X container should run rootful or rootless (for tty
     # access it must be rootful)
     #
+    case "$Backendrootless" in
+        yes|no) ;;
+        *)
+            # When simplifying the next expression I assumed that
+            # case "$Backendrootless" in yes) ;; no) ;; esac covered all possibilities.
+            # May have to revise.
+            error "check_xcontainer() : Backendrootless = '$Backendrootless' is not in {yes|no}"
+            ;;
+    esac
+    #
     if [ "$Backendrootless" = "yes" ] \
     && [ "$Xserver" != "--xorg"     ] \
     && [ -z "$Newxvt"               ] ;
