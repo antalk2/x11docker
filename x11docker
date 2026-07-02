@@ -5408,7 +5408,8 @@ calculate_floor_a_per_b() {
 #                               (also option --size)
 check_screensize() {
     local Line="" Xrandroutput=""
-    local BRE1=""
+    local mysed
+    local ERE1=""
     local BRE2=""
     local digits="" monitorname_RE=""
     local is_windowed_desktop=""
@@ -5430,24 +5431,24 @@ check_screensize() {
         # --------------------------------
         if [ -n "$Xrandroutput" ] ; then
             #
-            # BRE1: Basic Regular Expressions for a
+            # ERE1: Extended Regular Expressions for a
             #      "Screen 0: minimum 8 x 8, current 1920 x 1200, maximum 32767 x 32767"
             #              ^                         ^^^^   ^^^^
             #       line with \1,\2,\3 giving
             #       screen_number, current_x, current_y
             #
-            digits='[0-9][0-9]*'
-            BRE1="$(trim_to_mark \
-                   '|^Screen \('"${digits}"'\):
-                    : minimum '"${digits}"' x '"${digits}"'
-                    :, current \('"${digits}"'\) x \('"${digits}"'\)
-                    :, maximum '"${digits}"' x '"${digits}"'$'
+            mysed="$(command -v sed)"
+            # ----------------------------
+            ERE1="$(trim_to_mark \
+                  '|^Screen ([0-9]+):
+                   : minimum [0-9]+ x [0-9]+
+                   :, current ([0-9]+) x ([0-9]+)
+                   :, maximum [0-9]+ x [0-9]+$'
                    )"
-            #
-            Line="$( grep -e "${BRE1}" "$Xrandroutput" | head -n1  )"
-            Maxxaxis="$(echo "$Line" | sed  -e "s|${BRE1}|\\\2|" )" # 1920
-            Maxyaxis="$(echo "$Line" | sed  -e "s|${BRE1}|\\\3|" )" # 1200
-
+            Line="$( echo "$Xrandroutput" | grep -E -e "${ERE1}" | head -n1  )"
+            Maxxaxis="$(echo "$Line" | $mysed -E -e "s|${ERE1}|\\2|" )" # 1920
+            Maxyaxis="$(echo "$Line" | $mysed -E -e "s|${ERE1}|\\3|" )" # 1200
+            # ----------------------------
             #  # Old version
             #  # Extract " current 1920 x 1200"
             #  # Line="$(grep current <<< "$Xrandroutput" | head -n1 | cut -d, -f2)"

@@ -1,5 +1,12 @@
 #!/bin/bash
 
+set_up() {
+ X11DOCKER_TESTING=1
+ . ../x11docker
+}
+
+set_up
+
 #
 # The Open Group Base Specifications Issue 8: it is
 #     implementation-defined whether "\?", "\+", and "\|"
@@ -137,6 +144,44 @@ sed_Modeline_test() {
     fi
 }
 
+sed_Screen_test() {
+    local mysed="${1:-MISSING-sed}"
+    local ERE1
+    local Line
+    local Maxxaxis Maxyaxis
+    local Xrandroutput="$(trim_to_bar \
+       '|Screen 0: minimum 8 x 8, current 1920 x 1200, maximum 32767 x 32767
+        |DP1 disconnected (normal left inverted right x axis y axis)
+        |HDMI1 disconnected (normal left inverted right x axis y axis)
+        |HDMI2 connected 1920x1200+0+0 (normal left inverted right x axis y axis) 520mm x 330mm
+        |   1920x1200     59.95*+
+        |'
+        )"
+    # -------------------------
+    ERE1="$(trim_to_mark \
+          '|^Screen ([0-9]+):
+           : minimum [0-9]+ x [0-9]+
+           :, current ([0-9]+) x ([0-9]+)
+           :, maximum [0-9]+ x [0-9]+$'
+           )"
+    Line="$( echo "$Xrandroutput" | grep -E -e "${ERE1}" | head -n1  )"
+    Maxxaxis="$(echo "$Line" | $mysed -E -e "s|${ERE1}|\\2|" )" # 1920
+    Maxyaxis="$(echo "$Line" | $mysed -E -e "s|${ERE1}|\\3|" )" # 1200
+    # -------------------------
+    if [ "$Maxxaxis" != "1920" ] ; then
+        echo "sed_Screen_test() Maxxaxis is not 1920, it is '$Maxxaxis'" >&2
+        echo FAIL
+        return 1
+    fi
+    if [ "$Maxyaxis" != "1200" ] ; then
+        echo "sed_Screen_test() Maxyaxis is not 1200" >&2
+        echo FAIL
+        return 1
+    fi
+    echo PASS
+    return 0
+}
+
 
 for current_sed in "$(command -v sed)" "busybox sed" ; do
 
@@ -149,6 +194,7 @@ for current_sed in "$(command -v sed)" "busybox sed" ; do
     sed_has_E="$(            get_sed_has_E              "$current_sed" )"
     sed_has_i="$(            get_sed_has_i              "$current_sed" )"
     sed_Modeline_result="$(  sed_Modeline_test          "$current_sed" )"
+    sed_Screen_result="$(    sed_Screen_test            "$current_sed" )"
     printf "sed_command: \"%s\"\n"          "$current_sed"
     printf "sed_version: \"%s\"\n"          "$( $current_sed --version | head -n1 )"
     printf "\t sed_zero_or_one_BRE   = '%s'\n"   "$sed_zero_or_one_BRE"
@@ -159,6 +205,7 @@ for current_sed in "$(command -v sed)" "busybox sed" ; do
     printf "\t sed -E                = '%s'\n"   "$sed_has_E"
     printf "\t sed -i                = '%s'\n"   "$sed_has_i"
     printf "\t sed_Modeline_result   = '%s'\n"   "$sed_Modeline_result"
+    printf "\t sed_Screen_result     = '%s'\n"   "$sed_Screen_result"
 
 done
 
