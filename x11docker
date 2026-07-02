@@ -5438,6 +5438,9 @@ check_screensize() {
             #       screen_number, current_x, current_y
             #
             mysed="$(command -v sed)"
+            if [ "${mysed:-MISSING}" = MISSING ] ; then
+                error "Could not locate sed"
+            fi
             # ----------------------------
             ERE1="$(trim_to_mark \
                   '|^Screen ([0-9]+):
