@@ -16,7 +16,7 @@ X11DOCKER_TESTING=1
 
 generated_file="sh-compat-generated.sh"
 
-set -x
+# set -x
 {
     # storeinfo
     echo 'Storeinfofile="sh-compat-generated-store.info"'
@@ -37,7 +37,10 @@ set -x
     declare -f pspid
     declare -f disable_xhost
 
+    declare -f makecookie_v1
+    declare -f makecookie_v2
     echo '# shellcheck disable=SC3028 # (error): In dash, RANDOM is not supported.'
+    declare -f makecookie_v3
     declare -f makecookie
 
     echo Timetosaygoodbyefile="Timetosaygoodbyefile.txt"
@@ -55,11 +58,14 @@ set -x
     declare -f ws_colon_is_continuation_filter
     declare -f waitforlogentry_sh
 
+    declare -f calculate_floor_a_per_b
 
 } > "$generated_file"
 
-# shellcheck --shell=dash --norc "$generated_file"
-shellcheck --shell=sh --exclude=SC3043 --norc "$generated_file"
+for s in bash dash ash sh ; do
+    # Ignore SC3043 (warning): In POSIX sh, 'local' is undefined.
+    printf "\n%s\n" "shellcheck --shell=\"$s\" --exclude=SC3043 --norc \"$generated_file\""
+    shellcheck --shell=$s --exclude=SC3043 --norc "$generated_file"
+done
 
 
-# SC3043 (warning): In POSIX sh, 'local' is undefined.

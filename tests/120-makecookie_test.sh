@@ -24,14 +24,17 @@ makecookie_old_fallback() {                  # bake a cookie
 #
 test_makecookie() {
     local res1 res2 res3
-    res1=$(makecookie)       # probably uses mcookie
-    res2=$(PATH= makecookie) # empty PATH to force fallback
+    res1=$(makecookie_v1) # Uses mcookie
+    res2=$(makecookie_v2) # Uses /dev/urandom and md5sum
+    res3=$(makecookie_v3) # Uses $RANDOM
     
     assert_same  32 $( printf "%s" $res1 | wc --bytes ) "mcookie  length"
-    assert_same  32 $( printf "%s" $res2 | wc --bytes ) "fallback length"
+    assert_same  32 $( printf "%s" $res2 | wc --bytes ) "v2 length"
+    assert_same  32 $( printf "%s" $res3 | wc --bytes ) "v3 length"
     #
     assert_greater_than "0" $(printf "%s" $res1 |  tr -d 0-9 | wc --bytes) "mcookie  has hex"
-    assert_greater_than "0" $(printf "%s" $res2 |  tr -d 0-9 | wc --bytes) "fallback has hex"
+    assert_greater_than "0" $(printf "%s" $res2 |  tr -d 0-9 | wc --bytes) "v2 has hex"
+    assert_greater_than "0" $(printf "%s" $res3 |  tr -d 0-9 | wc --bytes) "v3 has hex"
     #
     # assert_same  32 $( printf "%s" $res3 | wc --bytes ) "old      length"
     # assert_greater_than "0" $(printf "%s" $res3 |  tr -d 0-9 | wc --bytes) "old has hex"

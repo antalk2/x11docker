@@ -1555,6 +1555,35 @@ isnum() {               # check if $1 is a number (according to awk)
 #
 # function makecookie()
 #
+makecookie_v1() {
+    mcookie 2>/dev/null
+}
+makecookie_v2() {
+    if [ -e /dev/urandom ] && command -v md5sum >/dev/null ; then
+        #
+        # md5sum might not cover the possible range from a 16-byte input.
+        # Use more bytes.
+        head -c 160 /dev/urandom | md5sum | cut -b 1-32
+        true
+    else
+        false
+    fi
+}
+makecookie_v3() {
+    if [ "$RANDOM" ] && [ "$RANDOM" !=  "$RANDOM" ] ; then
+        # SC3028 (error): In dash, RANDOM is not supported.
+        #
+        printf "%02x" $(( RANDOM % 256 )) $(( RANDOM % 256 )) $(( RANDOM % 256 )) $(( RANDOM % 256 ))
+        printf "%02x" $(( RANDOM % 256 )) $(( RANDOM % 256 )) $(( RANDOM % 256 )) $(( RANDOM % 256 ))
+        printf "%02x" $(( RANDOM % 256 )) $(( RANDOM % 256 )) $(( RANDOM % 256 )) $(( RANDOM % 256 ))
+        printf "%02x" $(( RANDOM % 256 )) $(( RANDOM % 256 )) $(( RANDOM % 256 )) $(( RANDOM % 256 ))
+        printf "\n"
+        #
+        true
+    else
+        false
+    fi
+}
 makecookie() {                  # bake a cookie
     #
     # /usr/bin/mcookie : mcookie generates a 128-bit random
@@ -1575,27 +1604,9 @@ makecookie() {                  # bake a cookie
     # shellcheck disable=SC3028 # (error): In dash, RANDOM is not supported.
     #
     # mcookie 2>/dev/null || echo $RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM | cut -b1-32
-    if  mcookie 2>/dev/null ; then
-        true
-    elif [ -e /dev/urandom ] && command -v md5sum 2>/dev/null ; then
-        #
-        # md5sum might not cover the possible range from a 16-byte input.
-        # Use more bytes.
-        head -c 160 /dev/urandom | md5sum | cut -b 1-32
-        true
-    elif [ "$RANDOM" ] && [ "$RANDOM" !=  "$RANDOM" ] ; then
-        # SC3028 (error): In dash, RANDOM is not supported.
-        #
-        printf "%02x" $(( RANDOM % 256 )) $(( RANDOM % 256 )) $(( RANDOM % 256 )) $(( RANDOM % 256 ))
-        printf "%02x" $(( RANDOM % 256 )) $(( RANDOM % 256 )) $(( RANDOM % 256 )) $(( RANDOM % 256 ))
-        printf "%02x" $(( RANDOM % 256 )) $(( RANDOM % 256 )) $(( RANDOM % 256 )) $(( RANDOM % 256 ))
-        printf "%02x" $(( RANDOM % 256 )) $(( RANDOM % 256 )) $(( RANDOM % 256 )) $(( RANDOM % 256 ))
-        printf "\n"
-        #
-        true
-    else
-        false
-    fi
+    #
+    makecookie_v1 || makecookie_v2 || makecookie_v3
+    #
 }
 
 #
@@ -7932,7 +7943,12 @@ create_xinitrc() {
     declare -f strlenhex
     declare -f pspid
     declare -f disable_xhost
+    #
+    declare -f makecookie_v1
+    declare -f makecookie_v2
+    declare -f makecookie_v3
     declare -f makecookie
+    #
     declare -f rocknroll
     # declare -f storeinfo_test_sh
     # declare -f storeinfo_drop_sh
