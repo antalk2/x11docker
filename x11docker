@@ -5857,7 +5857,8 @@ check_xcontainer() {
             esac
             ;;
         #
-        docker)
+        docker) # "$Xcontainer_option"
+            #
             Xcontainerbackend="$Xcontainer_option"
             if [ -z "$Xcrootless" ] ; then
                 if [ -n "$DOCKER_HOST" ] ;
@@ -5873,7 +5874,8 @@ check_xcontainer() {
             fi
             ;;
         #
-        podman|nerdctl)
+        podman|nerdctl) # "$Xcontainer_option"
+            #
             Xcontainerbackend="$Xcontainer_option"
             #
             if Xcrootless="${Xcrootless:-yes}" unpriv_xcbackend        \
@@ -5893,9 +5895,10 @@ check_xcontainer() {
                 fi
             fi
             ;;
-    esac
+        #
+    esac # "$Xcontainer_option"
 
-  [ "$Fail" = "yes" ] && {
+    [ "$Fail" = "yes" ] && {
     [ "$Xcontainer_option" = "yes" ] && {
       note "Option --xc: Image $Xcontainerimage not found
   at backend '$Xcontainerbackend' (rootless: $Xcrootless).
