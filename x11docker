@@ -5898,75 +5898,120 @@ check_xcontainer() {
         #
     esac # "$Xcontainer_option"
 
-    [ "$Fail" = "yes" ] && {
-    [ "$Xcontainer_option" = "yes" ] && {
-      note "Option --xc: Image $Xcontainerimage not found
-  at backend '$Xcontainerbackend' (rootless: $Xcrootless).
-  Fallback: Disabling option --xc"
-      check_fallback
-    }
-    Xcontainer_option="no"
-  }
-  
-  [ -z "$Xcontainerbackend" ] && Xcontainer_option="no"
-  
-  case "$Xcontainer_option" in
-    yes|auto)
-      case "$Xcontainerbackend" in
-        podman|nerdctl)
-          [ "$Startuser" != "root" ] && [ "$Xcrootless" = "no" ] && {
-            [ "$Xcontainer_option" = "yes" ] && {
-              note "Option --xc with rootful X container backend $Xcontainerbackend
-  needs to be started with root privileges. root needed to claim a tty.
-  Fallback: Disabling option --xc"
-              check_fallback
-            }
-            Xcontainer_option="no"
-            Auto="yes"
-          }
-        ;;
-      esac
-      [ "$Xcontainer_option" = "auto" ]    && Xcontainer_option="yes" && Auto="yes" || Auto="no"
-      [ "$Winsubsystem" ]           && Xcontainer_option="no"
-      case "$Runtime" in
-        kata-runtime)                  Xcontainer_option="no" ;;
-      esac
-      case "$Auto" in
-        yes)
-          [ "$Xcontainer_option" = "yes" ] && note "Option --xc for X in container enabled automatically."
-        ;;
-        no)
-          [ "$Xcontainer_option" = "no" ] && {
-            note "Option --xc not possible:
-  - without image x11docker/xserver.
-  - with runtime kata-runtime
-  - on MS Windows
-  Fallback: Setting --xc=no"
+    if [ "$Fail" = "yes" ] ; then
+        #
+        if [ "$Xcontainer_option" = "yes" ] ; then
+            note "$(trim_to_bar \
+              "|Option --xc: Image $Xcontainerimage not found
+               |  at backend '$Xcontainerbackend' (rootless: $Xcrootless).
+               |  Fallback: Disabling option --xc"
+               )"
             check_fallback
-          }
-        ;;
-      esac
-    ;;
-  esac
+        fi
+        #
+        Xcontainer_option="no"
+    fi
 
-  case "$Xcontainer_option" in
-    yes)
-      Xcontainerinspect="$(unpriv_xcbackend "$Xcontainerbackend inspect $Xcontainerimage")"
-      Xcontaineroptions_normal="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "options")"
-      Xcontaineroptions_normal="${Xcontaineroptions_normal:-"--nxagent --xpra --xpra2 --xpra2-xwayland --xephyr --weston-xwayland --xvfb --xwayland --weston"}"
-      Xcontaineroptionsconsole="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "options_console")"
-      Xcontainertools="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "tools")"
-      Xcontainerversion="$(parse_inspect "$Xcontainerinspect" "Config" "Labels" "version")"
-      version_less_than "$Xcontainerversion" "$Xcontainerversionlatest" && note "Option --xc: Please update image x11docker/xserver
-  with 'docker pull x11docker/xserver'."
-    ;;
-    no)
-      debugnote "check_xcontainer(): --xc disabled"
-    ;;
-  esac
+    if [ -z "$Xcontainerbackend" ] ; then
+        Xcontainer_option="no"
+    fi
+
+    case "$Xcontainer_option" in
+        yes|auto)
+            #
+            case "$Xcontainerbackend" in
+                podman|nerdctl)
+                    if [ "$Startuser" != "root" ] && [ "$Xcrootless" = "no" ] ; then
+                        if [ "$Xcontainer_option" = "yes" ] ; then
+                            note "$(trim_to_bar \
+                                  "|Option --xc with rootful X container backend $Xcontainerbackend
+                                   |  needs to be started with root privileges. root needed to claim a tty.
+                                   |  Fallback: Disabling option --xc"
+                                   )"
+                            #
+                            check_fallback
+                        fi
+                        Xcontainer_option="no"
+                        Auto="yes"
+                    fi
+                    ;;
+            esac
+            #
+            if [ "$Xcontainer_option" = "auto" ] ; then
+                Xcontainer_option="yes"
+                Auto="yes"
+            else
+                Auto="no"
+            fi
+               
+            if [ -n "$Winsubsystem"          ] ; then  Xcontainer_option="no" ; fi
+            if [ "$Runtime" = "kata-runtime" ] ; then  Xcontainer_option="no" ; fi
+            #
+            case "$Auto" in
+                yes)
+                    if [ "$Xcontainer_option" = "yes" ] ; then
+                        note "Option --xc for X in container enabled automatically."
+                    fi
+                    ;;
+                no)
+                    if [ "$Xcontainer_option" = "no" ] ; then
+                        note "$(trim_to_bar \
+                              "|Option --xc not possible:
+                               |  - without image x11docker/xserver.
+                               |  - with runtime kata-runtime
+                               |  - on MS Windows
+                               |  Fallback: Setting --xc=no"
+                               )"
+                        #
+                        check_fallback
+                    fi
+                    ;; # no)
+            esac
+            ;; # yes|auto)
+        #
+    esac # "$Xcontainer_option"
+
+    case "$Xcontainer_option" in
+        yes)
+            #
+            Xcontainerinspect="$( unpriv_xcbackend \
+                                     "$Xcontainerbackend inspect $Xcontainerimage"
+                                )"
+            #
+            Xcontaineroptions_normal="$( parse_inspect "$Xcontainerinspect" \
+                                              "Config" "Labels" "options"
+                                       )"
+            #
+            Xcontaineroptions_normal="${Xcontaineroptions_normal:-"$( trim_to_mark
+                                                                     "|--nxagent
+                                                                      : --xpra --xpra2 --xpra2-xwayland
+                                                                      : --xephyr
+                                                                      : --weston-xwayland
+                                                                      : --xvfb
+                                                                      : --xwayland
+                                                                      : --weston"
+                                                                      )"}"
+            #
+            Xcontaineroptionsconsole="$( parse_inspect "$Xcontainerinspect"     \
+                                            "Config" "Labels" "options_console" )"
+            #
+            Xcontainertools="$(   parse_inspect "$Xcontainerinspect" "Config" "Labels" "tools"   )"
+            Xcontainerversion="$( parse_inspect "$Xcontainerinspect" "Config" "Labels" "version" )"
+            #
+            if version_less_than "$Xcontainerversion" "$Xcontainerversionlatest" ; then
+                note "$(trim_to_bar \
+                      "|Option --xc: Please update image x11docker/xserver
+                       |  with 'docker pull x11docker/xserver'."
+                       )"
+            fi
+            ;;
+        no)
+            debugnote "check_xcontainer(): --xc disabled"
+            ;;
+    esac
 
   return 0
-}
+} # check_xcontainer()
 
 #
 # function check_xdepends( arg1 )
