@@ -5362,7 +5362,7 @@ check_screensize() {
     local BRE1=""
     local BRE2=""
     local digits="" monitorname_RE=""
-    local is_windowed_dekstop=""
+    local is_windowed_desktop=""
 
     if [ -z "$Hostdisplay" ] && [ -n "$Hostwaylandsocket" ] ; then
         verbose "check_screensize(): Skipping check on pure Wayland environment"
@@ -5459,20 +5459,20 @@ check_screensize() {
 
     # Size for windowed desktops, roughly maximized relative to primary monitor
     {
-        is_windowed_dekstop="no"
+        is_windowed_desktop="no"
         case "$Xserver" in
             --xpra*)
                 if [ "$Desktopmode" = "yes" ] ; then
                     # Xserver="${Xserver}-desktop" # Add "-desktop" suffix
-                    is_windowed_dekstop="yes"
+                    is_windowed_desktop="yes"
                 fi
                 ;;
             --xephyr|--weston-xwayland|--weston|--kwin|--kwin-xwayland|--nxagent)
-                is_windowed_dekstop="yes"
+                is_windowed_desktop="yes"
                 ;;
         esac
 
-        if [ -z "$Screensize" ] && [ -z "$Newxvt" ] && [ "$is_windowed_dekstop" = "yes" ] ; then
+        if [ -z "$Screensize" ] && [ -z "$Newxvt" ] && [ "$is_windowed_desktop" = "yes" ] ; then
             # Leave 2*48 pixels for margin?
             Xaxis="$((Maxxaxis-96))"
             Yaxis="$((Maxyaxis-96))"
