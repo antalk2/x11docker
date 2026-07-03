@@ -6016,12 +6016,14 @@ check_xcontainer() {
 } # check_xcontainer()
 
 #
-# function check_xdepends( arg1 ) : # check dependencies on host for X
-#                                     server option in arg1
+# function check_xdepends( X_option_to_check ) : Check dependencies on host for X
+#                                                server option in X_option_to_check
 #
 # Return 1 if something is missing or not possible
 #
-#  arg1 may be:
+#  X_option_to_check may be:
+#
+#    "$Xserver"
 #
 #    --xpra-xwayland
 #    --xpra2-xwayland
@@ -6081,7 +6083,7 @@ check_xdepends() {
     esac
 
     xdepends_message_ttm() {
-        # global Message
+        # inherit Message
         $Message "$(trim_to_mark "${1}" )"
     }
 
