@@ -35,13 +35,14 @@ esac
 #    matches.
 #
 #  - A pattern containing newlines is a list of patterns.
+#  - A pattern containg Space or Tab is an error.
 #
 # return 0 if word is found in stdin, non-0 otherwise
 #
 stdin_contains_as_word() {
     #
-    if grep -E -q '[ \t]' <<< "$1" ; then
-        error "stdin_contains_as_word(): Space or Tab found in pattern"
+    if  grep -E -q -e $'[ \t]' <<< "$1" ; then
+        error "stdin_contains_as_word(): Space or Tab found in pattern ($1)"
         return 13 # Only if error returns.
     fi
     # We want space and tab to separate words in the input.
