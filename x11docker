@@ -6012,7 +6012,7 @@ check_xcontainer() {
             ;;
     esac
 
-  return 0
+    return 0
 } # check_xcontainer()
 
 #
