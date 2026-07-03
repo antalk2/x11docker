@@ -6045,10 +6045,11 @@ check_xcontainer() {
 #
 check_xdepends() {
     #
+    local X_option_to_check="${1:-}"
+    #
     local Return=""
     local Message=""
     local Xcopt=""
-    local X_option_to_check="${1:-}"
 
     if [ "$Autochooseserver" = yes ] && [ "$Printcheck" != "yes" ] ;
     then Message="debugnote"
@@ -6127,6 +6128,7 @@ check_xdepends() {
     esac
 
 
+    # ----------------------------------------
     #
     # function check_command_generic(
     #         test_type={command|xtool}, the_Message_fun, the_X_option, the_command, the_message_cont
@@ -6183,7 +6185,6 @@ check_xdepends() {
             return 0
         fi
     }
-
     #
     # function check_command_xdepends( the_command, the_message_cont )
     #
@@ -6200,7 +6201,8 @@ check_xdepends() {
     check_xtool_xdepends() {
         check_command_generic "xtool"   "${Message}" "${X_option_to_check}" "${1}" "${2}"
     }
-    
+    # ----------------------------------------
+
     # xinit
     case "${X_option_to_check}" in
         --xephyr   | --xpra      | --xpra-xwayland   | --nxagent       | --xvfb | \
