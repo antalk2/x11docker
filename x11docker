@@ -6126,15 +6126,93 @@ check_xdepends() {
             ;;
     esac
 
+
+    #
+    # function check_command_generic(
+    #         test_type={command|xtool}, the_Message_fun, the_X_option, the_command, the_message_cont
+    # )
+    #
+    #  Test if the_command is available. Return 0 if yes, call the_Message_fun if not.
+    #  The 1st line of message is `"${the_X_option}: ${the_command} not found."`
+    #  If the_message_cont is provided, it is added after a NEWLINE.
+    #
+    #  The whole message is passed through trim_to_mark: starting the_message_cont with ":"
+    #  erases the preceding NEWLINE, starting with "|" keeps it.
+    #
+    # check_command_generic "note" "--xpra" "xpra" "|  $Wikipackagesimage" || Return=1
+    #
+    check_command_generic() {
+        local test_type="${1:-MISSING}"
+        local the_Message_fun="${2:-MISSING}"
+        local the_X_option="${3:-MISSING}"
+        local the_command="${4:-MISSING}"
+        local the_message_cont="${5:-}"
+        #
+        local message_1st_line=""
+        local test_result=0
+        #
+        case "$test_type" in
+            "command")
+                if ! command -v "${the_command}"  >/dev/null ; then
+                    message_1st_line="${the_X_option}: the command '${the_command}' not found."
+                    test_result=1
+                else
+                    test_result=0
+                fi
+                ;;
+            "xtool")
+                if !  xtool --check --quiet "${the_command}" ; then
+                    message_1st_line="${the_X_option}: the xtool '${the_command}' not found."
+                    test_result=1
+                else
+                    test_result=0
+                fi
+                ;;
+            *)
+                error "check_command_generic() : test_type='$test_type', should be 'command' or 'xtool'"
+        esac
+        #
+        if [ "$test_result" = "1" ] ; then
+            if [ -z "${the_message_cont}" ] ; then
+                $Message  "${message_1st_line}"
+            else
+                $Message "$( trim_to_mark  "|${message_1st_line}${NEWLINE}${the_message_cont}" )"
+            fi
+            return 1
+        else
+            return 0
+        fi
+    }
+
+    #
+    # function check_command_xdepends( the_command, the_message_cont )
+    #
+    #  Calls `check_command_generic`  with
+    #        test_type       = "command"
+    #        the_Message_fun = "${Message}"            and
+    #        the_X_option    = "${X_option_to_check}"  picked up from the caller.
+    #
+    # check_command_xdepends "xpra" "|  $Wikipackagesimage" || Return=1
+    #
+    check_command_xdepends() {
+        check_command_generic "command" "${Message}" "${X_option_to_check}" "${1}" "${2}"
+    }
+    check_xtool_xdepends() {
+        check_command_generic "xtool"   "${Message}" "${X_option_to_check}" "${1}" "${2}"
+    }
+    
     # xinit
     case "${X_option_to_check}" in
         --xephyr   | --xpra      | --xpra-xwayland   | --nxagent       | --xvfb | \
         --xwayland | --satellite | --weston-xwayland | --kwin-xwayland | --xorg )
             #
-            if !  xtool --check --quiet xinit ; then
-                $Message "${X_option_to_check}: xinit not found.${NEWLINE}  $Wikipackagesimage"
-                Return=1
-            fi
+            if ! check_xtool_xdepends "xinit" "|  $Wikipackagesimage" ;
+            then Return=1 ; fi
+            #
+            #if !  xtool --check --quiet xinit ; then
+            #    $Message "${X_option_to_check}: xinit not found.${NEWLINE}  $Wikipackagesimage"
+            #    Return=1
+            #fi
             ;;
     esac
 
@@ -6149,45 +6227,13 @@ check_xdepends() {
             ;;
     esac
 
-    #
-    # check_command "note" "--xpra" "xpra" "|  $Wikipackagesimage" || Return=1
-    #
-    check_command() {
-        local the_Message_fun="${1:-MISSING}"
-        local the_X_option="${2:-MISSING}"
-        local the_command="${3:-MISSING}"
-        local the_message_cont="${4:-}"
-        #
-        local message_1st_line=""
-        #
-        if ! command -v "${the_command}"  >/dev/null ; then
-            message_1st_line="${the_X_option}: ${the_command} not found."
-            if [ -z "${the_message_cont}" ] ; then
-                $Message  "${message_1st_line}"
-            else
-                $Message "$( trim_to_mark  "|${message_1st_line}${NEWLINE}${the_message_cont}" )"
-            fi
-            # Return=1
-            return 1
-        else
-            return 0
-        fi
-    }
-
-    #
-    # check_command_xdepends "xpra" "|  $Wikipackagesimage" || Return=1
-    #
-    check_command_xdepends() {
-        check_command  "${Message}" "${X_option_to_check}" "${1}" "${2}"
-    }
     
     if [ -z "$Xcopt" ] ; then
         case "${X_option_to_check}" in
             --xpra)
                 if  ! check_command_xdepends "xpra" "|  $Wikipackagesimage"  \
                 ||  ! check_command_xdepends "Xvfb" "|  $Wikipackagesimage"  ;
-                then Return=1
-                fi
+                then Return=1 ; fi
                 #
                 #if false ; then
                 #    command -v "xpra" >/dev/null || {
@@ -6202,8 +6248,7 @@ check_xdepends() {
                 ;;
             --xpra-xwayland)
                 if ! check_command_xdepends "xpra" "|  $Wikipackagesimage" ;
-                then Return=1
-                fi
+                then Return=1 ; fi
                 #   
                 #command -v "xpra" >/dev/null || {
                 #    $Message "${X_option_to_check}: xpra not found.${NEWLINE}  $Wikipackagesimage"
@@ -6211,35 +6256,52 @@ check_xdepends() {
                 #}
                 ;;
             --xephyr)
-                command -v "Xephyr" >/dev/null || {
-                    $Message "${X_option_to_check}: Xephyr not found.${NEWLINE}  $Wikipackagesimage"
-                    Return=1
-                } ;;
+                if ! check_command_xdepends "Xephyr" "|  $Wikipackagesimage" ;
+                then Return=1 ; fi
+                #command -v "Xephyr" >/dev/null || {
+                #    $Message "${X_option_to_check}: Xephyr not found.${NEWLINE}  $Wikipackagesimage"
+                #    Return=1
+                #}
+                ;;
             --nxagent)
-                command -v "nxagent" >/dev/null || {
-                    $Message "${X_option_to_check}: nxagent not found.${NEWLINE}  $Wikipackagesimage"
-                    Return=1
-                } ;;
+                if ! check_command_xdepends "nxagent" "|  $Wikipackagesimage" ;
+                then Return=1 ; fi
+                # command -v "nxagent" >/dev/null || {
+                #    $Message "${X_option_to_check}: nxagent not found.${NEWLINE}  $Wikipackagesimage"
+                #    Return==1
+                # }
+                ;;
             --xvfb)
-                command -v "Xvfb" >/dev/null || {
-                    $Message "${X_option_to_check}: Xvfb not found.${NEWLINE}  $Wikipackagesimage"
-                    Return=1
-                } ;;
+                if ! check_command_xdepends "Xvfb" "|  $Wikipackagesimage" ;
+                then Return=1 ; fi
+                #command -v "Xvfb" >/dev/null || {
+                #    $Message "${X_option_to_check}: Xvfb not found.${NEWLINE}  $Wikipackagesimage"
+                #    Return=1
+                #}
+                ;;
             --xorg)
-                command -v "Xorg" >/dev/null || {
-                    $Message "${X_option_to_check}: Xorg not found.${NEWLINE}  $Wikipackages"
-                    Return=1
-                } ;;
+                if ! check_command_xdepends "Xorg" "|  $Wikipackages" ;
+                then Return=1 ; fi
+                #command -v "Xorg" >/dev/null || {
+                #    $Message "${X_option_to_check}: Xorg not found.${NEWLINE}  $Wikipackages"
+                #    Return=1
+                #}
+                ;;
             --xwin)
                 case "$Winsubsystem" in
                     CYGWIN)
-                        command -v XWin >/dev/null || {
-                            $Message "$(trim_to_bar \
-                               "|${X_option_to_check}: XWin not found.
-                                |  Need packages 'xinit', 'xauth' and 'xwininfo' in Cygwin (X11 section)."
-                                )"
-                            Return=1
-                        }
+                        if ! check_command_xdepends "XWin"               \
+                             "|  Need packages 'xinit', 'xauth'
+                              : and 'xwininfo' in Cygwin (X11 section)." ;
+                        then Return=1 ; fi
+                        #
+                        #command -v XWin >/dev/null || {
+                        #    $Message "$(trim_to_bar \
+                        #       "|${X_option_to_check}: XWin not found.
+                        #        |  Need packages 'xinit', 'xauth' and 'xwininfo' in Cygwin (X11 section)."
+                        #        )"
+                        #    Return=1
+                        #}
                         ;;
                     WSL1|WSL2)
                         $Message "$(trim_to_bar \
@@ -6263,13 +6325,17 @@ check_xdepends() {
                         ;;
                 esac
                 #
-                command -v xwininfo >/dev/null || {
-                    $Message "$(trim_to_mark \
-                      "|${X_option_to_check}: xwininfo not found.
-                       : Need 'xwininfo' package from Cygwin/X (X11 section)."
-                       )"
-                    Return=1
-                }
+                if ! check_command_xdepends "xwininfo" \
+                     ": Need 'xwininfo' package from Cygwin/X (X11 section)." ;
+                then Return=1 ; fi
+                #
+                #command -v xwininfo >/dev/null || {
+                #    $Message "$(trim_to_mark \
+                #      "|${X_option_to_check}: xwininfo not found.
+                #       : Need 'xwininfo' package from Cygwin/X (X11 section)."
+                #       )"
+                #    Return=1
+                #}
                 #
                 [ "$Hostip" ] || {
                     $Message "${X_option_to_check}: Failed to get host IP address."
@@ -6281,13 +6347,17 @@ check_xdepends() {
                     $Message "${X_option_to_check}: runx is available on MS Windows only."
                     Return=1
                 }
-                command -v runx >/dev/null || {
-                    $Message "$(trim_to_mark \
-                        "|${X_option_to_check}: runx not found.
-                         : Need runx from https://github.com/mviereck/runx"
-                         )"
-                    Return=1
-                }
+                #
+                if ! check_command_xdepends "runx" ": Need runx from https://github.com/mviereck/runx" ;
+                then Return=1 ; fi
+                #
+                #command -v runx >/dev/null || {
+                #    $Message "$(trim_to_mark \
+                #        "|${X_option_to_check}: runx not found.
+                #         : Need runx from https://github.com/mviereck/runx"
+                #         )"
+                #    Return=1
+                #}
                 ;;
         esac # case $X_option_to_check
     fi
@@ -6296,44 +6366,61 @@ check_xdepends() {
     if [ -z "$Xcopt" ] ; then
         case "${X_option_to_check}" in
             --weston|--xpra-xwayland|--weston-xwayland)
-                command -v "weston" >/dev/null || {
-                    $Message "${X_option_to_check}: weston not found.${NEWLINE}  $Wikipackagesimage"
-                    Return=1
-                } ;;
+                if ! check_command_xdepends "weston" "|  $Wikipackagesimage" ;
+                then Return=1 ; fi
+                #
+                #command -v "weston" >/dev/null || {
+                #    $Message "${X_option_to_check}: weston not found.${NEWLINE}  $Wikipackagesimage"
+                #    Return=1
+                #}
+                ;;
             --kwin|--kwin-xwayland)
-                command -v "kwin_wayland" >/dev/null || {
-                    $Message "${X_option_to_check}: kwin_wayland not found.${NEWLINE}  $Wikipackagesimage"
-                    Return=1
-                } ;;
+                if ! check_command_xdepends "kwin_wayland" "|  $Wikipackagesimage" ;
+                then Return=1 ; fi
+                #command -v "kwin_wayland" >/dev/null || {
+                #    $Message "${X_option_to_check}: kwin_wayland not found.${NEWLINE}  $Wikipackagesimage"
+                #    Return=1
+                #}
+                ;;
         esac
     fi
   
     if [ -z "$Xcopt" ] ; then
         case "${X_option_to_check}" in
             --xpra-xwayland|--weston-xwayland|--kwin-xwayland|--xwayland)
-                command -v "Xwayland" >/dev/null || {
-                    $Message "${X_option_to_check}: Xwayland not found.${NEWLINE}  $Wikipackagesimage"
-                    Return=1
-                } ;;
+                if ! check_command_xdepends "Xwayland" "|  $Wikipackagesimage" ;
+                then Return=1 ; fi
+                #command -v "Xwayland" >/dev/null || {
+                #    $Message "${X_option_to_check}: Xwayland not found.${NEWLINE}  $Wikipackagesimage"
+                #    Return=1
+                #}
+                ;;
         esac
     fi
 
     if [ -z "$Xcopt" ] ; then
         case "${X_option_to_check}" in
             --satellite)
-                command -v "xwayland-satellite" >/dev/null || {
-                    $Message "${X_option_to_check}: xwayland-satellite not found.${NEWLINE}  $Wikipackagesimage"
-                    Return=1
-                } ;;
+                if ! check_command_xdepends "xwayland-satellite" "|  $Wikipackagesimage" ;
+                then Return=1 ; fi
+                #command -v "xwayland-satellite" >/dev/null || {
+                #    $Message "${X_option_to_check}: xwayland-satellite not found.${NEWLINE}  $Wikipackagesimage"
+                #    Return=1
+                #}
+                ;;
         esac
     fi
 
     case "${X_option_to_check}" in
         --xpra-xwayland)
-            xtool --check --quiet xdotool || {
-                $Message "${X_option_to_check}: xdotool not found.${NEWLINE}  $Wikipackagesimage"
-                Return=1
-            }
+            #
+            if ! check_xtool_xdepends "xdotool" "|  $Wikipackagesimage" ;
+            then Return=1 ; fi
+            #
+            #xtool --check --quiet xdotool || {
+            #    $Message "${X_option_to_check}: xdotool not found.${NEWLINE}  $Wikipackagesimage"
+            #    Return=1
+            #}
             ;;
     esac
 
@@ -6592,56 +6679,76 @@ check_xdepends() {
 
   # --xeyes
   [ "$Xeyes" = "yes" ] && {
-    xtool --check --quiet xeyes || {
-        $Message "$(trim_to_bar \
-         "|xeyes not found.
-          |  Please install 'xeyes' for option --xeyes.
-          |  $Wikipackagesimage"
-          )"
-      Return=1
-    }
-    case "$Xserver" in
-      --weston|--kwin|--hostwayland)
-        $Message "Option ${X_option_to_check} does not support option --xeyes"
-        Return=1
-      ;;
-    esac
+      if ! check_xtool_xdepends "xeyes" \
+           "|  Please install 'xeyes' for option --xeyes.
+            |  $Wikipackagesimage"            ;
+      then Return=1 ; fi
+      # xtool --check --quiet xeyes || {
+      #     $Message "$(trim_to_bar \
+      #      "|xeyes not found.
+      #       |  Please install 'xeyes' for option --xeyes.
+      #       |  $Wikipackagesimage"
+      #       )"
+      #   Return=1
+      # }
+      #
+      case "$Xserver" in
+          --weston|--kwin|--hostwayland)
+              $Message "Option ${X_option_to_check} does not support option --xeyes"
+              Return=1
+              ;;
+      esac
   }
 
   # --xlogo
   [ "$Xlogo" = "yes" ] && {
-    xtool --check --quiet xlogo || {
-        $Message "$(trim_to_bar \
-          "|xlogo not found.
-           |  Please install 'xlogo' for option --xlogo.
-           |  $Wikipackagesimage"
-           )"
-      Return=1
-    }
-    case "$Xserver" in
-      --weston|--kwin|--hostwayland)
-        $Message "Option ${X_option_to_check} does not support option --xlogo"
-        Return=1
-      ;;
-    esac
+      #
+      if ! check_xtool_xdepends "xlogo" \
+           "|  Please install 'xlogo' for option --xlogo.
+            |  $Wikipackagesimage"   ;
+      then Return=1 ; fi
+      #
+      # xtool --check --quiet xlogo || {
+      #     $Message "$(trim_to_bar \
+      #       "|xlogo not found.
+      #        |  Please install 'xlogo' for option --xlogo.
+      #        |  $Wikipackagesimage"
+      #        )"
+      #     Return=1
+      # }
+      #
+      case "$Xserver" in
+          --weston|--kwin|--hostwayland)
+              $Message "Option ${X_option_to_check} does not support option --xlogo"
+              Return=1
+              ;;
+      esac
   }
 
   # --xfishtank
   [ "$Xfishtank" = "yes" ] && {
-    xtool --check --quiet xfishtank || {
-        $Message "$(trim_to_bar \
-          "|xfishtank not found. Can not show a fish tank.
-           |  Please install 'xfishtank' for option --xfishtank to show a fish tank.
-           |  $Wikipackagesimage"
-           )"
-      Return=1
-    }
-    case "$Xserver" in
-      --weston|--kwin|--hostwayland|--satellite)
-        $Message "Option ${X_option_to_check} does not support option --xfishtank"
-        Return=1
-      ;;
-    esac
+      #
+      if ! check_xtool_xdepends "xfishtank" \
+           ": Can not show a fish tank.
+            |  Please install 'xfishtank' for option --xfishtank to show a fish tank.
+            |  $Wikipackagesimage" ;
+      then Return=1 ; fi
+      #
+      #xtool --check --quiet xfishtank || {
+      #    $Message "$(trim_to_bar \
+      #    "|xfishtank not found. Can not show a fish tank.
+      #     |  Please install 'xfishtank' for option --xfishtank to show a fish tank.
+      #     |  $Wikipackagesimage"
+      #     )"
+      #    Return=1
+      #}
+      #
+      case "$Xserver" in
+          --weston|--kwin|--hostwayland|--satellite)
+              $Message "Option ${X_option_to_check} does not support option --xfishtank"
+              Return=1
+              ;;
+      esac
   }
 
   # --xoverip
@@ -6661,15 +6768,21 @@ check_xdepends() {
               }
             ;;
             no)
-              command -v socat >/dev/null || {
-                  $Message "$(trim_to_bar \
-                     "|${X_option_to_check} --xoverip $Xserver needs socat. socat is not installed.
-                      |  $Wikipackagesimage"
-                      )"
-                Return=1
-              }
+                if ! check_command_xdepends "socat" \
+                     "|${X_option_to_check} --xoverip $Xserver needs socat.
+                      |  $Wikipackagesimage" ;
+                then Return=1 ; fi
+                #
+                #command -v socat >/dev/null || {
+                #    $Message "$(trim_to_bar \
+                #     "|${X_option_to_check} --xoverip $Xserver needs socat. socat is not installed.
+                #      |  $Wikipackagesimage"
+                #      )"
+                #    Return=1
+                #}
             ;;
           esac
+          #
           [ "$Xserver" = "--hostdisplay" ] && {
             [ -n "$(cut -d: -f1 <<< "$Hostdisplay")" ] && {
               [ "$Xoverip" = "socat" ] && {
