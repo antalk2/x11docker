@@ -42,7 +42,7 @@ esac
 stdin_contains_as_word() {
     #
     if  grep -E -q -e $'[ \t]' <<< "$1" ; then
-        error "stdin_contains_as_word(): Space or Tab found in pattern ($1)"
+        error "stdin_contains_as_word(): Space or Tab found in pattern \"$(printf %q  "$1")\""
         return 13 # Only if error returns.
     fi
     # We want space and tab to separate words in the input.
