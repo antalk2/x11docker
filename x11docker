@@ -6188,8 +6188,8 @@ check_xdepends() {
 
     #
     # Set Xcopt to yes if "${X_option_to_check}"
-    #                     appears in Xcontaineroptions_normal or
-    #                     Xcontaineroptionsconsole or is --hostdisplay
+    #                     appears in "$Xcontaineroptions_normal  --hostdisplay"
+    #                     or in      "$Xcontaineroptionsconsole"
     # 
     #
     case "$Runsonconsole" in
@@ -6205,6 +6205,7 @@ check_xdepends() {
             ;;
     esac
 
+    
     # Wayland
     case "${X_option_to_check}" in
         --xpra-xwayland   | \
