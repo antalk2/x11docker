@@ -6240,34 +6240,33 @@ check_xdepends() {
         esac # case $1
     fi
   
-  # Wayland command
-  [ "$Xcopt" ] || case "${1:-}" in
-    --weston|--xpra-xwayland|--weston-xwayland)
-      command -v "weston" >/dev/null || {
-        $Message "${1:-}: weston not found.
-  $Wikipackagesimage"
-        Return=1
-      } ;;
-    --kwin|--kwin-xwayland)
-      command -v "kwin_wayland" >/dev/null || {
-        $Message "${1:-}: kwin_wayland not found.
-  $Wikipackagesimage"
-        Return=1
-      } ;;
-  esac
+    # Wayland command
+    if [ -z "$Xcopt" ] ; then
+        case "${1:-}" in
+            --weston|--xpra-xwayland|--weston-xwayland)
+                command -v "weston" >/dev/null || {
+                    $Message "${1:-}: weston not found.${NEWLINE}  $Wikipackagesimage"
+                    Return=1
+                } ;;
+            --kwin|--kwin-xwayland)
+                command -v "kwin_wayland" >/dev/null || {
+                    $Message "${1:-}: kwin_wayland not found.${NEWLINE}  $Wikipackagesimage"
+                    Return=1
+                } ;;
+        esac
+    fi
+  
   [ "$Xcopt" ] || case "${1:-}" in
     --xpra-xwayland|--weston-xwayland|--kwin-xwayland|--xwayland)
       command -v "Xwayland" >/dev/null || {
-        $Message "${1:-}: Xwayland not found.
-  $Wikipackagesimage"
+        $Message "${1:-}: Xwayland not found.${NEWLINE}  $Wikipackagesimage"
         Return=1
       } ;;
   esac
   [ "$Xcopt" ] || case "${1:-}" in
     --satellite)
       command -v "xwayland-satellite" >/dev/null || {
-        $Message "${1:-}: xwayland-satellite not found.
-  $Wikipackagesimage"
+        $Message "${1:-}: xwayland-satellite not found.${NEWLINE}  $Wikipackagesimage"
         Return=1
       } ;;
   esac
@@ -6275,8 +6274,7 @@ check_xdepends() {
   case "${1:-}" in
     --xpra-xwayland)
       xtool --check --quiet xdotool || {
-        $Message "${1:-}: xdotool not found.
-  $Wikipackagesimage"
+        $Message "${1:-}: xdotool not found.${NEWLINE}  $Wikipackagesimage"
         Return=1
       }
     ;;
