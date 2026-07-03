@@ -5785,22 +5785,24 @@ check_xcontainer() {
     # access it must be rootful)
     #
     case "$Backendrootless" in
-        yes|no) ;;
+        yes)
+            # not (a||b) == (not a) && (not b)
+            if [ "$Xserver" != "--xorg" ] && [ -z "$Newxvt" ] ; then
+                Xcrootless="yes"
+            else
+                Xcrootless="no"
+            fi
+            ;;
+        no)
+            Xcrootless="no"
+            ;;
+        "") ;; # NOP, leave Xcrootless as is.
         *)
-            # When simplifying the next expression I assumed that
-            # case "$Backendrootless" in yes) ;; no) ;; esac covered all possibilities.
-            # May have to revise.
-            error "check_xcontainer() : Backendrootless = '$Backendrootless' is not in {yes|no}"
+            # This might be OK, just to see
+            error "check_xcontainer() : Backendrootless = '$Backendrootless' is not in {yes|no|''}"
             ;;
     esac
-    #
-    if [ "$Backendrootless" = "yes" ] \
-    && [ "$Xserver" != "--xorg"     ] \
-    && [ -z "$Newxvt"               ] ;
-    then  Xcrootless="yes"
-    else  Xcrootless="no"
-    fi
-
+    
     # Check if image x11docker/xserver is available
     case "$Xcontainer_option" in
         no) ;;
