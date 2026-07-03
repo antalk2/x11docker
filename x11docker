@@ -27,6 +27,30 @@ esac
 
 
 #
+# function stdin_contains_as_word( word ) <<< "$list_of_words"
+#
+#  - In list_of_words, newline, space and tab separate words.
+#
+#  - An empty pattern, or a pattern containing space or tab, never
+#    matches.
+#
+#  - A pattern containing newlines is a list of patterns.
+#
+# return 0 if word is found in stdin, non-0 otherwise
+#
+stdin_contains_as_word() {
+    #
+    if grep -E -q '[ \t]' <<< "$1" ; then
+        error "stdin_contains_as_word(): Space or Tab found in pattern"
+        return 13 # Only if error returns.
+    fi
+    # We want space and tab to separate words in the input.
+    # Change these to newlines
+    # Accept only whole-line matches.
+    tr -s ' \t' '\n\n' | grep -v -x ''  | LC_ALL=C grep -x -q  -- "${1}"
+}
+
+#
 # function trim_to_bar( s )
 #
 #  Remove indentation in `s` up to and including the marker `|`
@@ -6047,6 +6071,8 @@ check_xcontainer() {
 #    --xpra2*
 #       (and maybe more)
 #
+#    --tty
+#
 check_xdepends() {
     #
     local X_option_to_check="${1:-}"
@@ -6069,23 +6095,114 @@ check_xdepends() {
         return "$Lastcheckedxserverresult"
     fi
 
-    case "$Runsonconsole" in
-        no)
-            if grep -q -w -- "${X_option_to_check}" <<< "$Xcontaineroptions_normal --hostdisplay" ;
-            then Xcopt="yes"
-            fi
-            ;;
-        yes)
-            if grep -q -w -- "${X_option_to_check}" <<< "$Xcontaineroptionsconsole" ;
-            then Xcopt="yes"
-            fi
-            ;;
-    esac
-
+    # ------ helper functions (conceptually internal)  -------------------
+    #
     xdepends_message_ttm() {
         # inherit Message
         $Message "$(trim_to_mark "${1}" )"
     }
+    #
+    # function check_command_generic(
+    #         test_type={command|xtool}, the_Message_fun, the_X_option, the_command, the_message_cont
+    # )
+    #
+    #  Test if the_command is available. Return 0 if yes, call the_Message_fun if not.
+    #  The 1st line of message is `"${the_X_option}: ${the_command} not found."`
+    #  If the_message_cont is provided, it is added after a NEWLINE.
+    #
+    #  The whole message is passed through trim_to_mark: starting the_message_cont with ":"
+    #  erases the preceding NEWLINE, starting with "|" keeps it.
+    #
+    # check_command_generic "note" "--xpra" "xpra" "|  $Wikipackagesimage" || Return=1
+    #
+    check_command_generic() {
+        local test_type="${1:-MISSING}"
+        local the_Message_fun="${2:-MISSING}"
+        local the_X_option="${3:-MISSING}"
+        local the_command="${4:-MISSING}"
+        local the_message_cont="${5:-}"
+        #
+        local message_1st_line=""
+        local test_result=0
+        #
+        case "$test_type" in
+            "command")
+                if ! command -v "${the_command}"  >/dev/null ; then
+                    message_1st_line="${the_X_option}: the command '${the_command}' not found."
+                    test_result=1
+                else
+                    test_result=0
+                fi
+                ;;
+            "xtool")
+                if !  xtool --check --quiet "${the_command}" ; then
+                    message_1st_line="${the_X_option}: the xtool '${the_command}' not found."
+                    test_result=1
+                else
+                    test_result=0
+                fi
+                ;;
+            *)
+                error "check_command_generic() : test_type='$test_type', should be 'command' or 'xtool'"
+        esac
+        #
+        if [ "$test_result" = "1" ] ; then
+            if [ -z "${the_message_cont}" ] ; then
+                $the_Message_fun  "${message_1st_line}"
+            else
+                $the_Message_fun "$( trim_to_mark  "|${message_1st_line}${NEWLINE}${the_message_cont}" )"
+            fi
+            return 1
+        else
+            return 0
+        fi
+    }
+    #
+    # function check_command_xdepends( the_command, the_message_cont )
+    #
+    #  Calls `check_command_generic`  with
+    #        test_type       = "command"
+    #        the_Message_fun = "${Message}"            and
+    #        the_X_option    = "${X_option_to_check}"  picked up from the caller.
+    #
+    # check_command_xdepends "xpra" "|  $Wikipackagesimage" || Return=1
+    #
+    check_command_xdepends() {
+        check_command_generic "command" "${Message}" "${X_option_to_check}" "${1}" "${2}"
+    }
+    #
+    # function check_xtool_xdepends( the_command, the_message_cont )
+    #
+    #  Calls `check_command_generic`  with
+    #        test_type       = "xtool"
+    #        the_Message_fun = "${Message}"            and
+    #        the_X_option    = "${X_option_to_check}"  picked up from the caller.
+    #
+    # check_command_xdepends "xpra" "|  $Wikipackagesimage" || Return=1
+    #
+    check_xtool_xdepends() {
+        check_command_generic "xtool"   "${Message}" "${X_option_to_check}" "${1}" "${2}"
+    }
+    # ----------------------------------------
+
+    #
+    # Set Xcopt to yes if "${X_option_to_check}"
+    #                     appears in Xcontaineroptions_normal or
+    #                     Xcontaineroptionsconsole or is --hostdisplay
+    # 
+    #
+    case "$Runsonconsole" in
+        no)
+            if stdin_contains_as_word "${X_option_to_check}" <<< "$Xcontaineroptions_normal --hostdisplay" ;
+            then Xcopt="yes"
+            fi
+            ;;
+        yes)
+            if stdin_contains_as_word "${X_option_to_check}" <<< "$Xcontaineroptionsconsole" ;
+            then Xcopt="yes"
+            fi
+            ;;
+    esac
 
     # Wayland
     case "${X_option_to_check}" in
@@ -6135,82 +6252,6 @@ check_xdepends() {
             fi
             ;;
     esac
-
-
-    # ----------------------------------------
-    #
-    # function check_command_generic(
-    #         test_type={command|xtool}, the_Message_fun, the_X_option, the_command, the_message_cont
-    # )
-    #
-    #  Test if the_command is available. Return 0 if yes, call the_Message_fun if not.
-    #  The 1st line of message is `"${the_X_option}: ${the_command} not found."`
-    #  If the_message_cont is provided, it is added after a NEWLINE.
-    #
-    #  The whole message is passed through trim_to_mark: starting the_message_cont with ":"
-    #  erases the preceding NEWLINE, starting with "|" keeps it.
-    #
-    # check_command_generic "note" "--xpra" "xpra" "|  $Wikipackagesimage" || Return=1
-    #
-    check_command_generic() {
-        local test_type="${1:-MISSING}"
-        local the_Message_fun="${2:-MISSING}"
-        local the_X_option="${3:-MISSING}"
-        local the_command="${4:-MISSING}"
-        local the_message_cont="${5:-}"
-        #
-        local message_1st_line=""
-        local test_result=0
-        #
-        case "$test_type" in
-            "command")
-                if ! command -v "${the_command}"  >/dev/null ; then
-                    message_1st_line="${the_X_option}: the command '${the_command}' not found."
-                    test_result=1
-                else
-                    test_result=0
-                fi
-                ;;
-            "xtool")
-                if !  xtool --check --quiet "${the_command}" ; then
-                    message_1st_line="${the_X_option}: the xtool '${the_command}' not found."
-                    test_result=1
-                else
-                    test_result=0
-                fi
-                ;;
-            *)
-                error "check_command_generic() : test_type='$test_type', should be 'command' or 'xtool'"
-        esac
-        #
-        if [ "$test_result" = "1" ] ; then
-            if [ -z "${the_message_cont}" ] ; then
-                $Message  "${message_1st_line}"
-            else
-                $Message "$( trim_to_mark  "|${message_1st_line}${NEWLINE}${the_message_cont}" )"
-            fi
-            return 1
-        else
-            return 0
-        fi
-    }
-    #
-    # function check_command_xdepends( the_command, the_message_cont )
-    #
-    #  Calls `check_command_generic`  with
-    #        test_type       = "command"
-    #        the_Message_fun = "${Message}"            and
-    #        the_X_option    = "${X_option_to_check}"  picked up from the caller.
-    #
-    # check_command_xdepends "xpra" "|  $Wikipackagesimage" || Return=1
-    #
-    check_command_xdepends() {
-        check_command_generic "command" "${Message}" "${X_option_to_check}" "${1}" "${2}"
-    }
-    check_xtool_xdepends() {
-        check_command_generic "xtool"   "${Message}" "${X_option_to_check}" "${1}" "${2}"
-    }
-    # ----------------------------------------
 
     # xinit
     case "${X_option_to_check}" in
@@ -6732,7 +6773,7 @@ check_xdepends() {
     [ "$Return" = "1" ] && {
         check_fallback
         Autochooseserver="yes"
-        [ "$Printcheck" = "no" ] && grep -q -w "note" <<< "$Message" && note "$(trim_to_bar \
+        [ "$Printcheck" = "no" ] && stdin_contains_as_word "note" <<< "$Message" && note "$(trim_to_bar \
          "|check_xdepends(): ${X_option_to_check} is not possible,
           |  see message(s) above. Will search for another X server option.
           |  You can see intermediate X dependency check messages with option --printcheck.
@@ -9090,7 +9131,7 @@ xtool() {
     case "$Xcontainer_option" in
         yes)
             Usexcontainer="yes"
-            if ! echo "$Xcontainertools" | grep -w -q "$Tool" ; then
+            if ! echo "$Xcontainertools" | stdin_contains_as_word "$Tool" ; then
                 $Message "$(trim_to_bar \
                    "|Option --xc: Please update image x11docker/xserver.
                     |  Did not find command '$Tool' in image. Will try to run '$Tool' on host"
@@ -9224,7 +9265,7 @@ check_backend() {               # options --backend, --rootless
   [ "$Backendrootless" = "no" ] && export DOCKER_HOST=
   [ -z "$Backendrootless" ] && case "$BackendKind" in
     docker) 
-      id -G -n | grep -q -w 'docker'              && Backendrootless="no"
+      id -G -n | stdin_contains_as_word 'docker'     && Backendrootless="no"
       grep -q "/run/user/" <<< "${DOCKER_HOST:-}" && Backendrootless="yes"
       [ "$(id -un)" = "root" ]                    && Backendrootless="no"
     ;;
@@ -9250,7 +9291,7 @@ check_backend() {               # options --backend, --rootless
     no)
       case "$BackendKind" in
         docker)
-          [ "$(id -un)" = "root" ] || id -G -n | grep -q -w 'docker' || error "Option --rootless=no: Please run x11docker as root
+          [ "$(id -un)" = "root" ] || id -G -n | stdin_contains_as_word 'docker' || error "Option --rootless=no: Please run x11docker as root
   to allow rootful $BackendKind."
         ;;
         podman|nerdctl)
@@ -10887,10 +10928,13 @@ store_runoption_dump_cap() {  # dump cap for docker command
                     #     capabilities, are already included. Avoid
                     #     duplicating them.
                     #
-                    if grep -w -q "$Line" <<< "SETPCAP MKNOD AUDIT_WRITE CHOWN NET_RAW DAC_OVERRIDE FOWNER FSETID KILL SETGID SETUID NET_BIND_SERVICE SYS_CHROOT SETFCAP" ; then
-                        : # nothing, already included
-                    else
-                        echo "$Line"
+                    if stdin_contains_as_word "$Line" <<< "$(trim_to_mark \
+                        "|SETPCAP MKNOD AUDIT_WRITE CHOWN NET_RAW
+                         : DAC_OVERRIDE FOWNER FSETID KILL SETGID
+                         : SETUID NET_BIND_SERVICE SYS_CHROOT SETFCAP"
+                         )" ;
+                    then true # nothing, already included
+                    else echo "$Line"
                     fi
                     ;;
             esac
@@ -10957,7 +11001,7 @@ store_runoption_dump_cap() {  # dump cap for docker command
 #          while read Line; do
 #            [ "$Line" ] && case "$Capdropall" in
 #              yes) echo "$Line" ;;
-#              no)  grep -w -q "$Line" <<< "SETPCAP MKNOD AUDIT_WRITE CHOWN NET_RAW DAC_OVERRIDE FOWNER FSETID KILL SETGID SETUID NET_BIND_SERVICE SYS_CHROOT SETFCAP" || echo "$Line" ;;
+#              no)  stdin_contains_as_word -q "$Line" <<< "SETPCAP MKNOD AUDIT_WRITE CHOWN NET_RAW DAC_OVERRIDE FOWNER FSETID KILL SETGID SETUID NET_BIND_SERVICE SYS_CHROOT SETFCAP" || echo "$Line" ;;
 #            esac
 #          done < <(echo "$Capabilities" | sort -u)
 #        ;;
@@ -14107,7 +14151,7 @@ check_options_arguments() {     # check for [likely] valid arguments
 
   # --rotate
   [ -n "$Rotation" ] && {
-    grep -q -w "$Rotation" <<< "0 90 180 270 flipped flipped-90 flipped-180 flipped-270" || {
+    stdin_contains_as_word "$Rotation" <<< "0 90 180 270 flipped flipped-90 flipped-180 flipped-270" || {
       note "Option --rotate: Unsupported value '$Rotation'.
   Must be one of 0 90 180 270 flipped flipped-90 flipped-180 flipped-270
   Fallback: disabling option --rotate"
