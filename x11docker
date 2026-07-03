@@ -6256,56 +6256,65 @@ check_xdepends() {
         esac
     fi
   
-  [ "$Xcopt" ] || case "${1:-}" in
-    --xpra-xwayland|--weston-xwayland|--kwin-xwayland|--xwayland)
-      command -v "Xwayland" >/dev/null || {
-        $Message "${1:-}: Xwayland not found.${NEWLINE}  $Wikipackagesimage"
-        Return=1
-      } ;;
-  esac
-  [ "$Xcopt" ] || case "${1:-}" in
-    --satellite)
-      command -v "xwayland-satellite" >/dev/null || {
-        $Message "${1:-}: xwayland-satellite not found.${NEWLINE}  $Wikipackagesimage"
-        Return=1
-      } ;;
-  esac
+    if [ -z "$Xcopt" ] ; then
+        case "${1:-}" in
+            --xpra-xwayland|--weston-xwayland|--kwin-xwayland|--xwayland)
+                command -v "Xwayland" >/dev/null || {
+                    $Message "${1:-}: Xwayland not found.${NEWLINE}  $Wikipackagesimage"
+                    Return=1
+                } ;;
+        esac
+    fi
 
-  case "${1:-}" in
-    --xpra-xwayland)
-      xtool --check --quiet xdotool || {
-        $Message "${1:-}: xdotool not found.${NEWLINE}  $Wikipackagesimage"
-        Return=1
-      }
-    ;;
-  esac
+    if [ -z "$Xcopt" ] ; then
+        case "${1:-}" in
+            --satellite)
+                command -v "xwayland-satellite" >/dev/null || {
+                    $Message "${1:-}: xwayland-satellite not found.${NEWLINE}  $Wikipackagesimage"
+                    Return=1
+                } ;;
+        esac
+    fi
 
-  # xpra version
-  [ "$Xcopt" ] || case "${1:-}" in
-    --xpra*)
-      [ "$Return" = "1" ] || {
-        [ "$Xpraversion" ] || {
-          Xpraversion="$(xpra --version 2>/dev/null | cut -d' ' -f2)"
-          verbose "Xpra version: ${Xpraversion:-XPRA_NOT_FOUND}"
-          [ "$Xprahelp" ] || Xprahelp="$(xpra --help 2>/dev/null)"
-        }
-      }
-    ;;
-  esac
-  case "${1:-}" in
-    --hostdisplay|--xpra-xwayland|--xpra2-xwayland|--xephyr|--nxagent)
-      [ "$Hostdisplay" ] || {
-        $Message "${1:-} needs a running X server. DISPLAY is empty."
-        Return=1
-      }
-    ;;
-    --hostwayland|--xwayland|--satellite)
-      [ "$Hostwaylandsocket" ] || {
-        $Message "${1:-} needs a running Wayland compositor. WAYLAND_DISPLAY is empty."
-        Return=1
-      }
-    ;;
-  esac
+    case "${1:-}" in
+        --xpra-xwayland)
+            xtool --check --quiet xdotool || {
+                $Message "${1:-}: xdotool not found.${NEWLINE}  $Wikipackagesimage"
+                Return=1
+            }
+            ;;
+    esac
+
+    # xpra version
+    if [ -z "$Xcopt" ] ; then
+        case "${1:-}" in
+            --xpra*)
+                [ "$Return" = "1" ] || {
+                    [ "$Xpraversion" ] || {
+                        Xpraversion="$(xpra --version 2>/dev/null | cut -d' ' -f2)"
+                        verbose "Xpra version: ${Xpraversion:-XPRA_NOT_FOUND}"
+                        [ "$Xprahelp" ] || Xprahelp="$(xpra --help 2>/dev/null)"
+                    }
+                }
+                ;;
+        esac
+    fi
+
+    case "${1:-}" in
+        --hostdisplay|--xpra-xwayland|--xpra2-xwayland|--xephyr|--nxagent)
+            [ "$Hostdisplay" ] || {
+                $Message "${1:-} needs a running X server. DISPLAY is empty."
+                Return=1
+            }
+            ;;
+        --hostwayland|--xwayland|--satellite)
+            [ "$Hostwaylandsocket" ] || {
+                $Message "${1:-} needs a running Wayland compositor. WAYLAND_DISPLAY is empty."
+                Return=1
+            }
+            ;;
+    esac
+
   [ "$Winsubsystem" ] && {
     case "${1:-}" in
       --xwin|--runx) ;;
@@ -6316,13 +6325,22 @@ check_xdepends() {
       *)
         [ -z "$Hostdisplay" ] && {
           case "$Winsubsystem" in
-            Cygwin) $Message "${1:-} needs a running X server. DISPLAY is empty.
-  Please install packages in Cygwin:  xinit xauth xwininfo
-  or use runx to provide an X server on MS Windows:
-    https://github.com/mviereck/runx" ;;
-            MSYS2|WSL1|WSL2) $Message "${1:-} needs a running X server. DISPLAY is empty.
-  Please use runx to provide an X server on MS Windows:
-    https://github.com/mviereck/runx" ;;
+              Cygwin)
+                  $Message "$(trim_to_bar \
+                    "|${1:-} needs a running X server. DISPLAY is empty.
+                     |  Please install packages in Cygwin:  xinit xauth xwininfo
+                     |  or use runx to provide an X server on MS Windows:
+                     |    https://github.com/mviereck/runx"
+                     )"
+                  ;;
+
+              MSYS2|WSL1|WSL2)
+                  $Message "$(trim_to_bar \
+                     "|${1:-} needs a running X server. DISPLAY is empty.
+                      |  Please use runx to provide an X server on MS Windows:
+                      |    https://github.com/mviereck/runx"
+                      )"
+                  ;;
           esac
           Return=1
         }
@@ -6380,9 +6398,11 @@ check_xdepends() {
         --xpra-xwayland|--xpra2-xwayland|--weston-xwayland|--kwin-xwayland|--xwayland|--satellite) ;;
         --hostdisplay)
           [ "$Xcontainer_option" = "no" ] && [ "$Shareipc" != "host" ] && { # Shareipc_host
-            $Message "${1:-}: --gpu=$Sharegpu would need insecure and discouraged
-  option --ipc=host to avoid MIT-SHM errors. Alternatively you can provide
-  image x11docker/xserver (option --xc) that contains a fake MIT-SHM library."
+              $Message "$(trim_to_bar \
+                  "|${1:-}: --gpu=$Sharegpu would need insecure and discouraged
+                   |  option --ipc=host to avoid MIT-SHM errors. Alternatively you can provide
+                   |  image x11docker/xserver (option --xc) that contains a fake MIT-SHM library."
+                   )"
             Return=1
           }
         ;;
@@ -6429,14 +6449,18 @@ check_xdepends() {
       --xpra*|--xorg) ;;
       --weston|--weston-xwayland)
         isint "$Scaling" || {
-          $Message "${1:-} does support full integers only for option --scale.
-  Try one of the --xpra* options instead."
+            $Message "$(trim_to_bar \
+               "|${1:-} does support full integers only for option --scale.
+                |  Try one of the --xpra* options instead."
+                )"
           Return=1
         }
       ;;
       *)
-        $Message "${1:-} does not support scaling (option --scale).
-  Try one of the --xpra* or --weston* options instead."
+          $Message "$(trim_to_bar \
+            "|${1:-} does not support scaling (option --scale).
+             |  Try one of the --xpra* or --weston* options instead."
+             )"
         Return=1
       ;;
     esac
@@ -6464,7 +6488,10 @@ check_xdepends() {
       ;;
       --xorg|--weston|--weston-wayland)
         [ "$Xcrootless" = "yes" ] && {
-          $Message "${1:-} cannot claim a new virtual terminal (option --vt) with rootless X container (option --xc)."
+            $Message "$(trim_to_mark \
+                "|${1:-} cannot claim a new virtual terminal (option --vt)
+                 : with rootless X container (option --xc)."
+                 )"
           Return=1
         }
       ;;
@@ -6482,11 +6509,19 @@ check_xdepends() {
         "")
           case "${1:-}" in
             --xorg|--kwin)
-              $Message "${1:-} is not supported by installed version of x11docker/xserver (option --xc). Please update image."
+                $Message "$(trim_to_mark \
+                   "|${1:-} is not supported
+                    : by installed version of x11docker/xserver (option --xc).
+                    : Please update image."
+                    )"
               Return=1
             ;;
             --weston|--weston-xwayland)
-              $Message "${1:-} on console is not supported by installed version of x11docker/xserver (option --xc). Please update image."
+                $Message "$(trim_to_mark \
+                   "|${1:-} on console is not supported
+                    : by installed version of x11docker/xserver (option --xc).
+                    : Please update image."
+                    )"
               Return=1
             ;;
          esac
@@ -6506,9 +6541,11 @@ check_xdepends() {
   # --xeyes
   [ "$Xeyes" = "yes" ] && {
     xtool --check --quiet xeyes || {
-      $Message "xeyes not found.
-  Please install 'xeyes' for option --xeyes.
-  $Wikipackagesimage"
+        $Message "$(trim_to_bar \
+         "|xeyes not found.
+          |  Please install 'xeyes' for option --xeyes.
+          |  $Wikipackagesimage"
+          )"
       Return=1
     }
     case "$Xserver" in
@@ -6522,9 +6559,11 @@ check_xdepends() {
   # --xlogo
   [ "$Xlogo" = "yes" ] && {
     xtool --check --quiet xlogo || {
-      $Message "xlogo not found.
-  Please install 'xlogo' for option --xlogo.
-  $Wikipackagesimage"
+        $Message "$(trim_to_bar \
+          "|xlogo not found.
+           |  Please install 'xlogo' for option --xlogo.
+           |  $Wikipackagesimage"
+           )"
       Return=1
     }
     case "$Xserver" in
@@ -6538,9 +6577,11 @@ check_xdepends() {
   # --xfishtank
   [ "$Xfishtank" = "yes" ] && {
     xtool --check --quiet xfishtank || {
-      $Message "xfishtank not found. Can not show a fish tank.
-  Please install 'xfishtank' for option --xfishtank to show a fish tank.
-  $Wikipackagesimage"
+        $Message "$(trim_to_bar \
+          "|xfishtank not found. Can not show a fish tank.
+           |  Please install 'xfishtank' for option --xfishtank to show a fish tank.
+           |  $Wikipackagesimage"
+           )"
       Return=1
     }
     case "$Xserver" in
@@ -6560,15 +6601,19 @@ check_xdepends() {
           case "$Xcontainer_option" in
             yes)
               grep -q socat <<< "$Xcontainertools" || {
-                $Message "${1:-} --xoverip $Xserver needs socat.
-  Please update image x11docker/xserver."
-                Return=1
+                  $Message "$(trim_to_bar \
+                     "|${1:-} --xoverip $Xserver needs socat.
+                      :  Please update image x11docker/xserver."
+                      )"
+                  Return=1
               }
             ;;
             no)
               command -v socat >/dev/null || {
-                $Message "${1:-} --xoverip $Xserver needs socat. socat is not installed.
-  $Wikipackagesimage"
+                  $Message "$(trim_to_bar \
+                     "|${1:-} --xoverip $Xserver needs socat. socat is not installed.
+                      |  $Wikipackagesimage"
+                      )"
                 Return=1
               }
             ;;
@@ -6576,8 +6621,10 @@ check_xdepends() {
           [ "$Xserver" = "--hostdisplay" ] && {
             [ -n "$(cut -d: -f1 <<< "$Hostdisplay")" ] && {
               [ "$Xoverip" = "socat" ] && {
-                $Message "${1:-} --xoverip: host already runs with X over IP.
-  Setting up an additional socat connection is not supported."
+                  $Message "$(trim_to_bar \
+                     "|${1:-} --xoverip: host already runs with X over IP.
+                      |  Setting up an additional socat connection is not supported."
+                      )"
                 Return=1
               }
             }
@@ -6590,7 +6637,10 @@ check_xdepends() {
     ;;
     listentcp)
       case "${1:-}" in
-        --xephyr|--xorg|--nxagent|--xpra|--xpra2|--xvfb|--xwin|--runx|--satellite|*xwayland) ;;
+          --xephyr | --xorg | --nxagent | --xpra      | --xpra2    | \
+          --xvfb   | --xwin | --runx    | --satellite | *xwayland  )
+              # NOP
+          ;;
         *)
           $Message "${1:-} does not support --xoverip=listentcp."
           Return=1
@@ -6605,17 +6655,21 @@ check_xdepends() {
   [ "$Return" = "1" ] && {
     check_fallback
     Autochooseserver="yes"
-    [ "$Printcheck" = "no" ] && grep -q -w "note" <<< "$Message" && note "check_xdepends(): ${1:-} is not possible,
-  see message(s) above. Will search for another X server option.
-  You can see intermediate X dependency check messages with option --printcheck.
-  You can disable the search with option --fallback=no."
+    [ "$Printcheck" = "no" ] && grep -q -w "note" <<< "$Message" && note "$(trim_to_bar \
+         "|check_xdepends(): ${1:-} is not possible,
+          |  see message(s) above. Will search for another X server option.
+          |  You can see intermediate X dependency check messages with option --printcheck.
+          |  You can disable the search with option --fallback=no."
+          )"
   }
 
   Lastcheckedxserver="${1:-}"
   Lastcheckedxserverresult="$Return"
 
   return "$Return"
-}
+} # check_xdepends()
+
+
 check_xlibnoshm() {             # search XlibNoSHM.so and libdl.so.2 for fake MIT-SHM
   # check for XlibNoSHM.so
   Xlibnoshmfile="$(find "/usr/local/share/x11docker/XlibNoSHM.so" "$Localsharedir/XlibNoSHM.so"  2>/dev/null | tail -n1 )"
@@ -16614,10 +16668,12 @@ declare_variables() {           # declare global variables
   
   Wikipackages="$(trim_to_bar \
          "|You can look for the package name of this command at:
-          | https://github.com/mviereck/x11docker/wiki/dependencies#table-of-all-packages"  )"
+          | https://github.com/mviereck/x11docker/wiki/dependencies#table-of-all-packages"
+          )"
   Wikipackagesimage="$(trim_to_bar \
          "|$Wikipackages
-          |  Alternatively you can provide image x11docker/xserver (option --xc)."  )"
+          |  Alternatively you can provide image x11docker/xserver (option --xc)."
+          )"
 
   # =============================================
   # Special options not starting X or docker
