@@ -6081,6 +6081,7 @@ check_xdepends() {
     esac
 
     xdepends_message_ttm() {
+        # global Message
         $Message "$(trim_to_mark "${1}" )"
     }
 
