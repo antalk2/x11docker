@@ -113,6 +113,10 @@ note_ttm() {
     note  "$( trim_to_mark "${1}" )"
 }
 
+debugnote_ttm() {
+    debugnote  "$( trim_to_mark "${1}" )"
+}
+
 
 #
 # echo yes or echo no depending on [ "$?" = "0" ]
@@ -804,10 +808,10 @@ traperror() {                   # trap ERR: --debug: Output for 'set -o errtrace
     #  ${4:-}
     #  ${3:-} - ${5:-}"
     #
-    debugnote "$(trim_to_bar \
+    debugnote_ttm \
       "|traperror: Command at Line ${2:-} returned with error code ${1:-}:
        |  ${4:-}
-       |  ${3:-} - ${5:-}" )"
+       |  ${3:-} - ${5:-}"
     #
     storeinfo_add_kv_sh error=64
     saygoodbye traperror
@@ -973,10 +977,9 @@ finish() {      # trap EXIT routine to clean up background processes and cache
         docker|podman|nerdctl)
             if containerisrunning ; then
                 Debugmode="yes"
-                debugnote  "$(trim_to_bar \
+                debugnote_ttm \
                    "|finish(): Container still running. Executing 'docker stop'.
                     |  Will wait up to 15 seconds for docker to finish."
-                    )"
                 #
                 unpriv_backend "$Backendbin stop $g_Containername" >> "$Containerlogfile" 2>&1
 
@@ -992,7 +995,7 @@ finish() {      # trap EXIT routine to clean up background processes and cache
 
                 if containerisrunning ; then
                     Exitcode="64"
-                    debugnote "$(trim_to_bar \
+                    debugnote_ttm \
                        "|finish(): Container did not terminate as it should.
                         |  Will not clean cache to avoid file permission issues.
                         |  You can remove the new container with command:
@@ -1001,7 +1004,6 @@ finish() {      # trap EXIT routine to clean up background processes and cache
                         |    rm -R $Cachefolder
                         |  or let x11docker do the cleanup work for you:
                         |    x11docker --cleanup"
-                        )"
                 else
                     debugnote "finish(): Container terminated successfully"
                 fi
@@ -1378,10 +1380,8 @@ check_envvar() {
 
     if [ "$Newvar" = "${1:-}" ] ; then return 0 ; fi
 
-    debugnote "$(trim_to_bar \
-              "|check_envvar(): Input string has been changed. Result:
-               |  $Newvar"
-               )"
+    debugnote_ttm "|check_envvar(): Input string has been changed. Result:
+                   |  $Newvar"
     return 1
 }
 
@@ -2122,10 +2122,8 @@ mswindowsipcheck() {            # get WSL host IP and Windows host ip
     #    ↔ WSL IP pair that resides in the same subnet.
 
     if ! command -v ipcalc >/dev/null ; then
-        note "$(trim_to_bar \
-         "|mswindowsipcheck(): command ipcalc not found.
-          |  Please install ipcalc"
-          )"
+        note_ttm "|mswindowsipcheck(): command ipcalc not found.
+                  |  Please install ipcalc"
         return 1
     fi
     # Note: ipcalc is used to check the subnet ranges. This is a
@@ -2421,10 +2419,9 @@ convertpath() {                 # convert unix and windows paths
         case "$Mode" in
             unix|subsystem|windows)
                 echo "$Path" ;
-                debugnote "$(trim_to_mark \
+                debugnote_ttm \
                     "|convertpath() $Mode:
                      : Docker volumes do not have a specified path on host: $Path"
-                     )"
                 ;;
             volume)
                 ## docker volume to volume?
@@ -6009,11 +6006,10 @@ check_xcontainer() {
                 podman|nerdctl)
                     if [ "$Startuser" != "root" ] && [ "$Xcrootless" = "no" ] ; then
                         if [ "$Xcontainer_option" = "yes" ] ; then
-                            note "$(trim_to_bar \
+                            note_ttm  \
                                   "|Option --xc with rootful X container backend $Xcontainerbackend
                                    |  needs to be started with root privileges. root needed to claim a tty.
                                    |  Fallback: Disabling option --xc"
-                                   )"
                             #
                             check_fallback
                         fi
