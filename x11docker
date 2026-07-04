@@ -11154,20 +11154,26 @@ create_containerrootrc() {
     # create a script inside the container:
     # "/etc/profile.d/90-x11docker-containerrc.sh"
     #
-    # This latter script, when run, will clear its own content (?)
-    # and
-    #
-    #   exec  /bin/sh $(convertpath share "$Containerrc")
-    #
-    # Or maybe it will not exec it, since cleared before execution?
+    # This latter script, when run, will clear its own content (?),
+    # then
+    #      exec  /bin/sh $(convertpath share "$Containerrc")
+    # Or maybe it will not exec, since cleared before execution?
     #
     # Changed to always emit (so that I can see it), but execute conditionally.
+    #
+    # FIXME: Could we avoid it being self-modifying?
     #
     echo
     echo '# Maybe create /etc/profile.d/90-x11docker-containerrc.sh'
     case "$Initsystem" in
-        systemd|openrc|sysvinit|runit) echo "CREATE_etc_profile_d_90_x11docker_containerrc_sh=yes" ;;
-        *)                             echo "CREATE_etc_profile_d_90_x11docker_containerrc_sh=no"  ;;
+        systemd|openrc|sysvinit|runit)
+            echo "# Initsystem '$Initsystem' is in {systemd|openrc|sysvinit|runit}"
+            echo "CREATE_etc_profile_d_90_x11docker_containerrc_sh=yes"
+            ;;
+        *)
+            echo "# Initsystem '$Initsystem' is not in {systemd|openrc|sysvinit|runit}"
+            echo "CREATE_etc_profile_d_90_x11docker_containerrc_sh=no"
+            ;;
     esac
     
     case "$Initsystem" in
