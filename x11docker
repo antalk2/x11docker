@@ -4490,10 +4490,9 @@ setup_gpu() {
              |  $Nvidiainstallerfile"
         #
         if [ "$Containersetup" = "no" ] ; then
-            note "$(trim_to_bar \
-                  "|Options --no-setup --gpu: Cannot install NVIDIA driver
-                   |  with option --no-setup. Fallback: Disabling option --gpu"
-                   )"
+            note_ttm \
+                "|Options --no-setup --gpu: Cannot install NVIDIA driver
+                 |  with option --no-setup. Fallback: Disabling option --gpu"
             #
             check_fallback
             Sharegpu="no"
@@ -4512,17 +4511,19 @@ setup_gpu() {
         store_runoption_cap CHOWN
         store_runoption_cap FOWNER
 
-        note "$(trim_to_bar \
-              "|Option --gpu: x11docker will install NVIDIA driver in container.
-               |  You can provide images with pre-installed drivers to speed up container start.
-               |  Compare: https://github.com/mviereck/x11docker/wiki/NVIDIA-driver-support-for-docker-container"
-               )"
+        note_ttm \
+            "|Option --gpu: x11docker will install NVIDIA driver in container.
+             |  You can provide images with pre-installed drivers to speed up
+             : container start.
+             |  Compare: https://github.com/mviereck/x11docker/wiki/NVIDIA-dr
+             :iver-support-for-docker-container"
+        #
 
         if [ "$Xcontainer_option" = "yes" ] ; then
 
             waitforlogentry_sh "start_xcontainer()"          \
-                            "$Xinitlogfile"               \
-                            "X server container is ready" \
+                               "$Xinitlogfile"               \
+                               "X server container is ready" \
                 || return 1
             
             note "Option --gpu: Installing NVIDIA driver in X container."
@@ -4543,36 +4544,37 @@ setup_gpu() {
 
     Nvidiainstallerfile=""
 
-    note "$(trim_to_bar \
-          "|Option --gpu: You are using the closed source NVIDIA driver.
-           |  GPU acceleration will only work if you have installed the very same driver
-           |  version in image. That makes images less portable.
-           |  It is recommended to use free open source nouveau driver on host instead.
-           |  Ask NVIDIA corporation to at least publish their closed source API,
-           |  or even better to actively support open source driver nouveau.
-           |
-           |  To use the GPU without NVIDIA driver in container, you can use 
-           |  less performant option --gpu=iglx (--xorg only)."
-           )"
+    note_ttm  \
+        "|Option --gpu: You are using the closed source NVIDIA driver.
+         |  GPU acceleration will only work if you have installed the very same driver
+         |  version in image. That makes images less portable.
+         |  It is recommended to use free open source nouveau driver on host instead.
+         |  Ask NVIDIA corporation to at least publish their closed source API,
+         |  or even better to actively support open source driver nouveau.
+         |
+         |  To use the GPU without NVIDIA driver in container, you can use 
+         |  less performant option --gpu=iglx (--xorg only)."
+    #
            
-    note "$(trim_to_bar \
-          "|Option --gpu: x11docker can try to automatically install NVIDIA driver
-           |  version $Nvidiaversion in container on every container startup.
-           |  Drawbacks: Container startup is a bit slower and its security will be reduced.
-           |
-           |  You can look here for a driver installer file:
-           |    https://www.nvidia.com/Download/index.aspx
-           |    https://http.download.nvidia.com/
-           |  A direct download URL is probably:
-           |    https://http.download.nvidia.com/XFree86/Linux-x86_64/$Nvidiaversion/NVIDIA-Linux-x86_64-$Nvidiaversion.run
-           |  If you got a driver, store it at one of the following locations:
-           |    $Localsharedir/
-           |    /usr/local/share/x11docker/
-           |
-           |  Be aware that the version number must match exactly the version on host.
-           |  The file name must begin with 'NVIDIA', contain the version number $Nvidiaversion
-           |  and end with suffix '.run'."
-           )"
+    note_ttm \
+        "|Option --gpu: x11docker can try to automatically install NVIDIA driver
+         |  version $Nvidiaversion in container on every container startup.
+         |  Drawbacks: Container startup is a bit slower and its security will be reduced.
+         |
+         |  You can look here for a driver installer file:
+         |    https://www.nvidia.com/Download/index.aspx
+         |    https://http.download.nvidia.com/
+         |  A direct download URL is probably:
+         |    https://http.download.nvidia.com/XFree86/Linux-x86_64/
+         :$Nvidiaversion/NVIDIA-Linux-x86_64-$Nvidiaversion.run
+         |  If you got a driver, store it at one of the following locations:
+         |    $Localsharedir/
+         |    /usr/local/share/x11docker/
+         |
+         |  Be aware that the version number must match exactly the version on host.
+         |  The file name must begin with 'NVIDIA',
+         : contain the version number $Nvidiaversion
+         |  and end with suffix '.run'."
     #
     return 0
 }
@@ -4610,12 +4612,11 @@ setup_hostdbus() {
             #
             export $(dbus-launch)
         else
-            note "$(trim_to_bar \
-                  "|Option --hostdbus: Is DBus running on host?
-                   |  Did not find an active session and did not find dbus-launch.
-                   |  DBUS_SESSION_BUS_ADDRESS is empty.
-                   |  $Wikipackages"
-                   )"
+            note_ttm \
+                "|Option --hostdbus: Is DBus running on host?
+                 |  Did not find an active session and did not find dbus-launch.
+                 |  DBUS_SESSION_BUS_ADDRESS is empty.
+                 |  $Wikipackages"
             check_fallback
             return 1
         fi
@@ -4657,12 +4658,11 @@ setup_hostdbus() {
         fi
         
         if [ "$g_Network" != "host" ] ; then  # g_Network_host
-            note  "$(trim_to_bar \
-                   "|Option --hostdbus: Did not find a DBus session socket file
-                    |  but an abstract unix socket. To allow access for container,
-                    |  x11docker needs insecure option '--network=host'.
-                    |  Sharing host dbus will fail."
-                    )"
+            note_ttm \
+                "|Option --hostdbus: Did not find a DBus session socket file
+                 |  but an abstract unix socket. To allow access for container,
+                 |  x11docker needs insecure option '--network=host'.
+                 |  Sharing host dbus will fail."
             check_fallback
             return 1
         fi
@@ -4688,11 +4688,10 @@ setup_printer() {
     local Cupsserver=
 
     if ! command -v lpstat >/dev/null ; then
-        note "$(trim_to_bar \
-              "|Option --printer: command lpstat not found.
-               |  Is cups printer server installed on your system?
-               |  Error: Cannot share access to printer."
-               )"
+        note_ttm \
+            "|Option --printer: command lpstat not found.
+             |  Is cups printer server installed on your system?
+             |  Error: Cannot share access to printer."
         Sharecupsmode=""
         return 1
     fi
@@ -4710,10 +4709,9 @@ setup_printer() {
         tcp)
             Cupsserver="$Hostip:631"
             if [ "$g_Network" = "none" ] ; then
-                note "$(trim_to_bar \
-                      "|Option --printer=tcp does not work without network access.
-                       |  Consider to enable option -I, --network."
-                       )"
+                note_ttm \
+                    "|Option --printer=tcp does not work without network access.
+                     |  Consider to enable option -I, --network."
                 check_fallback
                 return 1
             fi
@@ -4736,22 +4734,22 @@ setup_printer() {
                 ;;
         esac
         #
-        note  "$(trim_to_bar \
-               "|Option --printer: Network setup for CUPS detected.
-                |  Server address: $Cupsserver
-                |  You may need to allow container access in /etc/cups/cupsd.conf, e.g.:
-                |
-                |Port 631
-                |<Location />
-                |  # Allow remote access...
-                |  Order allow,deny
-                |  Allow 172.17.0.*
-                |  Allow 172.20.0.*
-                |  Allow 127.0.0.1
-                |</Location>
-                |
-                |Also you need to allow network access for each printer in a CUPS GUI."
-                )"
+        note_ttm \
+            "|Option --printer: Network setup for CUPS detected.
+             |  Server address: $Cupsserver
+             |  You may need to allow container access in /etc/cups/cupsd.conf, e.g.:
+             |
+             |Port 631
+             |<Location />
+             |  # Allow remote access...
+             |  Order allow,deny
+             |  Allow 172.17.0.*
+             |  Allow 172.20.0.*
+             |  Allow 127.0.0.1
+             |</Location>
+             |
+             |Also you need to allow network access for each printer in a CUPS GUI."
+        #
     fi
 
     if [ -n "$Cupsserver" ] ; then
