@@ -6005,6 +6005,10 @@ check_xcontainer() {
                                      "$Xcontainerbackend inspect $Xcontainerimage"
                                 )"
             #
+            # The labels are added for example here:
+            # https://github.com/mviereck/dockerfile-x11docker-xserver/blob/41c2e7644a9726f3f7d3c6302f106c8a84644e52/Dockerfile#L209
+            # to the docker image as metadata to use here.
+            #
             Xcontaineroptions_normal="$( parse_inspect "$Xcontainerinspect" \
                                               "Config" "Labels" "options"
                                        )"
@@ -6650,6 +6654,7 @@ check_xdepends() {
                     esac
                     ;;
             esac
+            #
             ;;
         no)
             case "${X_option_to_check}" in
@@ -6716,9 +6721,13 @@ check_xdepends() {
 
     # --xoverip
     case "$Xoverip" in
+        #
         yes|socat)
+            #
             case "${X_option_to_check}" in
+                #
                 --xephyr|--xorg|--nxagent|--xpra|--xpra2|--xvfb|--xwin|--runx) ;;
+                #
                 --hostdisplay)
                     case "$Xcontainer_option" in
                         yes)
@@ -6748,12 +6757,15 @@ check_xdepends() {
                         }
                     }
                     ;;
+                #
                 --weston|--kwin|--hostwayland)
                     xdepends_message_ttm \
                         "|${X_option_to_check} does not support X over TCP (--xoverip)."
                     ;;
+                #
             esac
             ;;
+        #
         listentcp)
             case "${X_option_to_check}" in
                 --xephyr | --xorg | --nxagent | --xpra      | --xpra2    | \
