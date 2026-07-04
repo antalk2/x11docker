@@ -106,7 +106,7 @@ trim_to_mark() {
 }
 
 error_ttm() {
-    error  "$( trim_to_mark "${1}" )"
+    error "$( trim_to_mark "${1}" )"
 }
 
 note_ttm() {
@@ -2898,11 +2898,11 @@ waitforlogentry_sh() {
 
         # error if TimeToWait seconds have elapsed
         if [ "$ElapsedTime" -gt "$TimeToWait" ] ; then
-            error  "$(trim_to_mark \
-            "|waitforlogentry_sh(): ${application}:
-             : Timeout waiting for entry \"${keyword}\" in ${logfile_basename}
-             |  Last lines of ${logfile_basename}:"
-             )${NEWLINE}$(tail -n15 "${logfile}")"
+            error "$(trim_to_mark \
+                   "|waitforlogentry_sh(): ${application}:
+                    : Timeout waiting for entry \"${keyword}\" in ${logfile_basename}
+                    |  Last lines of ${logfile_basename}:"
+                    )${NEWLINE}$(tail -n15 "${logfile}")"
         fi
 
         # error if Errorkeys matches to content of logfile
@@ -2911,11 +2911,11 @@ waitforlogentry_sh() {
             #
             if [ -n "$Errorkey" ] ; then
                 error "$(trim_to_bar \
-              "|waitforlogentry_sh(): ${application}: Found error message in logfile:
-               |  <'$Errorkey'>
-               |
-               |  Context in logfile ${logfile_basename}:"
-               )${NEWLINE}$(grep -C7 "$Errorkey" "${logfile}" )"
+                       "|waitforlogentry_sh(): ${application}: Found error message in logfile:
+                        |  <'$Errorkey'>
+                        |
+                        |  Context in logfile ${logfile_basename}:"
+                        )${NEWLINE}$( grep -C7 "$Errorkey" "${logfile}" )"
                 # ---
             fi
         fi
@@ -3519,10 +3519,8 @@ installer() {                   # --install, --update, --update-master, --remove
     case "${1:-}" in
         --install)
             if [ ! -f "./x11docker" ]   ; then
-                error "$(trim_to_bar \
-                       "|File x11docker not found in current folder.
-                        |  Try 'x11docker --update' instead."
-                        )"
+                error_ttm "|File x11docker not found in current folder.
+                           |  Try 'x11docker --update' instead."
                 return 1
             fi
 
@@ -3558,10 +3556,9 @@ installer() {                   # --install, --update, --update-master, --remove
             fi
         
             if ! download ; then
-                error "$(trim_to_bar \
-                       "|Neither wget nor curl found. Need 'wget' or 'curl' for download.
-                        |Please install wget or curl."
-                       )"
+                error_ttm \
+                    "|Neither wget nor curl found. Need 'wget' or 'curl' for download.
+                     |Please install wget or curl."
                 return 1
             fi
 
@@ -3811,9 +3808,9 @@ mkpasswd() {
     Password="${1:-}"
 
     if ! command -v perl >/dev/null ; then
-        error "$(trim_to_bar \
+        error_ttm \
           "|Option --password: command 'perl' not found.
-           |  perl is needed to generate an encrypted password." )"
+           |  perl is needed to generate an encrypted password."
         #
         return 1
     fi
@@ -5046,13 +5043,11 @@ setup_sound_pulseaudio() {
 
     if [ "$Setcookie" = "yes" ] ; then
         if [ -e "$Hostuserhome/.config/pulse/cookie" ] ; then
-            cp "$Hostuserhome/.config/pulse/cookie" "$Pulseaudiocookie"
+            cp  "$Hostuserhome/.config/pulse/cookie" "$Pulseaudiocookie"
             store_runoption_env "PULSE_COOKIE=$(convertpath share "$Pulseaudiocookie")"
         else
-            note "$(trim_to_bar \
-                  "|Option --pulseaudio: Did not find cookie
-                   |  $Hostuserhome/.config/pulse/cookie"
-                   )"
+            note_ttm "|Option --pulseaudio: Did not find cookie
+                      |  $Hostuserhome/.config/pulse/cookie"
         fi
   fi
 
@@ -5113,21 +5108,19 @@ setup_vaapi() {
         elif lspci -k | grep -q nvidia            ; then
             LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME:-nvidia}"
             #
-            note "$(trim_to_bar \
-               "|Option --gpu: Enabling VA-API video decoding support
-                |  with NVIDIA NVDECODE. If you want to use NVIDIA VDPAU instead,
-                |  please run x11docker with '--env LIBVA_DRIVER_NAME=vdpau'
-                |  or set the variable globally with 'export LIBVA_DRIVER_NAME=vdpau'."
-                )"
+            note_ttm \
+                "|Option --gpu: Enabling VA-API video decoding support
+                 |  with NVIDIA NVDECODE. If you want to use NVIDIA VDPAU instead,
+                 |  please run x11docker with '--env LIBVA_DRIVER_NAME=vdpau'
+                 |  or set the variable globally with 'export LIBVA_DRIVER_NAME=vdpau'."
             #
         elif lspci -k | grep -q i915 &&  [ -z "${DRI_PRIME:-}" ] ; then
             LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME:-i965}"
-            note "$(trim_to_bar \
-                  "|Option --gpu: Enabling VA-API intel driver i965.
-                   |  If you want to use the newer iHD intel driver instead,
-                   |  please run x11docker with '--env LIBVA_DRIVER_NAME=iHD'
-                   |  or set the variable globally with 'export LIBVA_DRIVER_NAME=iHD'."
-                   )"
+            note_ttm \
+                "|Option --gpu: Enabling VA-API intel driver i965.
+                 |  If you want to use the newer iHD intel driver instead,
+                 |  please run x11docker with '--env LIBVA_DRIVER_NAME=iHD'
+                 |  or set the variable globally with 'export LIBVA_DRIVER_NAME=iHD'."
         fi
     fi
 
@@ -5137,10 +5130,9 @@ setup_vaapi() {
         nouveau)       VDPAU_DRIVER="${VDPAU_DRIVER:-nouveau}"  ;;
         nvidia|vdpau)  VDPAU_DRIVER="${VDPAU_DRIVER:-nvidia}"   ;;
         "")
-            note  "$(trim_to_bar \
-                   "|Option --gpu: Could not estimate drivers for VA-API and VDPAU
-                    |  video decoding acceleration support. This will likely fail in container."
-                    )"
+            note_ttm \
+                "|Option --gpu: Could not estimate drivers for VA-API and VDPAU
+                 |  video decoding acceleration support. This will likely fail in container."
             ;;
     esac
 
@@ -5176,10 +5168,8 @@ setup_webcam() {
   while read -r Webcamdevice ; do
     store_runoption_volume "$Webcamdevice"
   done < <(  find /dev/video* -maxdepth 0 2>/dev/null \
-                 || note "$(trim_to_bar \
-                     "|Option --webcam: No webcam devices /dev/video* found.
-                      |  Webcam in container will fail."
-                      )"
+                 || note_ttm "|Option --webcam: No webcam devices /dev/video* found.
+                              |  Webcam in container will fail."
           )
 
   Containerusergroups="$Containerusergroups video"
@@ -5242,10 +5232,8 @@ check_newxenv()  {
 
         case "$Runtime" in
             kata-runtime)
-                note "$(trim_to_bar \
-                      "|Option --runtime=$Runtime works only with X over IP.
-                       |  Enabling option --xoverip."
-                       )"
+                note_ttm "|Option --runtime=$Runtime works only with X over IP.
+                          |  Enabling option --xoverip."
                 Xoverip="listentcp"
                 ;;
         esac
@@ -5254,20 +5242,19 @@ check_newxenv()  {
             --xwin|--runx)
                 Xoverip="listentcp"
                 if [ "$g_Network" = "none" ] ; then
-                    note "$(trim_to_bar \
-                          "|Option $Xserver needs network access.
-                           |  Enabling option -I, --network."
-                           )"
+                    note_ttm "|Option $Xserver needs network access.
+                              |  Enabling option -I, --network."
                     check_fallback
                     g_Network=""
                 fi
                 ;;
             --hostdisplay)
                 if [ "$Hostxoverip" = "yes" ] ; then
-                    note "$(trim_to_bar \
-                          "|Option $Xserver needs --xoverip because host X server
-                           |  DISPLAY==$Hostdisplay uses X over TCP/IP. Enabling option --xoverip."
-                           )"
+                    note_ttm \
+                        "|Option $Xserver needs --xoverip because host X server
+                         |  DISPLAY==$Hostdisplay uses X over TCP/IP.
+                         : Enabling option --xoverip."
+                    #
                     Xoverip="listentcp"
                 fi
                 ;;
@@ -5301,12 +5288,11 @@ check_newxenv()  {
                         ;;
                         no)
                             if [ "$g_Network" = "none" ] ; then
-                                error "$(trim_to_bar \
-                                       "|Option --xoverip needs network access.
-                                        |  Please enable option -I, --network.
-                                        |  Alternatively provide image x11docker/xserver (option --xc)
-                                        |  to allow an isolated internal network."
-                                        )"
+                                error_ttm \
+                                    "|Option --xoverip needs network access.
+                                     |  Please enable option -I, --network.
+                                     |  Alternatively provide image x11docker/xserver (option --xc)
+                                     |  to allow an isolated internal network."
                             fi
                             ;;
                     esac
@@ -5380,12 +5366,13 @@ check_newxenv()  {
                           ABSTRACT-CONNECT:/tmp/.X11-unix/X${Newdisplaynumber} &
                     storepid $! "socat_X$Newdisplaynumber"
                 else
-                    note "$(trim_to_bar \
-                          "|It seems you are running x11docker on WSL2g.
-                           |  Because WSL2g mounts /tmp/.X11-unix read-only, x11docker needs either socat
-                           |  for a workaround, so please install socat, or use option --xoverip.
-                           |  This start of x11docker is likely to fail."
-                           )"
+                    note_ttm \
+                        "|It seems you are running x11docker on WSL2g.
+                         |  Because WSL2g mounts /tmp/.X11-unix read-only,
+                         : x11docker needs either socat
+                         |  for a workaround, so please install socat, or
+                         : use option --xoverip.
+                         |  This start of x11docker is likely to fail."
                 fi
             fi
             ;; #  # other Xserver
@@ -5768,30 +5755,27 @@ check_vt() {
     fi
 
     if [ -n "${XDG_VTNR:-}" ] && [ -n "$Hostdisplay$Hostwaylandsocket" ] ; then
-        note "$(trim_to_bar \
-              "|Current X server $Hostdisplay runs on tty ${XDG_VTNR:-}.
-               |  Access it with [CTRL][ALT][F${XDG_VTNR:-}]."
-               )"
+        note_ttm \
+            "|Current X server $Hostdisplay runs on tty ${XDG_VTNR:-}.
+             |  Access it with [CTRL][ALT][F${XDG_VTNR:-}]."
     fi
 
     if [ "${Newxvt:-999}" -gt "12" ] ; then
         if ! fgconsole --next-available 1>/dev/null 2>/dev/null ; then
-            note "$(trim_to_bar \
-                  "|Could not check for a free tty below or equal to 12.
-                   |  Would need to use command fgconsole for a better check.
-                   |  Possibilities:
-                   |  1.) Run x11docker as root.
-                   |  2.) Add user to group tty (not recommended, may be insecure).
-                   |  3.) Use display manager gdm3.
-                   |  4.) Run x11docker directly from console."
-                   )"
+            note_ttm \
+                "|Could not check for a free tty below or equal to 12.
+                 |  Would need to use command fgconsole for a better check.
+                 |  Possibilities:
+                 |  1.) Run x11docker as root.
+                 |  2.) Add user to group tty (not recommended, may be insecure).
+                 |  3.) Use display manager gdm3.
+                 |  4.) Run x11docker directly from console."
         fi
         note "To access X on tty$Newxvt, use command 'chvt $Newxvt'"
     else
-        note "$(trim_to_bar \
-              "|New X server $Xserver $Newdisplay will run on tty $Newxvt.
-               |  Access it with [CTRL][ALT][F$Newxvt]."
-               )"
+        note_ttm \
+            "|New X server $Xserver $Newdisplay will run on tty $Newxvt.
+             |  Access it with [CTRL][ALT][F$Newxvt]."
     fi
 
     return 0
@@ -5825,10 +5809,9 @@ check_xcontainer() {
         case "$Xcontainer_option" in
             auto) Xcontainer_option="no" ;;
             yes)
-                note "$(trim_to_bar \
+                note_ttm \
                   "|Option --xc is not supported with Docker Desktop VM.
                    |  Fallback: Disabling option --xc."
-                   )"
                 check_fallback
                 Xcontainer_option="no"
                 ;;
@@ -5957,11 +5940,10 @@ check_xcontainer() {
     if [ "$Fail" = "yes" ] ; then
         #
         if [ "$Xcontainer_option" = "yes" ] ; then
-            note "$(trim_to_bar \
-              "|Option --xc: Image $Xcontainerimage not found
-               |  at backend '$Xcontainerbackend' (rootless: $Xcrootless).
-               |  Fallback: Disabling option --xc"
-               )"
+            note_ttm \
+                "|Option --xc: Image $Xcontainerimage not found
+                 |  at backend '$Xcontainerbackend' (rootless: $Xcrootless).
+                 |  Fallback: Disabling option --xc"
             check_fallback
         fi
         #
@@ -6010,13 +5992,11 @@ check_xcontainer() {
                     ;;
                 no)
                     if [ "$Xcontainer_option" = "no" ] ; then
-                        note "$(trim_to_bar \
-                              "|Option --xc not possible:
-                               |  - without image x11docker/xserver.
-                               |  - with runtime kata-runtime
-                               |  - on MS Windows
-                               |  Fallback: Setting --xc=no"
-                               )"
+                        note_ttm "|Option --xc not possible:
+                                  |  - without image x11docker/xserver.
+                                  |  - with runtime kata-runtime
+                                  |  - on MS Windows
+                                  |  Fallback: Setting --xc=no"
                         #
                         check_fallback
                     fi
@@ -6082,10 +6062,8 @@ check_xcontainer() {
             Xcontainerversion="$( parse_inspect "$Xcontainerinspect" "Config" "Labels" "version" )"
             #
             if version_less_than "$Xcontainerversion" "$Xcontainerversionlatest" ; then
-                note "$(trim_to_bar \
-                      "|Option --xc: Please update image x11docker/xserver
-                       |  with 'docker pull x11docker/xserver'."
-                       )"
+                note_ttm "|Option --xc: Please update image x11docker/xserver
+                          |  with 'docker pull x11docker/xserver'."
             fi
             ;;
         no)
@@ -10945,10 +10923,10 @@ store_runoption_volume() {  # store volume/device for docker command
             SharevolumesArray[$Sharevolumescount]="${ARG1}"
             [ -h "$Path" ] && myrealpath "$Path" >/dev/null && {
                     #
-                    note "$(trim_to_bar \
-                       "|Option --share: Shared file is a symbolic link. Sharing target, too.
-                        |  Symlink: $Path
-                        |  Target:  $(myrealpath "$Path")" )"
+                    note_ttm \
+                        "|Option --share: Shared file is a symbolic link. Sharing target, too.
+                         |  Symlink: $Path
+                         |  Target:  $(myrealpath "$Path")"
                     #
                     store_runoption_volume "$(myrealpath "$Path")$Readwritemode"
                 }
@@ -13968,9 +13946,8 @@ ${2:-}"                       ; shift ;;                             # Add custo
 
      #### Deprecated options
          --build)             Buildimage="yes" ;
-                              note "$(trim_to_bar \
-                                   "|Option ---build is deprecated.
-                                    |  Please directly build with docker or podman instead." )"
+                              note_ttm "|Option ---build is deprecated.
+                                        |  Please directly build with docker or podman instead."
                               ;;
          --dbus-system)       note "Option --dbus-system is deprecated.
   Please use one of --init=systemd|openrc|runit|sysvinit instead.
@@ -17344,9 +17321,9 @@ main() {
   if [ "$Xcontainer_option" = "yes" ] ; then
       # --xc
       create_xcontainercommand
-      debugnote "$(trim_to_bar \
-            "|X container command (rootless ${Xcrootless:-undefined}):
-             |  $Xcontainercommand" )"
+      debugnote_ttm \
+          "|X container command (rootless ${Xcrootless:-undefined}):
+           |  $Xcontainercommand"
       #
       start_xcontainer
   fi
@@ -17424,10 +17401,10 @@ main() {
 
           create_backendcommand           # create 'docker run' command
           echo "$Backendcommand" >> "$Backendcommandfile"
-          debugnote "$(trim_to_bar \
+          debugnote_ttm \
              "|$BackendKind command (rootless ${Backendrootless:-undefined}):
-              |  $Backendcommand" )"
-
+              |  $Backendcommand"
+          #
           if [ "$Containersetup" = "yes" ] ; then
               ## containerrootrc runs as root in container.
               #
@@ -17481,7 +17458,7 @@ main() {
                fi
             )"
       #
-      debugnote "$(trim_to_mark \
+      debugnote_ttm \
       "|x11docker version:  $Version
        |  Backend version:               ${Backendbin_version}
        |  Running rootless:              $Backendrootless
@@ -17500,17 +17477,16 @@ main() {
        |  Running on console:            $Runsonconsole
        |  Running over SSH:              $Runsoverssh
        |  Running sourced:               $Runssourced
-       |  bash \$-:                       $-" )"
+       |  bash \$-:                       $-"
   )
 
   if [ "$Winsubsystem" ] ; then
-      debugnote "$(trim_to_bar \
+      debugnote_ttm \
           "|
            |  Running on Windows subsystem:  $Winsubsystem
            |  Path to subsystem:             $(convertpath windows "$Winsubpath")/
            |  Mount path in subsystem:       $Winsubmount/
            |  Using docker VM:               $Dockervm"
-      )"
   fi
 
   { #### Run docker image
