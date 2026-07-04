@@ -11269,59 +11269,80 @@ create_containerrootrc() {
         rootrc_nvidia_installer
     fi
 
-  trim_to_bar "|
-               |rocknroll || exit 64
-               |"
+    trim_to_bar "|
+                 |rocknroll || exit 64
+                 |"
+    echo
 
-  printf "\n# Createcontaineruser: rootrc_setup_user()\n"
-  [ "$Createcontaineruser" = "yes" ] && rootrc_setup_user
+    printf "\n# Createcontaineruser: rootrc_setup_user()\n"
+    [ "$Createcontaineruser" = "yes" ] && rootrc_setup_user
   
-  trim_to_bar \
-      "|
-       |debugnote \"containerrootrc: Container user: \$(id \$Containeruser)
-       |\$(cat /etc/passwd | grep '^\$Containeruser:')\"
-       |
-       |# Create HOME
-       |Containeruserhome=\"\$(cat /etc/passwd | grep \"\$Containeruser:\" | cut -d: -f6)\"
-       |Containeruserhome=\"\${Containeruserhome:-/tmp/\$Containeruser}\"
-       |[ -e \"\$Containeruserhome\" ] || {
-       |  mkdir -v -p -m 777 \"\$Containeruserhome\"
-       |  chown -v \"\$Containeruser\":\"\$Containerusergroup\" \"\$Containeruserhome\" \\
-       |  && chmod -v   755  \"\$Containeruserhome\"  # can fail depending on capabilities
-       |}
-       |ls -la \"\$Containeruserhome\"
-       |export HOME=\"\$Containeruserhome\"
-       |"
-  echo
-  #
-  
-  [ "$Switchcontaineruserflag" = "yes" ] && rootrc_create_helperscripts
-  [ "$Dbussystem" = "yes" ]          && rootrc_prepare_dbus
-  case "$Initsystem" in
-    openrc)   rootrc_prepare_init_openrc ;;
-    runit)    rootrc_prepare_init_runit ;;
-    systemd)  rootrc_prepare_init_systemd ;;
-    sysvinit) rootrc_prepare_init_sysvinit ;;
-  esac
-  
-  echo "
-# disable getty in inittab
-[ -e /etc/inittab ] && sed -i 's/.*getty/##getty disabled by x11docker## \0/' /etc/inittab
-"
+    trim_to_bar \
+        "|
+         |debugnote \"containerrootrc: Container user: \$(id \$Containeruser)
+         |\$(cat /etc/passwd | grep '^\$Containeruser:')\"
+         |
+         |# Create HOME
+         |Containeruserhome=\"\$(cat /etc/passwd | grep \"\$Containeruser:\" | cut -d: -f6)\"
+         |Containeruserhome=\"\${Containeruserhome:-/tmp/\$Containeruser}\"
+         |[ -e \"\$Containeruserhome\" ] || {
+         |  mkdir -v -p -m 777 \"\$Containeruserhome\"
+         |  chown -v \"\$Containeruser\":\"\$Containerusergroup\" \"\$Containeruserhome\" \\
+         |  && chmod -v   755  \"\$Containeruserhome\"  # can fail depending on capabilities
+         |}
+         |ls -la \"\$Containeruserhome\"
+         |export HOME=\"\$Containeruserhome\"
+         |"
+    echo
+    #
+    
+    printf "\n# Switchcontaineruserflag: rootrc_create_helperscripts()\n"
+    [ "$Switchcontaineruserflag" = "yes" ] && rootrc_create_helperscripts
+    
+    printf "\n# Dbussystem: rootrc_prepare_dbus()\n"
+    [ "$Dbussystem" = "yes" ]          && rootrc_prepare_dbus
 
-  [ "$Dbussystem" = "yes" ] && {
-    echo "
-command -v dbus-daemon || note 'DBus not found.
-  Cannot run DBus system daemon. Please install dbus in image.'
-"
+    printf "\n# Initsystem: rootrc_prepare_init_{openrc|runit|systemd|sysvinit}()\n"
     case "$Initsystem" in
-      tini|none|dockerinit) 
-        echo "
-dbus-daemon --system --fork
-"
-      ;;
+        openrc)   rootrc_prepare_init_openrc   ;;
+        runit)    rootrc_prepare_init_runit    ;;
+        systemd)  rootrc_prepare_init_systemd  ;;
+        sysvinit) rootrc_prepare_init_sysvinit ;;
     esac
-  }
+
+    #
+    # https://www.networkworld.com/article/930604/unix-how-to-the-linux-etc-inittab-file.html
+    # Unix How To: The Linux /etc/inittab file.
+    # Basically, # at the start of a line makes the line a comment.
+    #
+    #
+    
+    trim_to_bar \
+        "|
+         |# disable getty in inittab
+         |if [ -e /etc/inittab ] ; then
+         |    sed -i 's/.*getty/##getty disabled by x11docker## \0/' /etc/inittab
+         |fi
+         |"
+    echo
+
+    if [ "$Dbussystem" = "yes" ] ; then
+        trim_to_bar \
+            "|
+             |command -v dbus-daemon || note 'DBus not found.
+             |  Cannot run DBus system daemon. Please install dbus in image.'
+             |"
+        echo
+
+        case "$Initsystem" in
+            tini|none|dockerinit)
+                trim_to_bar "|
+                             |dbus-daemon --system --fork
+                             |"
+                echo
+                ;;
+        esac
+    fi
 
   [ "$g_Remountcgroup" = "yes" ] && echo "
 # wait for nsenter to remount /sys/fs/cgroup to :rw
