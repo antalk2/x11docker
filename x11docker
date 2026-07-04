@@ -11094,6 +11094,9 @@ store_runoption_dump_cap() {
 #  - The emitted script runs as root in container
 #
 create_containerrootrc() {
+    local Line
+    local key_part
+    #
     trim_to_mark \
         "|#! /bin/sh
          |
@@ -11160,6 +11163,8 @@ create_containerrootrc() {
     #
     # Changed to always emit (so that I can see it), but execute conditionally.
     #
+    echo
+    echo '# Maybe create /etc/profile.d/90-x11docker-containerrc.sh'
     case "$Initsystem" in
         systemd|openrc|sysvinit|runit) echo "CREATE_etc_profile_d_90_x11docker_containerrc_sh=yes" ;;
         *)                             echo "CREATE_etc_profile_d_90_x11docker_containerrc_sh=no"  ;;
@@ -11167,41 +11172,58 @@ create_containerrootrc() {
     
     case "$Initsystem" in
       systemd|openrc|sysvinit|runit|*)
-          trim_to_mark \
+          trim_to_bar \
               "|
                |if [ \"\$CREATE_etc_profile_d_90_x11docker_containerrc_sh\" = yes ] ; then
-               |install -m 666 /dev/null /etc/profile.d/90-x11docker-containerrc.sh
-               |echo '
-               |echo > /etc/profile.d/90-x11docker-containerrc.sh
-               |exec /bin/sh $(convertpath share "$Containerrc")
-               |' >> /etc/profile.d/90-x11docker-containerrc.sh
+               |    install -m 666 /dev/null /etc/profile.d/90-x11docker-containerrc.sh
+               |    (
+               |      echo
+               |      echo 'echo > /etc/profile.d/90-x11docker-containerrc.sh'
+               |      echo 'exec /bin/sh $(convertpath share "$Containerrc")'
+               |    ) >> /etc/profile.d/90-x11docker-containerrc.sh
                |fi
                |"
           echo
           ;;
     esac
-  
-  while read Line; do
-    case "$(cut -d= -f1 <<< "$Line")" in
-      DISPLAY|XAUTHORITY)
-        echo "
-echo 'case \"\${SSH_CLIENT:-}\${SSH_TTY:-}\" in' >> /etc/profile.d/10-x11docker-env.sh
-echo '  \"\")' >> /etc/profile.d/10-x11docker-env.sh
-echo '    export $Line' >> /etc/profile.d/10-x11docker-env.sh
-echo '  ;;' >> /etc/profile.d/10-x11docker-env.sh
-echo '  *)' >> /etc/profile.d/10-x11docker-env.sh
-echo '    # disabled due to issues with ssh and xrdp #554' >> /etc/profile.d/10-x11docker-env.sh
-echo '    # export $Line' >> /etc/profile.d/10-x11docker-env.sh
-echo '    # workaround for ssh and xrdp #554' >> /etc/profile.d/10-x11docker-env.sh
-echo '    export XAUTHORITY=$Containeruserhome/.Xauthority' >> /etc/profile.d/10-x11docker-env.sh
-echo '  ;;' >> /etc/profile.d/10-x11docker-env.sh
-echo 'esac' >> /etc/profile.d/10-x11docker-env.sh"
-      ;;
-      *)
-        echo "echo 'export $Line'                                          >> /etc/profile.d/10-x11docker-env.sh"
-      ;;
-    esac
-  done <<< $(store_runoption_dump_env)
+
+    #
+    # Unlike "/etc/profile.d/90-x11docker-containerrc.sh" above, we do
+    # not explicitly create "/etc/profile.d/10-x11docker-env.sh", only
+    # append to it.
+    #
+    echo
+    echo '# Append to (or Create?) /etc/profile.d/10-x11docker-env.sh'
+    echo '('
+    while read Line; do
+        key_part="$(cut -d= -f1 <<< "$Line")"
+        case "${key_part}" in
+            DISPLAY|XAUTHORITY)
+                #
+                trim_to_bar \
+                    "|
+                     |echo                                                        >> /etc/profile.d/10-x11docker-env.sh
+                     |echo '# ${key_part}'                                        >> /etc/profile.d/10-x11docker-env.sh
+                     |echo 'case \"\${SSH_CLIENT:-}\${SSH_TTY:-}\" in'            >> /etc/profile.d/10-x11docker-env.sh
+                     |echo '  \"\")'                                              >> /etc/profile.d/10-x11docker-env.sh
+                     |echo '    export $Line'                                     >> /etc/profile.d/10-x11docker-env.sh
+                     |echo '  ;;'                                                 >> /etc/profile.d/10-x11docker-env.sh
+                     |echo '  *)'                                                 >> /etc/profile.d/10-x11docker-env.sh
+                     |echo '    # disabled due to issues with ssh and xrdp #554'  >> /etc/profile.d/10-x11docker-env.sh
+                     |echo '    # export $Line'                                   >> /etc/profile.d/10-x11docker-env.sh
+                     |echo '    # workaround for ssh and xrdp #554'               >> /etc/profile.d/10-x11docker-env.sh
+                     |echo '    export XAUTHORITY=$Containeruserhome/.Xauthority' >> /etc/profile.d/10-x11docker-env.sh
+                     |echo '  ;;'                                                 >> /etc/profile.d/10-x11docker-env.sh
+                     |echo 'esac'                                                 >> /etc/profile.d/10-x11docker-env.sh
+                     |echo                                                        >> /etc/profile.d/10-x11docker-env.sh"
+                ;;
+            *)
+                echo "echo 'export $Line'                                         >> /etc/profile.d/10-x11docker-env.sh"
+                ;;
+        esac
+    done <<< $(store_runoption_dump_env)
+    echo ')'
+    echo
 
   echo "
 # Container system
