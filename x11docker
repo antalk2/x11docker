@@ -39,6 +39,10 @@ esac
 #
 # return 0 if word is found in stdin, non-0 otherwise
 #
+as_newline_separated_words() {
+    # Space and Tab to newline, omit empty lines
+    tr -s ' \t' '\n\n' | grep -v -x '' 
+}
 stdin_contains_as_word() {
     #
     if  grep -E -q -e $'[ \t]' <<< "$1" ; then
@@ -50,7 +54,7 @@ stdin_contains_as_word() {
     # We want space and tab to separate words in the input.
     # Change these to newlines
     # Accept only whole-line matches.
-    tr -s ' \t' '\n\n' | grep -v -x ''  | LC_ALL=C grep -x -q  -- "${1}"
+    as_newline_separated_words | LC_ALL=C grep -x -q  -- "${1}"
 }
 
 word_is_in() {
@@ -9381,16 +9385,17 @@ check_backend() {               # options --backend, --rootless
     no)
       case "$BackendKind" in
         docker)
-            [ "$(id -un)" != "root" ] \
-                && ! word_is_in 'docker' "$(id -G -n)" \
-                && error_ttm \
-                       "|Option --rootless=no: Please run x11docker as root
-                        |  to allow rootful $BackendKind."
-        ;;
+           if [ "$(id -un)" != "root" ] && ! word_is_in 'docker' "$(id -G -n)" ; then
+               error_ttm  "|Option --rootless=no: Please run x11docker as root
+                           |  to allow rootful $BackendKind."
+           fi
+           ;;
         podman|nerdctl)
-          [ "$(id -un)" != "root" ] && error "Option --rootless=no: Please run x11docker as root
-  to allow rootful $BackendKind."
-        ;;
+            if [ "$(id -un)" != "root" ] ; then
+                error_ttm "|Option --rootless=no: Please run x11docker as root
+                           |  to allow rootful $BackendKind."
+            fi
+            ;;
       esac
     ;;
   esac
@@ -10996,6 +11001,23 @@ store_runoption_dump_volume() {  # store volume/device for docker command
     return 0
 }
 
+#
+# store_runoption_cap "a b c"
+#  appends  "${NEWLINE}a${NEWLINE}b${NEWLINE}c"
+#  to       Capabilities
+#
+# Note: Capabilities may contain duplicate entries. Those are removed
+#       by store_runoption_dump_cap()
+#
+# Note: The only capability that is not in docker_default_capabilities
+#       is SYS_BOOT.
+#
+#       Calling store_runoption_cap() for those in
+#       docker_default_capabilities have no effect (until the defaults
+#       change), because store_runoption_dump_cap() will filter them.
+#       They may serve as a documentation of which capabilities are
+#       relied on, though.
+#
 store_runoption_cap() {  # dump cap for docker command
     # local Count Line Path Readwritemode
     local Line
@@ -11005,34 +11027,62 @@ store_runoption_cap() {  # dump cap for docker command
     return 0
 }
 
+#
+# Emit newline-separated list of capabilities for "docker --cap-add $capability"
+#
+# Called in a single location
+#
 store_runoption_dump_cap() {  # dump cap for docker command
     # local Count
     local Line
     # local Path
     # local Readwritemode
-    while read Line; do
-        if  [ "$Line" ] ; then
-            case "$Capdropall" in
-                yes)
-                    echo "$Line"
-                    ;;
-                no)
-                    # If Capdropall=no then the following
-                    #     capabilities, are already included. Avoid
-                    #     duplicating them.
-                    #
-                    if stdin_contains_as_word "$Line" <<< "$(trim_to_mark \
-                        "|SETPCAP MKNOD AUDIT_WRITE CHOWN NET_RAW
-                         : DAC_OVERRIDE FOWNER FSETID KILL SETGID
-                         : SETUID NET_BIND_SERVICE SYS_CHROOT SETFCAP"
-                         )" ;
-                    then true # nothing, already included
-                    else echo "$Line"
-                    fi
-                    ;;
-            esac
-        fi
-    done < <(echo "$Capabilities" | sort -u)
+    local docker_default_capabilities
+    local normalized_Capabilities
+    #
+    case "$Capdropall" in
+        yes)
+            # echo "$Line"
+            true # Emit nothing. It does not really matter, this
+                 # function is not called if [  "$Capdropall" = yes ]
+            ;;
+        no)
+            #
+            # See: https://dockerlabs.collabnix.com/advanced/security/capabilities/
+            # under 'The following list contains all capabilities that are enabled by default'
+            #
+            # docker_default_capabilities contains these in a newline-separated list.
+            docker_default_capabilities= "$(trim_to_bar \
+                        "|CHOWN DAC_OVERRIDE FSETID FOWNER MKNOD NET_RAW
+                         | SETGID SETUID SETFCAP SETPCAP
+                         | NET_BIND_SERVICE SYS_CHROOT KILL AUDIT_WRITE" \
+                         | as_newline_separated_words | sort -u
+                         )"
+            # If Capdropall=no then emit a newline-separated list of
+            #     capabilities from $Capabilities , omitting
+            #     those in docker_default_capabilities.
+            #
+            #if false ; then 
+            #    while read Line; do
+            #        if ! word_is_in "$Line" "${docker_default_capabilities}" ;
+            #        then echo "$Line"
+            #        fi
+            #    done < <(echo "$Capabilities" | tr ' ' '\n' | sort -u | grep -v '' )
+            #else
+            # ---
+            #
+            # Note: as_newline_separated_words is probably redundant,
+            #       since Capabilities should already be a newline-separated list of words.
+            #
+            normalized_Capabilities="$( echo "$Capabilities"              \
+                                            | as_newline_separated_words  \
+                                            | sort -u                     )"
+            # grep considers newline-separated list of patterns as alternatives to match.
+            echo "${normalized_Capabilities}" | grep -Fvx "${docker_default_capabilities}"
+            # ---
+            #fi
+            ;;
+    esac
     return 0
 }
 
