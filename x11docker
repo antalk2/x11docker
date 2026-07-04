@@ -9381,8 +9381,11 @@ check_backend() {               # options --backend, --rootless
     no)
       case "$BackendKind" in
         docker)
-          [ "$(id -un)" = "root" ] || id -G -n | stdin_contains_as_word 'docker' || error "Option --rootless=no: Please run x11docker as root
-  to allow rootful $BackendKind."
+            [ "$(id -un)" != "root" ] \
+                && ! word_is_in 'docker' "$(id -G -n)" \
+                && error_ttm \
+                       "|Option --rootless=no: Please run x11docker as root
+                        |  to allow rootful $BackendKind."
         ;;
         podman|nerdctl)
           [ "$(id -un)" != "root" ] && error "Option --rootless=no: Please run x11docker as root
