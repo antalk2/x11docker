@@ -2873,10 +2873,8 @@ waitforlogentry_sh() {
     StartTime="$(date +%s || true)"
     StartTime="${StartTime:-0}"
 
-    debugnote "$(trim_to_mark \
-        "|waitforlogentry_sh(): ${application}:
-         : Waiting for logentry \"${keyword}\" in ${logfile_basename}"
-         )"
+    debugnote_ttm "|waitforlogentry_sh(): ${application}:
+                   : Waiting for logentry \"${keyword}\" in ${logfile_basename}"
 
     while ! grep -q "${keyword}" <"${logfile}" ; do
         Count="$(( Count + 1 ))"
@@ -2892,11 +2890,10 @@ waitforlogentry_sh() {
 
         ## Report after 10 sec of waiting.
         if [ "$ElapsedTime" -gt "10" ] ; then
-            debugnote "$(trim_to_mark \
-           "|waitforlogentry_sh(): ${application}:
-            : Waiting since ${ElapsedTime}s
-            : for log entry \"${keyword}\" in ${logfile_basename}"
-         )"
+            debugnote_ttm  \
+                "|waitforlogentry_sh(): ${application}:
+                 : Waiting since ${ElapsedTime}s
+                 : for log entry \"${keyword}\" in ${logfile_basename}"
         fi
 
         # error if TimeToWait seconds have elapsed
@@ -2925,11 +2922,10 @@ waitforlogentry_sh() {
 
         # break loop on Timetosaygoodbye
         if ! rocknroll ; then
-            debugnote "$(trim_to_mark \
-                  "|waitforlogentry_sh(): ${application}:
-                   : Stopped waiting for ${keyword} in ${logfile_basename}
-                   : due to terminating signal."
-                   )"
+            debugnote_ttm \
+                "|waitforlogentry_sh(): ${application}:
+                 : Stopped waiting for ${keyword} in ${logfile_basename}
+                 : due to terminating signal."
             Error=1
             break
         fi
@@ -2941,10 +2937,8 @@ waitforlogentry_sh() {
     fi
     #
     # Normal return, found keyword
-    debugnote  "$(trim_to_mark \
-              "|waitforlogentry_sh(): ${application}:
-               : Found log entry \"${keyword}\" in ${logfile_basename}."
-              )"
+    debugnote_ttm "|waitforlogentry_sh(): ${application}:
+                   : Found log entry \"${keyword}\" in ${logfile_basename}."
     return 0
 }
 
@@ -3345,12 +3339,11 @@ cleanup() {
 
         for Line in $Orphanedfolders ; do
             if     [   -d "$Cachebasefolder/$Line/share"                  ] \
-                       && [ ! -s "$Cachebasefolder/$Line/share/timetosaygoodbye" ] ; then
+                && [ ! -s "$Cachebasefolder/$Line/share/timetosaygoodbye" ] ; then
                 #
-                note "$(trim_to_bar \
-              "|Found possibly active container for cache dir $Line.
-               |  Will summon it to terminate itself."
-               )"
+                note_ttm  \
+                    "|Found possibly active container for cache dir $Line.
+                     |  Will summon it to terminate itself."
                 #
                 echo timetosaygoodbye >> "$Cachebasefolder/$Line/share/timetosaygoodbye"
             fi
@@ -3546,10 +3539,8 @@ installer() {                   # --install, --update, --update-master, --remove
         --update|--update-master)
             if [ -x "${Prefix}/bin/x11docker" ] ; then
                 Oldversion="$(${Prefix}/bin/x11docker --version)"
-                note "$(trim_to_bar \
-              "|Current installed version: x11docker $Oldversion
-               |  at ${Prefix}/bin/x11docker"
-               )"
+                note_ttm "|Current installed version: x11docker $Oldversion
+                          |  at ${Prefix}/bin/x11docker"
             else
                 Oldversion=""
             fi
@@ -3656,10 +3647,9 @@ installer() {                   # --install, --update, --update-master, --remove
     case "${1:-}" in
         --update)
             if echo "$Oldversion" | grep -q beta ; then
-                note "$(trim_to_bar \
-                      "|You are switching from master branch to stable releases.
-                       |  To get latest master beta version, use option --update-master instead"
-                       )"
+                note_ttm \
+                    "|You are switching from master branch to stable releases.
+                     |  To get latest master beta version, use option --update-master instead"
                 #
                 # Note: Key1 and Key2 are address patterns for a `sed` call below.
                 #
@@ -3670,10 +3660,9 @@ installer() {                   # --install, --update, --update-master, --remove
                 Key2="\[${Oldversion}\]"
                 if [ "$Newversion" = "$Oldversion" ] ; then
                     Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
-                    note "$(trim_to_bar \
-                          "|Version $Newversion was already installed before this update.
-                           |  If you want the latest beta version from master branch, use --update-master."
-                           )"
+                    note_ttm \
+                        "|Version $Newversion was already installed before this update.
+                         |  If you want the latest beta version from master branch, use --update-master."
                 fi
                 if [ -z "$Oldversion" ] ; then
                     Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
@@ -3712,13 +3701,15 @@ installer() {                   # --install, --update, --update-master, --remove
                         :; s/^-.*/${Colredbg}\0${Colnorm}/
                         :; s/^@.*/${Coluline}\0${Colnorm}/"
                 )"
-                note "$(printf "%s\n%s\n%s"                                           \
-                 "Difference of installed version to new version:"                    \
-                 "  $ diff -u -s -Z '$(command -v x11docker)' '$(pwd)/x11docker'"     \
-                 "$(  diff -u -s -Z "$(command -v x11docker)" "$(pwd)/x11docker" 2>&1 \
-                      | sed "${colorize_diff_patterns}"
+                #
+                note "$( printf "%s\n%s\n%s"                                                    \
+                           "Difference of installed version to new version:"                    \
+                           "  $ diff -u -s -Z '$(command -v x11docker)' '$(pwd)/x11docker'"     \
+                           "$(  diff -u -s -Z "$(command -v x11docker)" "$(pwd)/x11docker" 2>&1 \
+                               | sed "${colorize_diff_patterns}"
+                            )"
                       )"
-                   )"
+                #
                 ;;
         esac
     fi
