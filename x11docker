@@ -11254,13 +11254,20 @@ create_containerrootrc() {
          |"
     echo
 
-  [ "$Screensize" ]          && rootrc_xrandr
-  [ "$Hostlocaltimefile" ]   && rootrc_timezone
-  [ "$Langwunsch" ]          && rootrc_create_locale
-  [ "$Nvidiainstallerfile" ] && [ "$Sharegpu" = "direct" ] && {
-    echo "note 'Option --gpu: Installing NVIDIA driver in container.'"
-    rootrc_nvidia_installer
-  }
+    printf "\n# Screensize: rootrc_xrandr()\n"
+    if [ -n "$Screensize"        ] ; then rootrc_xrandr ;  fi
+    
+    printf "\n# Hostlocaltimefile:  rootrc_timezone()\n"
+    if [ -n "$Hostlocaltimefile" ] ; then rootrc_timezone ; fi
+
+    printf "\n# Langwunsch:  rootrc_create_locale()\n"
+    if [ -n "$Langwunsch"        ] ; then rootrc_create_locale ; fi
+    
+    printf "\n# Installing NVIDIA driver:  rootrc_nvidia_installer()\n"
+    if [ "$Nvidiainstallerfile" ] && [ "$Sharegpu" = "direct" ] ; then
+        echo "note 'Option --gpu: Installing NVIDIA driver in container.'"
+        rootrc_nvidia_installer
+    fi
 
   echo "
 rocknroll || exit 64
