@@ -3737,16 +3737,12 @@ installer() {                   # --install, --update, --update-master, --remove
                      --size 64                               \
                      "$(pwd)/x11docker.png" "x11docker" ;
                 then
-                    note "$(trim_to_bar \
-                          "|Could not install icon for x11docker.
-                           |  Is 'xdg-icon-resource' (xdg-utils) installed on your system?"
-                           )"
+                    note_ttm "|Could not install icon for x11docker.
+                              |  Is 'xdg-icon-resource' (xdg-utils) installed on your system?"
                 fi
 
-                note "$(trim_to_bar \
-                      "|Storing README.md, CHANGELOG.md and LICENSE.txt in
-                       |  ${Prefix}/share/doc/x11docker"
-                       )"
+                note_ttm "|Storing README.md, CHANGELOG.md and LICENSE.txt in
+                          |  ${Prefix}/share/doc/x11docker"
                 #
                 if mkdir -p "${Prefix}/share/doc/x11docker" ; then
                     cp "README.md"    "${Prefix}/share/doc/x11docker/"
@@ -3786,12 +3782,10 @@ installer() {                   # --install, --update, --update-master, --remove
                     xdg-icon-resource uninstall --size 64 "x11docker" || true
                 fi
                 
-                note  "$(trim_to_bar \
-                       "|Will not remove files in your home folder.
-                        |  There might be files left in \$HOME/.local/share/x11docker
-                        |  The symbolic link \$HOME/x11docker might exist, too.
-                        |  The cache folder \$HOME/.cache/x11docker should be removed already."
-                        )"
+                note_ttm "|Will not remove files in your home folder.
+                          |  There might be files left in \$HOME/.local/share/x11docker
+                          |  The symbolic link \$HOME/x11docker might exist, too.
+                          |  The cache folder \$HOME/.cache/x11docker should be removed already."
                 ;;
         esac
     fi
