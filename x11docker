@@ -42,7 +42,9 @@ esac
 stdin_contains_as_word() {
     #
     if  grep -E -q -e $'[ \t]' <<< "$1" ; then
-        error "stdin_contains_as_word(): Space or Tab found in pattern \"$(printf %q  "$1")\""
+        error_ttm "|stdin_contains_as_word():
+                   : Space or Tab found in pattern \"$(printf %q  "$1")\""
+        #
         return 13 # Only if error returns.
     fi
     # We want space and tab to separate words in the input.
@@ -95,6 +97,15 @@ trim_to_mark() {
         | trim_to_bar_filter
 }
 
+error_ttm() {
+    error  "$( trim_to_mark "${1}" )"
+}
+
+note_ttm() {
+    note  "$( trim_to_mark "${1}" )"
+}
+
+
 #
 # echo yes or echo no depending on [ "$?" = "0" ]
 #
@@ -104,6 +115,17 @@ exitcode_yes_or_no() { if [ "$?" = "0" ] ; then echo yes ; else  echo no ; fi }
 # echo yes or echo no depending on exitcode of $*
 #
 yes_or_no() { if "${@}" ; then echo yes ; else echo no ; fi }
+
+#
+# function rev_cut() : Reversed cut.
+#
+# - As `cut`, but count fields from the back.
+#
+# Example: echo abcdef | rev_cut -c1-3
+#
+rev_cut() {
+    rev | cut "${@}" | rev
+}
 
 
 #
@@ -820,8 +842,9 @@ watchmessagefifo() {
             #
             # Messagetype is the text in `Line` after the last colon,
             #             without spaces.
-            #
-            Messagetype=":$(echo "$Line" | rev | cut -d: -f1  | rev | tr -d ' ')"
+
+            Messagetype=":$(echo "$Line" | rev_cut -d: -f1  | tr -d ' ')"
+            
             #
             # If `Message`  ends with `Messagetype`, remove the suffix `Messagetype`.
             #
@@ -1544,7 +1567,8 @@ download() {
 #
 escapestring() {
     if grep -q "'" <<< "${1:-}" ; then
-        error "escapestring(): x11docker cannot escape char ' in :${NEWLINE}  ${1:-}"
+        error_ttm "|escapestring(): x11docker cannot escape char ' in :
+                   |  ${1:-}"
         return 1
     fi
     echo "${1:-}" | LC_ALL=C sed -e 's/[^a-zA-Z0-9,._+@=:/-]/\\&/g; '
@@ -2802,7 +2826,8 @@ myrealpath() {                  # real path of possible symlink
 #  time.
 #
 # Examples:
-#  waitforlogentry_sh "start_xcontainer()" "$Xinitlogfile"      "X server container is ready"
+#
+#  waitforlogentry_sh "start_xcontainer()" "$Xinitlogfile"     "X server container is ready"
 #  waitforlogentry_sh containerrc          \$Storeinfofile      containerrootrc=ready  ''                       infinity
 #  waitforlogentry_sh "start_compositor()" "$Compositorlogfile" "$Compositorkeyword"   "$Compositorerrorcodes"
 #  waitforlogentry_sh tailstdout           "$Storeinfofile"      "x11docker=ready"      ""                       infinity
@@ -3192,10 +3217,9 @@ buildimage() {                  # --build: build image from x11docker repository
     # and ended up with "[...]dockerfile-xxx-x11docker[...]"
     #
     if ! grep -q  "dockerfile-x11docker-" <<< "$Wwwpath" ; then
-        error "$( trim_to_bar \
-               "|Option --build: x11docker only supports building of
-                |  images provided at x11docker repository https://github.com/mviereck"
-                )"
+        error_ttm  \
+            "|Option --build: x11docker only supports building of
+             |  images provided at x11docker repository https://github.com/mviereck"
     fi
     #
     mkdir -p "$Buildpath"
@@ -3207,12 +3231,11 @@ buildimage() {                  # --build: build image from x11docker repository
     #
     note "Download of $Wwwpath/Dockerfile"
     if ! download "$Wwwpath/Dockerfile" "$Buildpath/Dockerfile"  ; then
-        error "$(trim_to_bar \
+        error_ttm \
                "|Option --build: Did not find a Dockerfile for $local_Imagename
                 |  at $Wwwpath
                 |  Option --build only supports Dockerfiles from https://github.com/mviereck.
                 |  For other sources please download Dockerfile and use 'docker build'."
-                )"
     fi
     #
     if [ "$local_Imagename" = "x11docker/xserver" ] ; then
@@ -3233,29 +3256,40 @@ buildimage() {                  # --build: build image from x11docker repository
 }
 
 #
-# function cleanup()
+# function cleanup() : --cleanup : Check for non-removed containers
+#                      and left cache files.
 #
-cleanup() {                     # --cleanup : check for non-removed containers and left cache files
-    # Cleans x11docker cache and removes running and stopped x11docker containers.
-    # Does not change --home folders.
-    local Orphanedcontainers=
-    local Orphanedfolders=
-    local Line=
+# - Cleans x11docker cache and removes running and stopped x11docker
+#   containers.
+# - Does not change --home folders.
+#
+cleanup() {
+    
+    local Orphanedcontainers=""
+    local Orphanedfolders=""
+    local Line=""
     local Containerinspect Containerid
 
     # global BackendKind
-    note "x11docker will check for orphaned containers from earlier sessions
-  for current --backend=$BackendKind
-  This can happen if docker was not closed successfully.
-  x11docker will look for those containers and will clean up x11docker cache.
-  Caution: any currently running x11docker sessions will be terminated, too."
+    note_ttm \
+        "|x11docker will check for orphaned containers from earlier sessions
+         |  for current --backend=$BackendKind
+         |  This can happen if docker was not closed successfully.
+         |  x11docker will look for those containers and will clean up x11docker cache.
+         |  Caution: any currently running x11docker sessions will be terminated, too."
 
     # global Cachebasefolder
     cd "$Cachebasefolder" || error "Could not cd to cache folder '$Cachebasefolder'."
 
     # get Orphanedfolders
     if grep -q -- "\.cache/x11docker" <<< "$Cachebasefolder" ; then
-        Orphanedfolders="$(find "$Cachebasefolder" -mindepth 1 -maxdepth 1 -type d | sed "s%$Cachebasefolder/%%" )"
+        Orphanedfolders="$(
+            find "$Cachebasefolder" \
+                  -mindepth 1       \
+                  -maxdepth 1       \
+                  -type d           \
+            | sed "s%$Cachebasefolder/%%"
+        )"
     fi
 
     # get Orphanedcontainers
@@ -3263,7 +3297,11 @@ cleanup() {                     # --cleanup : check for non-removed containers a
         docker|podman|nerdctl)
             #
             # Container names from "docker ps -a"
-            Orphanedcontainers="$(unpriv_backend "$Backendbin ps -a" | grep x11docker_X | rev | cut -d' ' -f1 | rev)"
+            Orphanedcontainers="$(
+                 unpriv_backend "$Backendbin ps -a"  \
+                 | grep x11docker_X                  \
+                 | rev_cut -d' ' -f1
+            )"
             #
             # Make Orphanedcontainers  space-separated
             #
@@ -3590,7 +3628,7 @@ installer() {                   # --install, --update, --update-master, --remove
             # Assuming no space in its name, the name is the last word in that line.
             #
             # SC2010 (warning): Don't use ls | grep.
-            # the_unpacked_dir="$(ls -l | grep drwx | rev | cut -d' ' -f1 | rev)"
+            # the_unpacked_dir="$( ls -l | grep drwx | rev_cut -d' ' -f1 )"
             #
             the_unpacked_dir="$( find . -maxdepth 1 -type d -name 'x11docker*'  -exec basename {} \; )"
             if ! cd "/tmp/x11docker-install/${the_unpacked_dir:-MISSING}"
@@ -5048,6 +5086,7 @@ setup_sound_pulseaudio() {
 #                          video decoding acceleration
 #
 setup_vaapi() {
+    local Line
 
     # Support for prime-run / discrete NVIDIA card #394
     if [ -n "$__NV_PRIME_RENDER_OFFLOAD" ] ; then
@@ -5069,15 +5108,27 @@ setup_vaapi() {
 
     # Check VA-API driver on host
     if [ -z "${LIBVA_DRIVER_NAME:-}" ] ; then
-        LIBVA_DRIVER_NAME="$(xtool "vainfo 2>&1 | grep drv_video.so | rev | cut -d/ -f1 | rev" || : )"
-        LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME%"_drv_video.so"}"
+        #
+        # `vainfo 2>&1` includes
+        # "libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/i965_drv_video.so"
+        # We want to extract the "i965" part.
+        #
+        # LIBVA_DRIVER_NAME="$(xtool "vainfo 2>&1 | grep drv_video.so | rev_cut -d/ -f1 " || : )"
+        # LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME%"_drv_video.so"}"
+        #
+        Line="$(xtool "vainfo 2>&1 | grep drv_video.so " || : )"
+        LIBVA_DRIVER_NAME="$( basename "${Line}" "_drv_video.so" )"
     fi
 
     # Guess driver (LIBVA_DRIVER_NAME) based on kernel modules if
     #       vainfo is not available
     #
+    # FIXME: Are we looking into the 'Kernel modules:' lines for the
+    #        *driver* name? Or we are looking into the 'Kernel driver in use:'
+    #        lines?
+    #
     if [ -z "$LIBVA_DRIVER_NAME" ] ; then
-        if lspci -k | grep -q -e amdgpu -e radeon ; then
+        if   lspci -k | grep -q -e amdgpu -e radeon ; then
             LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME:-radeonsi}"
         elif lspci -k | grep -q nouveau           ; then
             LIBVA_DRIVER_NAME="${LIBVA_DRIVER_NAME:-nouveau}"
@@ -5719,7 +5770,7 @@ check_vt() {
         # XDG_VTNR is an environment variable that holds the number of
         # the virtual terminal (TTY) where the current graphical
         # session is running.
-        Newxvt="$(fgconsole --next-available 2>/dev/null < "/dev/tty${XDG_VTNR:-}")"
+        Newxvt="$( fgconsole --next-available 2>/dev/null < "/dev/tty${XDG_VTNR:-}" )"
         # Note: man fgconsole does not mention stdin. But it
         # presumably works by checking the tty of its stdin.
     fi
@@ -6009,6 +6060,26 @@ check_xcontainer() {
             # https://github.com/mviereck/dockerfile-x11docker-xserver/blob/41c2e7644a9726f3f7d3c6302f106c8a84644e52/Dockerfile#L209
             # to the docker image as metadata to use here.
             #
+            # ---------------------------------------------------------------------------------
+            # LABEL version='2.6'
+            # LABEL options='--nxagent --weston --weston-xwayland --xephyr                     \
+            #                --xpra --xpra-xwayland --xpra2 --xpra2-xwayland                   \
+            #                --xorg --xvfb --xwayland --satellite'
+            # 
+            # LABEL tools='bindkey catatonit cvt glxinfo iceauth setxkbmap socat               \
+            #              vainfo vdpauinfo virgl wl-copy wl-paste wmctrl                      \
+            #              xauth xbindkeys xclip xdotool xdpyinfo xdriinfo xev                 \
+            #              xeyes xlogo xfishtank xhost xinit xkbcomp xkill xlsclients xmessage \
+            #              xmodmap xprop xrandr xrefresh xset xsetroot xvinfo xwininfo'
+            # 
+            # LABEL options_console='--weston --weston-xwayland --xorg'
+            #
+            # LABEL gpu='MESA'
+            #
+            # LABEL windowmanager='openbox'
+            # ---------------------------------------------------------------------------------
+            #
+            # "LABEL options='--nxagent --weston ..."
             Xcontaineroptions_normal="$( parse_inspect "$Xcontainerinspect" \
                                               "Config" "Labels" "options"
                                        )"
@@ -6023,10 +6094,14 @@ check_xcontainer() {
                                                                       : --weston"
                                                                       )"}"
             #
+            # "LABEL options_console='--weston --weston-xwayland --xorg'"
             Xcontaineroptionsconsole="$( parse_inspect "$Xcontainerinspect"     \
                                             "Config" "Labels" "options_console" )"
             #
+            # "LABEL tools='bindkey catatonit ..."
             Xcontainertools="$(   parse_inspect "$Xcontainerinspect" "Config" "Labels" "tools"   )"
+            #
+            # "LABEL version='2.6'"
             Xcontainerversion="$( parse_inspect "$Xcontainerinspect" "Config" "Labels" "version" )"
             #
             if version_less_than "$Xcontainerversion" "$Xcontainerversionlatest" ; then
@@ -6104,7 +6179,7 @@ check_xdepends() {
     #
     xdepends_message_ttm() {
         # inherit Message
-        $Message "$(trim_to_mark "${1}" )"
+        $Message "$( trim_to_mark "${1}" )"
     }
     #
     # function check_command_generic(
@@ -6634,8 +6709,7 @@ check_xdepends() {
     # --xc
     case "$Xcontainer_option" in
         yes)
-            case "$Xcopt" in
-                "")
+            if [ -z "$Xcopt" ] ; then
                     case "${X_option_to_check}" in
                         --xorg|--kwin)
                             xdepends_message_ttm  \
@@ -6652,8 +6726,7 @@ check_xdepends() {
                             Return=1
                             ;;
                     esac
-                    ;;
-            esac
+            fi
             #
             ;;
         no)
@@ -10879,8 +10952,8 @@ store_runoption_volume() {  # store volume/device for docker command
     local ARG1="${1:-}"
     #
     Path="$(convertpath subsystem "${ARG1}")"
-    Readwritemode="$(echo "${ARG1}" | rev | cut -c1-3 | rev)"
-    [ "$Readwritemode" = ":ro" ] || Readwritemode=""
+    Readwritemode="$(echo "${ARG1}" | rev_cut -c1-3 )"
+    if [ "$Readwritemode" != ":ro" ] ; then  Readwritemode="" ; fi
     #
     ## Path="$(convertpath subsystem "${ARG1}")"
     ## Readwritemode="$(echo "${ARG1}" | rev | cut -c1-3 | rev)"
@@ -12591,7 +12664,9 @@ start_compositor() {            # start Wayland compositor Weston or KWin
 
   case "$Xserver" in
     --xpra-xwayland|--xpra2-xwayland)  # hide weston window
-      xtool "xdotool windowunmap 0x$(printf '%x\n' $(grep 'window id' "$Compositorlogfile" | rev | cut -d' ' -f1 | rev))" ;;
+        xtool "xdotool windowunmap 0x$(printf '%x\n' $( grep 'window id' "$Compositorlogfile" \
+                                                        | rev | cut -d' ' -f1 | rev )            )"
+        ;;
   esac
   return 0
 }
