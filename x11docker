@@ -109,6 +109,10 @@ error_ttm() {
     error "$( trim_to_mark "${1}" )"
 }
 
+warning_ttm() {
+    warning "$( trim_to_mark "${1}" )"
+}
+
 note_ttm() {
     note  "$( trim_to_mark "${1}" )"
 }
@@ -1816,9 +1820,9 @@ parse_inspect() {               # parse json of inspect output using python
   ##
   echo "$Parserscript" \
       | $Pythonbin - "$@" \
-      || warning "$(trim_to_bar \
+      || warning_ttm \
              "|parse_inspect(): Error while parsing json for
-              |  ${2:-} ${3:-} ${4:-} ${5:-} ${6:-} (Line ${BASH_LINENO[0]})" )"
+              |  ${2:-} ${3:-} ${4:-} ${5:-} ${6:-} (Line ${BASH_LINENO[0]})"
   #
 }
 
@@ -2201,12 +2205,11 @@ convertpath_split_Readwritemode() {
     case "$x1_Readwritemode_out" in
         ":ro"|":rw") return 0 ;;
         *)
-            warning "$(trim_to_bar \
+            warning_ttm \
                 "|convertpath_split_Readwritemode:
                  |   Path='$Path_in' has ':..' suffix '${x1_Readwritemode_out}',
                  |   that is neither ':ro', nor ':rw'
                  |   Note: NOT removing suffix and emitting Readwritemode=':rw'"
-                 )"
             #
             x1_Readwritemode_out=":rw"
             x1_Path_out="$Path_in"
@@ -2517,15 +2520,15 @@ convertpath() {                 # convert unix and windows paths
                         #
                         grep -q "$Cachefolder" <<< "$Path" || { # global Cachefolder
                             if  [ "$Readwritemode" = ":rw" ] ; then
-                                warning "$(trim_to_bar \
-                            "|Request of Windows path to path within WSL:
-                             |  $Path
-                             |  Write access from Windows host to WSL files
-                             : can damage the WSL file system.
-                             |  Read-only access is ok.
-                             |  Option --share: You can add :ro to the path
-                             : to allow read-only access.
-                             |  Example: --share='$Path:ro'" )"
+                                warning_ttm \
+                                    "|Request of Windows path to path within WSL:
+                                     |  $Path
+                                     |  Write access from Windows host to WSL files
+                                     : can damage the WSL file system.
+                                     |  Read-only access is ok.
+                                     |  Option --share: You can add :ro to the path
+                                     : to allow read-only access.
+                                     |  Example: --share='$Path:ro'"
                             fi
                         }
                         ;;
@@ -5748,10 +5751,9 @@ check_vt() {
     fi
 
     if [ -z "$Newxvt" ] ; then
-        error "$(trim_to_bar \
-               "|Could not identify a free tty for --xorg.
-                |  You can specify a desired tty number N with option --vt=N."
-                )"
+        error_ttm \
+            "|Could not identify a free tty for --xorg.
+             |  You can specify a desired tty number N with option --vt=N."
     fi
 
     if [ -n "${XDG_VTNR:-}" ] && [ -n "$Hostdisplay$Hostwaylandsocket" ] ; then
@@ -10257,9 +10259,9 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
           ### FIXME $Containeruserhomebasefolder ?? mount/volume?
         ;;
         *) # proot|host) ;; # BackendKind_host
-            error "$(printf "%s\n%s"                                                \
-             "Option --backend=$BackendKind: Sharing a docker volume is not supported." \
-             "  Failing option: --home=$Persistanthomevolume")"
+            error_ttm \
+                "|Option --backend=$BackendKind: Sharing a docker volume is not supported.
+                 |  Failing option: --home=$Persistanthomevolume"
         ;;
       esac
     ;;
@@ -14793,15 +14795,15 @@ check_options_interferences() { # check multiple option interferences, change se
                 case "$Nvidiaversion" in
                   "") ;;
                   *)
-                      error  "$(trim_to_bar \
-                       "|Options $Xserver --xc: Running weston or Xorg
-                        |  with option --xc on console can result in not being able to get back
-                        |  to console after terminating or to switch to other ttys.
-                        |  This is likely caused by proprietary NVIDIA drivers.
-                        |  Consider to use free and open source nouveau driver instead.
-                        |  Rather use $Xserver with option '--xc=no'.
-                        |  You can force to run with option --xc with option '--xc=force'." )"
-                  ;;
+                      error_ttm \
+                          "|Options $Xserver --xc: Running weston or Xorg
+                           |  with option --xc on console can result in not being able to get back
+                           |  to console after terminating or to switch to other ttys.
+                           |  This is likely caused by proprietary NVIDIA drivers.
+                           |  Consider to use free and open source nouveau driver instead.
+                           |  Rather use $Xserver with option '--xc=no'.
+                           |  You can force to run with option --xc with option '--xc=force'."
+                      ;;
                 esac
               ;;
             esac
@@ -17243,10 +17245,10 @@ main() {
           yes)
               case "$Installermode" in
                   --install|--update|--update-master|--remove|--remove-oldprefix)
-                      error "$(trim_to_bar \
+                      error_ttm \
                         "|Options --install|--update|--update-master|--remove
                          |  are not supported in packaged versions of x11docker.
-                         |  Please use your package manager instead." )"
+                         |  Please use your package manager instead."
                       ;;
               esac
               ;;
