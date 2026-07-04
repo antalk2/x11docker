@@ -53,6 +53,10 @@ stdin_contains_as_word() {
     tr -s ' \t' '\n\n' | grep -v -x ''  | LC_ALL=C grep -x -q  -- "${1}"
 }
 
+word_is_in() {
+    stdin_contains_as_word "$1" <<< "${2}"
+}
+
 #
 # function trim_to_bar( s )
 #
@@ -6273,12 +6277,12 @@ check_xdepends() {
     #
     case "$Runsonconsole" in
         no)
-            if stdin_contains_as_word "${X_option_to_check}" <<< "$Xcontaineroptions_normal --hostdisplay" ;
+            if word_is_in "${X_option_to_check}"  "$Xcontaineroptions_normal --hostdisplay" ;
             then Xcopt="yes"
             fi
             ;;
         yes)
-            if stdin_contains_as_word "${X_option_to_check}" <<< "$Xcontaineroptionsconsole" ;
+            if word_is_in "${X_option_to_check}"  "$Xcontaineroptionsconsole" ;
             then Xcopt="yes"
             fi
             ;;
