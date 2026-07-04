@@ -4793,12 +4793,11 @@ setup_sound_alsa() {
     if [ "$Alsacard" ] ; then store_runoption_env "ALSA_CARD=$Alsacard" ; fi
 
     if pgrep pulseaudio >/dev/null ; then
-        note "$(trim_to_bar \
-           "|Option --alsa: It seems that pulseaudio is running
-            |  on your host. Pulseaudio can interfere with ALSA sound.
-            |  Host sound may not work while container is playing sound and vice versa.
-            |  Alternative: with pulseaudio on host and in image, use option --pulseaudio."
-            )"
+        note_ttm \
+            "|Option --alsa: It seems that pulseaudio is running
+             |  on your host. Pulseaudio can interfere with ALSA sound.
+             |  Host sound may not work while container is playing sound and vice versa.
+             |  Alternative: with pulseaudio on host and in image, use option --pulseaudio."
     fi
 
     if [ -d /dev/snd ] ; then
@@ -4827,12 +4826,11 @@ setup_sound_pipewire() {
     local Pipewiresocket Pipewirescript
 
     command -v pw-container >/dev/null || {
-        note "$(trim_to_bar \
-          "|Option --pipewire: Command pw-container not found.
-           |  Is pipewire installed on your system?
-           |  Fallback: Disabling option --pipewire
-           |  You can try options --pulseaudio or --alsa instead."
-           )"
+        note_ttm "|Option --pipewire: Command pw-container not found.
+                  |  Is pipewire installed on your system?
+                  |  Fallback: Disabling option --pipewire
+                  |  You can try options --pulseaudio or --alsa instead."
+        #
         check_fallback
         Sharepipewire="no"
         return 1
@@ -4876,11 +4874,9 @@ setup_sound_pipewire() {
     fi
 
     if [ -z "$Pipewirepulseaudiosocket" ] ; then
-        note "$(trim_to_bar \
-           "|Option --pipewire: Did not find pulseaudio socket.
-            |  Are 'pipewire-module-pulse' and 'pactl' installed?
-            |  Fallback: Not sharing pipewire pulseaudio scoket."
-            )"
+        note_ttm "|Option --pipewire: Did not find pulseaudio socket.
+                  |  Are 'pipewire-module-pulse' and 'pactl' installed?
+                  |  Fallback: Not sharing pipewire pulseaudio scoket."
     fi
 }
 
@@ -4913,12 +4909,10 @@ setup_sound_pulseaudio() {
     local Setcookie=""
 
     if ! command -v pactl >/dev/null ; then
-        note "$(trim_to_bar \
-           "|Option --pulseaudio: pactl not found.
-            |  Is pulseaudio installed and running on your host system?
-            |  Fallback: Disabling option --pulseaudio.
-            |  You can try options --pipewire or --alsa instead."
-            )"
+        note_ttm "|Option --pulseaudio: pactl not found.
+                  |  Is pulseaudio installed and running on your host system?
+                  |  Fallback: Disabling option --pulseaudio.
+                  |  You can try options --pipewire or --alsa instead."
         check_fallback
         Pulseaudiomode=""
         return 1
@@ -4949,11 +4943,10 @@ setup_sound_pulseaudio() {
     fi
 
     if [ "$Pulseaudiomode" = "tcp" ] && [ "$g_Network" = "none" ] ; then
-        note "$(trim_to_bar \
-           "|Option --pulseaudio: Without option -I, --network
-            |  pulseaudio sound over TCP is not possible but needed in your setup.
-            |  Fallback: Disabling option --pulseaudio."
-            )"
+        note_ttm \
+            "|Option --pulseaudio: Without option -I, --network
+             |  pulseaudio sound over TCP is not possible but needed in your setup.
+             |  Fallback: Disabling option --pulseaudio."
         #
         Pulseaudiomode=""
         check_fallback
@@ -4968,11 +4961,10 @@ setup_sound_pulseaudio() {
     case "$Pulseaudiomode" in
         socket|tcp)
             if grep -q -i "PipeWire" <<< "$(unpriv "pactl info")" ; then
-                note "$(trim_to_bar \
-                  "|Option --pulseaudio: Found pipewire sound server.
-                   |  If pulseaudio sound fails, you can try
-                   |  --pipewire, --pulseaudio=tcp or --pulseaudio=host instead."
-                   )"
+                note_ttm \
+                    "|Option --pulseaudio: Found pipewire sound server.
+                     |  If pulseaudio sound fails, you can try
+                     |  --pipewire, --pulseaudio=tcp or --pulseaudio=host instead."
             fi
             ;;
     esac
