@@ -4988,13 +4988,12 @@ setup_sound_pulseaudio() {
                 store_runoption_env "PULSE_SERVER=unix:$(convertpath share "$Pulseaudiosocket")"
                 Setcookie="yes"
             else
-                note "$(trim_to_bar \
-                  "|Option --pulseaudio: command pactl failed with output:
-                   |  '$Pulseaudiomoduleid'
-                   |  Is pulseaudio running at all on your host?
-                   |  Fallback: Disabling option --pulseaudio.
-                   |  You can try options --pipewire or --alsa instead."
-                   )"
+                note_ttm \
+                    "|Option --pulseaudio: command pactl failed with output:
+                     |  '$Pulseaudiomoduleid'
+                     |  Is pulseaudio running at all on your host?
+                     |  Fallback: Disabling option --pulseaudio.
+                     |  You can try options --pipewire or --alsa instead."
                 check_fallback
                 Pulseaudiomode=""
                 return 1
@@ -5026,10 +5025,8 @@ setup_sound_pulseaudio() {
             if [ -e "$Hostuserhome/.config/pulse/cookie" ] ; then
                 cp "$Hostuserhome/.config/pulse/cookie" "$Pulseaudiocookie"
             else
-                note "$(trim_to_bar \
-                      "|Option --pulseaudio: Did not find cookie
-                       |  $Hostuserhome/.config/pulse/cookie"
-                       )"
+                note_ttm "|Option --pulseaudio: Did not find cookie
+                          |  $Hostuserhome/.config/pulse/cookie"
             fi
 
             store_runoption_env "PULSE_SERVER=tcp:$Hostip:$Pulseaudioport"
