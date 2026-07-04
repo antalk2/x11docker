@@ -729,12 +729,12 @@ error() {                       # show error message and exit
                 "%s\n\n%s" \
                 "$*" \
                 "$(trim_to_bar \
-                      "  Type 'x11docker --help' for usage information
+                     "|  Type 'x11docker --help' for usage information
                       |  Debug options: '--verbose' (full log) or '--debug' (log excerpt).
                       |  Logfile will be: $Logfilebackup
                       |  Please report issues at https://github.com/mviereck/x11docker"
                 )"
-         )"
+          )"
 
   # shellcheck disable=SC2119
   Message="$(rmcr <<< "$Message")"
