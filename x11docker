@@ -4981,7 +4981,11 @@ setup_sound_pulseaudio() {
         socket)
             # Create pulseaudio socket
             Pulseaudiomoduleid="$(
-                unpriv "pactl load-module module-native-protocol-unix        socket='$Pulseaudiosocket' 2>&1 ||:"
+                unpriv "$(
+                    trim_to_mark "|pactl load-module
+                                  : module-native-protocol-unix
+                                  : socket='$Pulseaudiosocket' 2>&1 ||:"
+                )"
             )"
             # Pulseaudiomoduleid="$(
             #   unpriv "pactl load-module libpipewire-module-protocol-native socket='$Pulseaudiosocket' 2>&1 ||:"
