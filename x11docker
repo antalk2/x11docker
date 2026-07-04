@@ -11310,16 +11310,10 @@ create_containerrootrc() {
         sysvinit) rootrc_prepare_init_sysvinit ;;
     esac
 
-    #
-    # https://www.networkworld.com/article/930604/unix-how-to-the-linux-etc-inittab-file.html
-    # Unix How To: The Linux /etc/inittab file.
-    # Basically, # at the start of a line makes the line a comment.
-    #
-    #
-    
     trim_to_bar \
         "|
-         |# disable getty in inittab
+         |# disable getty in inittab by prefixing the getty lines with
+         |#    '##getty disabled by x11docker## '
          |if [ -e /etc/inittab ] ; then
          |    sed -i 's/.*getty/##getty disabled by x11docker## \0/' /etc/inittab
          |fi
