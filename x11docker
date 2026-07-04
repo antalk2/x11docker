@@ -2838,11 +2838,11 @@ myrealpath() {                  # real path of possible symlink
 # Examples:
 #
 #  waitforlogentry_sh "start_xcontainer()" "$Xinitlogfile"     "X server container is ready"
-#  waitforlogentry_sh containerrc          \$Storeinfofile      containerrootrc=ready  ''                       infinity
+#  waitforlogentry_sh containerrc          \$Storeinfofile      containerrootrc=ready  ''                      infinity
 #  waitforlogentry_sh "start_compositor()" "$Compositorlogfile" "$Compositorkeyword"   "$Compositorerrorcodes"
-#  waitforlogentry_sh tailstdout           "$Storeinfofile"      "x11docker=ready"      ""                       infinity
+#  waitforlogentry_sh tailstdout           "$Storeinfofile"      "x11docker=ready"      ""                     infinity
 #  waitforlogentry_sh 'start_container()'   $Xinitlogfile        'xinitrc is ready'     "$Xiniterrorcodes"
-#  waitforlogentry_sh xpra                  $Xinitlogfile        "xinitrc is ready"     ""                       infinity
+#  waitforlogentry_sh xpra                  $Xinitlogfile        "xinitrc is ready"     ""                     infinity
 #
 waitforlogentry_sh() {
 
