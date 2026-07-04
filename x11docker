@@ -11320,6 +11320,7 @@ create_containerrootrc() {
          |"
     echo
 
+    printf "\n# if Dbussystem and Initsystem in {tini|none|dockerinit} then start dbus-daemon\n"
     if [ "$Dbussystem" = "yes" ] ; then
         trim_to_bar \
             "|
@@ -11338,82 +11339,129 @@ create_containerrootrc() {
         esac
     fi
 
-  [ "$g_Remountcgroup" = "yes" ] && echo "
-# wait for nsenter to remount /sys/fs/cgroup to :rw
-for i in 1 2 3 4 5 6 7 8 9 10; do
-  test -e /nsenter_is_ready && break
-  sleep 1
-  debugnote 'containerrootrc: Waiting for nsenter/mount to be ready'
-done
-rm /nsenter_is_ready
-"
+    printf "\n# if g_Remountcgroup then wait until remount /sys/fs/cgroup is done.\n"
+    if [ "$g_Remountcgroup" = "yes" ] ; then
+        trim_to_bar \
+            "|
+             |# wait for nsenter to remount /sys/fs/cgroup to :rw
+             |for i in 1 2 3 4 5 6 7 8 9 10; do
+             |  test -e /nsenter_is_ready && break
+             |  sleep 1
+             |  debugnote 'containerrootrc: Waiting for nsenter/mount to be ready'
+             |done
+             |rm /nsenter_is_ready
+             |"
+        echo
+    fi
+        
+    printf "\n# if Runasroot is not empty, execute it (in containerrootrc)\n"
+    if [ -n "$Runasroot" ] ; then
+        trim_to_bar \
+            "|
+             |# Custom setup root command added with option --runasroot
+             |$Runasroot
+             |"
+        echo
+    fi
 
-  [ "$Runasroot" ] && {
-    echo "
-# Custom setup root command added with option --runasroot
-$Runasroot
-"
-  }
+    trim_to_bar \
+        "|
+         |rocknroll || exit 64
+         |storeinfo_add_kv_sh containerrootrc=ready   # signal for containerrc
+         |#exec 1>&5 2>&6
+         |"
+    echo
 
-  echo "
-rocknroll || exit 64
-storeinfo_add_kv_sh containerrootrc=ready   # signal for containerrc
-#exec 1>&5 2>&6
-"
+    printf "\n# if g_Interactive, redirect: exec 1>&5 2>&6\n"
+    if [ "$g_Interactive" = "yes" ] ; then
+        trim_to_bar "|
+                     |exec 1>&5 2>&6
+                     |"
+        echo
+    fi
 
-  [ "$g_Interactive" = "yes" ] && echo "
-exec 1>&5 2>&6
-"
-
-  [ "$Switchcontaineruserflag" = "yes" ] && {   # if "no", containerrc is executed in command line $Backendcommand, and containerrootrc is started with 'docker exec'
-    echo "debugnote 'containerrootrc(): --init=$Initsystem'"
-    case "$Initsystem" in
-      none|dockerinit)
-        case "$BackendKind" in
-          proot)                 echo "exec /bin/sh $(convertpath share "$Containerrc")" ;;
-          docker|podman|nerdctl) echo "exec /usr/local/bin/x11docker-agetty" ;;
-          # host) ;; # BackendKind_host
+    
+    printf "\n# if Switchcontaineruserflag = yes, ...\n"
+    #
+    # If it is "no", containerrc is executed in command line $Backendcommand,
+    # and containerrootrc is started with 'docker exec'
+    #
+    if [ "$Switchcontaineruserflag" = "yes" ] ; then
+        #
+        echo "debugnote 'containerrootrc(): --init=$Initsystem'"
+        #
+        case "$Initsystem" in
+            #
+            none|dockerinit)
+                case "$BackendKind" in
+                    proot)
+                        echo "exec /bin/sh $(convertpath share "$Containerrc")"
+                        ;;
+                    docker|podman|nerdctl)
+                        echo "exec /usr/local/bin/x11docker-agetty"
+                        ;;
+                    # host) ;; # BackendKind_host
+                esac
+                ;;
+            #
+            tini)
+                case "$BackendKind" in
+                    proot)
+                        trim_to_mark "|exec env TINI_SUBREAPER=1
+                                      : '$Initcontainerpath'
+                                      : -- /bin/sh $(convertpath share "$Containerrc")"
+                        echo
+                        ;;
+                    docker|podman|nerdctl)
+                        trim_to_mark "|exec
+                                      : '$Initcontainerpath'
+                                      : -- /usr/local/bin/x11docker-agetty"
+                        echo
+                        ;;
+                    # host) ;; # BackendKind_host
+                esac
+                ;;
+            sysvinit)
+                trim_to_bar "|/usr/local/bin/x11docker-watch &
+                             |exec /sbin/init"
+                echo
+                ;;
+            openrc)
+                trim_to_bar "|/usr/local/bin/x11docker-watch &
+                             |if command -v openrc-init ;
+                             |then     exec openrc-init
+                             |else     exec /sbin/init  ; fi"
+                echo
+                ;;
+            runit)
+                trim_to_bar "|/usr/local/bin/x11docker-watch &
+                             |if [ -e /sbin/runit-init ] ;
+                             |then     exec runit-init
+                             |else     exec /sbin/init"
+                echo
+                ;;
+            s6-overlay)
+                echo "exec /init /usr/local/bin/x11docker-agetty"
+                ;;
+            systemd)
+                trim_to_bar '|Systemd=/lib/systemd/systemd
+                             |[ -x "$Systemd" ] || Systemd=/bin/systemd
+                             |[ -x "$Systemd" ] || Systemd=/sbin/systemd
+                             |[ -x "$Systemd" ] || Systemd=/sbin/init
+                             |command -v systemctl >/dev/null || {
+                             |  error "Option --init=systemd: systemd not found."
+                             |  exit 64
+                             |}
+                             |export SYSTEMD_LOG_LEVEL=info
+                             |export SYSTEMD_LOG_TARGET=console
+                             |exec $Systemd --show-status=yes'
+                echo
+                ;;
         esac
-      ;;
-      tini)
-        case "$BackendKind" in
-          proot)                 echo "exec env TINI_SUBREAPER=1 '$Initcontainerpath' -- /bin/sh $(convertpath share "$Containerrc")" ;;
-          docker|podman|nerdctl) echo "exec '$Initcontainerpath' -- /usr/local/bin/x11docker-agetty" ;;
-          # host) ;; # BackendKind_host
-        esac
-      ;;
-      sysvinit)
-        echo "/usr/local/bin/x11docker-watch &"
-        echo "exec /sbin/init"
-      ;;
-      openrc)
-        echo "/usr/local/bin/x11docker-watch &"
-        echo "command -v openrc-init && exec openrc-init || exec /sbin/init"
-      ;;
-      runit)
-        echo "/usr/local/bin/x11docker-watch &"
-        echo "[ -e /sbin/runit-init ] && exec runit-init || exec /sbin/init"
-      ;;
-      s6-overlay)
-        echo "exec /init /usr/local/bin/x11docker-agetty"
-      ;;
-      systemd)
-        echo 'Systemd=/lib/systemd/systemd'
-        echo '[ -x "$Systemd" ] || Systemd=/bin/systemd'
-        echo '[ -x "$Systemd" ] || Systemd=/sbin/systemd'
-        echo '[ -x "$Systemd" ] || Systemd=/sbin/init'
-        echo 'command -v systemctl >/dev/null || {'
-        echo '  error "Option --init=systemd: systemd not found."'
-        echo '  exit 64'
-        echo '}'
-        echo 'export SYSTEMD_LOG_LEVEL=info'
-        echo 'export SYSTEMD_LOG_TARGET=console'
-        echo 'exec $Systemd --show-status=yes'
-      ;;
-    esac
-  }
-  return 0
-}
+    fi
+    return 0
+} # create_containerrootrc()
+
 
 create_containerrc() {          # This script runs as unprivileged user in container
   local Ungrep= Path= Line=
