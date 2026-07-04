@@ -11081,63 +11081,106 @@ store_runoption_dump_cap() {
 }
 
 
-#### scripts running in container
-create_containerrootrc() {      # This script runs as root in container
-  echo "#! /bin/sh
+#### ##################################################
+####
+####         scripts running in container
+####
+#### ##################################################
 
-# containerrootrc
-# This Script is executed as root in container.
-# - Create container user
-# - Set time zone
-# - Create locale
-# - Install NVIDIA driver if requested
-# - Set up init system services and DBus for --init=systemd|openrc|runit|sysvinit
+#
+# function create_containerrootrc() : Emit a script on stdout.
+#
+#  - Output will go to the file "$Containerrootrc" = "$Sharefolder/containerrootrc"
+#  - The emitted script runs as root in container
+#
+create_containerrootrc() {
+    trim_to_mark \
+        "|#! /bin/sh
+         |
+         |# containerrootrc
+         |# This Script is executed as root in container.
+         |# - Create container user
+         |# - Set time zone
+         |# - Create locale
+         |# - Install NVIDIA driver if requested
+         |# - Set up init system services and DBus for --init=systemd|openrc|runit|sysvinit
+         |
+         |# redirect output to have it available before 'docker logs' starts.
+         : --init=runit (void) would eat up the output at all for unknown reasons.
+         :
+         |exec 5>&1 6>&2
+         |exec 1>>$(convertpath share "$Containerlogfile") 2>&1
+         |"
+    #
 
-# redirect output to have it available before 'docker logs' starts. --init=runit (void) would eat up the output at all for unknown reasons.
-exec 5>&1 6>&2
-exec 1>>$(convertpath share "$Containerlogfile") 2>&1
-"
+    declare -f storeinfo_dump_sh
+    declare -f storeinfo_test_sh
+    declare -f storeinfo_drop_sh
+    declare -f storeinfo_add_kv_sh
+    declare -f rocknroll
+    echo "$Messagefifofuncs"
 
-  declare -f storeinfo_dump_sh
-  declare -f storeinfo_test_sh
-  declare -f storeinfo_drop_sh
-  declare -f storeinfo_add_kv_sh
-  declare -f rocknroll
-  echo "$Messagefifofuncs"
+    trim_to_mark \
+        "|
+         |Messagefile=$(convertpath share "$Messagefifo")
+         |Storeinfofile='$(convertpath share "$Storeinfofile")'
+         |Timetosaygoodbyefile=$(convertpath share "$Timetosaygoodbyefile")
+         |
+         |Containeruser=\"\$(storeinfo_dump_sh containeruser)\"
+         |Containeruserhome='$Containeruserhome'
+         |
+         |debugnote 'Running containerrootrc: Setup as root in container'
+         |
+         |Error=''
+         |for Line in cat chmod chown cut cd cp date echo env export
+         : grep id ln ls mkdir mv printf rm sed sh sleep tail touch; do
+         |  command -v \$Line || {
+         |    warning \"ERROR: Command not found in image: \$Line\"
+         |    Error=1
+         |  }
+         |done
+         |[ \"\$Error\" ] && error 'Commands for container setup missing in image.
+         |  You can try with option --no-setup to avoid this error.'
+         |
+         |# /etc/profile.d
+         |"
+    #
 
-  echo "
-Messagefile=$(convertpath share "$Messagefifo")
-Storeinfofile='$(convertpath share "$Storeinfofile")'
-Timetosaygoodbyefile=$(convertpath share "$Timetosaygoodbyefile")
-
-Containeruser=\"\$(storeinfo_dump_sh containeruser)\"
-Containeruserhome='$Containeruserhome'
-
-debugnote 'Running containerrootrc: Setup as root in container'
-
-Error=''
-for Line in cat chmod chown cut cd cp date echo env export grep id ln ls mkdir mv printf rm sed sh sleep tail touch; do
-  command -v \$Line || {
-    warning \"ERROR: Command not found in image: \$Line\"
-    Error=1
-  }
-done
-[ \"\$Error\" ] && error 'Commands for container setup missing in image.
-  You can try with option --no-setup to avoid this error.'
-
-# /etc/profile.d
-"
-  case "$Initsystem" in
-    systemd|openrc|sysvinit|runit)
-      echo "
-install -m 666 /dev/null /etc/profile.d/90-x11docker-containerrc.sh
-echo '
-echo > /etc/profile.d/90-x11docker-containerrc.sh
-exec /bin/sh $(convertpath share "$Containerrc")
-' >> /etc/profile.d/90-x11docker-containerrc.sh
-"
-    ;;
-  esac
+    #
+    # We are emitting a script (containerrootrc) that will
+    # create a script inside the container:
+    # "/etc/profile.d/90-x11docker-containerrc.sh"
+    #
+    # This latter script, when run, will clear its own content (?)
+    # and
+    #
+    #   exec  /bin/sh $(convertpath share "$Containerrc")
+    #
+    # Or maybe it will not exec it, since cleared before execution?
+    #
+    # Changed to always emit (so that I can see it), but execute conditionally.
+    #
+    case "$Initsystem" in
+        systemd|openrc|sysvinit|runit) echo "CREATE_etc_profile_d_90_x11docker_containerrc_sh=yes" ;;
+        *)                             echo "CREATE_etc_profile_d_90_x11docker_containerrc_sh=no"  ;;
+    esac
+    
+    case "$Initsystem" in
+      systemd|openrc|sysvinit|runit|*)
+          trim_to_mark \
+              "|
+               |if [ \"\$CREATE_etc_profile_d_90_x11docker_containerrc_sh\" = yes ] ; then
+               |install -m 666 /dev/null /etc/profile.d/90-x11docker-containerrc.sh
+               |echo '
+               |echo > /etc/profile.d/90-x11docker-containerrc.sh
+               |exec /bin/sh $(convertpath share "$Containerrc")
+               |' >> /etc/profile.d/90-x11docker-containerrc.sh
+               |fi
+               |"
+          echo
+          ;;
+    esac
+  
   while read Line; do
     case "$(cut -d= -f1 <<< "$Line")" in
       DISPLAY|XAUTHORITY)
