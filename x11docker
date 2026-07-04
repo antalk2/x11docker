@@ -4592,10 +4592,9 @@ setup_hostdbus() {
     if [ -z "$DBUS_SESSION_BUS_ADDRESS" ] ; then
         # no running DBus session?
         if command -v dbus-launch >/dev/null ; then
-            note"$(trim_to_bar \
+            note_ttm \
                  "|Option --hostdbus: DBUS_SESSION_BUS_ADDRESS is empty.
                   |  Creating abstract DBus socket with dbus-launch."
-                  )"
             #
             # shellcheck disable=SC2046 # (warning): Quote this to prevent word splitting.
             #
