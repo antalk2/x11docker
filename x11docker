@@ -3905,10 +3905,10 @@ check_windowmanager() {
                     # Windowmanagercommand is available on host
                     Windowmanagermode="host"   # Windowmanagermode_host
                 else
-                    note "$(trim_to_bar \
-                          "|Option --wm: Did not find command on host: $Windowmanagercommand
-                           |  Fallback: Searching for another window manager."
-                           )"
+                    note_ttm \
+                        "|Option --wm: Did not find command on host: $Windowmanagercommand
+                         |  Fallback: Searching for another window manager."
+                    #
                     check_fallback
                     Windowmanagercommand=""
                 fi
@@ -3930,12 +3930,10 @@ check_windowmanager() {
 
     if [ "$Windowmanagercommand" = "WM_NOT_FOUND" ] ; then
         Windowmanagercommand=""
-        note "$(trim_to_bar \
-              "|Option --wm: No host window manager found.
-               |    Please install a supported one. Recommended:
-               |  $Wm_recommended_nodesktop_light
-               |  Fallback: Setting --wm=none"
-               )"
+        note_ttm "|Option --wm: No host window manager found.
+                  |    Please install a supported one. Recommended:
+                  |  $Wm_recommended_nodesktop_light
+                  |  Fallback: Setting --wm=none"
         #
         check_fallback
         Windowmanagermode="none"
@@ -3944,12 +3942,10 @@ check_windowmanager() {
     if  [ "$Windowmanagermode" = "none" ] ; then return 0 ; fi
     
     if grep -q "$Windowmanagercommand" <<< "$Wm_not_recommended" ; then 
-        note "$(trim_to_bar \
-              "|Option --wm: Window manager $Windowmanagercommand
-               |  is not recommended. Please install a recommended one:
-               |    $Wm_recommended_nodesktop_light
-               |    $Wm_recommended_desktop_light"
-               )"
+        note_ttm "|Option --wm: Window manager $Windowmanagercommand
+                  |  is not recommended. Please install a recommended one:
+                  |    $Wm_recommended_nodesktop_light
+                  |    $Wm_recommended_desktop_light"
     fi
 
     if [ "$Xtest" = "yes" ] ; then
@@ -4472,12 +4468,12 @@ setup_gpu() {
         case "$Xserver" in
             --xorg|--hostdisplay) ;;
             *)
-                note "$(trim_to_bar \
-                      "|Option --gpu: Acceleration with NVIDIA might work
-                       |  with option --xorg and option --hostdisplay only.
-                       |  Though, some configuration mit allow Wayland based accelerated X servers.
-                       |  Compare https://wiki.debian.org/NvidiaGraphicsDrivers#Wayland"
-                       )"
+                note_ttm \
+                    "|Option --gpu: Acceleration with NVIDIA might work
+                     |  with option --xorg and option --hostdisplay only.
+                     |  Though, some configuration mit allow Wayland based accelerated X servers.
+                     |  Compare https://wiki.debian.org/NvidiaGraphicsDrivers#Wayland"
+                #
                 ;;
         esac
     fi
@@ -4489,10 +4485,9 @@ setup_gpu() {
     fi
 
     if [ -e "$Nvidiainstallerfile" ] ; then
-        debugnote "$(trim_to_bar \
-                   "|NVIDIA: Found proprietary closed source NVIDIA driver installer
-                    |  $Nvidiainstallerfile"
-                    )"
+        debugnote_ttm \
+            "|NVIDIA: Found proprietary closed source NVIDIA driver installer
+             |  $Nvidiainstallerfile"
         #
         if [ "$Containersetup" = "no" ] ; then
             note "$(trim_to_bar \
