@@ -11269,26 +11269,32 @@ create_containerrootrc() {
         rootrc_nvidia_installer
     fi
 
-  echo "
-rocknroll || exit 64
-"
+  trim_to_bar "|
+               |rocknroll || exit 64
+               |"
 
+  printf "\n# Createcontaineruser: rootrc_setup_user()\n"
   [ "$Createcontaineruser" = "yes" ] && rootrc_setup_user
-  echo "
-debugnote \"containerrootrc: Container user: \$(id \$Containeruser)
-\$(cat /etc/passwd | grep '^\$Containeruser:')\"
-
-# Create HOME
-Containeruserhome=\"\$(cat /etc/passwd | grep \"\$Containeruser:\" | cut -d: -f6)\"
-Containeruserhome=\"\${Containeruserhome:-/tmp/\$Containeruser}\"
-[ -e \"\$Containeruserhome\" ] || {
-  mkdir -v -p -m 777 \"\$Containeruserhome\"
-  chown -v \"\$Containeruser\":\"\$Containerusergroup\" \"\$Containeruserhome\" && chmod -v 755 \"\$Containeruserhome\"  # can fail depending on capabilities
-}
-ls -la \"\$Containeruserhome\"
-export HOME=\"\$Containeruserhome\"
-"
-
+  
+  trim_to_bar \
+      "|
+       |debugnote \"containerrootrc: Container user: \$(id \$Containeruser)
+       |\$(cat /etc/passwd | grep '^\$Containeruser:')\"
+       |
+       |# Create HOME
+       |Containeruserhome=\"\$(cat /etc/passwd | grep \"\$Containeruser:\" | cut -d: -f6)\"
+       |Containeruserhome=\"\${Containeruserhome:-/tmp/\$Containeruser}\"
+       |[ -e \"\$Containeruserhome\" ] || {
+       |  mkdir -v -p -m 777 \"\$Containeruserhome\"
+       |  chown -v \"\$Containeruser\":\"\$Containerusergroup\" \"\$Containeruserhome\" \\
+       |  && chmod -v   755  \"\$Containeruserhome\"  # can fail depending on capabilities
+       |}
+       |ls -la \"\$Containeruserhome\"
+       |export HOME=\"\$Containeruserhome\"
+       |"
+  echo
+  #
+  
   [ "$Switchcontaineruserflag" = "yes" ] && rootrc_create_helperscripts
   [ "$Dbussystem" = "yes" ]          && rootrc_prepare_dbus
   case "$Initsystem" in
