@@ -1765,8 +1765,6 @@ parse_inspect() {               # parse json of inspect output using python
     }
 
     ##
-    ## Replacement using trim_to_bar(), intercepted single quotes and ${SINGLE_QUOTE}
-    ##
     # shellcheck disable=SC2090 # (warning): Quotes/backslashes in this variable will not be respected.
     Parserscript="#! $Pythonbin$(trim_to_mark \
       '|
@@ -2441,11 +2439,10 @@ convertpath() {                 # convert unix and windows paths
                 ;;
             mount)
                 ##
-                trim_to_mark \
-                      "|type=volume
-                       :,source='$Path'
-                       :,target='${containerpath_arg:-/$Path}'
-                       :${Readwritemode_mount}"
+                trim_to_mark "|type=volume
+                              :,source='$Path'
+                              :,target='${containerpath_arg:-/$Path}'
+                              :${Readwritemode_mount}"
                 #
                 ;;
             container)      echo "${containerpath_arg:-/$Path}" ;;
