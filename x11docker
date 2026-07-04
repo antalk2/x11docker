@@ -11203,32 +11203,36 @@ create_containerrootrc() {
     echo '{'
     while read Line; do
         key_part="$(cut -d= -f1 <<< "$Line")"
+        #
+        # https://github.com/mviereck/x11docker/issues/554
+        # Cannot use SSH X11 forwarding inside container
+        #
         case "${key_part}" in
             DISPLAY|XAUTHORITY)
-                #
                 trim_to_bar \
                     "|
-                     |echo                                                        >> /etc/profile.d/10-x11docker-env.sh
-                     |echo '# ${key_part}'                                        >> /etc/profile.d/10-x11docker-env.sh
-                     |echo 'case \"\${SSH_CLIENT:-}\${SSH_TTY:-}\" in'            >> /etc/profile.d/10-x11docker-env.sh
-                     |echo '  \"\")'                                              >> /etc/profile.d/10-x11docker-env.sh
-                     |echo '    export $Line'                                     >> /etc/profile.d/10-x11docker-env.sh
-                     |echo '  ;;'                                                 >> /etc/profile.d/10-x11docker-env.sh
-                     |echo '  *)'                                                 >> /etc/profile.d/10-x11docker-env.sh
-                     |echo '    # disabled due to issues with ssh and xrdp #554'  >> /etc/profile.d/10-x11docker-env.sh
-                     |echo '    # export $Line'                                   >> /etc/profile.d/10-x11docker-env.sh
-                     |echo '    # workaround for ssh and xrdp #554'               >> /etc/profile.d/10-x11docker-env.sh
-                     |echo '    export XAUTHORITY=$Containeruserhome/.Xauthority' >> /etc/profile.d/10-x11docker-env.sh
-                     |echo '  ;;'                                                 >> /etc/profile.d/10-x11docker-env.sh
-                     |echo 'esac'                                                 >> /etc/profile.d/10-x11docker-env.sh
-                     |echo                                                        >> /etc/profile.d/10-x11docker-env.sh"
+                     |    echo
+                     |    echo '# ${key_part}'
+                     |    echo 'case \"\${SSH_CLIENT:-}\${SSH_TTY:-}\" in'
+                     |    echo '  \"\")'
+                     |    echo '    export $Line'
+                     |    echo '  ;;'
+                     |    echo '  *)'
+                     |    echo '    # disabled due to issues with ssh and xrdp #554'
+                     |    echo '    # export $Line'
+                     |    echo '    # workaround for ssh and xrdp #554'
+                     |    echo '    export XAUTHORITY=$Containeruserhome/.Xauthority'
+                     |    echo '  ;;'
+                     |    echo 'esac'
+                     |    echo
+                     |"
                 ;;
             *)
-                echo "echo 'export $Line'                                         >> /etc/profile.d/10-x11docker-env.sh"
+                echo "    echo 'export $Line'"
                 ;;
         esac
     done <<< $(store_runoption_dump_env)
-    echo '}'
+    echo '} >> /etc/profile.d/10-x11docker-env.sh'
     echo
 
   echo "
