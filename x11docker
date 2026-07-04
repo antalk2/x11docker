@@ -2809,11 +2809,13 @@ myrealpath() {                  # real path of possible symlink
         realpath "$*"
     else
         # Otherwise complain if it is a symlink
-        [ -h "$*" ] && warning "$(trim_to_bar \
-           "|  Could not check for symbolic links.
-            |  Please install 'realpath' (package 'coreutils'),
-            |  or provide real file path instead of symbolic link path.
-            |  Possible symbolic link: $*" )"
+        if [ -h "$*" ] ; then
+            warning_ttm \
+                "|  Could not check for symbolic links.
+                 |  Please install 'realpath' (package 'coreutils'),
+                 |  or provide real file path instead of symbolic link path.
+                 |  Possible symbolic link: $*"
+        fi
         #
         # and emit the path unmodified
         echo "$*"   ### FIXME: Maybe workaround with ls
