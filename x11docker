@@ -9221,7 +9221,7 @@ xtool() {
     case "$Xcontainer_option" in
         yes)
             Usexcontainer="yes"
-            if ! echo "$Xcontainertools" | stdin_contains_as_word "$Tool" ; then
+            if ! word_is_in "$Tool" "$Xcontainertools" ; then
                 $Message "$(trim_to_bar \
                    "|Option --xc: Please update image x11docker/xserver.
                     |  Did not find command '$Tool' in image. Will try to run '$Tool' on host"
