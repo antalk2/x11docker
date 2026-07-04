@@ -5038,7 +5038,9 @@ setup_sound_pulseaudio() {
 
         host)
             Pulseaudiosocket="$(
-                unpriv "env LC_ALL=C pactl info" | grep 'Server String' |rev|cut -d' ' -f1|rev
+                unpriv "env LC_ALL=C pactl info" \
+                | grep 'Server String'           \
+                | rev_cut -d' ' -f1
             )"
             store_runoption_env "PULSE_SERVER=unix:/tmp/pulseaudio.socket.host"
             Setcookie="yes"
