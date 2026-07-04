@@ -11176,11 +11176,11 @@ create_containerrootrc() {
               "|
                |if [ \"\$CREATE_etc_profile_d_90_x11docker_containerrc_sh\" = yes ] ; then
                |    install -m 666 /dev/null /etc/profile.d/90-x11docker-containerrc.sh
-               |    (
+               |    {
                |      echo
                |      echo 'echo > /etc/profile.d/90-x11docker-containerrc.sh'
                |      echo 'exec /bin/sh $(convertpath share "$Containerrc")'
-               |    ) >> /etc/profile.d/90-x11docker-containerrc.sh
+               |    } >> /etc/profile.d/90-x11docker-containerrc.sh
                |fi
                |"
           echo
@@ -11194,7 +11194,7 @@ create_containerrootrc() {
     #
     echo
     echo '# Append to (or Create?) /etc/profile.d/10-x11docker-env.sh'
-    echo '('
+    echo '{'
     while read Line; do
         key_part="$(cut -d= -f1 <<< "$Line")"
         case "${key_part}" in
@@ -11222,7 +11222,7 @@ create_containerrootrc() {
                 ;;
         esac
     done <<< $(store_runoption_dump_env)
-    echo ')'
+    echo '}'
     echo
 
   echo "
