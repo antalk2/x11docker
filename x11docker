@@ -11028,15 +11028,18 @@ store_runoption_cap() {  # dump cap for docker command
 }
 
 #
-# Emit newline-separated list of capabilities for "docker --cap-add $capability"
+# function store_runoption_dump_cap() : Emit newline-separated list of
+#                     capabilities for "docker --cap-add $capability"
 #
-# Called in a single location
+# - Called in a single location
 #
-store_runoption_dump_cap() {  # dump cap for docker command
-    # local Count
+# - Emit nothing if [  "$Capdropall" = yes ]
+#
+# - Even if [ "$Capdropall" = no ], omit docker_default_capabilities
+#   from the output.
+#
+store_runoption_dump_cap() {
     local Line
-    # local Path
-    # local Readwritemode
     local docker_default_capabilities
     local normalized_Capabilities
     #
@@ -11058,18 +11061,10 @@ store_runoption_dump_cap() {  # dump cap for docker command
                          | NET_BIND_SERVICE SYS_CHROOT KILL AUDIT_WRITE" \
                          | as_newline_separated_words | sort -u
                          )"
+            #
             # If Capdropall=no then emit a newline-separated list of
             #     capabilities from $Capabilities , omitting
             #     those in docker_default_capabilities.
-            #
-            #if false ; then 
-            #    while read Line; do
-            #        if ! word_is_in "$Line" "${docker_default_capabilities}" ;
-            #        then echo "$Line"
-            #        fi
-            #    done < <(echo "$Capabilities" | tr ' ' '\n' | sort -u | grep -v '' )
-            #else
-            # ---
             #
             # Note: as_newline_separated_words is probably redundant,
             #       since Capabilities should already be a newline-separated list of words.
@@ -11079,8 +11074,7 @@ store_runoption_dump_cap() {  # dump cap for docker command
                                             | sort -u                     )"
             # grep considers newline-separated list of patterns as alternatives to match.
             echo "${normalized_Capabilities}" | grep -Fvx "${docker_default_capabilities}"
-            # ---
-            #fi
+            #
             ;;
     esac
     return 0
