@@ -2689,7 +2689,8 @@ getwslpath() {                  # get path to currently running WSL system
 
     # Fork from https://github.com/Microsoft/WSL/issues/2578#issuecomment-354010141
 
-    local RUN_ID="" BASEPATH=""
+    local RUN_ID=""
+    local BASEPATH=""
 
     RUN_ID="/tmp/$(makecookie)"
 
