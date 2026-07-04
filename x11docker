@@ -11235,22 +11235,24 @@ create_containerrootrc() {
     echo '} >> /etc/profile.d/10-x11docker-env.sh'
     echo
 
-  echo "
-# Container system
-Containersystem=\"\$(grep '^ID=' /etc/os-release 2>/dev/null | cut -d= -f2 || echo 'unknown')\"
-verbose \"Container system ID: \$Containersystem\"
-
-# Check type of libc
-ldd --version 2>&1 | grep -q 'musl libc' && Containerlibc='musl'
-ldd --version 2>&1 | grep -q -E 'GLIBC|GNU libc'  && Containerlibc='glibc'
-debugnote \"containerrootrc: Container libc: \$Containerlibc\"
-
-# Create some system dirs with needed permissions
-mkdir -v -p /var/lib/dbus /var/run/dbus
-mkdir -v -p -m 1777 /tmp/.ICE-unix /tmp/.X11-unix /tmp/.font-unix
-chmod -c 1777 /tmp/.ICE-unix /tmp/.X11-unix /tmp/.font-unix
-mkdir -v -p /run/sshd
-"
+    trim_to_bar \
+        "|
+         |# Container system
+         |Containersystem=\"\$(grep '^ID=' /etc/os-release 2>/dev/null | cut -d= -f2 || echo 'unknown')\"
+         |verbose \"Container system ID: \$Containersystem\"
+         |
+         |# Check type of libc
+         |ldd --version 2>&1 | grep -q 'musl libc' && Containerlibc='musl'
+         |ldd --version 2>&1 | grep -q -E 'GLIBC|GNU libc'  && Containerlibc='glibc'
+         |debugnote \"containerrootrc: Container libc: \$Containerlibc\"
+         |
+         |# Create some system dirs with needed permissions
+         |mkdir -v -p /var/lib/dbus /var/run/dbus
+         |mkdir -v -p -m 1777 /tmp/.ICE-unix /tmp/.X11-unix /tmp/.font-unix
+         |chmod -c 1777 /tmp/.ICE-unix /tmp/.X11-unix /tmp/.font-unix
+         |mkdir -v -p /run/sshd
+         |"
+    echo
 
   [ "$Screensize" ]          && rootrc_xrandr
   [ "$Hostlocaltimefile" ]   && rootrc_timezone
