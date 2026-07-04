@@ -3394,10 +3394,10 @@ cleanup() {
   if [ "$(basename "$Cachebasefolder")" = x11docker ] ; then
       rmdir -v "$Cachebasefolder"
   else
-      warning "$(printf "%s\n"                               \
-               "Did not succeed in removing cache folder"    \
-               "  '$Cachebasefolder'"                        \
-               "  Please run 'x11docker --cleanup' as root." )"
+      warning_ttm \
+          "|Did not succeed in removing cache folder
+           |  '$Cachebasefolder'
+           |  Please run 'x11docker --cleanup' as root."
   fi
 
   case "$BackendKind" in
@@ -3491,16 +3491,15 @@ installer() {                   # --install, --update, --update-master, --remove
             ;;
         *)
             if [ -x "/usr/bin/x11docker" ] ; then
-                warning "$(trim_to_bar \
-                "|Option ${1:-}: Detected x11docker installation in /usr/bin
-                 |  Since version 7.6.0 x11docker defaults to ${Prefix}/bin instead.
-                 |  If this was a custom installation without your package manager,
-                 |  you can remove the old installation as root with:
-                 |rm    /usr/bin/x11docker
-                 |rm -R /usr/share/doc/x11docker
-                 |rm    /usr/share/man/man1/x11docker.1.gz
-                 |  or with x11docker option --remove-oldprefix"
-                 )"
+                warning_ttm \
+                    "|Option ${1:-}: Detected x11docker installation in /usr/bin
+                     |  Since version 7.6.0 x11docker defaults to ${Prefix}/bin instead.
+                     |  If this was a custom installation without your package manager,
+                     |  you can remove the old installation as root with:
+                     |rm    /usr/bin/x11docker
+                     |rm -R /usr/share/doc/x11docker
+                     |rm    /usr/share/man/man1/x11docker.1.gz
+                     |  or with x11docker option --remove-oldprefix"
             fi
             ;;
     esac
@@ -3530,12 +3529,11 @@ installer() {                   # --install, --update, --update-master, --remove
             fi
 
             if [ -x "${Prefix}/bin/x11docker" ] ; then
-                warning "$(trim_to_bar \
-                         "|x11docker seems to be installed already
-                          |  at ${Prefix}/bin/x11docker.
-                          |  Will overwrite existing installation.
-                          |  Consider to use option '--update' or '--update-master' instead."
-                          )"
+                warning_ttm \
+                    "|x11docker seems to be installed already
+                     |  at ${Prefix}/bin/x11docker.
+                     |  Will overwrite existing installation.
+                     |  Consider to use option '--update' or '--update-master' instead."
             fi
             ;;
     
@@ -3951,15 +3949,14 @@ check_windowmanager() {
     fi
 
     if [ "$Xtest" = "yes" ] ; then
-        warning "$(trim_to_bar \
-                 "|Options --xtest --wm: Did not disable X extension XTEST
-                  |  for X server $Xserver.
-                  |  If your host window manager '$Windowmanagercommand' can start applications
-                  |  on its own (for example with a context menu), container applications
-                  |  can abuse this to run and remotely control host applications.
-                  |  If you provide content of X server $Xserver over network to others,
-                  |  they may take control over your host system!"
-                  )"
+        warning_ttm \
+            "|Options --xtest --wm: Did not disable X extension XTEST
+             |  for X server $Xserver.
+             |  If your host window manager '$Windowmanagercommand' can start applications
+             |  on its own (for example with a context menu), container applications
+             |  can abuse this to run and remotely control host applications.
+             |  If you provide content of X server $Xserver over network to others,
+             |  they may take control over your host system!"
     fi
 
     # command adjustment for some host window managers
@@ -4030,11 +4027,10 @@ clean_xhost() {
     fi
     #
     if [ -z "$Hostxauthority" ] ; then
-        warning "$(trim_to_bar \
-                 "|Option --clean-xhost: You host X server does not provide
-                  |  an authentication cookie in \$XAUTHORITY.
-                  |  Host applications started after xhost cleanup might fail to start."
-                  )"
+        warning_ttm \
+            "|Option --clean-xhost: You host X server does not provide
+             |  an authentication cookie in \$XAUTHORITY.
+             |  Host applications started after xhost cleanup might fail to start."
     fi
     #
     echo "Option --clean-xhost:" >> "$Xinitlogfile"
@@ -4502,11 +4498,10 @@ setup_gpu() {
         fi
         
         if [ "$Capdropall" = "yes" ] ; then
-            warning "$(trim_to_bar \
-                     "|Option --gpu: Installing NVIDIA driver in container
-                      |  requires container privileges that x11docker would drop otherwise.
-                      |  Though, they are still within default docker capabilities."
-                      )"
+            warning_ttm \
+                "|Option --gpu: Installing NVIDIA driver in container
+                 |  requires container privileges that x11docker would drop otherwise.
+                 |  Though, they are still within default docker capabilities."
         fi
 
         Allownewprivileges="yes"
@@ -4587,10 +4582,10 @@ setup_gpu() {
 #
 setup_hostdbus() {
 
-    warning "$(trim_to_bar \
-             "|Option --hostdbus: Connecting container to host DBus degrades
-              |  container isolation. Container applications might send malicious requests."
-              )"
+    warning_ttm \
+        "|Option --hostdbus: Connecting container to host DBus degrades
+         |  container isolation. Container applications might send malicious requests."
+    #
 
     Dbusrunsession="no"
 
@@ -4786,11 +4781,11 @@ setup_sound_alsa() {
     # Further documentation at
     # https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio
 
-    warning "$(trim_to_bar \
+    warning_ttm \
         "|Option --alsa: ALSA sound degrades container isolation.
          |Sharing device files in /dev/snd, container gains access to sound hardware.
          |Container applications can catch audio output and microphone input."
-         )"
+    #
 
     if [ "$Alsacard" ] ; then store_runoption_env "ALSA_CARD=$Alsacard" ; fi
 
@@ -4805,10 +4800,10 @@ setup_sound_alsa() {
     if [ -d /dev/snd ] ; then
         store_runoption_volume "/dev/snd"
      else
-         warning "$(trim_to_bar \
-            "|Option --alsa: /dev/snd not found.
-             |  Sound support not possible."
-             )"
+         warning_ttm \
+             "|Option --alsa: /dev/snd not found.
+              |  Sound support not possible."
+         #
          check_fallback
          Sharealsa="no"
          return 1
@@ -4838,10 +4833,10 @@ setup_sound_pipewire() {
         return 1
     }
 
-    warning "$(trim_to_bar \
-       "|Option --pipewire allows container applications
-        |  to catch your audio output and microphone input."
-        )"
+    warning_ttm \
+        "|Option --pipewire allows container applications
+         |  to catch your audio output and microphone input."
+    #
 
     # Create and share restricted pipewire socket
     Pipewirescript="$Cachefolder/pw-script"
@@ -4955,10 +4950,10 @@ setup_sound_pulseaudio() {
         return 1
     fi
 
-    warning "$(trim_to_bar \
-         "|Option --pulseaudio allows container applications
-          |  to catch your audio output and microphone input."
-          )"
+    warning_ttm \
+        "|Option --pulseaudio allows container applications
+         |  to catch your audio output and microphone input."
+    #
 
     case "$Pulseaudiomode" in
         socket|tcp)
@@ -5164,10 +5159,9 @@ setup_webcam() {
     local Webcamdevice
 
     if [ "$Sharewebcam" = "yes" ] ; then
-        warning "$(trim_to_bar \
-          "|Option --webcam: Container applications might look
-           |  at you and also might take screenshots of your Desktop."
-           )"
+        warning_ttm \
+            "|Option --webcam: Container applications might look
+             |  at you and also might take screenshots of your Desktop."
     fi
 
   while read -r Webcamdevice ; do
@@ -14784,15 +14778,15 @@ check_options_interferences() { # check multiple option interferences, change se
           --weston*|--xorg)
             case "$Xcforce" in
               yes) 
-                  warning "$(trim_to_bar \
-                   "|Option --xc=force passes by this issue:
-                    |  Options $Xserver --xc: Running weston or Xorg
-                    |  with option --xc on console can result in not being able to get back
-                    |  to console after terminating or to switch to other ttys.
-                    |  This is likely caused by proprietary NVIDIA drivers.
-                    |  Consider to use free and open source nouveau driver instead.
-                    |  Rather use $Xserver with option '--xc=no'." )"
-              ;;
+                  warning_ttm \
+                      "|Option --xc=force passes by this issue:
+                       |  Options $Xserver --xc: Running weston or Xorg
+                       |  with option --xc on console can result in not being able to get back
+                       |  to console after terminating or to switch to other ttys.
+                       |  This is likely caused by proprietary NVIDIA drivers.
+                       |  Consider to use free and open source nouveau driver instead.
+                       |  Rather use $Xserver with option '--xc=no'."
+                  ;;
               *)
                 case "$Nvidiaversion" in
                   "") ;;
