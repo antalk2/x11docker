@@ -6864,12 +6864,11 @@ check_xdepends() {
     [ "$Return" = "1" ] && {
         check_fallback
         Autochooseserver="yes"
-        [ "$Printcheck" = "no" ] && stdin_contains_as_word "note" <<< "$Message" && note "$(trim_to_bar \
+        [ "$Printcheck" = "no" ] && word_is_in "note" "$Message" && note_ttm  \
          "|check_xdepends(): ${X_option_to_check} is not possible,
           |  see message(s) above. Will search for another X server option.
           |  You can see intermediate X dependency check messages with option --printcheck.
           |  You can disable the search with option --fallback=no."
-          )"
     }
 
     Lastcheckedxserver="${X_option_to_check}"
