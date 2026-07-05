@@ -4,6 +4,17 @@
 # This file tests an earlier version of stdin_contains_as_word(),
 # which is not anymore used. Only kept as a reminder.
 #
+# Result: the main observation here is that the -w, --word-regexp flag
+#         of grep does not care about what is inside the match.
+#         It only requires that just before and just after the match,
+#         there is no word-constituent character.
+#
+#         Word-constituent characters are letters, digits, and the
+#         underscore. This is fixed, but we also need words like "--flag"
+#         or "flipped-90"
+#          
+#
+#
 
 set_up() {
  X11DOCKER_TESTING=1
