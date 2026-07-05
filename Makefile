@@ -6,10 +6,10 @@ all:
 
 
 test: lib/bashunit
-	lib/bashunit tests/ --fail-on-risky # -vvv
+	lib/bashunit tests-bashunit/ --fail-on-risky # -vvv
 
 test-verbose: lib/bashunit
-	lib/bashunit tests/  -vvv
+	lib/bashunit tests-bashunit/  -vvv
 
 run1:
 	./x11docker
