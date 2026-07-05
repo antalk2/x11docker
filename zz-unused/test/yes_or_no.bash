@@ -1,7 +1,10 @@
 #!/bin/bash
 
 #
-# Purpose: reduce the verbosity of
+# Q: How could we reduce the verbosity of the  following expression?
+#
+#    We want to set a variable to "yes" or "no" depending on the
+#    exitcode of a test.
 #
 
 # shellcheck disable=SC2050 # (warning): This expression is
@@ -13,8 +16,12 @@ else
     variable="no"
 fi
 
+variable="$( if [ "one" = "two" ] ; then echo yes; else echo no; fi )"
+
 #
-# Variant 1a: uses 'eval $*`. Arg has to be quoted.
+# Variant 1a: Unsing a function that uses 'eval $*` to evaluate the test.
+#
+#    - The test has to be quoted.
 #
 
 echo "*** yes_or_no1a ***"

@@ -143,10 +143,6 @@ debugnote_ttm() {
 #
 exitcode_yes_or_no() { if [ "$?" = "0" ] ; then echo yes ; else  echo no ; fi }
 
-#
-# echo yes or echo no depending on exitcode of $*
-#
-yes_or_no() { if "${@}" ; then echo yes ; else echo no ; fi }
 
 #
 # function rev_cut() : Reversed cut.
@@ -3085,13 +3081,10 @@ writeaccess() {                 # check if useruid $1 has write access to folder
     dir_perm_flags="${dirVals[2]}"
     dir_owner_uid="$(id -u "$dir_owner_name")"
     #
-    # dir_is_user_writable=$(  [ "${dir_perm_flags:2:1}" == "w" ] ; exitcode_yes_or_no )
-    # dir_is_group_writable=$( [ "${dir_perm_flags:5:1}" == "w" ] ; exitcode_yes_or_no )
-    # dir_is_other_writable=$( [ "${dir_perm_flags:8:1}" == "w" ] ; exitcode_yes_or_no )
+    dir_is_user_writable=$(  [ "${dir_perm_flags:2:1}" == "w" ] ; exitcode_yes_or_no )
+    dir_is_group_writable=$( [ "${dir_perm_flags:5:1}" == "w" ] ; exitcode_yes_or_no )
+    dir_is_other_writable=$( [ "${dir_perm_flags:8:1}" == "w" ] ; exitcode_yes_or_no )
     #
-    dir_is_user_writable=$(  yes_or_no [ "${dir_perm_flags:2:1}" == "w" ] )
-    dir_is_group_writable=$( yes_or_no [ "${dir_perm_flags:5:1}" == "w" ] )
-    dir_is_other_writable=$( yes_or_no [ "${dir_perm_flags:8:1}" == "w" ] )
     #
     #    if $verbose ; then
     #        echo "dir_owner_name='$dir_owner_name' dir_owner_uid='$dir_owner_uid'"
@@ -3162,7 +3155,7 @@ writeaccess() {                 # check if useruid $1 has write access to folder
     #     userid_has_acl_groups=no
     # fi
     #
-    userid_has_acl_groups=$( yes_or_no [ -n "${userid_acl_group_id_entries}" ] )
+    userid_has_acl_groups=$( [ -n "${userid_acl_group_id_entries}" ]; exitcode_yes_or_no )
     #
     if [ "${userid_has_dirs_group}" = "yes" ] || [ "${userid_has_acl_groups}" = "yes" ] ; then
         # if $verbose; then echo "Have matching group"; fi

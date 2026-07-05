@@ -1,9 +1,27 @@
 #!/usr/bin/env bash
 
+#
+# 
+#
+# Note: Passing code as unquoted arguments does not handle redirections.
+#
+#       For example:
+#
+# f(){  printf "'%s' "  "$@" ; echo ; } # Reports its arguments
+# f [ a = b ]                           # '[' 'a' '=' 'b' ']' # as expected
+# f command -v ls 2>/dev/null           # 'command' '-v' 'ls' # Redirection is not an argument.
+# 
+
 set_up() {
  X11DOCKER_TESTING=1
- . ./x11docker
+ # . ./x11docker
 }
+
+#
+# echo yes or echo no depending on exitcode of "${@}"
+#
+yes_or_no() { if "${@}" ; then echo yes ; else echo no ; fi }
+
 
 #
 # Test yes_or_no()

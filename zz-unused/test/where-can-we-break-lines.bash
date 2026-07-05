@@ -1,7 +1,8 @@
 #!/bin/bash
 
 
-# Where can we break lines?
+# Q: Where can we break lines?
+
 Hostsystem="ThisSystem"
 Host_system_to_report="$(     \
         grep                  \
