@@ -6,40 +6,40 @@ set_up() {
 }
 
 #
-# Test stdin_contains_as_word
+# Test stdin_contains_the_word
 #
 
-test_stdin_contains_as_word_1() {
+test_stdin_contains_the_word_1() {
     #
     # Plain words match
     #
-    stdin_contains_as_word "abc" <<< "abc def ghi"
+    stdin_contains_the_word "abc" <<< "abc def ghi"
     assert_exit_code 0  "First word"
     #
-    stdin_contains_as_word "def" <<< "abc def ghi"
+    stdin_contains_the_word "def" <<< "abc def ghi"
     assert_exit_code 0  "Middle word"
     #
-    stdin_contains_as_word "ghi" <<< "abc def ghi"
+    stdin_contains_the_word "ghi" <<< "abc def ghi"
     assert_exit_code 0  "Last word"
 }
 
-test_stdin_contains_as_word_2() {
+test_stdin_contains_the_word_2() {
     #
     # Ugly words match
     #
-    stdin_contains_as_word "abc-def!@#$%^" <<< "abc-def!@#$%^ def ghi"
+    stdin_contains_the_word "abc-def!@#$%^" <<< "abc-def!@#$%^ def ghi"
     assert_exit_code 0  "First word"
     #
-    stdin_contains_as_word "def-def!@#$%^" <<< "abc def-def!@#$%^ ghi"
+    stdin_contains_the_word "def-def!@#$%^" <<< "abc def-def!@#$%^ ghi"
     assert_exit_code 0  "Middle word"
     #
-    stdin_contains_as_word "ghi-def!@#$%^" <<< "abc def ghi-def!@#$%^"
+    stdin_contains_the_word "ghi-def!@#$%^" <<< "abc def ghi-def!@#$%^"
     assert_exit_code 0  "Last word"
 }
 
 
 
-test_stdin_contains_as_word_3() {
+test_stdin_contains_the_word_3() {
     #
     #
     #
@@ -54,11 +54,11 @@ test_stdin_contains_as_word_3() {
     #
     f1() {
         ## To catch an exit, use subshell
-        (stdin_contains_as_word "abc def" <<< "abc def ghi")
+        (stdin_contains_the_word "abc def" <<< "abc def ghi")
     }
     assert_exec "f1" \
                 --exit 7 \
-                --stderr-contains "myerror: stdin_contains_as_word(): The pattern" \
+                --stderr-contains "myerror: stdin_contains_the_word(): The pattern" \
                 --stdout ""
 
     #
@@ -66,37 +66,37 @@ test_stdin_contains_as_word_3() {
     #
     f2() {
         ## To catch an exit, use subshell
-        (stdin_contains_as_word "$(printf "a\tb" )" <<< "abc def ghi")
+        (stdin_contains_the_word "$(printf "a\tb" )" <<< "abc def ghi")
     }
     assert_exec "f1" \
                 --exit 7 \
-                --stderr-contains "myerror: stdin_contains_as_word(): The pattern" \
+                --stderr-contains "myerror: stdin_contains_the_word(): The pattern" \
                 --stdout ""
     #
     # Empty pattern does not match.
     #
-    stdin_contains_as_word "" <<< "abc def ghi"
+    stdin_contains_the_word "" <<< "abc def ghi"
     assert_exit_code 1  "empty1"
     #
-    stdin_contains_as_word "" <<< "$( printf "abc\n\nghi" )"
+    stdin_contains_the_word "" <<< "$( printf "abc\n\nghi" )"
     assert_exit_code 1  "empty2 We removed duplicate newlines "
     #
-    stdin_contains_as_word "" <<< "$( printf "\nabc" )"
+    stdin_contains_the_word "" <<< "$( printf "\nabc" )"
     assert_exit_code 1  "empty3 We removed empty lines"
     #
     # Newline in pattern means multiple patterns
     #
-    stdin_contains_as_word "$( printf "a\nb\nc" )" <<< "b"
+    stdin_contains_the_word "$( printf "a\nb\nc" )" <<< "b"
     assert_exit_code 0  "Newline-separated multiple patterns are OK"
 }
 
 
-test_stdin_contains_as_word_4() {
+test_stdin_contains_the_word_4() {
     local L="0 90 180 270  flipped-90 flipped-180 flipped-270"
     #
-    stdin_contains_as_word "flipped" <<< "$L"
+    stdin_contains_the_word "flipped" <<< "$L"
     assert_exit_code 1  "We consider hyphen a word character"
     #
-    stdin_contains_as_word "flipped-90" <<< "$L"
+    stdin_contains_the_word "flipped-90" <<< "$L"
     assert_exit_code 0  "We consider hyphen a word character"
 }

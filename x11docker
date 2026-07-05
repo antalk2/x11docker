@@ -28,7 +28,8 @@ esac
 #
 # Concept nlsv : newline_separated_values
 #
-#   - A string where entries are separated by a newline character.
+#  - A string where entries are separated by a newline character.
+#  - Empty entries would be too easy to lose: we disallow them here.
 #
 # Concept: word : A string not containing newlne, space, tab.
 #          - Maybe it should be more strict.
@@ -46,6 +47,35 @@ esac
 #
 nlsv_drop_empty() {
     grep -F -v -x ''
+}
+
+#
+# filter as_nlsv : same as nlsv_drop_empty
+#
+# Example nlsv="$( cat "$file" | as_nlsv )"
+#
+as_nlsv() {
+    nlsv_drop_empty
+}
+
+is_nlsv_entry() {
+    local the_bad_part
+    # remove all allowed characters from $1
+    the_bad_part="$( echo "$1" | tr -c -d '\n' )"
+    [ -z "${the_bad_part}" ]
+}
+
+#
+#  echo "$nlsv" | nlsv_contains "$entry"
+#
+nlsv_contains() {
+    if ! is_nlsv_entry "${1}" ; then
+        error_ttm "|nlsv_contains():
+                   : The entry \"$(printf %q  "$1")\" is not a valid nlsv entry"
+        #
+        return 13 # Only if error returns.
+    fi
+    grep -F -x -q  -- "${1}"
 }
 
 #
@@ -69,22 +99,21 @@ is_a_word() {
 }
 
 #
-# function stdin_contains_as_word( word ) <<< "$list_of_words"
+# function stdin_contains_the_word( word ) <<< "$list_of_words"
 #
 #  - In list_of_words, newline, space and tab separate words.
 #
-#  - An empty pattern, or a pattern containing space or tab, never
-#    matches.
+#  - "$word" must pass is_a_word
 #
 #  - A pattern containing newlines is a list of patterns.
 #  - A pattern containg Space or Tab is an error.
 #
 # return 0 if word is found in stdin, non-0 otherwise
 #
-stdin_contains_as_word() {
+stdin_contains_the_word() {
     #
     if ! is_a_word "$1" ; then
-        error_ttm "|stdin_contains_as_word():
+        error_ttm "|stdin_contains_the_word():
                    : The pattern \"$(printf %q  "$1")\" is not a word"
         #
         return 13 # Only if error returns.
@@ -92,14 +121,14 @@ stdin_contains_as_word() {
     # We want space and tab to separate words in the input.
     # Change these to newlines
     # Accept only whole-line matches.
-    as_newline_separated_words | LC_ALL=C grep -F -x -q  -- "${1}"
+    as_newline_separated_words | nlsv_contains "${1}"
 }
 
 #
 # function word_is_in( word, text )
 #
 word_is_in() {
-    echo "${2}" | stdin_contains_as_word "$1"
+    echo "${2}" | stdin_contains_the_word "$1"
 }
 
 #
@@ -14357,7 +14386,7 @@ check_options_arguments() {     # check for [likely] valid arguments
 
   # --rotate
   [ -n "$Rotation" ] && {
-    stdin_contains_as_word "$Rotation" <<< "0 90 180 270 flipped flipped-90 flipped-180 flipped-270" || {
+    stdin_contains_the_word "$Rotation" <<< "0 90 180 270 flipped flipped-90 flipped-180 flipped-270" || {
       note "Option --rotate: Unsupported value '$Rotation'.
   Must be one of 0 90 180 270 flipped flipped-90 flipped-180 flipped-270
   Fallback: disabling option --rotate"
