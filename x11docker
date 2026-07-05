@@ -3719,6 +3719,42 @@ create_launcher() {
 }
 
 #
+# Get version of the latest release from downloaded "CHANGELOG.md"
+#
+CHANGELOG_md_get_Releaseversion() {
+    local CHANGELOG_md="$1"
+    #
+    # Release lines look like this:
+    #
+    # "## [7.8.0](https://github.com/mviereck/x11docker/releases/tag/v7.8.0) - 2026-01-17"
+    #
+    #  They are in latest-first order, but there may be a line like:
+    # "## [Unreleased]"
+    #  We want to ignore that.
+    #
+    local release_line_ERE='^## \[([^]]+)\].*' # relaxed version, only assumes
+    #   that the version number does not contain ']'
+    #   Will yield the version number as \\1
+    #
+    # A stricter version could be:
+    # release_line_ERE='^## \[([0-9.]+)\]\([^)]+\)[ -]+([0-9-]+).*$'
+    #                          \\1 : version_number
+    #                                      \\2 URL to download from
+    #                                                  \\3 release date
+    #
+    # shellcheck disable=SC2002 # (style): Useless cat.
+    Releaseversion="v$(
+                       cat "${CHANGELOG_md}"                \
+                       | grep -E -e  "${release_line_ERE}"  \
+                       | grep -v Unreleased                 \
+                       | head -n1                           \
+                       | sed -E -e "s|${release_line_ERE}|\\1|"
+                       )"
+    #
+    echo "${Releaseversion}"
+}
+
+#
 # function installer( installer_option )
 #
 #
@@ -3752,8 +3788,11 @@ installer() {
     local Key1="" Key2="" Oldversion="" Newversion="" Format="" Prefix
     local codeload_url_prefix=""
     local raw_url_prefix=""
-    local the_unpacked_dir=""
     local colorize_diff_patterns
+    local release_line_ERE
+    local release_url_pattern
+    local the_unpacked_dir=""
+    local the_old_version_is_beta="no"
 
     Prefix="/usr/local"
 
@@ -3816,6 +3855,8 @@ installer() {
                 Oldversion=""
             fi
 
+            # Ensure "/tmp/x11docker-install" exists and is an empty
+            # directory.
             if [ -d       "/tmp/x11docker-install" ] ; then  rm -R "/tmp/x11docker-install" ; fi
             if ! mkdir -p "/tmp/x11docker-install"   ; then
                 error "Could not create /tmp/x11docker-install."
@@ -3824,7 +3865,7 @@ installer() {
             #
             # Now "/tmp/x11docker-install" is empty.
             if ! cd    "/tmp/x11docker-install" ; then
-                error "Could not create or cd to /tmp/x11docker-install."
+                error "Could not cd to /tmp/x11docker-install."
                 return 1
             fi
         
@@ -3845,28 +3886,29 @@ installer() {
             codeload_url_prefix="https://codeload.github.com/mviereck/x11docker"
             raw_url_prefix="https://raw.githubusercontent.com/mviereck/x11docker"
             case "${installer_option}" in
+
                 --update-master)
                     note "Downloading latest x11docker master version from github."
-                    if ! download "${codeload_url_prefix}/$Format/master" "x11docker-update.$Format" ; then
+                    #
+                    if ! download                                \
+                         "${codeload_url_prefix}/$Format/master" \
+                         "x11docker-update.$Format"              ;
+                    then
                         error "Failed to download x11docker from github."
                         return 1
                     fi
                     ;;
+
                 --update)
-                    if ! download "${raw_url_prefix}/master/CHANGELOG.md" "CHANGELOG.md" ; then
+                    if ! download                                \
+                         "${raw_url_prefix}/master/CHANGELOG.md" \
+                         "CHANGELOG.md"                          ;
+                    then
                         error "Failed to download CHANGELOG.md from github."
                         return 1
                     fi
                     #
-                    # shellcheck disable=SC2002 # (style): Useless cat.
-                    Releaseversion="v$(
-                            cat "CHANGELOG.md"     \
-                            | grep "## \["         \
-                            | grep -v 'Unreleased' \
-                            | head -n1             \
-                            | cut -d[ -f2          \
-                            | cut -d] -f1
-                            )"
+                    Releaseversion="$( CHANGELOG_md_get_Releaseversion "CHANGELOG.md" )"
                     #
                     note "Downloading latest x11docker release $Releaseversion from github."
                     if ! download "${codeload_url_prefix}/$Format/$Releaseversion" "x11docker-update.$Format" ;
@@ -3909,58 +3951,70 @@ installer() {
     # New version number
     case "${installer_option}" in
         --install|--update|--update-master)
+            ## For example: "7.8.1-beta"
             Newversion="$(bash "$(pwd)/x11docker" --version)"
             ;;
     esac
 
+    #
     # Changelog excerpt
-    case "${installer_option}" in
-        --update)
-            if echo "$Oldversion" | grep -q beta ; then
-                note_ttm \
-                    "|You are switching from master branch to stable releases.
-                     |  To get latest master beta version, use option --update-master instead"
-                #
-                # Note: Key1 and Key2 are address patterns for a `sed` call below.
-                #
+    # =================
+    {
+        #
+        # Note: Key1 and Key2 are address patterns for a `sed` call below.
+        #
+        #   Will print from a line matching Key1, to the line before
+        #   one matching Key2.
+        #
+        # Release URLs match this pattern as a sed address.
+        # Setting Key2 to this means: "till the next release line"
+        release_url_pattern="https:\/\/github.com\/mviereck\/x11docker\/releases"
+        #
+        if echo "$Oldversion" | grep -q beta ;
+        then the_old_version_is_beta=yes
+        else the_old_version_is_beta=no
+        fi
+        #
+        case "${installer_option}" in
+            --update)
                 Key1="\[${Newversion}\]"
-                Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
-            else
-                Key1="\[${Newversion}\]"
-                Key2="\[${Oldversion}\]"
-                if [ "$Newversion" = "$Oldversion" ] ; then
-                    Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
+                
+                if [ -n "$Oldversion"                    ] \
+                && [ "${the_old_version_is_beta}" != yes ] \
+                &&  [ "$Newversion" != "$Oldversion"     ] ;
+                then Key2="\[${Oldversion}\]"
+                else Key2="${release_url_pattern}"
+                fi
+                #
+                if [ "${the_old_version_is_beta}" = yes ] ; then
+                    note_ttm \
+                        "|You are switching from master branch (beta version) to a stable release.
+                         |  To get latest master beta version, use option --update-master instead"
+                elif [ "$Newversion" = "$Oldversion" ] ; then
                     note_ttm \
                         "|Version $Newversion was already installed before this update.
                          |  If you want the latest beta version from master branch, use --update-master."
                 fi
-                if [ -z "$Oldversion" ] ; then
-                    Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
-                fi
-            fi
-            ;;
+                ;;
 
-        --update-master)
-            if echo "$Oldversion" | grep -q beta ; then
+            --update-master)
                 Key1="\[Unreleased\]"
-                Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
-            else
-                Key1="\[Unreleased\]"
-                Key2="\[${Oldversion}\]"
-                if [ -z "$Oldversion" ] ; then
-                    Key2="https:\/\/github.com\/mviereck\/x11docker\/releases"
+                if [ -n "$Oldversion"                    ] \
+                && [ "${the_old_version_is_beta}" != yes ] ;
+                then Key2="\[${Oldversion}\]"
+                else Key2="${release_url_pattern}"
                 fi
-            fi
-            ;;
-    esac
+                ;;
+        esac
 
-    case "${installer_option}" in
-        --update|--update-master)
-            note "Excerpt of x11docker changelog:${NEWLINE}$(
-               sed -n "/${Key1}/,/${Key2}/p" "CHANGELOG.md" | head -n-1
+        case "${installer_option}" in
+            --update|--update-master)
+                note "Excerpt of x11docker changelog:${NEWLINE}$(
+                   sed -n "/${Key1}/,/${Key2}/p" "CHANGELOG.md" | head -n-1
                )"
-            ;;
-    esac
+              ;;
+        esac
+    }
 
     # Show diff
     if [ "$Installerarg" = "diff" ] ; then
