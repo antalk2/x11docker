@@ -26,6 +26,11 @@ grep -q -- "--enforce-i" <<< "$*" && case $- in
 esac
 
 
+as_newline_separated_words() {
+    # Space and Tab to newline, omit empty lines
+    tr -s ' \t' '\n\n' | grep -F -v -x ''
+}
+
 #
 # function stdin_contains_as_word( word ) <<< "$list_of_words"
 #
@@ -39,10 +44,6 @@ esac
 #
 # return 0 if word is found in stdin, non-0 otherwise
 #
-as_newline_separated_words() {
-    # Space and Tab to newline, omit empty lines
-    tr -s ' \t' '\n\n' | grep -v -x '' 
-}
 stdin_contains_as_word() {
     #
     if  grep -E -q -e $'[ \t]' <<< "$1" ; then
@@ -57,6 +58,9 @@ stdin_contains_as_word() {
     as_newline_separated_words | LC_ALL=C grep -x -q  -- "${1}"
 }
 
+#
+# function word_is_in( word, text )
+#
 word_is_in() {
     stdin_contains_as_word "$1" <<< "${2}"
 }
