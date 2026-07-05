@@ -15,8 +15,8 @@ test_escapestring() {
     #
     local fixed_characters='a-zA-Z0-9,._+@=:/-'
     local escaped
-    escaped="$(escapestring "${fixed_characters}")"
-    assert_same "$fixed" "$escaped"
+    escaped="$( escapestring "${fixed_characters}" )"
+    assert_same "$fixed_characters" "$escaped"  "Fixed_characters_are_not_modified"
     #
     # single_quote is an error
     #
