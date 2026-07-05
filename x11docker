@@ -4014,7 +4014,7 @@ installer() {
                )"
               ;;
         esac
-    }
+    } # Changelog excerpt
 
     # Show diff
     if [ "$Installerarg" = "diff" ] ; then
@@ -4024,7 +4024,7 @@ installer() {
                        "|s/^+.*/${Colgreenbg}\0${Colnorm}/
                         :; s/^-.*/${Colredbg}\0${Colnorm}/
                         :; s/^@.*/${Coluline}\0${Colnorm}/"
-                )"
+                        )"
                 #
                 note "$( printf "%s\n%s\n%s"                                                    \
                            "Difference of installed version to new version:"                    \
@@ -4042,6 +4042,7 @@ installer() {
     if [ -z "$Installerarg" ] ; then
         case "${installer_option}" in
             --install|--update|--update-master)
+                #
                 note "Installing x11docker to ${Prefix}/bin"
                 cp "x11docker" "${Prefix}/bin/" || {
                     error "Could not copy x11docker to ${Prefix}/bin"
@@ -4054,7 +4055,7 @@ installer() {
                 chown "root:root" "${Prefix}/bin/x11docker" || {
                     warning "Could not set ownership 'root:root' to '${Prefix}/bin/x11docker'"
                 }
-
+                
                 note "Installing icon for x11docker with xdg-icon-resource"
                 if ! xdg-icon-resource install               \
                      --context apps --novendor --mode system \
@@ -4068,25 +4069,27 @@ installer() {
                 note_ttm "|Storing README.md, CHANGELOG.md and LICENSE.txt in
                           |  ${Prefix}/share/doc/x11docker"
                 #
-                if mkdir -p "${Prefix}/share/doc/x11docker" ; then
+                if ! mkdir -p "${Prefix}/share/doc/x11docker" ; then
+                    note "Error while creating /usr/share/doc/x11docker"
+                else
                     cp "README.md"    "${Prefix}/share/doc/x11docker/"
                     cp "CHANGELOG.md" "${Prefix}/share/doc/x11docker/"
                     cp "LICENSE.txt"  "${Prefix}/share/doc/x11docker/"
-                else
-                    note "Error while creating /usr/share/doc/x11docker"
                 fi
 
                 note "Storing man page in ${Prefix}/share/man/man1/x11docker.1.gz"
-                if have_command  gzip  ; then
-                    gzip -c "x11docker.man" > "${Prefix}/share/man/man1/x11docker.1.gz"
+                if ! have_command  gzip  ; then
+                    note "Error storing man page: gzip not found. "
                 else
-                    note "Error storing man page."
+                    gzip -c "x11docker.man" > "${Prefix}/share/man/man1/x11docker.1.gz" \
+                        || note "Error storing man page."
                 fi
 
                 note "Installed x11docker version $Newversion"
                 ;;
 
             --remove|--remove-oldprefix)
+                
                 note "Removing x11docker from your system."
                 if [ "${installer_option}" = "--remove" ] && [ -n "$Backendbin" ] ; then
                     note "Running --cleanup"
