@@ -25,6 +25,18 @@ grep -q -- "--enforce-i" <<< "$*" && case $- in
   *)   exec bash --noprofile --norc --noediting -i -- "$0" "$@" ;;
 esac
 
+#
+# Concept nlsv : newline_separated_values
+#
+#   - A string where entries are separated by a newline character.
+#
+
+#
+# filter nlsv_drop_empty() 
+#
+nlsv_drop_empty() {
+    grep -F -v -x ''
+}
 
 as_newline_separated_words() {
     # Space and Tab to newline, omit empty lines
