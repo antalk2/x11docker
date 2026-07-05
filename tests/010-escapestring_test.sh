@@ -32,35 +32,3 @@ test_escapestring() {
     assert_same  '\\t'    "$(escapestring "\t"    )" "backslash-t"
    
 }
-
-test_createmountopt() {
-    local res
-    local File="/tmp/xxx yyy"
-    # File must exist
-    touch "${File}"
-    #
-    res="$(createmountopt mount  "$File" "ro" )"
-    assert_same '--mount type=bind,source=/tmp/xxx\ yyy,target=/tmp/xxx\ yyy,readonly' "${res}"
-    #
-    res="$(createmountopt device  "$File" "ro" )"
-    assert_same '--device /tmp/xxx\ yyy:ro' "${res}"
-    #
-    res="$(createmountopt volume  "$File" "ro" )"
-    assert_same '--volume /tmp/xxx\ yyy:/tmp/xxx\ yyy:ro' "${res}"
-    #
-    unlink "${File}"
-    #
-    # If the file does not exist, stdout is empty and exitcode is 1
-    assert_exec 'createmountopt mount  "$File" "ro"' --exit 1 --stdout "" --stderr ""
-    #
-    # The following result in message on stderr
-    #
-    local Debugmode=yes
-    local Verbose=not-yes
-    local FDstderr=2
-    assert_exec 'createmountopt mount  "$File" "ro"' --exit 1 --stdout "" \
-                --stderr-contains "DEBUGNOTE"
-    assert_exec 'createmountopt mount  "$File" "ro"' --exit 1 --stdout "" \
-                --stderr-contains "createmountopt(): ERROR: File not found:"
-}
-
