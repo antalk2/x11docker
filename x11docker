@@ -4207,6 +4207,11 @@ set_password() {
 #
 # function check_windowmanager() : option --wm: search a host window manager
 #
+#  Attempts to fill Windowmanagercommand and Windowmanagermode
+#
+#  Considers:  Xcontainer_option (--xc)
+#  On exit, Windowmanagermode can be { none | host }
+#
 check_windowmanager() {
     #
     # check --wm arguments, adjust mode
@@ -4224,53 +4229,57 @@ check_windowmanager() {
         return 0
     fi
 
-    case "$Windowmanagermode" in
-        ""|none)
-            Windowmanagermode="none"
-            return 0
-            ;;
-        auto)
-            Windowmanagermode="host"           # Windowmanagermode_host
-            if [ -n "$Windowmanagercommand" ] ; then
-                if have_command  "$(cut -d' ' -f1 <<< "$Windowmanagercommand")" ; then
-                    # Windowmanagercommand is available on host
-                    Windowmanagermode="host"   # Windowmanagermode_host
-                else
-                    note_ttm \
-                        "|Option --wm: Did not find command on host: $Windowmanagercommand
-                         |  Fallback: Searching for another window manager."
-                    #
-                    check_fallback
-                    Windowmanagercommand=""
+    {
+        case "$Windowmanagermode" in
+            ""|none)
+                Windowmanagermode="none"
+                return 0
+                ;;
+            auto)
+                Windowmanagermode="host"           # Windowmanagermode_host
+                if [ -n "$Windowmanagercommand" ] ; then
+                    if ! have_command  "$(cut -d' ' -f1 <<< "$Windowmanagercommand")" ; then
+                        note_ttm \
+                            "|Option --wm: Did not find command on host: $Windowmanagercommand
+                             |  Fallback: Searching for another window manager."
+                        #
+                        check_fallback
+                        Windowmanagercommand=""
+                    else
+                        # Windowmanagercommand is available on host
+                        Windowmanagermode="host"   # Windowmanagermode_host
+                    fi
                 fi
-            fi
-            ;;
-        host) ;;
-    esac
+                ;;
+            host) ;;
+        esac
 
-    if [ "$Windowmanagermode" = "none" ] ; then return 0 ; fi
+        if [ "$Windowmanagermode" = "none" ] ; then return 0 ; fi
+    }
 
-    # Find a host window manager
-    if [ -z "$Windowmanagercommand" ] ; then
-        for Windowmanagercommand in $Wm_all WM_NOT_FOUND; do
-            if have_command "$Windowmanagercommand" ; then
-                break # found
-            fi
-        done
-    fi
+    # Find an available window manager command on the host
+    {
+        if [ -z "$Windowmanagercommand" ] ; then
+            for Windowmanagercommand in $Wm_all WM_NOT_FOUND; do
+                if have_command "$Windowmanagercommand" ; then
+                    break # found
+                fi
+            done
+        fi
 
-    if [ "$Windowmanagercommand" = "WM_NOT_FOUND" ] ; then
-        Windowmanagercommand=""
-        note_ttm "|Option --wm: No host window manager found.
+        if [ "$Windowmanagercommand" = "WM_NOT_FOUND" ] ; then
+            Windowmanagercommand=""
+            note_ttm "|Option --wm: No host window manager found.
                   |    Please install a supported one. Recommended:
                   |  $Wm_recommended_nodesktop_light
                   |  Fallback: Setting --wm=none"
+            #
+            check_fallback
+            Windowmanagermode="none"
+        fi
         #
-        check_fallback
-        Windowmanagermode="none"
-    fi
-    #
-    if  [ "$Windowmanagermode" = "none" ] ; then return 0 ; fi
+        if  [ "$Windowmanagermode" = "none" ] ; then return 0 ; fi
+    }
     
     if grep -q "$Windowmanagercommand" <<< "$Wm_not_recommended" ; then 
         note_ttm "|Option --wm: Window manager $Windowmanagercommand
@@ -4290,7 +4299,9 @@ check_windowmanager() {
              |  they may take control over your host system!"
     fi
 
-    # command adjustment for some host window managers
+    #
+    # Command adjustment for some host window managers
+    #
     case "$(basename "$(cut -d' ' -f1 <<< "$Windowmanagercommand")")" in
         cinnamon|cinnamon-session)
             # Override 'cinnamon-session' and also any args provided elsewhere
@@ -4331,20 +4342,26 @@ check_windowmanager() {
                 cp /etc/xdg/openbox/rc.xml "$Sharefolder/openbox-nomenu.rc"
                 sed -i /ShowMenu/d         "$Sharefolder/openbox-nomenu.rc" # disable ShowMenu
                 sed -i s/NLIMC/NLMC/       "$Sharefolder/openbox-nomenu.rc" # hide the Iconify button
-                Windowmanagercommand="$Windowmanagercommand --config-file '$Sharefolder/openbox-nomenu.rc'"
+                Windowmanagercommand="$(trim_to_mark
+                          "|$Windowmanagercommand
+                           : --config-file '$Sharefolder/openbox-nomenu.rc'"
+                           )"
             fi
             ;;
     esac
 
     case "$Windowmanagermode" in
         host) # Windowmanagermode_host
+            # https://linux.die.net/man/1/wmctrl
             xtool --check "wmctrl" || true
             ;;
     esac
 
   note "Using host window manager: ${Windowmanagercommand:-"(none)"}"
   return 0
-}
+} # check_windowmanager
+
+
 
 # function clean_xhost() : option --clean-xhost: disable xhost
 #                          policies on host X
