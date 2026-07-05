@@ -3702,7 +3702,7 @@ create_launcher() {
 }
 
 #
-# function installer()
+# function installer( installer_option )
 #
 installer() {
     #
@@ -3727,6 +3727,8 @@ installer() {
     ### FIXME: (--update)
     ### maybe not install additional files if x11docker is owned by user
     #
+    local installer_option="${1:-}"
+    #
     local Key1="" Key2="" Oldversion="" Newversion="" Format="" Prefix
     local codeload_url_prefix=""
     local raw_url_prefix=""
@@ -3735,14 +3737,14 @@ installer() {
 
     Prefix="/usr/local"
 
-    case "${1:-}" in
+    case "${installer_option}" in
         --remove-oldprefix)
             Prefix="/usr"
             ;;
         *)
             if [ -x "/usr/bin/x11docker" ] ; then
                 warning_ttm \
-                    "|Option ${1:-}: Detected x11docker installation in /usr/bin
+                    "|Option ${installer_option}: Detected x11docker installation in /usr/bin
                      |  Since version 7.6.0 x11docker defaults to ${Prefix}/bin instead.
                      |  If this was a custom installation without your package manager,
                      |  you can remove the old installation as root with:
@@ -3771,7 +3773,7 @@ installer() {
     fi
 
     # Preparing
-    case "${1:-}" in
+    case "${installer_option}" in
         --install)
             if [ ! -f "./x11docker" ]   ; then
                 error_ttm "|File x11docker not found in current folder.
@@ -3825,7 +3827,7 @@ installer() {
             
             codeload_url_prefix="https://codeload.github.com/mviereck/x11docker"
             raw_url_prefix="https://raw.githubusercontent.com/mviereck/x11docker"
-            case "${1:-}" in
+            case "${installer_option}" in
                 --update-master)
                     note "Downloading latest x11docker master version from github."
                     if ! download "${codeload_url_prefix}/$Format/master" "x11docker-update.$Format" ; then
@@ -3888,14 +3890,14 @@ installer() {
     # We are in "/tmp/x11docker-install/${the_unpacked_dir}"
 
     # New version number
-    case "${1:-}" in
+    case "${installer_option}" in
         --install|--update|--update-master)
             Newversion="$(bash "$(pwd)/x11docker" --version)"
             ;;
     esac
 
     # Changelog excerpt
-    case "${1:-}" in
+    case "${installer_option}" in
         --update)
             if echo "$Oldversion" | grep -q beta ; then
                 note_ttm \
@@ -3935,7 +3937,7 @@ installer() {
             ;;
     esac
 
-    case "${1:-}" in
+    case "${installer_option}" in
         --update|--update-master)
             note "Excerpt of x11docker changelog:${NEWLINE}$(
                sed -n "/${Key1}/,/${Key2}/p" "CHANGELOG.md" | head -n-1
@@ -3945,7 +3947,7 @@ installer() {
 
     # Show diff
     if [ "$Installerarg" = "diff" ] ; then
-        case "${1:-}" in
+        case "${installer_option}" in
             --update|--update-master)
                 colorize_diff_patterns="$(trim_to_mark \
                        "|s/^+.*/${Colgreenbg}\0${Colnorm}/
@@ -3967,7 +3969,7 @@ installer() {
 
     # Doing
     if [ -z "$Installerarg" ] ; then
-        case "${1:-}" in
+        case "${installer_option}" in
             --install|--update|--update-master)
                 note "Installing x11docker to ${Prefix}/bin"
                 cp "x11docker" "${Prefix}/bin/" || {
@@ -4015,7 +4017,7 @@ installer() {
 
             --remove|--remove-oldprefix)
                 note "Removing x11docker from your system."
-                if [ "${1:-}" = "--remove" ] && [ -n "$Backendbin" ] ; then
+                if [ "${installer_option}" = "--remove" ] && [ -n "$Backendbin" ] ; then
                     note "Running --cleanup"
                     cleanup
                 fi
@@ -4029,7 +4031,7 @@ installer() {
                 if [ -e      "${Prefix}/share/man/man1/x11docker.1.gz" ] ; then
                     rm -v    "${Prefix}/share/man/man1/x11docker.1.gz"
                 fi
-                if [ "${1:-}" = "--remove" ] ; then
+                if [ "${installer_option}" = "--remove" ] ; then
                     xdg-icon-resource uninstall --size 64 "x11docker" || true
                 fi
                 
@@ -4042,7 +4044,7 @@ installer() {
     fi
 
     # Cleanup
-    case "${1:-}" in
+    case "${installer_option}" in
         --update|--update-master)
             note "Removing downloaded temporary files."
             cd ~ || error "cd ~ FAILED in installer()"
