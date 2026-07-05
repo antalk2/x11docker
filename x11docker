@@ -15914,13 +15914,17 @@ check_options_messages() {      # some messages depending on options, but not ch
 # global g_Optionset1 : the currently selected options.
 #
 check_optionset() {
-    local Line Return=
-    for Line in ${2:-}; do
+    local the_option="${1:-}"
+    local incompatible_options="${2:-}"
+    #
+    local current_incompatible_option Return=
+    #
+    for current_incompatible_option in ${incompatible_options}; do
         # -x, --line-regexp Select only those matches that exactly match
         #                   the whole line.
-        if grep -q -x -- "$Line" <<< "$g_Optionset1" ; then
+        if grep -q -x -- "$current_incompatible_option" <<< "$g_Optionset1" ; then
             Return=1
-            note "Option ${1:-} does not support option $Line"
+            note "Option ${the_option} does not support option $current_incompatible_option"
             check_fallback
         fi
     done
@@ -17572,38 +17576,38 @@ main() {
     check_containeruser            # unprivileged user in container                 # --user
     check_containerhomebasedir     # check base dir for --home and possible rootfs  # --homebasedir
 
-  # Special x11docker jobs
-  if [ "$Createlauncher" ] ; then
-      # --launcher: Create application launcher icon on desktop
-      create_launcher
-      finish
-  fi
+    # Special x11docker jobs
+    if [ "$Createlauncher" ] ; then
+        # --launcher: Create application launcher icon on desktop
+        create_launcher
+        finish
+    fi
 
-  check_backend  # --backend
+    check_backend  # --backend
 
-  if [ "$Installermode" ] ; then
-      # --install, --update, --update-master, --remove
-      case "$Packagedversion" in
-          yes)
-              case "$Installermode" in
-                  --install|--update|--update-master|--remove|--remove-oldprefix)
-                      error_ttm \
+    if [ "$Installermode" ] ; then
+        # --install, --update, --update-master, --remove
+        if [ "$Packagedversion" =   yes ] ; then
+            case "$Installermode" in
+                --install|--update|--update-master|--remove|--remove-oldprefix)
+                    error_ttm \
                         "|Options --install|--update|--update-master|--remove
                          |  are not supported in packaged versions of x11docker.
                          |  Please use your package manager instead."
-                      ;;
-              esac
-              ;;
-      esac
-      #
-      check_optionset \
-          "$Installermode" \
-          "$(grep -v -E -- '--install|--update|--update-master|--remove|--remove-oldprefix' <<< "$g_AllAvailableLongOptions")" \
-          || true
-      #
-      installer "$Installermode"
-      finish
-  fi
+                    ;;
+            esac
+        fi
+        #
+        check_optionset         \
+            "$Installermode"    \
+            "$( grep -v -E --                                                       \
+                '--install|--update|--update-master|--remove|--remove-oldprefix'  \
+                 <<< "$g_AllAvailableLongOptions"
+           )" || true
+        #
+        installer "$Installermode"
+        finish
+    fi
 
   if [ "$Cleanup" ] ; then
       # --cleanup: Clean up cache and orphaned x11docker containers
