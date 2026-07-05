@@ -43,7 +43,8 @@ esac
 #
 
 #
-# filter nlsv_drop_empty() 
+# filter nlsv_drop_empty() : Remove empty lines (aka empty entries)
+#                            from stdin.
 #
 nlsv_drop_empty() {
     grep -F -v -x ''
@@ -58,15 +59,45 @@ as_nlsv() {
     nlsv_drop_empty
 }
 
+#
+# is_nlsv_entry entry
+#
+# return 0 if "$entry" is     a valid nlsv entry
+# return 1 if "$entry" is not a valid nlsv entry
+#
 is_nlsv_entry() {
     local the_bad_part
+    if [ -z "$1" ] ; then
+        return 1
+    fi
     # remove all allowed characters from $1
     the_bad_part="$( echo "$1" | tr -c -d '\n' )"
     [ -z "${the_bad_part}" ]
 }
 
 #
+#  echo "$nlsv1" | nlsv_contains_any_unsafe "$nlsv2"
+#
+#  return 0 if "$nlsv1" contains any entry in "$nlsv2"
+#
+#  In other words: true if the intersection of two set of entries (lines) is
+#                  not an empty set.
+#
+#  unsafe : Assumes stdin and "$1" are already passed through as_nlsv
+#           (or nlsv_drop_empty) (i.e. they have no empty lines).
+#           Otherwise empty lines may match each other.
+#
+nlsv_contains_any_unsafe() {
+    grep -F -x -q  -- "${1}"
+}
+
+
+#
 #  echo "$nlsv" | nlsv_contains "$entry"
+#
+#  - checks is_nlsv_entry "$entry"
+#  - warning: Assumes "$nlsv" has no empty lines
+#
 #
 nlsv_contains() {
     if ! is_nlsv_entry "${1}" ; then
@@ -75,8 +106,10 @@ nlsv_contains() {
         #
         return 13 # Only if error returns.
     fi
-    grep -F -x -q  -- "${1}"
+    nlsv_contains_any_unsafe
 }
+
+
 
 #
 # filter as_newline_separated_words() : Convert a
@@ -93,6 +126,9 @@ as_newline_separated_words() {
 
 is_a_word() {
     local the_bad_part
+    if [ -z "$1" ] ; then
+        return 1
+    fi
     # remove all allowed characters from $1
     the_bad_part="$( echo "$1" | tr -c -d ' \t\n' )"
     [ -z "${the_bad_part}" ]
@@ -104,9 +140,6 @@ is_a_word() {
 #  - In list_of_words, newline, space and tab separate words.
 #
 #  - "$word" must pass is_a_word
-#
-#  - A pattern containing newlines is a list of patterns.
-#  - A pattern containg Space or Tab is an error.
 #
 # return 0 if word is found in stdin, non-0 otherwise
 #
@@ -121,7 +154,24 @@ stdin_contains_the_word() {
     # We want space and tab to separate words in the input.
     # Change these to newlines
     # Accept only whole-line matches.
-    as_newline_separated_words | nlsv_contains "${1}"
+    as_newline_separated_words | nlsv_contains_any_unsafe "${1}"
+}
+
+#
+#  echo "$wordlist1" | stdin_contains_any_word "$wordlist2"
+#
+#   - Both wordlists are converted to newline_separated_words.
+#   - return 0 if "$wordlist1" contains any of the words in "$wordlist2"
+#
+stdin_contains_any_word() {
+    #
+    local pattern
+    pattern="$(echo "$1" | as_newline_separated_words)"
+    #
+    # We want space and tab to separate words in the input.
+    # Change these to newlines
+    # Accept only whole-line matches.
+    as_newline_separated_words | nlsv_contains_any_unsafe "${pattern}"
 }
 
 #
