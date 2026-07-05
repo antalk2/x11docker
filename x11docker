@@ -149,7 +149,8 @@ exitcode_yes_or_no() { if [ "$?" = "0" ] ; then echo yes ; else  echo no ; fi }
 #
 # - As `cut`, but count fields from the back.
 #
-# Example: echo abcdef | rev_cut -c1-3
+# Example: echo abcdef | rev_cut -c1-3 # def
+#          printf "abddef\nABCDEF" | rev_cut -c1-3 # def\nDEF
 #
 rev_cut() {
     rev | cut "${@}" | rev
