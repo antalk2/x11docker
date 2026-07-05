@@ -4204,24 +4204,25 @@ set_password() {
 
 #### host integration features
 
-# function check_windowmanager()    # option --wm: search a host window manager
+#
+# function check_windowmanager() : option --wm: search a host window manager
+#
 check_windowmanager() {
     #
     # check --wm arguments, adjust mode
-    case "$Xcontainer_option" in
-        yes)
-            case "$Windowmanagermode" in
-                auto|host)                    # Windowmanagermode_host
-                    Windowmanagermode="host"  # Windowmanagermode_host
-                    Windowmanagercommand="openbox --sm-disable"
-                    ;;
-                *)
-                    Windowmanagermode="none"
-                    ;;
-            esac
-            return 0
-            ;;
-    esac
+    #
+    if [ "$Xcontainer_option" = yes ] ; then
+        case "$Windowmanagermode" in
+            auto|host)                    # Windowmanagermode_host
+                Windowmanagermode="host"  # Windowmanagermode_host
+                Windowmanagercommand="openbox --sm-disable"
+                ;;
+            *)
+                Windowmanagermode="none"
+                ;;
+        esac
+        return 0
+    fi
 
     case "$Windowmanagermode" in
         ""|none)
