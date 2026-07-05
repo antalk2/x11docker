@@ -14,6 +14,10 @@ test_get_ppid() {
         Myps=$(command -v ps || command -v psproc)
         echo "Myps is empty, set to 'Myps'"
     fi
+    export Myps
+    error() {
+        echo "ERROR: $*" >&2
+    }
     #
     #
     local x expected
@@ -21,13 +25,23 @@ test_get_ppid() {
     expected="0"
     assert_same "$expected" "$x"  "get_ppid 1"
     #
-    x="$(get_ppid noshuchpid)"
-    expected=""
-    assert_same "$expected" "$x"  "get_ppid noshuchpid"
+    f1(){
+        ( get_ppid noshuchpid )
+    }
+    assert_exec "f1"  --exit 2 --stderr-contains "ERROR:" --stdout ""
     #
-    x="$(get_ppid)"
-    expected=""
-    assert_same "$expected" "$x" "missing-arg"
+    f2(){
+        ( get_ppid  ) # missing arg
+    }
+    assert_exec "f2"  --exit 2 --stderr-contains "ERROR:" --stdout ""
     #
-    assert_exec "get_ppid" --exit 1 --stdout ""
+    f3(){
+        ( get_ppid 999999999999 ) # very large arg, Likely no hit
+    }
+    assert_exec "f3"  --exit 1 --stderr "" --stdout ""
+    #
+    f4(){
+        ( get_ppid 0 ) # no hit
+    }
+    assert_exec "f4"  --exit 1 --stderr "" --stdout ""
 }
