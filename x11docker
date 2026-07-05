@@ -181,6 +181,23 @@ word_is_in() {
     echo "${2}" | stdin_contains_the_word "$1"
 }
 
+#
+# function is_empty_or_a_word_in( word, text )
+#
+is_empty_or_a_word_in() {
+    local word="${1:-}"
+    local text="${2:-}"
+    [ -z "${word}" ] || word_is_in "$word" "${text}"
+}
+
+#
+# function is_empty_or_a_word_not_in( word, text )
+#
+is_empty_or_a_word_not_in() {
+    local word="${1:-}"
+    local text="${2:-}"
+    [ -z "${word}" ] || ! word_is_in "$word" "${text}"
+}
 
 #
 # nlsw_set_difference "$A"  "$B" : Set difference A \ B
@@ -3704,25 +3721,28 @@ create_launcher() {
 #
 # function installer( installer_option )
 #
+#
+# installer_option:
+#
+# --install, --update, --update-master, --remove: Installer for x11docker
+#
+# --install:
+#   - copies x11docker to /usr/local/bin
+#   - installs icon in /usr/share/icons
+#   - creates x11docker.desktop file in /usr/share/applications
+#
+# --update:
+#   - download and install latest release from github, regard
+#     existing installation location
+#
+# --update-master:
+#   - download and install latest master version from github,
+#     regard existing installation location
+#
+# --remove
+#   - remove installed files
+#
 installer() {
-    #
-    # --install, --update, --update-master, --remove: Installer for x11docker
-    #
-    # --install:
-    #   - copies x11docker to /usr/local/bin
-    #   - installs icon in /usr/share/icons
-    #   - creates x11docker.desktop file in /usr/share/applications
-    #
-    # --update:
-    #   - download and install latest release from github, regard
-    #     existing installation location
-    #
-    # --update-master:
-    #   - download and install latest master version from github,
-    #     regard existing installation location
-    #
-    # --remove
-    #   - remove installed files
 
     ### FIXME: (--update)
     ### maybe not install additional files if x11docker is owned by user
@@ -3739,9 +3759,12 @@ installer() {
 
     case "${installer_option}" in
         --remove-oldprefix)
+            # Set Prefix to its old value
             Prefix="/usr"
             ;;
         *)
+            # Check if x11docker is present under the old prefix.
+            # Warn if so.
             if [ -x "/usr/bin/x11docker" ] ; then
                 warning_ttm \
                     "|Option ${installer_option}: Detected x11docker installation in /usr/bin
@@ -3756,20 +3779,14 @@ installer() {
             ;;
     esac
 
-    if [ "$Startuser" != "root" ] ; then
-        case "$Winsubsystem" in
-            CYGWIN|MSYS2) ;;
-            *)
-                case "$Installerarg" in
-                    diff) ;;
-                    *)
-                        error_ttm "|Must run as root to install
-                                   :, update or remove x11docker system wide."
-                        return 1
-                        ;;
-                esac
-                ;;
-        esac
+
+    if [ "$Startuser" != "root" ]                               \
+    && is_empty_or_a_word_not_in "$Winsubsystem" "CYGWIN MSYS2" \
+    && [ "$Installerarg" != "diff" ]                            ;
+    then
+        error_ttm "|Must run as root to install
+                   :, update or remove x11docker system wide."
+        return 1
     fi
 
     # Preparing
@@ -5872,7 +5889,7 @@ check_screensize() {
         # ----
         # # 1920x1200 59.88 Hz (CVT 2.30MA) hsync: 74.56 kHz; pclk: 193.25 MHz
         # Modeline "1920x1200_60.00"  193.25  1920 2056 2256 2592  1200 1203 1209 1245 -hsync +vsync
-        # xxxxxxxxxx^^^^^^^^^xxxxxxx^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  
+        # __________^^^^^^^^^_______^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  
         # ----
         #
         if false ; then
