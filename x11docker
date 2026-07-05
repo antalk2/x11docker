@@ -2876,9 +2876,9 @@ createmountopt() {
 }
 
 #
-# function getwslpath()
+# function getwslpath() :  Get path to currently running WSL system
 #
-getwslpath() {                  # get path to currently running WSL system
+getwslpath() {
 
     # Fork from https://github.com/Microsoft/WSL/issues/2578#issuecomment-354010141
 
@@ -2926,22 +2926,25 @@ getwslpath() {                  # get path to currently running WSL system
 }
 
 #
-# function get_xpath()
+# function get_xpath( arg ) : $arg can be: Xorg Xvfb Xephyr Xwayland
+#                             xwayland-satellite nxagent
 #
-#  $1 can be: Xorg Xvfb Xephyr Xwayland xwayland-satellite nxagent
+# Depends on global Xcontainer_option (--xc: path to X server)
 #
-get_xpath() {                   # --xc: path to X server
+# Used when building command to start the Xserver
+#
+get_xpath() { 
     #
     # global Xcontainer_option
     #
-  case "$Xcontainer_option" in
-    yes) echo "/usr/bin/${1:-}" ;;
-    no)  command -v "${1:-}"    ;;
-  esac
+    case "$Xcontainer_option" in
+        yes) echo "/usr/bin/${1:-}" ;; # Path within container?
+        no)  command -v "${1:-}"    ;;
+    esac
 }
 
 #
-# function mkfile()
+# function mkfile( path ) Create file path=$1 owned by "$Hostuser:$Hostusergid"
 #
 #  mkfile path [mode]
 #      mode defaults to 644
@@ -2950,19 +2953,25 @@ get_xpath() {                   # --xc: path to X server
 #  mkfile $path 666
 #
 #
-mkfile() {                      # create file $1 owned by $Hostuser
-  :> "${1:-}"                   || return 1
+# 
+mkfile() {
+  :> "${1:-}"                   || return 1 # create as empty
   chown "$Hostuser"    "${1:-}" || return 1
   chgrp "$Hostusergid" "${1:-}" || return 1
-  chmod 644            "${1:-}" || return 1
+  #
+  chmod 644            "${1:-}" || return 1 # default mode
   [ -n "${2:-}" ] && { 
-    chmod "${2:-}" "${1:-}"     || return 1
+    chmod "${2:-}" "${1:-}"     || return 1 # supplied mode
   }
   return 0
 }
 
 #
-# function mkfolder(  path, mode=755 )
+# function mkfolder(  path, mode=755 ) : # Create folder $1 owned by $Hostuser
+#
+#  - path must be an  absolute unix path
+#  - Each part in the directory chain created gets `chmod mode`
+#  - return 1 if failed, 0 on success.
 #
 #  examples:
 #
@@ -2973,18 +2982,27 @@ mkfile() {                      # create file $1 owned by $Hostuser
 #  mkfolder "$XDG_RUNTIME_DIR" 0700
 #  ...
 #
-mkfolder() {                    # create folder $1 owned by $Hostuser
-    local Step Path="" Return=""
+mkfolder() {
+    local Step
+    local Path=""
+    local Return=""
+    locat pieces
     #
     # Work recursively
     #
-    for Step in $(tr '/' '\n' <<< "${1:-}" | grep .) ; do
-        Path="$Path/$Step"
-        [ -d "$Path" ] || {
+    # Only use the nonempty pieces. Thwirs away the empty piece from
+    # before the first "/"
+    #
+    # FIXME: /home/user/../user2/../user3
+    #
+    pieces="$(tr '/' '\n' <<< "${1:-}" | grep .)"
+    for Step in $pieces ; do
+        Path="$Path/$Step" # path in $1 must be absolute
+        if [ ! -d "$Path" ] ; then
             unpriv "mkdir -p  '$Path'"  || Return=1
             chmod "${2:-755}" "$Path"   || Return=1
-        }
-        [ "$Return" ] && break
+        fi
+        if [ -n "$Return" ] ; then break ; fi
     done
     return ${Return:-0}
     #unpriv "mkdir -p  '${1:-}'"   || return 1
