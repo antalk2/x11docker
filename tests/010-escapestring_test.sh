@@ -5,14 +5,17 @@ set_up() {
  . ./x11docker
 }
 
+#
+# Test the function escapestring()
+#
 test_escapestring() {
-    # fixed : characters not to be escaped. Note: uses character
+    # fixed_characters : characters not to be escaped. Note: uses character
     #         ranges, but that is OK here, it contains a
     #         representative set
     #
-    local fixed='a-zA-Z0-9,._+@=:/-'
+    local fixed_characters='a-zA-Z0-9,._+@=:/-'
     local escaped
-    escaped="$(escapestring "${fixed}")"
+    escaped="$(escapestring "${fixed_characters}")"
     assert_same "$fixed" "$escaped"
     #
     # single_quote is an error

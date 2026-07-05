@@ -1585,11 +1585,15 @@ download() {
 }
 
 #
-# function escapestring()
+# function escapestring(s) : Escape special chars of "$s" by inserting a
+#                            backslash before each.
 #
-# Escape special chars of $1
+# - Escape all characters except those described in [^a-zA-Z0-9,._+@=:/-]
+# - single_quote is not allowed in "$s" :  error() if it does.
 #
-# Escape all characters except those described in [^a-zA-Z0-9,._+@=:/-]
+# Examples:  Backendcommand="$Backendcommand --env '$( escapestring "$Line" )'"
+#            echo "export $( escapestring "SHELL=$Containerusershell" )"
+#
 #
 escapestring() {
     if grep -q "'" <<< "${1:-}" ; then
@@ -1610,19 +1614,19 @@ getrandomnumber() {             # get random number
 }
 
 #
-# function isint()
+# function isint() : Check if $1 is a positive integer (no sign)
 #
-isint() {             # check if $1 is a positive integer
+isint() {
     [[ "${1:-EMPTY}" =~ ^[0-9]+$ ]]
 }
 
 #
-# function isnum()
+# function isnum() : Check if $1 is a number (according to awk)
 #
-#  For example `isnum -2.1e-3` returns true
+#  For example `isnum -2.1e-3` is true
 #              `isnum 0xff`    is false
 #
-isnum() {               # check if $1 is a number (according to awk)
+isnum() {
     [ "1" = "$(awk -v a="${1:-}" 'BEGIN {print (a == a + 0)}')" ]
 }
 
