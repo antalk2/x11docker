@@ -3698,20 +3698,32 @@ create_launcher() {
     unpriv "xdg-desktop-icon install --novendor '$Cachefolder/$Name.desktop'"
 }
 
-installer() {                   # --install, --update, --update-master, --remove: Installer for x11docker
+#
+# function installer()
+#
+installer() {
+    #
+    # --install, --update, --update-master, --remove: Installer for x11docker
+    #
     # --install:
     #   - copies x11docker to /usr/local/bin
     #   - installs icon in /usr/share/icons
     #   - creates x11docker.desktop file in /usr/share/applications
+    #
     # --update:
-    #   - download and install latest release from github, regard existing installation location
+    #   - download and install latest release from github, regard
+    #     existing installation location
+    #
     # --update-master:
-    #   - download and install latest master version from github, regard existing installation location
+    #   - download and install latest master version from github,
+    #     regard existing installation location
+    #
     # --remove
     #   - remove installed files
 
     ### FIXME: (--update)
     ### maybe not install additional files if x11docker is owned by user
+    #
     local Key1="" Key2="" Oldversion="" Newversion="" Format="" Prefix
     local codeload_url_prefix=""
     local raw_url_prefix=""
