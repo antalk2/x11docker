@@ -2986,7 +2986,7 @@ mkfolder() {
     local Step
     local Path=""
     local Return=""
-    locat pieces
+    local pieces
     #
     # Work recursively
     #
