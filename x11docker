@@ -30,6 +30,16 @@ esac
 #
 #   - A string where entries are separated by a newline character.
 #
+# Concept: word : A string not containing newlne, space, tab.
+#          - Maybe it should be more strict.
+#
+#          - We need to allow "-", for arguments like "--xc"
+#            and for "flipped-180"
+#
+#          - An empty string is not a word.
+#
+# Concept: nlsw : newline_separated_words. An nlv containing only words.
+#
 
 #
 # filter nlsv_drop_empty() 
@@ -38,9 +48,24 @@ nlsv_drop_empty() {
     grep -F -v -x ''
 }
 
+#
+# filter as_newline_separated_words() : Convert a
+#                       (space,tab,newline)-separated list of words
+#                       to newline_separated_words
+#
+#  - input:  stdin
+#  - output: stdout an nlsv
+#
 as_newline_separated_words() {
     # Space and Tab to newline, omit empty lines
-    tr -s ' \t' '\n\n' | grep -F -v -x ''
+    tr -s ' \t' '\n\n' | nlsv_drop_empty
+}
+
+is_a_word() {
+    local the_bad_part
+    # remove all allowed characters from $1
+    the_bad_part="$( echo "$1" | tr -c -d ' \t\n' )"
+    [ -z "${the_bad_part}" ]
 }
 
 #
@@ -58,23 +83,23 @@ as_newline_separated_words() {
 #
 stdin_contains_as_word() {
     #
-    if  grep -E -q -e $'[ \t]' <<< "$1" ; then
+    if ! is_a_word "$1" ; then
         error_ttm "|stdin_contains_as_word():
-                   : Space or Tab found in pattern \"$(printf %q  "$1")\""
+                   : The pattern \"$(printf %q  "$1")\" is not a word"
         #
         return 13 # Only if error returns.
     fi
     # We want space and tab to separate words in the input.
     # Change these to newlines
     # Accept only whole-line matches.
-    as_newline_separated_words | LC_ALL=C grep -x -q  -- "${1}"
+    as_newline_separated_words | LC_ALL=C grep -F -x -q  -- "${1}"
 }
 
 #
 # function word_is_in( word, text )
 #
 word_is_in() {
-    stdin_contains_as_word "$1" <<< "${2}"
+    echo "${2}" | stdin_contains_as_word "$1"
 }
 
 #
@@ -841,8 +866,7 @@ verbose() {
     logentry "x11docker[$(timestamp)]: $*${NEWLINE}"
 }
 
-# function warning()
-# Show warning messages
+# function warning() : Show warning messages
 warning() {
     if [ "$Verbose" != "yes" ] ; then
         echo "${Colyellow}x11docker WARNING:${Colnorm} $*${NEWLINE}" >&"${FDstderr}"
@@ -1123,16 +1147,17 @@ saygoodbye() {                  # create file signaling watching processes to te
 
 #### watching processes
 #
-# function checkpid()
+# function checkpid(PID) : Check if PID is active (process with this PID exists)
 #
-checkpid() {                    # check if PID $1 is active
+checkpid() {
     [ -e "/proc/${1:-NONSENSE}" ]
 }
 
 #
-# function containerisrunning()
+# function containerisrunning() : Check if container is running
 #
-containerisrunning() {          # check if container is running
+containerisrunning() {
+    # Has an entry in Storeinfofile
     storeinfo_test_sh containerid || return 1
     case "$Dockervm" in
         no)
