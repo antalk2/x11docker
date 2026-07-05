@@ -4191,7 +4191,7 @@ set_password() {
       fi
   fi
 
-  mkpasswd "$Password" # Sets Containeruserpassword
+  mkpasswd "$Password" # Sets $Containeruserpassword
 
   mkdir -p "$(dirname "$Passwordfile")" \
       || error "Failed to create $(dirname "$Passwordfile")"
