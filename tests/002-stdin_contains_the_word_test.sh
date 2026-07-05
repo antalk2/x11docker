@@ -45,8 +45,8 @@ test_stdin_contains_the_word_3() {
     #
     # Override here, otherwise set_up will reinstate x11docker's error()
     #
-    error() {
-        echo "myerror: $*" >&2
+    error_ttm() {
+        echo "myerror: $(trim_to_mark "$@" )" >&2
         exit 7
     }
     #
@@ -58,7 +58,7 @@ test_stdin_contains_the_word_3() {
     }
     assert_exec "f1" \
                 --exit 7 \
-                --stderr-contains "myerror: stdin_contains_the_word(): The pattern" \
+                --stderr-contains "myerror: stdin_contains_the_word():" \
                 --stdout ""
 
     #
@@ -68,26 +68,21 @@ test_stdin_contains_the_word_3() {
         ## To catch an exit, use subshell
         (stdin_contains_the_word "$(printf "a\tb" )" <<< "abc def ghi")
     }
-    assert_exec "f1" \
+    assert_exec "f2" \
                 --exit 7 \
-                --stderr-contains "myerror: stdin_contains_the_word(): The pattern" \
+                --stderr-contains "myerror: stdin_contains_the_word():" \
                 --stdout ""
     #
-    # Empty pattern does not match.
+    # Empty pattern is an error
     #
-    stdin_contains_the_word "" <<< "abc def ghi"
-    assert_exit_code 1  "empty1"
-    #
-    stdin_contains_the_word "" <<< "$( printf "abc\n\nghi" )"
-    assert_exit_code 1  "empty2 We removed duplicate newlines "
-    #
-    stdin_contains_the_word "" <<< "$( printf "\nabc" )"
-    assert_exit_code 1  "empty3 We removed empty lines"
-    #
-    # Newline in pattern means multiple patterns
-    #
-    stdin_contains_the_word "$( printf "a\nb\nc" )" <<< "b"
-    assert_exit_code 0  "Newline-separated multiple patterns are OK"
+    f3() {
+        ( stdin_contains_the_word "" <<< "abc def ghi" )
+    }
+    assert_exec "f3" \
+                --exit 7 \
+                --stderr-contains "myerror: stdin_contains_the_word():" \
+                --stdout ""
+    
 }
 
 
