@@ -2702,11 +2702,11 @@ getwslpath() {                  # get path to currently running WSL system
     
     powershell.exe \
         -Command "$(trim_to_mark \
-         '|(Get-ChildItem
-          : HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss
-          : | ForEach-Object {Get-ItemProperty $_.PSPath}
-          :).BasePath.replace(":", "").replace("\", "/")'
-          )" |  while IFS= read -r BASEPATH; do
+                  '|(Get-ChildItem
+                   : HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss
+                   : | ForEach-Object {Get-ItemProperty $_.PSPath}
+                   :).BasePath.replace(":", "").replace("\", "/")'
+                   )" |  while IFS= read -r BASEPATH; do
         #
         # Remove trailing whitespaces.
         BASEPATH="${BASEPATH%"${BASEPATH##*[![:space:]]}"}"
