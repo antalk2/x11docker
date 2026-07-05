@@ -864,8 +864,8 @@ debugnote() {                   # show debug output $*
 }
 
 
-# function error()
-error() {                       # show error message and exit
+# function error( msg ) : show error message and exit
+error() {
   local Message
 
   # shellcheck disable=SC2104
@@ -1516,7 +1516,8 @@ check_envvar() {
     # - Replaces forbidden chars with X and returns 1
     # - Returns 0 if no change occurred.
     # - Echoes result.
-    local Newvar Space=''
+    local Newvar
+    local Space=''
 
     case "${1:-}" in
         -w) Space=" " ; shift ;;
@@ -1525,8 +1526,7 @@ check_envvar() {
     # tr -c : replace characters not in the list.
     Newvar="$(printf %s "${1:-}" | LC_ALL=C tr -c "a-zA-Z0-9_:/.,@=${Space}-" "X" )"
 
-    printf %s "$Newvar"
-    printf "\n"
+    printf "%s\n" "$Newvar"
 
     if [ "$Newvar" = "${1:-}" ] ; then return 0 ; fi
 
@@ -1535,25 +1535,47 @@ check_envvar() {
     return 1
 }
 
+
+
+#
+# cat "$file" | find_first_print_second query
+#
+# - file: A file with at least two whitespace-separated columns.
+#         Whitespace before the first column is ignored.
+#
+# - query : a string, containing no whitespace
+#
+find_first_print_second() {
+    local query="${1:-}"
+    # Extra quotes to around query, to force it to be interpreted as a
+    # string and not vary with the value of the first field. 
+    awk --posix ' BEGIN { QUERY="'"${query}"'" ; } ; $1 == QUERY { print $2 } '
+}
+
+
 #
 # function get_ppid( pid_to_check ) :  Get ppid of pid $1. Result goes to stdout.
 #
-#  If pid_to_check not found, echo "", return 1
-#  Otherwise echo ppid, return 0
+#  - If pid_to_check is empty or not an integer,
+#    call error(). If error returns, return 2.
+#
+#  - If pid_to_check not found, return 1
+#
+#  - Otherwise echo ppid, return 0.  Note: ppid seems to be 0 if there
+#    is no parent.
 #
 get_ppid() {
     local pid_to_check="${1:-}"
     local res=''
-    if [ -z "${pid_to_check}" ] ; then
-        echo ''
-        return 1
+    #
+    if [ -z "${pid_to_check}" ] ||  ! isint "${pid_to_check}"  ; then
+        error "get_ppid(): The argument '${pid_to_check}' is not an integer"
+        return 2
     fi
     res="$( $Myps ax -o pid,ppid                  \
-           | grep -E '^\s+'"${pid_to_check}"'\s+' \
-           | awk ' { print $2 } '
+           | find_first_print_second "${pid_to_check}"
          )"
     if [ -z "$res" ] ; then
-        echo "" # what should be printed here?
         return 1
     else
         echo "$res"
@@ -1565,12 +1587,33 @@ get_ppid() {
 #
 # function check_parent_sshd() : Check whether pid $1 runs in SSH session
 #
-# return 0 if it does.
+# - return 0 if it does.
+# - Walks the parent chain, not only the direct parent.
 #
 check_parent_sshd() {
-    $Myps ax -o pid,comm    \
-        | awk '$1 ~ /'"$(get_ppid "${1:-}")"'/ { SUM += $2 } END { print SUM } ' \
-        | grep -q "sshd"
+    local pid ppid
+    pid="${1:-}"
+    if [ -z "$pid" ] ; then
+        error "check_parent_sshd(): argument pid is empty"
+    fi
+    while [ ! -z "$pid" ] ; do
+        ppid="$( get_ppid "${pid}" )"
+        if [ -z "$ppid" ] ; then
+            error "check_parent_sshd(): Could not get ppid for pid '${pid}'"
+        fi
+        if [ "$ppid"  = "1" ] ||  [ "$ppid"  = "0" ] ; then
+            # reached init or the end of the parent chain
+            return 1 # Not running under sshd
+        fi
+        if $Myps ax -o pid,comm                     \
+                | find_first_print_second "${ppid}" \
+                | grep -Fx -q "sshd"                ;
+        then
+            return 0 # found sshd in the parent chain
+        else
+            pid="$ppid"
+        fi
+    done
 }
 
 #
