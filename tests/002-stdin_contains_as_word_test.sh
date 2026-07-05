@@ -58,7 +58,7 @@ test_stdin_contains_as_word_3() {
     }
     assert_exec "f1" \
                 --exit 7 \
-                --stderr-contains "myerror: stdin_contains_as_word(): Space or Tab found in pattern" \
+                --stderr-contains "myerror: stdin_contains_as_word(): The pattern" \
                 --stdout ""
 
     #
@@ -70,7 +70,7 @@ test_stdin_contains_as_word_3() {
     }
     assert_exec "f1" \
                 --exit 7 \
-                --stderr-contains "myerror: stdin_contains_as_word(): Space or Tab found in pattern" \
+                --stderr-contains "myerror: stdin_contains_as_word(): The pattern" \
                 --stdout ""
     #
     # Empty pattern does not match.
