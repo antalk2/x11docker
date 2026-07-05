@@ -93,6 +93,22 @@ nlsv_contains_any_unsafe() {
 
 
 #
+#  echo "$nlsv1" | nlsv_intersection_unsafe "$nlsv2"
+#
+#  return 0 if "$nlsv1" contains any entry in "$nlsv2"
+#
+#  In other words: true if the intersection of two set of entries (lines) is
+#                  not an empty set.
+#
+#  unsafe : Assumes stdin and "$1" are already passed through as_nlsv
+#           (or nlsv_drop_empty) (i.e. they have no empty lines).
+#           Otherwise empty lines may match each other.
+#
+nlsv_intersection_unsafe() {
+    grep -F -x  -- "${1}"
+} 
+
+#
 #  echo "$nlsv" | nlsv_contains "$entry"
 #
 #  - checks is_nlsv_entry "$entry"
@@ -15906,28 +15922,31 @@ check_options_messages() {      # some messages depending on options, but not ch
 # - the_option : The option we are testing for
 #
 # - incompatible_options : List of options that are not compatible
-#                with the_option
+#                with the_option. They are separated by whitespace.
 #
 # Check if any of the incompatible_options appear in g_Optionset1, the
 # list of current options. Return false (1) if some appear.
 #
-# global g_Optionset1 : the currently selected options.
+# global g_Optionset1 : the currently selected options. Newline-separated
+#
+#  Our question is: which incompatible_options appear in g_Optionset1 ?
 #
 check_optionset() {
     local the_option="${1:-}"
     local incompatible_options="${2:-}"
     #
-    local current_incompatible_option Return=
+    local current_incompatible_option
+    local Return=""
     #
     for current_incompatible_option in ${incompatible_options}; do
-        # -x, --line-regexp Select only those matches that exactly match
-        #                   the whole line.
-        if grep -q -x -- "$current_incompatible_option" <<< "$g_Optionset1" ; then
+        if stdin_contains_the_word "$current_incompatible_option" <<< "$g_Optionset1" ; then
             Return=1
-            note "Option ${the_option} does not support option $current_incompatible_option"
-            check_fallback
+            note "Option ${the_option} does not support option ${current_incompatible_option}"
         fi
     done
+    if [ "${Return}" = "1" ] ; then
+        check_fallback
+    fi
     return "${Return:-0}"
 }
 
