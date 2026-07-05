@@ -4016,7 +4016,9 @@ installer() {
         esac
     } # Changelog excerpt
 
-    # Show diff
+    #
+    # Show diff of old x11docker and new x11docker
+    #
     if [ "$Installerarg" = "diff" ] ; then
         case "${installer_option}" in
             --update|--update-master)
@@ -4041,6 +4043,7 @@ installer() {
     # Doing
     if [ -z "$Installerarg" ] ; then
         case "${installer_option}" in
+
             --install|--update|--update-master)
                 #
                 note "Installing x11docker to ${Prefix}/bin"
