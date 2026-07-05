@@ -13249,13 +13249,20 @@ check_console() {               # check whether x11docker runs on console
   debugnote "check_console(): Guess if running on console: $Runsonconsole"
 }
 
-check_fallback() {              # --fallback
-  # Option --fallback
-  case "$Fallback" in
-    no) error "Option --fallback=no: Fallbacks are disabled.
-    x11docker cannot fulfill an option you have chosen, see message above." ;;
-  esac
+#
+# function check_fallback() :  --fallback
+#
+#    error() if --fallback=no was selected
+#
+check_fallback() {
+    # Option --fallback
+    if [  "$Fallback" = no ] ; then
+        error_ttm \
+            "|Option --fallback=no: Fallbacks are disabled.
+           |    x11docker cannot fulfill an option you have chosen, see message above." ;;
+    fi
 }
+
 check_host() {                  # check host environment
   local Drive
 
