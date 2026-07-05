@@ -3578,45 +3578,47 @@ cleanup() {
             #      Word splitting is ecpected here.
             rm -R -f $Orphanedfolders 2>&1
         fi
-  fi
+    fi
 
-  # remove internal networks
-  case "$BackendKind" in
-    docker|podman|nerdctl)
-      for Line in $(unpriv_backend "$Backendbin network ls" | grep x11docker_X); do
-        note "Removing internal network $Line"
-        unpriv_backend "$Backendbin network rm $(awk '{print $1}' <<< "$Line")"
-      done
-    ;;
-  esac
+    # remove internal networks
+    case "$BackendKind" in
+        docker|podman|nerdctl)
+            for Line in $(unpriv_backend "$Backendbin network ls" | grep x11docker_X); do
+                note "Removing internal network $Line"
+                unpriv_backend "$Backendbin network rm $(awk '{print $1}' <<< "$Line")"
+            done
+            ;;
+    esac
 
-  Logfile=
+    Logfile=""
 
-  note "Removing remaining files with: rm -Rf -v \"$Cachebasefolder\"/*"
-  rm -Rf -v "${Cachebasefolder:-NONSENSE}"/*
+    note "Removing remaining files with: rm -Rf -v \"$Cachebasefolder\"/*"
+    rm -Rf -v "${Cachebasefolder:-NONSENSE}"/*
 
-  note "Removing cache base folder with: rmdir -v \"$Cachebasefolder\""
-  cd  || error "cd (without argument) failed"  # Leave Cachebasefolder
+    note "Removing cache base folder with: rmdir -v \"$Cachebasefolder\""
+    cd  || error "cd (without argument) failed"  # Leave Cachebasefolder
 
-  if [ "$(basename "$Cachebasefolder")" = x11docker ] ; then
-      rmdir -v "$Cachebasefolder"
-  else
-      warning_ttm \
-          "|Did not succeed in removing cache folder
-           |  '$Cachebasefolder'
-           |  Please run 'x11docker --cleanup' as root."
-  fi
+    if [ "$(basename "$Cachebasefolder")" = x11docker ] ; then
+        rmdir -v "$Cachebasefolder"
+    else
+        warning_ttm \
+            "|Did not succeed in removing cache folder
+             |  '$Cachebasefolder'
+             |  Please run 'x11docker --cleanup' as root."
+    fi
 
-  case "$BackendKind" in
-    docker)
-        unpriv_backend "$Backendbin info" >/dev/null 2>/dev/null \
-            || warning "Could not check for $BackendKind containers.
-  Please run 'x11docker --cleanup' as root
-  to make sure that no orphaned containers are left."
-    ;;
-  esac
+    case "$BackendKind" in
+        docker)
+            if ! unpriv_backend "$Backendbin info" >/dev/null 2>/dev/null ; then
+                warning_ttm \
+                    "|Could not check for $BackendKind containers.
+                     |  Please run 'x11docker --cleanup' as root
+                     |  to make sure that no orphaned containers are left."
+            fi
+            ;;
+    esac
 
-  note "Cleanup ready."
+    note "Cleanup ready."
 }
 
 
@@ -3625,49 +3627,75 @@ cleanup() {
 # --launcher: create application launcher on desktop
 #
 create_launcher() {
-  local Name=
+    local Name=
+    local Parsedoptions_in_line
+    local commandline
 
-  have_command  xdg-desktop-icon  || error "Command 'xdg-desktop-icon' not found.
-  x11docker needs it to place the new icon on your desktop.
-  Please install xdg-utils"
+    if ! have_command  xdg-desktop-icon ; then
+        error_ttm \
+            "|Command 'xdg-desktop-icon' not found.
+             |  x11docker needs it to place the new icon on your desktop.
+             |  Please install xdg-utils"
+    fi
 
-  note "Will create a new application launcher icon on your desktop.
-  If you move the new file to:
+    note_ttm "|Will create a new application launcher icon on your desktop.
+              |  If you move the new file to:
+              |
+              |    $Hostuserhome/.local/share/applications
+              |
+              |  it will appear in your applications menu."
 
-    $Hostuserhome/.local/share/applications
+    Name="$Codename"
+    [ "$Codename" = "xonly" ] && Name="$( echo "$Xserver" | tr -d '-' )"
+    Name="${Name% }"
 
-  it will appear in your applications menu."
+    # -r   do not allow backslashes to escape any characters
+    # -e   use Readline to obtain the line
+    # -p   PROMPT
+    # -i   initial_text
+    #
+    read -re                                                                \
+         -p "Please choose a name for your application launcher:${NEWLINE}" \
+         -i "$Name"                                                         \
+         Name
+  
+    if [ -z "$Name" ] ; then
+        # Abort on empty answer (?)
+        return 1 ### FIXME: check for valid file name / invalid chars?
+    fi
 
-  Name="$Codename"
-  [ "$Codename" = "xonly" ] && Name="$(echo "$Xserver" | tr -d '-')"
-  Name="${Name% }"
+    # Remove our options from the command line.
+    # The rest will be used when launching.
+    #
+    Parsedoptions_global="${Parsedoptions_global//--launcher/}"
+    Parsedoptions_global="${Parsedoptions_global//--starter/}"
 
-  read -re -p "Please choose a name for your application launcher:
-" -i "$Name" Name
-  [ -z "$Name" ] && return 1 ### FIXME: check for valid file name / invalid chars?
+    Parsedoptions_in_line="$( echo "${Parsedoptions_global}" | tr "\n" " " )"
+    commandline="x11docker $Parsedoptions_in_line"
+    if [ -z "$(command -v x11docker)" ] ; then
+        # x11docker not in path. Use $0 instead.
+        commandline="$(myrealpath "$0") $Parsedoptions_in_line"
+    fi
+    
+    mkfile "$Cachefolder/$Name.desktop"
+    {
+        trim_to_bar \
+            "|#!/usr/bin/xdg-open
+             |[Desktop Entry]
+             |# x11docker desktop file
+             |Type=Application
+             |Name=$Name
+             |Exec=$commandline
+             |Icon=x11docker
+             |Comment=
+             |Categories=System
+             |Keywords=docker x11docker $(echo "$Name" | tr -c '[:alpha:][:digit:][:blank:]' ' ' )
+             |TryExec=$commandline
+             |"
+    } >> "$Cachefolder/$Name.desktop"
 
-  Parsedoptions_global="${Parsedoptions_global//--launcher/}"
-  Parsedoptions_global="${Parsedoptions_global//--starter/}"
-  mkfile "$Cachefolder/$Name.desktop"
-  {
-    echo "#!/usr/bin/xdg-open
-[Desktop Entry]
-# x11docker desktop file
-Type=Application
-Name=$Name
-Exec=x11docker $Parsedoptions_global
-Icon=x11docker
-Comment=
-Categories=System
-Keywords=docker x11docker $(echo "$Name" | tr -c '[:alpha:][:digit:][:blank:]' ' ' )
-"
-    case "$(command -v x11docker)" in
-      "")echo "TryExec=$0 $Parsedoptions_global" ;;
-      *) echo "TryExec=x11docker $Parsedoptions_global" ;;
-    esac
-  } >> "$Cachefolder/$Name.desktop"
-
-  unpriv "xdg-desktop-icon install --novendor '$Cachefolder/$Name.desktop'"
+    # Install on the desktop of the current user.
+    unpriv "xdg-desktop-icon install --novendor '$Cachefolder/$Name.desktop'"
 }
 
 installer() {                   # --install, --update, --update-master, --remove: Installer for x11docker
