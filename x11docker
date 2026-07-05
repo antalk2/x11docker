@@ -3627,7 +3627,8 @@ cleanup() {
 # --launcher: create application launcher on desktop
 #
 create_launcher() {
-    local Name=
+    local Name=""
+    local cleaned_Name=""
     local Parsedoptions_in_line
     local commandline
 
@@ -3664,6 +3665,8 @@ create_launcher() {
         return 1 ### FIXME: check for valid file name / invalid chars?
     fi
 
+    cleaned_Name="$(echo "$Name" | tr -c '[:alpha:][:digit:][:blank:]' ' ' )"
+    
     # Remove our options from the command line.
     # The rest will be used when launching.
     #
@@ -3689,7 +3692,7 @@ create_launcher() {
              |Icon=x11docker
              |Comment=
              |Categories=System
-             |Keywords=docker x11docker $(echo "$Name" | tr -c '[:alpha:][:digit:][:blank:]' ' ' )
+             |Keywords=docker x11docker ${cleaned_Name}
              |TryExec=$commandline
              |"
     } >> "$Cachefolder/$Name.desktop"
@@ -3758,7 +3761,8 @@ installer() {
                 case "$Installerarg" in
                     diff) ;;
                     *)
-                        error "Must run as root to install, update or remove x11docker system wide."
+                        error_ttm "|Must run as root to install
+                                   :, update or remove x11docker system wide."
                         return 1
                         ;;
                 esac
