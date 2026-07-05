@@ -260,6 +260,16 @@ rev_cut() {
     rev | cut "${@}" | rev
 }
 
+#
+# Test if command "$1" is available.
+#
+have_command() {
+    # Note: returns 0 for an alias or shell function.
+    if [ "$#" != "1" ] ; then
+        error "have_command expected exactly one argument"
+    fi
+    command -v "$1" > /dev/null
+}
 
 #
 # Debug stuff
@@ -770,17 +780,17 @@ alertbox() {                    # X alert box with title $1 and message $2
 
   # try some tools to show alert message. If all tools fail, return 1
   if [ -n "${DISPLAY:-}" ] ; then
-      if command -v gxmessage    >/dev/null ; then
+      if have_command  gxmessage  ; then
           printf "%s\n\n%s" "${Title}" "${Message}"  \
               | gxmessage -file - -default okay      \
               || true
-      elif command -v zenity       >/dev/null ; then
+      elif have_command zenity  ; then
           zenity --error --no-markup --ellipsize \
                  --title="$Title"                \
                  --text="$Message"               \
                  2>/dev/null                     \
               || true
-      elif command -v yad          >/dev/null ; then
+      elif have_command yad  ; then
           # shellcheck disable=SC2001
           yad  --image "dialog-error" \
                --title "$Title"       \
@@ -789,18 +799,18 @@ alertbox() {                    # X alert box with title $1 and message $2
                --fixed                \
                2>/dev/null            \
               || true
-      elif command -v kdialog      >/dev/null ; then
+      elif have_command kdialog  ; then
           # shellcheck disable=SC2001
           kdialog                                               \
               --title "$Title"                                  \
               --error "$(echo "$Message" | sed 's/\\/\\\\/g' )" \
               2>/dev/null                                       \
               || true
-      elif command -v   xmessage     >/dev/null ; then
+      elif have_command  xmessage  ; then
           printf "%s\n\n%s" "${Title}" "${Message}"  \
               | xmessage  -file - -default okay      \
               || true
-      elif command -v xterm        >/dev/null ; then
+      elif have_command xterm  ; then
           # shellcheck disable=SC2001
           xterm                             \
               -title "$Title"               \
@@ -1672,8 +1682,8 @@ download() {
     # Download follows redirects.
     #
     local Downloader=""
-    if   command -v curl >/dev/null ; then  Downloader="curl"
-    elif command -v wget >/dev/null ; then  Downloader="wget"
+    if   have_command curl ; then  Downloader="curl"
+    elif have_command wget ; then  Downloader="wget"
     else                              return 1 ; fi
 
     if [ -z "${1:-}" ] ; then
@@ -1760,7 +1770,7 @@ makecookie_v1() {
     mcookie 2>/dev/null
 }
 makecookie_v2() {
-    if [ -e /dev/urandom ] && command -v md5sum >/dev/null ; then
+    if [ -e /dev/urandom ] && have_command md5sum ; then
         #
         # md5sum might not cover the possible range from a 16-byte input.
         # Use more bytes.
@@ -1812,7 +1822,7 @@ makecookie() {
 #
 mygetent() {                    # custom getent command
     # fixes #477 #496
-    if command -v getent >/dev/null 2>&1 ; then
+    if have_command getent ; then
         getent "$1" "$2"
     else
         grep "^${2:-NOENTRY}:" < "/etc/${1:-NOFILESPECIFIED}"
@@ -2245,7 +2255,7 @@ mswindowsipcheck() {            # get WSL host IP and Windows host ip
     #  Mswindowsips : These IPs will then be used to find the Windows
     #    ↔ WSL IP pair that resides in the same subnet.
 
-    if ! command -v ipcalc >/dev/null ; then
+    if ! have_command ipcalc ; then
         note_ttm "|mswindowsipcheck(): command ipcalc not found.
                   |  Please install ipcalc"
         return 1
@@ -2925,7 +2935,7 @@ myrealpath() {                  # real path of possible symlink
     # No args is a failure
     [ -z "$*" ] && return 1
     # If have realpath, use that.
-    if command -v realpath >/dev/null ; then
+    if have_command realpath  ; then
         realpath "$*"
     else
         # Otherwise complain if it is a symlink
@@ -3537,7 +3547,7 @@ cleanup() {
 create_launcher() {
   local Name=
 
-  command -v xdg-desktop-icon >/dev/null || error "Command 'xdg-desktop-icon' not found.
+  have_command  xdg-desktop-icon  || error "Command 'xdg-desktop-icon' not found.
   x11docker needs it to place the new icon on your desktop.
   Please install xdg-utils"
 
@@ -3682,8 +3692,8 @@ installer() {                   # --install, --update, --update-master, --remove
                 return 1
             fi
 
-            if   command -v tar   >/dev/null ; then  Format="tar.gz"
-            elif command -v unzip >/dev/null ; then  Format="zip"
+            if   have_command  tar   ; then  Format="tar.gz"
+            elif have_command  unzip ; then  Format="zip"
             else
                 error "Cannot extract archive. Please install 'unzip' or 'tar'."
                 return 1
@@ -3870,7 +3880,7 @@ installer() {                   # --install, --update, --update-master, --remove
                 fi
 
                 note "Storing man page in ${Prefix}/share/man/man1/x11docker.1.gz"
-                if command -v gzip >/dev/null ; then
+                if have_command  gzip  ; then
                     gzip -c "x11docker.man" > "${Prefix}/share/man/man1/x11docker.1.gz"
                 else
                     note "Error storing man page."
@@ -3927,7 +3937,7 @@ mkpasswd() {
 
     Password="${1:-}"
 
-    if ! command -v perl >/dev/null ; then
+    if ! have_command perl ; then
         error_ttm \
           "|Option --password: command 'perl' not found.
            |  perl is needed to generate an encrypted password."
@@ -4018,7 +4028,7 @@ check_windowmanager() {
         auto)
             Windowmanagermode="host"           # Windowmanagermode_host
             if [ -n "$Windowmanagercommand" ] ; then
-                if command -v "$(cut -d' ' -f1 <<< "$Windowmanagercommand")" >/dev/null ; then
+                if have_command  "$(cut -d' ' -f1 <<< "$Windowmanagercommand")" ; then
                     # Windowmanagercommand is available on host
                     Windowmanagermode="host"   # Windowmanagermode_host
                 else
@@ -4039,7 +4049,7 @@ check_windowmanager() {
     # Find a host window manager
     if [ -z "$Windowmanagercommand" ] ; then
         for Windowmanagercommand in $Wm_all WM_NOT_FOUND; do
-            if command -v "$Windowmanagercommand" >/dev/null ; then
+            if have_command "$Windowmanagercommand" ; then
                 break # found
             fi
         done
@@ -4708,7 +4718,7 @@ setup_hostdbus() {
 
     if [ -z "$DBUS_SESSION_BUS_ADDRESS" ] ; then
         # no running DBus session?
-        if command -v dbus-launch >/dev/null ; then
+        if have_command  dbus-launch  ; then
             note_ttm \
                  "|Option --hostdbus: DBUS_SESSION_BUS_ADDRESS is empty.
                   |  Creating abstract DBus socket with dbus-launch."
@@ -4800,7 +4810,7 @@ setup_printer() {
     #
     local Cupsserver=
 
-    if ! command -v lpstat >/dev/null ; then
+    if ! have_command  lpstat ; then
         note_ttm \
             "|Option --printer: command lpstat not found.
              |  Is cups printer server installed on your system?
@@ -4938,7 +4948,7 @@ setup_sound_pipewire() {
 
     local Pipewiresocket Pipewirescript
 
-    command -v pw-container >/dev/null || {
+    have_command  pw-container  || {
         note_ttm "|Option --pipewire: Command pw-container not found.
                   |  Is pipewire installed on your system?
                   |  Fallback: Disabling option --pipewire
@@ -4976,7 +4986,7 @@ setup_sound_pipewire() {
     store_runoption_volume "$Pipewiresocket"
 
     # Share pulseaudio socket created by pipewire
-    if command -v pactl >/dev/null ; then
+    if have_command pactl  ; then
         Pipewirepulseaudiosocket="$(unpriv "env LC_ALL=C pactl info" 2>/dev/null)"
         Pipewirepulseaudiosocket="/$(grep "Server String" <<< "$Pipewirepulseaudiosocket" | cut -d/ -f2-)"
         if [ -z "$Pipewirepulseaudiosocket" ] ; then
@@ -5021,7 +5031,7 @@ setup_sound_pulseaudio() {
     local Upperport=""
     local Setcookie=""
 
-    if ! command -v pactl >/dev/null ; then
+    if ! have_command pactl ; then
         note_ttm "|Option --pulseaudio: pactl not found.
                   |  Is pulseaudio installed and running on your host system?
                   |  Fallback: Disabling option --pulseaudio.
@@ -5475,7 +5485,7 @@ check_newxenv()  {
             && [ "$Xserver" != "--hostdisplay" ] \
             && [ "$Xcontainer_option" = "no"   ] ;
             then
-                if command -v socat >/dev/null ; then
+                if have_command  socat  ; then
                     Newxsocket="$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber"
                     socat UNIX-LISTEN:${Newxsocket},fork,unlink-close \
                           ABSTRACT-CONNECT:/tmp/.X11-unix/X${Newdisplaynumber} &
@@ -5548,9 +5558,9 @@ calculate_floor_a_per_b() {
         error "calculate_floor_a_per_b(): arg 'b' is MISSING"
     fi
     #
-    if command -v bc >/dev/null ; then
+    if have_command  bc  ; then
         echo "scale=0; $a / $b " | bc
-    elif command -v awk >/dev/null ; then
+    elif have_command  awk  ; then
         # The original solution.
         result="$( awk -v a="$a" -v b="$b" 'BEGIN {print (a / b)}' )"
         result="${result%.*}" # Remove the decimal fraction part.
@@ -6276,7 +6286,7 @@ check_xdepends() {
         #
         case "$test_type" in
             "command")
-                if ! command -v "${the_command}"  >/dev/null ; then
+                if ! have_command "${the_command}"  ; then
                     message_1st_line="${the_X_option}: the command '${the_command}' not found."
                     test_result=1
                 else
@@ -6417,7 +6427,7 @@ check_xdepends() {
     # X command
     case "${X_option_to_check}" in
         --xpra2*)
-            if ! command -v "xpra" >/dev/null ; then
+            if ! have_command "xpra"  ; then
                 xdepends_message_ttm \
                     "|${X_option_to_check}: xpra not found on host.${NEWLINE}  $Wikipackages"
                 Return=1
@@ -7615,7 +7625,7 @@ create_xcommand() {             ### create command to start X server and/or Wayl
   #### Prepare weston.ini: config file for Weston
   case "$Xserver" in
     --weston|--weston-xwayland|--xpra-xwayland|--xpra2-xwayland)
-      command -v weston-launch >/dev/null && [ -n "$Newxvt" ] && [ "$Runsinteractive" = "yes" ] && Weston="weston-launch -v --" || Weston="weston"
+      have_command  weston-launch  && [ -n "$Newxvt" ] && [ "$Runsinteractive" = "yes" ] && Weston="weston-launch -v --" || Weston="weston"
       case "$Newxvt" in
         "")   # Display prefix X or WL; needed to indicate if host Wayland or host X provides the nested window.
           #[ -n "$Hostwaylandsocket" ] && [ "$Xserver" != "--xpra-xwayland" ] && [ "$Hostsystem" != "ubuntu" ] && [ "$Fullscreen" = "no" ] && Westonoutput="WL"
@@ -9313,7 +9323,7 @@ xtool() {
     #
     case "$Usexcontainer" in
         no)
-            if ! command -v "$Tool" >/dev/null ; then
+            if ! have_command  "$Tool"  ; then
                 $Message  "$(trim_to_bar \
                     "|xtool(): Command '$Tool' not found on host. Please install $Tool.
                      |  $Toolinfo
@@ -9379,7 +9389,7 @@ check_backend() {               # options --backend, --rootless
         ;;
       esac
       Backendbin="docker.exe"
-      command -v "$Backendbin" >/dev/null || {
+      have_command  "$Backendbin"  || {
         PATH="${PATH:-}:$(convertpath subsystem "C:/Program Files/docker"):$(convertpath subsystem "C:/Program Files/Docker/Docker/resources/bin")"
         export PATH
       }
