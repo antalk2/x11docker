@@ -305,7 +305,8 @@ debugnote_ttm() {
 #
 # echo yes or echo no depending on [ "$?" = "0" ]
 #
-exitcode_yes_or_no() { if [ "$?" = "0" ] ; then echo yes ; else  echo no ; fi }
+exitcode_yes_or_no()    { if [ "$?" = "0" ] ; then echo yes ; else  echo no ; fi }
+exitcode_yes_or_empty() { if [ "$?" = "0" ] ; then echo yes ; else  echo "" ; fi }
 
 
 #
@@ -4427,8 +4428,12 @@ create_clipboardrc() {
     # FIXME: clipboardrc expects bash. Why?
     #
     echo "#! /usr/bin/env bash"
+
     declare -f rocknroll
     declare -f mysleep
+    declare -f exitcode_yes_or_no
+    declare -f exitcode_yes_or_empty
+    
     echo "Timetosaygoodbyefile='$Timetosaygoodbyefile'"
 
     if [ -n "$Hostdisplay" ] ; then
@@ -4441,6 +4446,7 @@ create_clipboardrc() {
              : DISPLAY=$Hostdisplay
              : XAUTHORITY=$Hostxauthority
              :'"
+        echo
     elif [ -n "$Hostwaylandsocket" ] ; then
         #
         # Will extend the value of X1auth, so that eval $X1auth will
@@ -4456,10 +4462,18 @@ create_clipboardrc() {
              : WAYLAND_DISPLAY=$Hostwaylandsocket
              : XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR
              :\""
+        echo
     fi
 
     if [ -n "$Newdisplay" ] ; then
-        echo "X2auth='DISPLAY=$Newdisplay  XAUTHORITY=$Xclientcookie'"
+        # echo "X2auth='DISPLAY=$Newdisplay  XAUTHORITY=$Xclientcookie'"
+        trim_to_mark \
+            "|X2auth=
+             :'
+             : DISPLAY=$Newdisplay
+             : XAUTHORITY=$Xclientcookie
+             :'"
+        echo
     fi
 
     case "$Xserver" in
@@ -4472,6 +4486,7 @@ create_clipboardrc() {
                  : WAYLAND_DISPLAY=$Newwaylandsocket
                  : XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR
                  :\""
+            echo
             ;;
 
         --weston-xwayland)
@@ -4483,6 +4498,7 @@ create_clipboardrc() {
                      : WAYLAND_DISPLAY=$Newwaylandsocket
                      : XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR
                      :\""
+                echo
             fi
             ;;
     esac
@@ -4490,11 +4506,13 @@ create_clipboardrc() {
     # shellcheck disable=SC2016 # (info): Expressions don't expand in
     #                             single quotes
     if [ "$Mytest" ] ; then
-        trim_to_bar \
-            '|echo
-             |echo "$X1auth"
-             |echo "$X2auth"
-             |'
+        trim_to_bar '|
+                     |# Mytest
+                     |echo "$X1auth"
+                     |echo "$X2auth"
+                     |#
+                     |'
+        echo
     fi
 
     # shellcheck disable=SC2016 # (info): Expressions don't expand in
@@ -4537,14 +4555,16 @@ create_clipboardrc() {
          |      #
          |      # wl-paste : sudo apt install wl-clipboard
          |      #
-         |      env \$X1auth wl-paste --primary >/dev/null 2>&1 || Wprimary1=no
-         |      env \$X2auth wl-paste --primary >/dev/null 2>&1 || Wprimary2=no
+         |      env \$X1auth wl-paste --primary >/dev/null 2>&1 ; Wprimary1="$(exitcode_yes_or_no)"
+         |      env \$X2auth wl-paste --primary >/dev/null 2>&1 ; Wprimary2="$(exitcode_yes_or_no)"
          |      #
-         |      if [ -n "$WAYLAND_DISPLAY" ] && [ -z \"\$Wprimary1\$Wprimary2\" ] ; 
-         |         # Neither Wprimary1, nor Wprimary2 is "no" (both empty)
-         |                                     then CopyW=yes ;  else CopyW="" ; fi
          |
-         |      if [ -n "$DISPLAY"         ] ; then CopyX=yes ;  else CopyX="" ; fi
+         |      # [ -n "$WAYLAND_DISPLAY" ] && [ \"\$Wprimary1,\$Wprimary2\" = "yes,yes" ]
+         |      [ -n "$WAYLAND_DISPLAY" ] && [ "$Wprimary1,$Wprimary2" = "yes,yes" ]
+         |      CopyW="$(exitcode_yes_or_empty)"
+         |
+         |      [ -n "$DISPLAY" ]
+         |      CopyX="$(exitcode_yes_or_empty )"
          |    ;;
          |
          |    clipboard)
@@ -4556,7 +4576,7 @@ create_clipboardrc() {
          |    ;;
          |  esac
          |'
-
+    echo
   ############
   
   # shellcheck disable=SC2016 # (info): Expressions don't expand in
@@ -4615,6 +4635,7 @@ create_clipboardrc() {
        |      ;;
        |    esac
        |'
+  echo
   #############
 
   if [ "$Mytest" ] ; then
@@ -4631,11 +4652,13 @@ create_clipboardrc() {
            |Clip:     $Clip $(base64 -d -i <<< "$Clip")
            |"
            |'
+      echo
   else
       trim_to_bar \
           '|
            |# Mytest (elided)
            |'
+      echo
   fi
   
   # shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
@@ -4663,6 +4686,7 @@ create_clipboardrc() {
        |      fi
        |
        |'
+  echo
   ##
 
   # shellcheck disable=SC2016 # (info): Expressions don't expand in single quotes
@@ -4684,6 +4708,7 @@ create_clipboardrc() {
        |    # wait a bit to avoid high CPU usage and to reduce Wayland window flickering
        |    mysleep 1
        '
+  echo
 
   if [ "$Mytest" ] ; then
       echo '    [ "'$Mytest'" ] && sleep 5'
@@ -4696,6 +4721,7 @@ create_clipboardrc() {
        |} # clipexchange
        |
        |'
+  echo
   ###########
   
   # shellcheck disable=SC2016 # (info): Expressions don't expand in
@@ -4711,6 +4737,7 @@ create_clipboardrc() {
                |#clipexchange "$X2auth" "$X1auth" primary   &
                |#
                |'
+          echo
           ;;
 
       c2h) # only container to host
@@ -4719,6 +4746,7 @@ create_clipboardrc() {
                |clipexchange  "$X2auth" "$X1auth" clipboard &
                |#clipexchange "$X2auth" "$X1auth" primary   &
                |'
+          echo
           ;;
 
       h2c) # only container to host
@@ -4727,6 +4755,7 @@ create_clipboardrc() {
                |clipexchange  "$X1auth" "$X2auth" clipboard &
                |#clipexchange "$X1auth" "$X2auth" primary   &
                |'
+          echo
           ;;
 
       cmv)
@@ -4803,6 +4832,7 @@ create_clipboardrc() {
                |  ;;
                |esac # $1
                |'
+          echo
           ;;
   esac
   #
