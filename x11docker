@@ -91,18 +91,15 @@ nlsv_contains_any_unsafe() {
     grep -F -x -q  -- "${1}"
 }
 
-
 #
-#  echo "$nlsv1" | nlsv_intersection_unsafe "$nlsv2"
+#  The intersection (i.e. common entries) two newline_separated_values
 #
-#  return 0 if "$nlsv1" contains any entry in "$nlsv2"
+#      echo "$nlsv1" | nlsv_intersection_unsafe "$nlsv2"
 #
-#  In other words: true if the intersection of two set of entries (lines) is
-#                  not an empty set.
+#  - return 0 if "$nlsv1" and "$nlsv2" have common entries.
 #
-#  unsafe : Assumes stdin and "$1" are already passed through as_nlsv
-#           (or nlsv_drop_empty) (i.e. they have no empty lines).
-#           Otherwise empty lines may match each other.
+#  - Prints the common lines, in the order they appear in nlsv1.
+#    - Duplicates in nlsv1 may produce duplicates in the output.
 #
 nlsv_intersection_unsafe() {
     grep -F -x  -- "${1}"
