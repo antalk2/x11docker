@@ -197,6 +197,7 @@ stdin_contains_any_word() {
     as_newline_separated_words | nlsv_contains_any_unsafe "${pattern}"
 }
 
+
 #
 # function word_is_in( word, text )
 #
@@ -15926,29 +15927,32 @@ check_options_messages() {      # some messages depending on options, but not ch
 #
 # function check_optionset( the_option, incompatible_options )
 #
+#   Which incompatible_options appear in g_Optionset1 ?
+#
 # - the_option : The option we are testing for
 #
 # - incompatible_options : List of options that are not compatible
-#                with the_option. They are separated by whitespace.
+#                          with the_option. They are separated by
+#                          whitespace.
 #
-# Check if any of the incompatible_options appear in g_Optionset1, the
-# list of current options. Return false (1) if some appear.
+#   global g_Optionset1 : The currently selected options. Newline-separated
 #
-# global g_Optionset1 : the currently selected options. Newline-separated
+#    Check if any of the incompatible_options appear in g_Optionset1, the
+#    list of current options. Return false (1) if some appear.
 #
-#  Our question is: which incompatible_options appear in g_Optionset1 ?
+#
 #
 check_optionset() {
     local the_option="${1:-}"
     local incompatible_options="${2:-}"
     #
-    local current_incompatible_option
+    local x
     local Return=""
     #
-    for current_incompatible_option in ${incompatible_options}; do
-        if stdin_contains_the_word "$current_incompatible_option" <<< "$g_Optionset1" ; then
+    for x in ${incompatible_options}; do
+        if stdin_contains_the_word "$x" <<< "$g_Optionset1" ; then
             Return=1
-            note "Option ${the_option} does not support option ${current_incompatible_option}"
+            note "Option ${the_option} does not support option ${x}"
         fi
     done
     if [ "${Return}" = "1" ] ; then
@@ -15956,6 +15960,7 @@ check_optionset() {
     fi
     return "${Return:-0}"
 }
+
 
 #### main
 #
