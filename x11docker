@@ -1344,11 +1344,33 @@ watchmessagefifo() {
 }
 
 
-#### exit
+# Group: exit
 #
-# function finish()
+# Function: finish
+# Brief: trap EXIT routine to clean up background processes and cache
 #
-finish() {      # trap EXIT routine to clean up background processes and cache
+# Description:
+#    - Clear signal handlers
+#    - Read Storepidfile backwards
+#    - Terminate processes based on the pid,name pairs read.
+#    - unload pulseaudio module
+#    - call @code{setup_xcnetwork remove}
+#    - If container is still running: @{$Backendbin stop $g_Containername}
+#
+#    - Read Storepidfile backwards, again.
+#    - Call @code{termpid "$Pid" "$Name"} on those sill running.
+#
+#    - Backup Logfile
+#      - @code{unpriv "cp '$Logfile' '$Logfilebackup'"} or
+#      - for WSL1 and WSL2:  @code{unpriv "cp -T '$Logfilebackup' '$Hostuserhome/.cache/x11docker/x11docker.log'"}
+#
+#    - Remove some symlinks
+#    - close file descriptors
+#    - remove cache files
+#
+#    - exit or (if [ "$Runssourced" = yes ]) return
+#
+finish() {      
     #
     local Pid Name Zeit Exitcode Pid1pid="" Count Xpid1pid
     # local Watchmessagefifopid=""
@@ -1379,7 +1401,9 @@ finish() {      # trap EXIT routine to clean up background processes and cache
 
         checkpid "$Pid" && {
             case "$Name" in
+                #
                 watchmessagefifo) ;;
+                #
                 containerpid1)
                     Pid1pid="$Pid"
                     #[ "$Winsubsystem" ] && Pid1pid=""
@@ -1392,6 +1416,7 @@ finish() {      # trap EXIT routine to clean up background processes and cache
                     done
                     checkpid "$Pid1pid" && unpriv_backend "$Backendbin stop $g_Containername"
                     ;;
+                #
                 Xcontainerpid1)
                     Xpid1pid="$Pid"
                     #[ "$Winsubsystem" ] && Pid1pid=""
@@ -1406,7 +1431,7 @@ finish() {      # trap EXIT routine to clean up background processes and cache
                     ;;
                 #
                 *)
-                    termpid "$Pid" "$Name"
+                    termpid "$Pid" "$Name" # kill
                     ;;
             esac
         }
@@ -1524,9 +1549,15 @@ finish() {      # trap EXIT routine to clean up background processes and cache
 }
 
 #
-# function finish_sigint()
+# Function: finish_sigint
 #
-finish_sigint() {               # trap SIGINT to activate debug mode on finish()
+# Brief: trap handler for SIGINT, activates debug mode and calls finish()
+#
+# - Sets Debugmode, calls @code{finish}
+# - Unless called from a subshell.
+#   In this latter csase sends SIGINT to "$X11dockerpid" and exits.
+#
+finish_sigint() {
     local Pid1pid  X11dockerpid
     X11dockerpid="$(storeinfo_dump_sh x11dockerpid)"
     Debugmode="yes"
@@ -1543,28 +1574,48 @@ finish_sigint() {               # trap SIGINT to activate debug mode on finish()
     fi
 }
 
-# function saygoodbye()
-saygoodbye() {                  # create file signaling watching processes to terminate
+# Function: saygoodbye
+#
+# Emits timetosaygoodbye to "$Timetosaygoodbyefile" and
+# "$Timetosaygoodbyefifo" if they exist.
+#
+# Readers of these will then terminate.
+#
+# return: 0
+#
+# 
+saygoodbye() {
     debugnote "time to say goodbye ($*)"
     [ -e "$Timetosaygoodbyefile" ] && echo timetosaygoodbye >> "$Timetosaygoodbyefile"
     [ -e "$Timetosaygoodbyefifo" ] && echo timetosaygoodbye >> "$Timetosaygoodbyefifo"
     return 0
 }
 
-#### watching processes
+# EndGroup: exit
+
+# Group: watching_processes
 #
-# function checkpid(PID) : Check if PID is active (process with this PID exists)
+# Function: checkpid
+# Usage: checkpid PID
+# Brief:  Check if PID is active (process with this PID exists)
+#
+# return: 0 if PID is active
+#         1 ir not.
 #
 checkpid() {
     [ -e "/proc/${1:-NONSENSE}" ]
 }
 
 #
-# function containerisrunning() : Check if container is running
+# Function: containerisrunning
+# Brief: Check if container is running
 #
 containerisrunning() {
-    # Has an entry in Storeinfofile
-    storeinfo_test_sh containerid || return 1
+    # Has an entry in Storeinfofile?
+    if ! storeinfo_test_sh containerid ; then
+        return 1
+    fi
+    #
     case "$Dockervm" in
         no)
             checkpid      "$(storeinfo_dump_sh pid1pid)"
@@ -1584,8 +1635,9 @@ containerisrunning() {
 #
 
 #
-# function pspid( pid )
-#   Get USER and COMMAND for PID=pid (using ps)
+# Function: pspid
+# Usage: pspid pid 
+# Brief:  Get USER and COMMAND for PID=pid (using ps)
 #
 # stdout: Line containing
 #             USER PID COMMAND
@@ -1599,7 +1651,7 @@ containerisrunning() {
 #                              2 if an error occurred.
 #
 #
-pspid() {                     # Return some info to pid $1
+pspid() {
     #
     # Three columns: USER PID COMMAND
     # Only the middle column (PID) has space on both sides
@@ -1612,29 +1664,53 @@ pspid() {                     # Return some info to pid $1
 
 
 #
-# function rocknroll() : Check whether x11docker session is still
-#                        running
+# Function: rocknroll
+#
+# Brief: Check whether x11docker session is still running
+#
+# Note: only checks "$Timetosaygoodbyefile", not
+#       "$Timetosaygoodbyefifo".
+#
+# return: 0 If it thinks thes session is still running.
+#         1 If Timetosaygoodbyefile is non-empty or missing.
 #
 rocknroll() {
-    [ -s "$Timetosaygoodbyefile" ]   && return 1
-    [ -e "$Timetosaygoodbyefile" ]   || return 1
+    # -s : FILE exists and has a size greater than zero
+    if [ -s "$Timetosaygoodbyefile" ]  ; then
+        # Someone wrote "timetosaygoodbye" int it.
+        return 1
+    fi
+    if [ ! -e "$Timetosaygoodbyefile" ]  ; then
+        # We are so late, that the file has already been removed.
+        return 1
+    fi
     return 0
 }
 
 #
-# function setonwatchpidlist()
+# Function: setonwatchpidlist
+# Usage: setonwatchpidlist pid codename
 #
-setonwatchpidlist() {           # add PID $1 to watchpidlist()
+# Brief: Add pid=$1 to watchpidlist() and @code{ storepid pid codename }
+#
+setonwatchpidlist() {
   debugnote "watchpidlist(): Setting pid ${1:-} on watchlist: ${2:-}"
   echo "${1:-}" >> "$Watchpidfifo"
-  # add to list of background processes
-  grep -q CONTAINER <<<  "${1:-}" || storepid "${1:-}" "${2:-}"
+  #
+  # Add to list of background processes
+  if ! grep -q CONTAINER <<<  "${1:-}" ; then
+      storepid "${1:-}" "${2:-}"
+  fi
 }
 
 #
-# function storepid()
+# Function: storepid
+# Usage: storepid PID CODENAME # Store (into Storepidfile)
+# Usage: storepid test {PID|CODENAME} # return 0 if found
+# Usage: storepid dump CODENAME       # print PID (or nothing)
 #
-# use global Storepidfile
+# Globals:
+#   Storepidfile
 #
 storepid() {      # store pid $1 and name $2 of process in file $Storepidfile.
     # Store pid and process name of background processes in a file
@@ -1665,34 +1741,58 @@ storepid() {      # store pid $1 and name $2 of process in file $Storepidfile.
 }
 
 #
-# function termpid()
+# Function: termpid
+# Usage: termpid PID CODENAME
 #
-termpid() {                     # kill PID $1 with codename $2
+# Brief:  kill PID,  CODENAME is only used in messages.
+#
+# Description: If needed, after some waiting also sends KILL signal.
+#
+# return 0: if was not active or was able to kill
+#        1: if even the KILL signal did not succeed
+#
+termpid() {
     # TERM
     debugnote "termpid(): Terminating ${1:-} (${2:-}): $(pspid "${1:-}" ||:)"
-    checkpid "${1:-}" && {
+    if checkpid "${1:-}" ; then
         kill "${1:-}" 2>/dev/null
         true
-    } || return 0
+    else
+        return 0
+    fi
     mysleep 0.1
-    checkpid "${1:-}" && mysleep 0.4 || return 0
+    if checkpid "${1:-}" ; then
+        mysleep 0.4
+    else
+        return 0
+    fi
     #
     # KILL
     debugnote "termpid(): Killing ${1:-} (${2:-}): $(pspid "${1:-}" ||:)"
-    checkpid "${1:-}" && kill -s KILL "${1:-}" 2>/dev/null
+    if checkpid "${1:-}" ; then
+        kill -s KILL "${1:-}" 2>/dev/null
+    fi
     mysleep 0.2
-    checkpid "${1:-}" && {
+    if checkpid "${1:-}" ; then 
         note "Failed to terminate ${1:-} (${2:-}): $(pspid "${1:-}" ||:)"
         return 1
-    }
+    fi
     #
     return 0
 }
 
 #
-# function waitfortheend()
+# Function: waitfortheend
+# Brief:  Wait for end of x11docker session
 #
-waitfortheend() {               # wait for end of x11docker session
+# Description: watch FDtimetosaygoodbye, in a loop while @code{rocknroll}
+#
+# return: 0 if rocknroll returned false
+#
+# Used-by: @code{error}
+# Used-by: May appear in the file @code{cmdrc}
+#
+waitfortheend() {
     # signal is byte in $Timetosaygoodbyefifo
     # decent read to wait for signal to terminate
     case "$Usemkfifo" in
@@ -1717,7 +1817,17 @@ waitfortheend() {               # wait for end of x11docker session
 }
 
 #
-# function watchpidlist() : watch list of important pids
+# Function: watchpidlist
+# Brief: Watch list of important pids
+#
+# Description:
+# - Runs in the background, started by @code{setup_fifo}
+# - in a while rocknroll loop
+#   - reads FDwatchpid,
+#   - manages the list of pids to watch
+#   - checks if any watched pid has gone
+#   - If gone, calls saygoodbye
+#   - If rocknroll returns false, calls saygoodbye and returns.
 #
 watchpidlist() {
     #
@@ -1771,6 +1881,8 @@ watchpidlist() {
     done
     saygoodbye "watchpidlist"
 }
+
+# EndGroup: watching_processes
 
 # askyesno() is not used
 #
