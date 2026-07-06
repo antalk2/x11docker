@@ -13343,7 +13343,7 @@ check_fallback() {
     if [  "$Fallback" = no ] ; then
         error_ttm \
             "|Option --fallback=no: Fallbacks are disabled.
-           |    x11docker cannot fulfill an option you have chosen, see message above." ;;
+             |    x11docker cannot fulfill an option you have chosen, see message above."
     fi
 }
 
