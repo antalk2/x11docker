@@ -9255,27 +9255,64 @@ create_xinitrc() {
   return 0
 }
 
-disable_xhost() {               # remove any access to X server granted by xhost
-  local Line="" Environment
-  Environment="${1:-"DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY"}"
-  xtool --check xhost || return 1
-  xtool "env $Environment xhost 2>&1 | tail -n +2  /dev/stdin" | while read -r Line ; do  # read all but the first line (header)
-    debugnote "xhost: Removing entry $Line"
-    xtool "env $Environment xhost -'$Line'"                                # disable every entry
-  done
-  xtool "env $Environment xhost -"                                         # enable access control
-  [ "$(xtool "env $Environment xhost 2>&1 | wc -l")" -gt "1" ] && {
-    warning "Remaining xhost permissions found on display ${DISPLAY:-}
-$(xtool "env $Environment xhost 2>&1" )"
-    return 1
-  }
-  xtool "env $Environment xhost 2>&1" | grep -q "access control disabled" && {
-    warning "Failed to restrict xhost permissions.
-  Access to display ${1:-} is allowed for everyone."
-    return 1
-  }
-  return 0
+#
+# function disable_xhost() : Remove any access to X server granted by
+#                            `xhost`
+#
+# Usage: disable_xhost [Environment]
+#
+# Environment : passed to "env $Environment xhost".
+#               Defaults to `"DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY"`
+#
+# global DISPLAY
+# global XAUTHORITY
+#
+# Note: also used under /bin/sh in xinitrc
+#
+disable_xhost() {
+    local Environment
+    Environment="${1:-"DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY"}"
+    local Line=""
+    #
+    xtool --check xhost || return 1
+    #
+    # Disable every entry
+    #
+    {
+        # Note: "| tail -n +2  /dev/stdin" skips the first line (header).
+        # Q: Why is it part of the xtool argument?
+        # Q: Why does it need an explicit "/dev/stdin" argument?
+        #
+        xtool "env $Environment xhost 2>&1 | tail -n +2  /dev/stdin" \
+            | while read -r Line ; do
+            #
+            debugnote "xhost: Removing entry $Line"
+            xtool "env $Environment xhost -'$Line'"
+        done
+    }
+    #
+    # Enable access control
+    xtool "env $Environment xhost -"
+
+    #
+    # Check what did we achieve
+    #
+    if [ "$(xtool "env $Environment xhost 2>&1 | wc -l")" -gt "1" ] ; then
+        warning "$(printf "%s\n%s"                                       \
+         "Remaining xhost permissions found on display ${DISPLAY:-}"     \
+         "$(xtool "env $Environment xhost 2>&1" )"
+         )"
+        return 1
+    fi
+
+    if xtool "env $Environment xhost 2>&1" | grep -q "access control disabled" ; then
+        warning_ttm "|Failed to restrict xhost permissions.
+                     |  Access to display ${1:-} is allowed for everyone."
+        return 1
+    fi
+    return 0
 }
+
 setup_xcnetwork() {             # --xoverip --xc: start internal network between X container and command container
   local Internal
   [ "$BackendKind" = "$Xcontainerbackend" ] && [ "$Xcrootless" = "$Backendrootless" ] || return 1
