@@ -21,49 +21,67 @@ Packagedversion="no" # Set to "yes" if you want to package x11docker.
 #              in special setups. (deprecated)
 #
 grep -q -- "--enforce-i" <<< "$*" && case $- in
-  *i*) set +H ;;
-  *)   exec bash --noprofile --norc --noediting -i -- "$0" "$@" ;;
+    *i*) set +H ;;
+    *)   exec bash --noprofile --norc --noediting -i -- "$0" "$@" ;;
 esac
 
-#
 # Concept nlsv : newline_separated_values
 #
 #  - A string where entries are separated by a newline character.
 #  - Empty entries would be too easy to lose: we disallow them here.
 #
-# Concept: word : A string not containing newlne, space, tab.
+
+# Concept: word : A string not containing newline, space, tab.
+#
 #          - Maybe it should be more strict.
 #
 #          - We need to allow "-", for arguments like "--xc"
 #            and for "flipped-180"
 #
 #          - An empty string is not a word.
-#
-# Concept: nlsw : newline_separated_words. An nlv containing only words.
+
+# Concept: nlsw : newline_separated_words. An nlsv containing only words.
 #
 
 #
-# filter nlsv_drop_empty() : Remove empty lines (aka empty entries)
-#                            from stdin.
+# Filter: nlsv_drop_empty
+#
+# Usage: echo "${a_string}" | nlsv_drop_empty | ...
+#
+# Description: Remove empty lines (aka empty entries) from stdin.
+# stdin:   string.
+# stdout:  string, nlsv. As stdin, with empty lines removed.
 #
 nlsv_drop_empty() {
     grep -F -v -x ''
 }
 
+# Filter: as_nlsv
 #
-# filter as_nlsv : same as nlsv_drop_empty
+# Description: Same as nlsv_drop_empty()
 #
-# Example nlsv="$( cat "$file" | as_nlsv )"
+# Usage: nlsv="$( cat "$file" | as_nlsv )"
+# Usage: nlsv="$(  as_nlsv <<< "${a_string}" )"
+#
+# stdin:  string
+# stdout: string, nlsv. As stdin, with empty lines removed
 #
 as_nlsv() {
     nlsv_drop_empty
 }
 
+# Function: is_nlsv_entry
+# Usage:  is_nlsv_entry str
+# Brief:  Is str a valid nlsv entry?
 #
-# is_nlsv_entry entry
+# Description: Test if a string is non-empty and contains no newlines.
+#    This means it is a valid nlsv entry.
 #
-# return 0 if "$entry" is     a valid nlsv entry
-# return 1 if "$entry" is not a valid nlsv entry
+# Arguments:
+#   str : string
+#
+# return: 0 if "$entry" is     a valid nlsv entry
+#         1 if "$entry" is not a valid nlsv entry
 #
 is_nlsv_entry() {
     local the_bad_part
@@ -76,14 +94,16 @@ is_nlsv_entry() {
 }
 
 #
-#  echo "$nlsv1" | nlsv_contains_any_unsafe "$nlsv2"
+# Function: nlsv_contains_any_unsafe
 #
-#  return 0 if "$nlsv1" contains any entry in "$nlsv2"
+# Brief: Given two nlsv values, do they have any common entries?
 #
-#  In other words: true if the intersection of two set of entries (lines) is
-#                  not an empty set.
+#  Usage: echo "$nlsv1" | nlsv_contains_any_unsafe "$nlsv2"
 #
-#  unsafe : Assumes stdin and "$1" are already passed through as_nlsv
+#  return: 0 If "$nlsv1" contains any entry in "$nlsv2"
+#          1 If it does not.
+#
+#  unsafe : Assumes stdin and "$1" are already passed through @code{as_nlsv}
 #           (or nlsv_drop_empty) (i.e. they have no empty lines).
 #           Otherwise empty lines may match each other.
 #
@@ -91,137 +111,196 @@ nlsv_contains_any_unsafe() {
     grep -F -x -q  -- "${1}"
 }
 
+# Function: nlsv_intersection_unsafe
 #
-#  The intersection (i.e. common entries) two newline_separated_values
+#  Description: The intersection (i.e. common entries) of two
+#    nlsv values.
 #
-#      echo "$nlsv1" | nlsv_intersection_unsafe "$nlsv2"
+#  Usage: nlsv3="$( echo "$nlsv1" | nlsv_intersection_unsafe "$nlsv2" )"
 #
-#  - return 0 if "$nlsv1" and "$nlsv2" have common entries.
+# Arguments:
+#   nlsv2 : nlsv
 #
-#  - Prints the common lines, in the order they appear in nlsv1.
-#    - Duplicates in nlsv1 may produce duplicates in the output.
+# stdin: nlsv
+# stdout: The common lines, in the order they appear in nlsv1.
+#
+#         Note: Duplicates in nlsv1 may produce duplicates in the
+#               output.
+#
+# return: 0 If "$nlsv1" and "$nlsv2" have common entries.
+#         1 If found no common entries.
+#
+# unsafe: nlsv1 and stdin are not validated.
 #
 nlsv_intersection_unsafe() {
     grep -F -x  -- "${1}"
 }
 
+# Function: as_nlsw_intersection
+#
+# Description: Given to strings, convert them to nlsw values, print
+#   their intersection.
 #
 # Usage:   common="$(as_nlsw_intersection "${a}" <<< "${b}")"
 #
-#  - Converts a and b to newline_separated_values
-#  - Probably `a` should be the small set.
+# Description:
+#  - Converts a and b using as_newline_separated_words
+#  - Prints their intersection (b filtered by a, order according to b)
+#  - Duplicates in b can create duplicates in stdout.
+#
+#  Note: Probably `a` should be the small set, it is used as the
+#        filtering expression.
+#
+# Arguments:
+#   a : string containing words (sep by Space,Tab,Newline)
+#
+# stdin: string containing words (sep by Space,Tab,Newline)
+# stdout: nlsw containing the common words.
 #
 as_nlsw_intersection() {
     local a="$( as_newline_separated_words <<< "${1}" )"
     as_newline_separated_words | nlsv_intersection_unsafe "$a"
 }
 
+# Function: nlsv_contains
 #
-#  echo "$nlsv" | nlsv_contains "$entry"
+# Usage: echo "$nlsv" | nlsv_contains "$entry"
 #
-#  - checks is_nlsv_entry "$entry"
-#  - warning: Assumes "$nlsv" has no empty lines
+# Arguments:
+#   entry : An nlsv entry.
+#
+# Description:
+#   - Check `is_nlsv_entry "$entry"`, error if not.
+#
+# return: 0 If entry was found in nlsv.
+#
+# unsafe: Assumes "$nlsv" has no empty lines
 #
 #
 nlsv_contains() {
-    if ! is_nlsv_entry "${1}" ; then
-        error_ttm "|nlsv_contains():
-                   : The entry \"$(printf %q  "$1")\" is not a valid nlsv entry"
-        #
-        return 13 # Only if error returns.
-    fi
-    nlsv_contains_any_unsafe
+  if ! is_nlsv_entry "${1}" ; then
+    error_ttm "|nlsv_contains():
+               : The entry \"$(printf %q  "$1")\" is not a valid nlsv entry"
+    #
+    return 13 # Only if error returns.
+  fi
+  nlsv_contains_any_unsafe
 }
 
 
 
 #
-# filter as_newline_separated_words() : Convert a
-#                       (space,tab,newline)-separated list of words
-#                       to newline_separated_words
+# Filter: as_newline_separated_words
+# Brief: Convert string to nlsw
 #
-#  - input:  stdin
-#  - output: stdout an nlsv
+# Description: Convert a (space,tab,newline)-separated list of words
+#   to newline_separated_words.
+#
+# stdin: string
+# stdout: nlsw
 #
 as_newline_separated_words() {
-    # Space and Tab to newline, omit empty lines
-    tr -s ' \t' '\n\n' | nlsv_drop_empty
+  # Space and Tab to newline, omit empty lines
+  tr -s ' \t' '\n\n' | nlsv_drop_empty
 }
 
+# Function: is_a_word
+# Usage: is_a_word str
+# Brief: Test if str is a valid nlsw entry.
+#
+# return: 0 if yes
+#         1 if no
+#
 is_a_word() {
-    local the_bad_part
-    # "" is not a word
-    if [ -z "$1" ] ; then  return 1 ; fi
-    # remove all allowed characters from $1
-    the_bad_part="$( echo "$1" | tr -c -d ' \t\n' )"
-    [ -z "${the_bad_part}" ]
+  local the_bad_part
+  # "" is not a word
+  if [ -z "$1" ] ; then  return 1 ; fi
+  # remove all allowed characters from $1
+  the_bad_part="$( echo "$1" | tr -c -d ' \t\n' )"
+  [ -z "${the_bad_part}" ]
 }
 
+# Function: stdin_contains_the_word
 #
-# function stdin_contains_the_word( word ) <<< "$list_of_words"
+# Usage: stdin_contains_the_word a_word  <<< "$list_of_words"
 #
-#  - In list_of_words, newline, space and tab separate words.
+# Arguments:
+#   a_word : word. error() if is_a_word a_word fails.
 #
-#  - "$word" must pass is_a_word
+# stdin : string, passed through as_newline_separated_words
 #
-# return 0 if word is found in stdin, non-0 otherwise
+# return 0 If word is found in stdin.
+#        1 If not found.
+#        2 An error in grep
+#       13 If (! is_a_word a_word) and  error() returned
 #
 stdin_contains_the_word() {
+  #
+  if ! is_a_word "$1" ; then
+    error_ttm "|stdin_contains_the_word():
+               : The pattern \"$(printf %q  "$1")\" is not a word"
     #
-    if ! is_a_word "$1" ; then
-        error_ttm "|stdin_contains_the_word():
-                   : The pattern \"$(printf %q  "$1")\" is not a word"
-        #
-        return 13 # Only if error returns.
-    fi
-    # We want space and tab to separate words in the input.
-    # Change these to newlines
-    # Accept only whole-line matches.
-    as_newline_separated_words | nlsv_contains_any_unsafe "${1}"
+    return 13 # Only if error returns.
+  fi
+  as_newline_separated_words | nlsv_contains_any_unsafe "${1}"
 }
 
+# Function: stdin_contains_any_word
 #
-#  echo "$wordlist1" | stdin_contains_any_word "$wordlist2"
+#  Description: Given two strings, test if they contain any words in
+#    common.
 #
-#   - Both wordlists are converted to newline_separated_words.
-#   - return 0 if "$wordlist1" contains any of the words in "$wordlist2"
+#    Both strings are converted to nlsw before testing.
+#
+# Usage: echo "$wordlist1" | stdin_contains_any_word "$wordlist2"
+#
+# Arguments:
+#   wordlist2 : string
+#
+# stdin: wordlist1
+#
+# return: 0 If "$wordlist1" contains any of the words in "$wordlist2".
+#         1 If not.
 #
 stdin_contains_any_word() {
-    #
-    local pattern
-    pattern="$(echo "$1" | as_newline_separated_words)"
-    #
-    # We want space and tab to separate words in the input.
-    # Change these to newlines
-    # Accept only whole-line matches.
-    as_newline_separated_words | nlsv_contains_any_unsafe "${pattern}"
+  #
+  local pattern
+  pattern="$(echo "$1" | as_newline_separated_words)"
+  #
+  # We want space and tab to separate words in the input.
+  # Change these to newlines
+  # Accept only whole-line matches.
+  as_newline_separated_words | nlsv_contains_any_unsafe "${pattern}"
 }
 
 
+# Function: word_is_in
+# Usage: word_is_in  a_word a_text
+# Brief: A convenience wrapper around stdin_contains_the_word
 #
-# function word_is_in( word, text )
+# Arguments:
+#   a_word : word
+#   a_text : string. Used as stdin for stdin_contains_the_word
 #
 word_is_in() {
-    echo "${2}" | stdin_contains_the_word "$1"
+  echo "${2}" | stdin_contains_the_word "$1"
 }
 
+# Function: word_is_not_in
+# Usage: word_is_not_in  a_word a_text
+# Brief: Same as @code{! word_is_in a_word a_text}
 #
-# function is_empty_or_a_word_in( word, text )
+# Arguments:
+#   a_word : word
+#   a_text : string. Used as stdin for stdin_contains_the_word
 #
-is_empty_or_a_word_in() {
-    local word="${1:-}"
-    local text="${2:-}"
-    [ -z "${word}" ] || word_is_in "$word" "${text}"
+# return: 0 If a_word is not in a_text
+#         1 If it is in.
+#
+word_is_in() {
+  ! word_is_in "${1}" "${2}"
 }
 
-#
-# function is_empty_or_a_word_not_in( word, text )
-#
-is_empty_or_a_word_not_in() {
-    local word="${1:-}"
-    local text="${2:-}"
-    [ -z "${word}" ] || ! word_is_in "$word" "${text}"
-}
 
 #
 # nlsw_set_difference "$A"  "$B" : Set difference A \ B
@@ -233,12 +312,12 @@ is_empty_or_a_word_not_in() {
 #   - No duplicates in the output, and sorted. (LC_ALL et al may affect the order)
 #
 nlsw_set_difference() {
-    local A
-    local B
-    A="$( echo "$1" | as_newline_separated_words | sort -u )"
-    B="$( echo "$2" | as_newline_separated_words | sort -u )"
-    # grep considers newline-separated list of patterns as alternatives to match.
-    echo "$A" | grep -Fvx "$B"
+  local A
+  local B
+  A="$( echo "$1" | as_newline_separated_words | sort -u )"
+  B="$( echo "$2" | as_newline_separated_words | sort -u )"
+  # grep considers newline-separated list of patterns as alternatives to match.
+  echo "$A" | grep -Fvx "$B"
 }
 
 #
@@ -250,11 +329,11 @@ nlsw_set_difference() {
 #           source without affecting the value.
 #
 trim_to_bar_filter() {
-    # shellcheck disable=SC2001
-    sed -e 's/^[ \t]*|//'
+  # shellcheck disable=SC2001
+  sed -e 's/^[ \t]*|//'
 }
 trim_to_bar() {
-    printf "%s" "${1}" | trim_to_bar_filter
+  printf "%s" "${1}" | trim_to_bar_filter
 }
 
 #
@@ -263,14 +342,14 @@ trim_to_bar() {
 #  - The pattern is not looked for in the first line.
 #
 ws_colon_is_continuation_filter() {
-    # Based on https://www.gnu.org/software/sed/manual/html_node/Joining-lines.html
-    # Join lines that start with whitespace (e.g SMTP headers):
-    #  GNU sed: sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D'
-    #  A portable (non-gnu) variation: sed -e :a -e '$!N;s/\n  */ /;ta' -e 'P;D'
-    #
-    # Modified to look for /[ \t]*:/ instead of /\s+/ and leave no space after.
-    #
-    sed -e :a -e '$!N;s/\n[ \t]*://;ta' -e 'P;D'
+  # Based on https://www.gnu.org/software/sed/manual/html_node/Joining-lines.html
+  # Join lines that start with whitespace (e.g SMTP headers):
+  #  GNU sed: sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D'
+  #  A portable (non-gnu) variation: sed -e :a -e '$!N;s/\n  */ /;ta' -e 'P;D'
+  #
+  # Modified to look for /[ \t]*:/ instead of /\s+/ and leave no space after.
+  #
+  sed -e :a -e '$!N;s/\n[ \t]*://;ta' -e 'P;D'
 }
 
 #
@@ -280,29 +359,29 @@ ws_colon_is_continuation_filter() {
 # previous line (dropping the mathin part). The result is passed through trim_to_bar_filter.
 #
 trim_to_mark() {
-    printf "%s" "${1}" \
-        | ws_colon_is_continuation_filter \
-        | trim_to_bar_filter
+  printf "%s" "${1}" \
+      | ws_colon_is_continuation_filter \
+      | trim_to_bar_filter
 }
 
 error_ttm() {
-    error "$( trim_to_mark "${1}" )"
+  error "$( trim_to_mark "${1}" )"
 }
 
 warning_ttm() {
-    warning "$( trim_to_mark "${1}" )"
+  warning "$( trim_to_mark "${1}" )"
 }
 
 note_ttm() {
-    note  "$( trim_to_mark "${1}" )"
+  note  "$( trim_to_mark "${1}" )"
 }
 
 debugnote_ttm() {
-    debugnote  "$( trim_to_mark "${1}" )"
+  debugnote  "$( trim_to_mark "${1}" )"
 }
 
 verbose_ttm() {
-    verbose  "$( trim_to_mark "${1}" )"
+  verbose  "$( trim_to_mark "${1}" )"
 }
 
 
@@ -322,18 +401,18 @@ exitcode_yes_or_empty() { if [ "$?" = "0" ] ; then echo yes ; else  echo "" ; fi
 #          printf "abddef\nABCDEF" | rev_cut -c1-3 # def\nDEF
 #
 rev_cut() {
-    rev | cut "${@}" | rev
+  rev | cut "${@}" | rev
 }
 
 #
 # Test if command "$1" is available.
 #
 have_command() {
-    # Note: returns 0 for an alias or shell function.
-    if [ "$#" != "1" ] ; then
-        error "have_command expected exactly one argument"
-    fi
-    command -v "$1" > /dev/null
+  # Note: returns 0 for an alias or shell function.
+  if [ "$#" != "1" ] ; then
+    error "have_command expected exactly one argument"
+  fi
+  command -v "$1" > /dev/null
 }
 
 #
@@ -3849,7 +3928,7 @@ installer() {
 
 
     if [ "$Startuser" != "root" ]                               \
-    && is_empty_or_a_word_not_in "$Winsubsystem" "CYGWIN MSYS2" \
+    && word_is_not_in "${Winsubsystem:-EMPTY}" "CYGWIN MSYS2"   \
     && [ "$Installerarg" != "diff" ]                            ;
     then
         error_ttm "|Must run as root to install
@@ -9688,13 +9767,17 @@ xtool() {
 # function check_backend() :  options --backend, --rootless
 #
 check_backend() {
-    local Checkrootfs=
+    local Checkrootfs=""
 
     case "$Dockervm" in
         no|desktop)
+            #
             case "$BackendKind" in
-                docker|podman|nerdctl) Backendbin="$(command -v "$BackendKind")" ;;
+                docker|podman|nerdctl)
+                    Backendbin="$(command -v "$BackendKind")"
+                    ;;
             esac
+            #
             case "$BackendKind" in
                 docker)
                     docker info | grep -q "desktop-linux"  && {
@@ -9706,33 +9789,34 @@ check_backend() {
                              |  to allow file sharing in Docker Desktop GUI for file FILE.
                              |  Rather use native 'Docker Engine' running on your host linux kernel.
                              |  Docker Engine would allow all x11docker features and performes much better."
+                        #
                         Dockervm="desktop"
                     }
                     ;;
             esac
             ;;
 
-        moby)
-            case "$BackendKind" in
-                docker|host)  # BackendKind_host
-                ;;
-                *) 
-                    error_ttm \
-                        "|Option --backend=$BackendKind is not supported on MS Windows yet.
+      moby)
+          case "$BackendKind" in
+            docker|host)  # BackendKind_host
+            ;;
+            *) 
+                error_ttm \
+                    "|Option --backend=$BackendKind is not supported on MS Windows yet.
                          |  If you need this, ask for support at https://github.com/mviereck/x11docker"
-                    return 1
-                    ;;
-            esac
-            Backendbin="docker.exe"
-            have_command  "$Backendbin"  || {
-                PATH="$(trim_to_mark \
+                return 1
+                ;;
+          esac
+          Backendbin="docker.exe"
+          have_command  "$Backendbin"  || {
+              PATH="$(trim_to_mark \
                  "|${PATH:-}
                   ::$(convertpath subsystem "C:/Program Files/docker")
                   ::$(convertpath subsystem "C:/Program Files/Docker/Docker/resources/bin")"
                   )"
-                export PATH
-            }
-            ;;
+              export PATH
+          }
+          ;;
     esac
 
     case "$BackendKind" in
