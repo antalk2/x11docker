@@ -150,9 +150,8 @@ as_newline_separated_words() {
 
 is_a_word() {
     local the_bad_part
-    if [ -z "$1" ] ; then
-        return 1
-    fi
+    # "" is not a word
+    if [ -z "$1" ] ; then  return 1 ; fi
     # remove all allowed characters from $1
     the_bad_part="$( echo "$1" | tr -c -d ' \t\n' )"
     [ -z "${the_bad_part}" ]
