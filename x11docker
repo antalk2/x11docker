@@ -472,20 +472,37 @@ exitcode_yes_or_empty() { if [ "$?" = "0" ] ; then printf yes ;                 
 
 # EndGroup: exitcode_to_string
 
+
+# Function rev_cut
+# Brief: Reversed cut.
 #
-# function rev_cut() : Reversed cut.
-#
-# - As `cut`, but count fields from the back.
+# Description: As `cut`, but counts fields from the back.
 #
 # Example: echo abcdef | rev_cut -c1-3 # def
-#          printf "abddef\nABCDEF" | rev_cut -c1-3 # def\nDEF
+# Example: printf "abddef\nABCDEF" | rev_cut -c1-3 # def\nDEF
+#
+# Arguments:
+#   Same as for cut. @code{"${@}"} is passed on.
+#
+# stdin:  The text to process.
+# stdout: The processed text.
 #
 rev_cut() {
   rev | cut "${@}" | rev
 }
 
+# Function: have_command
+# Brief: Test if command "$1" is available.
 #
-# Test if command "$1" is available.
+# Warning: Currently it also returns 0 if "$1" is an alias or a shell
+#          function. Success does not imply we found the executable.
+#
+# Arguments:
+#    $1: name of an executable (This is what we use it for)
+#
+# return: 0 If the executable is found (in PATH)
+#         1 If no alias, no shell and no executable function found
+#            with this name.
 #
 have_command() {
   # Note: returns 0 for an alias or shell function.
@@ -495,18 +512,15 @@ have_command() {
   command -v "$1" > /dev/null
 }
 
+# Group: Debug_stuff
 #
-# Debug stuff
+# Function: stacktrace
+# Function: stacktrace2
+# Function: echodbg (helper used by stacktrace2)
 #
-
-
-
 # https://gitlab.com/kyb/autorsync/-/blob/master/utils.bash#L84
-
 # set -eETuo errexit -o nounset -o pipefail #-o errtrace -o functrace
 # shopt -s expand_aliases lastpipe #gnu_errfmt globstar huponexit inherit_errexit localvar_inherit
-
-
 
 # echodbg()  { >/dev/stderr echo $'\e[0;36m'"DBG  $@"$'\e[0m'; }
 echodbg()  { >/dev/stderr printf  '\e[0;36m%s\e[0m\n' "DBG  $*" ; }
@@ -530,9 +544,11 @@ stacktrace2() {
    done
 }
 
+# Function: SPY_STDOUT
+# Purpose: Find out what is the output of a function.
 #
-# To spy on stdout of a function F, rename F to F_orig,
-# and add F(){ SPY_STDOUT F_orig "${@}"  }
+#    To spy on stdout of a function @code{F}, rename @code{F} to @code{F_orig},
+#    and add @code{ F(){ SPY_STDOUT F_orig "${@}" } }
 #
 # This will report args and stdout of calls to F, prefixed with "SPY_STDOUT"
 #
@@ -554,8 +570,14 @@ SPY_STDOUT() {
     return "$exitCode"
 }
 
-## function usage()
-usage() {                       # --help: show usage information
+# EndGroup: Debug_stuff
+
+# Function: usage
+# Brief: Prints usage on stdout. Does not exit.
+#
+# CommandlineOption: --help: show usage information
+#
+usage() {
     # brace to help shellcheck parsing the following block.
     { trim_to_bar \
      "|
@@ -960,7 +982,7 @@ usage() {                       # --help: show usage information
 
 
 
-## function license()
+# Function: license
 license() {                     # --license: show license (MIT)
     trim_to_bar \
       '|
@@ -989,12 +1011,19 @@ license() {                     # --license: show license (MIT)
 
 #### messages
 
-# NEWLINE contains a newline character
+# NEWLINE contains a newline character. Declared readonly.
+#         Used for injecting a newline in double-quoted strings.
+#
 declare -r NEWLINE=$'\n'
 
 
-## function alertbox()
-alertbox() {                    # X alert box with title $1 and message $2
+# Function: alertbox
+# Brief: Show an  X alert box with title $1 and message $2
+# Argument:
+#   $1: title
+#   $2: message
+#
+alertbox() {
   local Title Message
   Title="${1:-}"
   Message="${2:-}"
@@ -1055,11 +1084,24 @@ alertbox() {                    # X alert box with title $1 and message $2
 }
 
 
-# function debugnote()
+# Function: debugnote
+# Brief: Show debug output $*
 #
-# return 0
+# Argument:
+#    "$*" is the message.
 #
-debugnote() {                   # show debug output $*
+# return: 0
+#
+# Globals:
+#   Debugmode
+#   Verbose
+#   Colblue, Colnorm
+#   FDstderr
+#
+# Calls:
+#    function timestamp
+#
+debugnote() {
     if [ "$Debugmode" = "yes" ] && [ "$Verbose" != "yes" ] ; then
         echo "${Colblue}DEBUGNOTE[$(timestamp)]:${Colnorm} $*" >&"${FDstderr}"
     fi
@@ -1069,13 +1111,23 @@ debugnote() {                   # show debug output $*
 }
 
 
-# function error( msg ) : show error message and exit
+# Function: error
+# Usage: error msg
+# Brief: Show error message and exit
+#
+# Argument:
+#    "$*" is the message
+#
+# Added: call to @code{stacktrace}
+#
 error() {
   local Message
 
   # shellcheck disable=SC2104
   break >/dev/null 2>&1 # just in case error occurred in a loop
 
+  stacktrace
+  
   Message="$(printf \
                 "%s\n\n%s" \
                 "$*" \
@@ -1107,11 +1159,28 @@ error() {
       alertbox "x11docker ERROR" "$Message" &
   fi
   finish
-  stacktrace
 }
 
-# function logentry()
-logentry() {                    # write into logfile
+# Function: logentry
+# Brief: write into logfile
+#
+# Argument:
+#   "$*" is the message
+#
+# Globals:
+#   Messagelogfile : Which file to append to.
+#                    Probably @code{ "$Cachefolder/message.log" }
+#
+#   Logmessages : Used to collect messages until @code{ [ -e "$Logfile" ] }
+#
+#   Logfile : The file whose existence is tested before we write to
+#             Messagelogfile.
+#             Q: Why do we test a different file?
+#
+#             Probably @code{ Logfile="$Sharefolder/x11docker.log" }
+#             and will be saved to @code{ Logfilebackup="$Cachebasefolder/x11docker.log" }
+#
+logentry() {
     if [ -e "$Logfile" ] ; then
         #
         # Try to emit earlier messages. Clear Logmessages on success
@@ -1131,10 +1200,24 @@ logentry() {                    # write into logfile
     fi
 }
 
-# function note()
-# Show notice messages
+# Function: note
+# Brief: Show notice messages if @code{Verbose} is not yes. @code{logentry} always.
+#
+# Argument:
+#  "$*" is the message
+#
+# Globals:
+#    Verbose : If not yes, print to FDstderr
+#    Colgreen, Colnorm
+#    NEWLINE
+#    FDstderr
+#
 note() {
     # Only show notice messages if not Verbose ?
+    #
+    # See: setup_verbosity(). If Verbose is not empty, the @code{tail -f} of the
+    #       Logfile will be shown, and direct output is not needed.
+    #
     if [ "$Verbose" != "yes" ] ; then
         echo "${Colgreen}x11docker note:${Colnorm} $*${NEWLINE}" >&"${FDstderr}"
     fi
@@ -1142,11 +1225,14 @@ note() {
     logentry  "x11docker note: $*${NEWLINE}"
 }
 
-# function traperror( $1:exitvalue
-#                   , $2:lineno
-#                   , $3:bash_lineno
-#                   , $4:bash_command
-#                   , $5:funcname )
+# Function: traperror
+#
+# Argument:
+#   $1:exitvalue
+#   $2:lineno
+#   $3:bash_lineno
+#   $4:bash_command
+#   $5:funcname
 #
 #
 # Example:
@@ -1157,12 +1243,9 @@ note() {
 # Note: -E  If set, the ERR trap is inherited by shell functions.
 #       -u  Treat unset variables as an error when substituting.
 #
-traperror() {                   # trap ERR: --debug: Output for 'set -o errtrace'
-    #
-    #    debugnote "traperror: Command at Line ${2:-} returned with error code ${1:-}:
-    #  ${4:-}
-    #  ${3:-} - ${5:-}"
-    #
+# Description:   trap ERR: --debug: Output for 'set -o errtrace'
+#
+traperror() {
     debugnote_ttm \
       "|traperror: Command at Line ${2:-} returned with error code ${1:-}:
        |  ${4:-}
@@ -1172,14 +1255,16 @@ traperror() {                   # trap ERR: --debug: Output for 'set -o errtrace
     saygoodbye traperror
 }
 
-# function verbose()
-# Show verbose messages
+# Function verbose
+# Brief: Show verbose messages
+#
 verbose() {
     # only logfile notes here, terminal output is done with tail in setup_verbosity()
     logentry "x11docker[$(timestamp)]: $*${NEWLINE}"
 }
 
-# function warning() : Show warning messages
+# Function warning
+# Brief: Show warning messages
 warning() {
     if [ "$Verbose" != "yes" ] ; then
         echo "${Colyellow}x11docker WARNING:${Colnorm} $*${NEWLINE}" >&"${FDstderr}"
@@ -1188,8 +1273,19 @@ warning() {
     logentry "x11docker WARNING: $*${NEWLINE}"
 }
 
+
+# Function: watchmessagefifo
+# Brief: Watch for messages coming from inside of container.
 #
-# function watchmessagefifo() :  Watch for messages coming from inside of container.
+# Description: Reads FDmessage, identifies Messagetype and
+#   calls the appropriate function (warning, note, debugnote, verbose, error,
+#   or echo) with the message.
+#
+# Globals:
+#    Cachefolder
+#    FDmessage
+#
+# Note: runs in the background, started in @code{setup_fifo()}
 #
 watchmessagefifo() {
     # message in fifo must end with :$Messagetype
@@ -1247,9 +1343,6 @@ watchmessagefifo() {
   done
 }
 
-#
-# global Storepidfile
-#
 
 #### exit
 #
