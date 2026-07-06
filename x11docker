@@ -4387,8 +4387,13 @@ check_windowmanager() {
 
 
 
-# function clean_xhost() : option --clean-xhost: disable xhost
-#                          policies on host X
+# function clean_xhost() : option --clean-xhost:
+#
+#    Disable access to X (granted via `xhost` permissions) on the host.
+#
+#    Q: Why are we messing with permissions on the host?
+#    A: This is only done if the user explicitly asked for it
+#       via `--clean-xhost`
 #
 clean_xhost() {
     #
@@ -4400,14 +4405,15 @@ clean_xhost() {
     #
     if [ -z "$Hostxauthority" ] ; then
         warning_ttm \
-            "|Option --clean-xhost: You host X server does not provide
+            "|Option --clean-xhost: Your host X server does not provide
              |  an authentication cookie in \$XAUTHORITY.
              |  Host applications started after xhost cleanup might fail to start."
     fi
     #
-    echo "Option --clean-xhost:" >> "$Xinitlogfile"
-    disable_xhost "DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority" \
-                  >> "$Xinitlogfile" 2>&1
+    {
+        echo "Option --clean-xhost:"
+        disable_X_access_via_xhost "DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority"
+    } >> "$Xinitlogfile" 2>&1
 }
 
 #
@@ -8823,7 +8829,7 @@ create_xinitrc() {
     declare -f cookiebaker
     declare -f strlenhex
     declare -f pspid
-    declare -f disable_xhost
+    declare -f disable_X_access_via_xhost
     #
     declare -f makecookie_v1
     declare -f makecookie_v2
@@ -9016,7 +9022,7 @@ create_xinitrc() {
                 *)
                   echo "# clean xhost"
                   echo "verbose 'Disabling any possible access to new X server possibly granted by xhost'"
-                  echo "disable_xhost"
+                  echo "disable_X_access_via_xhost"
                 ;;
               esac
             ;;
@@ -9256,10 +9262,10 @@ create_xinitrc() {
 }
 
 #
-# function disable_xhost() : Remove any access to X server granted by
+# function disable_X_access_via_xhost() : Remove any access to X server granted by
 #                            `xhost`
 #
-# Usage: disable_xhost [Environment]
+# Usage: disable_X_access_via_xhost [Environment]
 #
 # Environment : passed to "env $Environment xhost".
 #               Defaults to `"DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY"`
@@ -9269,7 +9275,7 @@ create_xinitrc() {
 #
 # Note: also used under /bin/sh in xinitrc
 #
-disable_xhost() {
+disable_X_access_via_xhost() {
     local Environment
     Environment="${1:-"DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY"}"
     local Line=""

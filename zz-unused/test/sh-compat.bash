@@ -35,7 +35,7 @@ generated_file="sh-compat-generated.sh"
 
     echo 'Myps="ps"'
     declare -f pspid
-    declare -f disable_xhost
+    declare -f disable_X_access_via_xhost
 
     declare -f makecookie_v1
     declare -f makecookie_v2
