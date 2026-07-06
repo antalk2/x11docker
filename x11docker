@@ -8808,7 +8808,9 @@ exit 0
   return 0
 }
 
-# create xinitrc: set up X environment, create cookies
+#
+# Create xinitrc: set up X environment, create cookies
+#
 create_xinitrc() {
     echo "#! /bin/sh"
     #
