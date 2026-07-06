@@ -103,7 +103,18 @@ nlsv_contains_any_unsafe() {
 #
 nlsv_intersection_unsafe() {
     grep -F -x  -- "${1}"
-} 
+}
+
+#
+# Usage:   common="$(as_nlsw_intersection "${a}" <<< "${b}")"
+#
+#  - Converts a and b to newline_separated_values
+#  - Probably `a` should be the small set.
+#
+as_nlsw_intersection() {
+    local a="$( as_newline_separated_words <<< "${1}" )"
+    as_newline_separated_words | nlsv_intersection_unsafe "$a"
+}
 
 #
 #  echo "$nlsv" | nlsv_contains "$entry"
