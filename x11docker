@@ -4434,7 +4434,13 @@ create_clipboardrc() {
     if [ -n "$Hostdisplay" ] ; then
         # When X1auth is eval-ed, will set DISPLAY and XAUTHORITY to the
         # values we have here.
-        echo "X1auth='DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority'"
+        # echo "X1auth='DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority'"
+        trim_to_mark \
+            "|X1auth=
+             :'
+             : DISPLAY=$Hostdisplay
+             : XAUTHORITY=$Hostxauthority
+             :'"
     elif [ -n "$Hostwaylandsocket" ] ; then
         #
         # Will extend the value of X1auth, so that eval $X1auth will
