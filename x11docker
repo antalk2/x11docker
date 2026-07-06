@@ -4563,15 +4563,15 @@ create_clipboardrc() {
          |      CopyW="$(exitcode_yes_or_empty)"
          |
          |      [ -n "$DISPLAY" ]
-         |      CopyX="$(exitcode_yes_or_empty )"
+         |      CopyX="$(exitcode_yes_or_empty)"
          |    ;;
          |
          |    clipboard)
          |      SelectionX="-selection clipboard"
          |      SelectionW=""
          |
-         |      if [ -n "$WAYLAND_DISPLAY" ] ; then CopyW="yes" ; else CopyW="" ; fi
-         |      if [ -n "$DISPLAY"         ] ; then CopyX="yes" ; else CopyX="" ; fi
+         |      [ -n "$WAYLAND_DISPLAY" ] ; CopyW="$(exitcode_yes_or_empty)"
+         |      [ -n "$DISPLAY"         ] ; CopyX="$(exitcode_yes_or_empty)"
          |    ;;
          |  esac
          |'
