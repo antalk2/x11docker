@@ -297,7 +297,7 @@ word_is_in() {
 # return: 0 If a_word is not in a_text
 #         1 If it is in.
 #
-word_is_in() {
+word_is_not_in() {
   ! word_is_in "${1}" "${2}"
 }
 
