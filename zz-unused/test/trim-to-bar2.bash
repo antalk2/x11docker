@@ -57,3 +57,18 @@ echo -ne "\n------------\n"
 echo -n "${w%SUFFIX}"
 echo -ne "\n------------\n"
 
+x="$(trim_to_bar_filter <<< \
+                        "|a
+                         |b
+                         |"
+                         )"
+printf "%q\n" "$x" # $'a\nb'
+
+x="$(trim_to_bar_filter <<< \
+                        "|a
+                         |b
+                         |
+                         |@magic_end_marker@"
+                         )"
+printf "%q\n" "${x}" # $'a\nb\n\n@'
+printf "%q\n" "${x%@magic_end_marker@}" # $'a\nb\n\n'

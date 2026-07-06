@@ -302,44 +302,90 @@ word_is_not_in() {
 }
 
 
+# Function: nlsw_set_difference
 #
-# nlsw_set_difference "$A"  "$B" : Set difference A \ B
+# Usage: nlsw_set_difference "$A"  "$B"
+# Brief: Set difference A \ B
 #
-# - A and B are converted to newline_separated_words, sorted and
+# Arguments:
+#   A : string
+#   B : string
+#
+# stdout: sorted  nlsw  of words in A but not in B
+#
+# Note: LC_ALL=C is used to make sorting determinisitic.
+#
+# Description:
+#
+# - A and B are converted to nlsw, sorted,
 #   duplicates are removed from each.
-#
-# - output: words in A that do not appear in B.
-#   - No duplicates in the output, and sorted. (LC_ALL et al may affect the order)
 #
 nlsw_set_difference() {
   local A
   local B
-  A="$( echo "$1" | as_newline_separated_words | sort -u )"
-  B="$( echo "$2" | as_newline_separated_words | sort -u )"
+  A="$( echo "$1" | as_newline_separated_words | LC_ALL=C sort -u )"
+  B="$( echo "$2" | as_newline_separated_words | LC_ALL=C sort -u )"
   # grep considers newline-separated list of patterns as alternatives to match.
+  # -v selects lines of A that are not in B
   echo "$A" | grep -Fvx "$B"
 }
 
+# Filter: trim_to_bar_filter
+# Used-by: trim_to_bar
 #
-# function trim_to_bar( s )
-#
-#  Remove indentation in `s` up to and including the marker `|`
-#
-#  Purpose: Allow lines of multi-line strings to be indented in the
-#           source without affecting the value.
+# Example: trim_to_bar_filter <<< "multiline_string"
 #
 trim_to_bar_filter() {
   # shellcheck disable=SC2001
   sed -e 's/^[ \t]*|//'
 }
+
+# Function: trim_to_bar
+#
+# Usage: trim_to_bar str
+#
+# Brief: Allow multiline strings to be indented without affecting
+#        their value.
+#
+# Description:
+#  - Remove indentation in `s` up to and including the marker `|`.
+#  - Lines not starting (after spaces and tabs) with '|' are not affected.
+#
+# Example: |
+#  trim_to_bar \
+#    "|abc
+#     |def"
+#  # yields: $'abc\ndef'
+#
+# Arguments:
+#     str: A multiline string with indentation markers.
+#
+# stdout: The string value with indentations and markers removed.
+#         Final newlines are usually lost by "$()".
+#         If they must be preserved, the following pattern could be used.
+#         ----
+#         x="$(trim_to_bar str)@magic_end_marker@"
+#         x="${x%@magic_end_marker@}"
+#         ----
+#         Unfortunately, if this would be done inside trim_to_bar,
+#         we would still lose the final newlines.
+#
+#         We could probably pass in the target variable and set it
+#         using a variable reference. Then we could:
+#           @code{ trim_to_bar_to varname str }
+#
 trim_to_bar() {
   printf "%s" "${1}" | trim_to_bar_filter
 }
 
+# Filter: ws_colon_is_continuation_filter
 #
-#  Join lines starting with /[ \t]*:/ to the previous line.
+# Brief: Join lines starting with /[ \t]*:/ to the previous line.
 #
+# Description:
+#  - This is a helper for trim_to_mark.
 #  - The pattern is not looked for in the first line.
+#
 #
 ws_colon_is_continuation_filter() {
   # Based on https://www.gnu.org/software/sed/manual/html_node/Joining-lines.html
@@ -353,10 +399,17 @@ ws_colon_is_continuation_filter() {
 }
 
 #
-# function trim_to_mark( s )
+# Function: trim_to_mark
+# Usage: x="$(trim_to_mark str)"
 #
-# Lines starting with spaces followed by a colon /^[ \t]*:/ are joined to the
-# previous line (dropping the mathin part). The result is passed through trim_to_bar_filter.
+# Purpose: Allow multiline strings to be indented and
+#          long lines broken into smaller parts without
+#          affecting the result.
+#
+# Description:
+#  - Lines starting with spaces followed by a colon /^[ \t]*:/ are joined to the
+#    previous line (dropping the matching part).
+#    The result is passed through trim_to_bar_filter.
 #
 trim_to_mark() {
   printf "%s" "${1}" \
@@ -364,6 +417,20 @@ trim_to_mark() {
       | trim_to_bar_filter
 }
 
+# Group: message_ttm
+# Function: error_ttm
+# Function: warning_ttm
+# Function: note_ttm
+# Function: debugnote_ttm
+# Function: verbose_ttm
+#
+#  The @code{ note "$( trim_to_mark text )" } pattern proved wery
+#  useful. These functions shorten its use to @code{ note_ttm text }.
+#
+#  Unlike the original @code{note} et al., these functions accept a
+#  single argument.
+#
+#
 error_ttm() {
   error "$( trim_to_mark "${1}" )"
 }
@@ -384,13 +451,26 @@ verbose_ttm() {
   verbose  "$( trim_to_mark "${1}" )"
 }
 
+# EndGroup: message_ttm
 
+# Group: exitcode_to_string
+# Function: exitcode_yes_or_no
+# Brief: echo yes or echo no depending on [ "$?" = "0" ]
 #
-# echo yes or echo no depending on [ "$?" = "0" ]
+# Example: [ -z "$a_variable" ] ; x="$(exitcode_yes_or_no )"
+# Example: x="$( [ -z "$a_variable" ] ; exitcode_yes_or_no )"
 #
-exitcode_yes_or_no()    { if [ "$?" = "0" ] ; then echo yes ; else  echo no ; fi }
-exitcode_yes_or_empty() { if [ "$?" = "0" ] ; then echo yes ; else  echo "" ; fi }
+# Purpose: shortens
+#  @code{ if [-z "$a_variable"] ; then a_long_name=yes ; else a_long_name=no; fi  }
+#  or @code{  [-z "$a_variable"] && a_long_name=yes || a_long_name=no   }
+#
+# Function: exitcode_yes_or_empty
+# Brief: Similar to exitcode_yes_or_no, but instead of "no" it produces no output.
+#
+exitcode_yes_or_no()    { if [ "$?" = "0" ] ; then printf yes ; else  printf no ; fi }
+exitcode_yes_or_empty() { if [ "$?" = "0" ] ; then printf yes ;                   fi }
 
+# EndGroup: exitcode_to_string
 
 #
 # function rev_cut() : Reversed cut.
