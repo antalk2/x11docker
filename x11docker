@@ -4559,7 +4559,6 @@ create_clipboardrc() {
          |      env \$X2auth wl-paste --primary >/dev/null 2>&1 ; Wprimary2="$(exitcode_yes_or_no)"
          |      #
          |
-         |      # [ -n "$WAYLAND_DISPLAY" ] && [ \"\$Wprimary1,\$Wprimary2\" = "yes,yes" ]
          |      [ -n "$WAYLAND_DISPLAY" ] && [ "$Wprimary1,$Wprimary2" = "yes,yes" ]
          |      CopyW="$(exitcode_yes_or_empty)"
          |
