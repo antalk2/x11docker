@@ -77,22 +77,22 @@ x=$(yes_or_no1b [ "one" = "one" ] )
 echo "result: '$x' expect yes"
 
 dir_perm_flags="01234w"
-x=$(yes_or_no1b [ "${dir_perm_flags:5:1}" == "w" ]  )
+x=$(yes_or_no1b [ "${dir_perm_flags:5:1}" = "w" ]  )
 echo "dp result: '$x' expect: yes"
 
 dir_perm_flags="01234-"
-x=$(yes_or_no1b [ "${dir_perm_flags:5:1}" == "w" ]  )
+x=$(yes_or_no1b [ "${dir_perm_flags:5:1}" = "w" ]  )
 echo "dp result: '$x' expect: no"
 
 if true ; then
     ## $* uses IFS!
     #
     dir_perm_flags="01234w"
-    x=$(IFS= yes_or_no1b [ "${dir_perm_flags:5:1}" == "w" ]  )
+    x=$(IFS= yes_or_no1b [ "${dir_perm_flags:5:1}" = "w" ]  )
     echo "IFS result: '$x' expect: yes"
     #
     dir_perm_flags="01234w"
-    x=$(IFS= yes_or_no1b [ "${dir_perm_flags:5:1}" == "@" ]  )
+    x=$(IFS= yes_or_no1b [ "${dir_perm_flags:5:1}" = "@" ]  )
     echo "IFS result: '$x' expect: no"
     #
 fi
@@ -113,7 +113,7 @@ yes_or_no2() {
 }
 
 
-x=$( [ "${dir_perm_flags:5:1}" == "w" ] ; yes_or_no2 )
+x=$( [ "${dir_perm_flags:5:1}" = "w" ] ; yes_or_no2 )
 echo "result: '$x' expect: no"
 
 #
@@ -128,13 +128,13 @@ echo "*** yes_or_no2 ***"
 yes_or_no3=' if [ "$?" = "0" ] ; then echo yes ; else echo no; fi '
 
 # shellcheck disable=SC2086 # (info): Double quote to prevent globbing and word splitting.
-x=$( [ "${dir_perm_flags:5:1}" == "w" ] ; eval $yes_or_no3 )
+x=$( [ "${dir_perm_flags:5:1}" = "w" ] ; eval $yes_or_no3 )
 echo "result: '$x' expect: no"
 
 dir_perm_flags="01234w"
 
 # shellcheck disable=SC2086 # (info): Double quote to prevent globbing and word splitting.
-x=$( [ "${dir_perm_flags:5:1}" == "w" ] ; eval $yes_or_no3 )
+x=$( [ "${dir_perm_flags:5:1}" = "w" ] ; eval $yes_or_no3 )
 echo "result: '$x' expect: yes"
 
 
@@ -176,21 +176,25 @@ echo "res '$variable' expect: yes"
 
 dir_perm_flags='drwxrwxrwx'
 
-if [ "${dir_perm_flags:2:1}" == "w" ] ; then
+if [ "${dir_perm_flags:2:1}" = "w" ] ; then
     dir_is_user_writable=yes
 else
     dir_is_user_writable=no
 fi
 echo "dir_is_user_writable1 ${dir_is_user_writable}"
 
-dir_is_user_writable=$( yes_or_no [ "${dir_perm_flags:2:1}" == "w" ] )
+dir_is_user_writable=$( yes_or_no [ "${dir_perm_flags:2:1}" = "w" ] )
 echo "dir_is_user_writable2 ${dir_is_user_writable}"
 
-[ "${dir_perm_flags:2:1}" == "w" ] ;
+[ "${dir_perm_flags:2:1}" = "w" ] ;
 dir_is_user_writable=$( exitcode_yes_or_no )
-echo "dir_is_user_writable3 ${dir_is_user_writable}"
+echo "dir_is_user_writable3yes ${dir_is_user_writable}"
+
+[ "${dir_perm_flags:2:1}" = "-" ] ;
+dir_is_user_writable=$( exitcode_yes_or_no )
+echo "dir_is_user_writable3no ${dir_is_user_writable}"
 
 
-dir_is_user_writable=$( [ "${dir_perm_flags:2:1}" == "w" ] ; exitcode_yes_or_no )
+dir_is_user_writable=$( [ "${dir_perm_flags:2:1}" = "w" ] ; exitcode_yes_or_no )
 echo "dir_is_user_writable4 ${dir_is_user_writable}"
 
