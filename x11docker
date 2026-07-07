@@ -8018,27 +8018,88 @@ check_xlibnoshm() {
   return 1
 }
 
-check_xpraoption() {            # check if xpra option $1 is available
-  local Option
+# Function: check_xpraoption
+# Brief: Check if xpra option $1 is available
+#
+# Argument:
+#   option_with_value : For example "--systemd-run=no".
+#                       Format: "Option=Value"
+#
+# Example:
+#       Xpraoptions="\\
+#          $(check_xpraoption --microphone=no ||:) \\
+#          $(check_xpraoption --mmap=$Sharefolder/xpra.mmap ||:)"
+#
+# Purpose: Filter xpra command line options, omit those not supported,
+#          and pass through the rest.
+#
+# Description:
+#
+#     Test if "Option=Value" seems to be supported by xpra, based on output
+#     from xpra --help.
+#
+#     If yes, then echo "$@", and return 0
+#     If no,  then debugnote, echo nothing, and return 1
+#
+check_xpraoption() {
+    local option_with_value="${1:-}"
+    local Option
 
-  [ "$Xcontainer_option" = "yes" ] && [ "$Xserver" != "--xpra2" ] && {
-    echo "$@"
-    return 0
-   }
+    if [ -z "${option_with_value}" ] ; then
+        error "check_xpraoption(): option_with_value is '', nothing to check"
+    fi
+    
+    # If --xc and not --xpra2, just echo "$@"
+    if [ "$Xcontainer_option" = "yes" ] && [ "$Xserver" != "--xpra2" ] ; then
+        echo "$@"
+        return 0
+    fi
+    # (not --xc) or (Xserver = "--xpra2")
 
-  Option="$(cut -d= -f1 <<< "${1:-}")"
-  grep -q "noprobe" <<< "${1:-}" && {
-    grep "OpenGL" <<< "$Xprahelp" | grep -q "probe" && echo "$@" || {
-      debugnote "Xpra option $Option not supported: $*"
-      return 1
-    }
+    # The Option part of "Option=Value"
+    Option="$(cut -d= -f1 <<< "${option_with_value}")"
+
+    if grep -q "noprobe" <<< "${option_with_value}" ; then
+        # ^^^ The only match in actual use is "--opengl=noprobe"
+        # Should we be more specific?
+        #
+        # Xprahelp : for xpra (3.1.5+dfsg1-0.2ubuntu1) contains:
+        # ----- 
+        #   --opengl=(yes|no|auto)[:backends]
+        #                        Use OpenGL accelerated rendering. Default: False.
+        # -----
+        #
+        # xpra v6.5.1-r0
+        # -------
+        #   --opengl=(yes|no|auto)[:backends]
+        #                        Use OpenGL accelerated rendering. Default: False.
+        # -------
+        # Presumably we are looking for "Default: probe" (or noprobe?)
+        # Which versions of xpra supported "--opengl=noprobe" according to xpra --help?
+        # Which versions of xpra supported the use of "--opengl=noprobe"?
+        #
+        if grep "OpenGL" <<< "$Xprahelp" | grep -q "probe" ; then
+            echo "$@"
+        else
+            # OpenGL.*probe not found in Xprahelp, "--opengl=noprobe" is not supported.
+            # Omit from stdout
+            debugnote "Xpra option $Option not supported: $*"
+            return 1
+        fi
+        return 0
+    fi
+
+    if grep -q -- "$Option" <<< "$Xprahelp" ; then
+        # Found in help, pass
+        echo "$@"
+    else
+        # Not found in help, omit from stdout.
+        debugnote "Xpra option not found: $Option"
+        return 1
+    fi
     return 0
-  }
-  grep -q -- "$Option" <<< "$Xprahelp" && echo "$@" || {
-    debugnote "Xpra option not found: $Option"
-    return 1
-  }
 }
+
 check_xserver() {               # check chosen X server, auto-choose X server
   local Xorgautochoice=
 
