@@ -8007,6 +8007,7 @@ check_xlibnoshm() {
             Libdlsofile=""
         fi
     else
+        :
         #    Found something matching $Sharefolder/libdl.so*
         #    Not copying to host.
         #    Not setting Libdlsofile
