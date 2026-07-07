@@ -7869,45 +7869,154 @@ check_xdepends() {
 #
 # Brief: search XlibNoSHM.so and libdl.so.2 for fake MIT-SHM
 #
+# Globals:
+#
+#    Xlibnoshmfile : On success, set to a location of XlibNoSHM.so,
+#                    preferably under Sharefolder
+#
+#    Libdlsofile   : On success, set to a location of libdl.so.2 or libdl.so,
+#                    preferably under Sharefolder
+#
+#    Localsharedir : read. Copy of files found under Sharefolder is copied here
+#    Sharefolder   : read. Copy of files found in host is copied here
+#
+# Description: If all goes well, on success we have a copy on the host
+#              and under Sharefolder for both files.
+#
+#              If could not copy to Sharefolder, the corresponding
+#              variable points to a copy on the host.
+#
+#              Instead of libdl.so.2, we may have libdl.so as a fallback.
+#
+#              BUT: if [ -e $Sharefolder/libdl.so* ], then Libdlsofile
+#                   is not set, and we may not have a copy in
+#                   Localsharedir (or on the host anywhere)
+#
+# return: 0 for success, Xlibnoshmfile and Libdlsofile are set to file
+#           locations.
+#         1 for failure
 #
 check_xlibnoshm() {
-  # check for XlibNoSHM.so
-  Xlibnoshmfile="$(find "/usr/local/share/x11docker/XlibNoSHM.so" "$Localsharedir/XlibNoSHM.so"  2>/dev/null | tail -n1 )"
-  [ -z "$Xlibnoshmfile" ] && {
-    Xlibnoshmfile="$(find "$Sharefolder/XlibNoSHM.so" 2>/dev/null)" # might be provided by --xc
-    [ -n "$Xlibnoshmfile" ] && cp "$Xlibnoshmfile" "$Localsharedir/XlibNoSHM.so"
-  }
-  [ -n "$Xlibnoshmfile" ] && [ ! -f "$Sharefolder/XlibNoSHM.so" ] && cp "$Xlibnoshmfile" "$Sharefolder/XlibNoSHM.so" && Xlibnoshmfile="$Sharefolder/XlibNoSHM.so"
-  [ -f "$Xlibnoshmfile" ] && debugnote "check_xlibnoshm(): Found XlibNoSHM.so" || {
-    debugnote "check_xlibnoshm(): Did NOT find XlibNoSHM.so"
-    return 1
-  }
+    # Check for XlibNoSHM.so
+    #
+    # LOC_A1, LOC_A2: Host locations for XlibNoSHM.so
+    #         LOC_A2 = A_last is where we back up from Sharefolder
+    #
+    # LOC_B: Location under Sharefolder, want a copy here, too.
+    local LOC_A1="/usr/local/share/x11docker/XlibNoSHM.so"
+    local LOC_A2="$Localsharedir/XlibNoSHM.so"
+    local LOC_B="$Sharefolder/XlibNoSHM.so"
+    #
+    # Prefer last of LOC_A hits
+    Xlibnoshmfile="$( find "$LOC_A1"                        \
+                           "$LOC_A2"                        \
+                            2>/dev/null                     \
+                      | tail -n1                            )"
+    
+    if [ -z "$Xlibnoshmfile" ] ; then
+        # Might be provided by --xc under Sharefolder
+        Xlibnoshmfile="$( find "$LOC_B" 2>/dev/null )"
+        # Backup the Sharefolder version to A_last
+        if [ -n "$Xlibnoshmfile" ] ; then
+            cp "$Xlibnoshmfile" "$LOC_A2"
+        fi
+    fi
+    
+    if [ -n "$Xlibnoshmfile" ] && [ ! -f "$LOC_B" ] ; then
+        # If we do not have it in Sharefolder, copy there
+        cp "$Xlibnoshmfile" "$LOC_B"
+        # On success, update the variable to point to the Sharefolder
+        # version.
+        if [ -f "$LOC_B" ] ; then
+            Xlibnoshmfile="$LOC_B"
+        else
+            :
+            # FIXME: Should we not warn or error here?
+            #        Can we do without having Xlibnoshmfile under
+            #        Sharefolder?
+        fi
+    fi
+    
+    if [ -f "$Xlibnoshmfile" ] ;
+    then  debugnote "check_xlibnoshm(): Found XlibNoSHM.so, and have it at ${$Xlibnoshmfile}"
+    else  debugnote "check_xlibnoshm(): Did NOT find XlibNoSHM.so"
+          return 1
+    fi
 
-  [ -e $Sharefolder/libdl.so* ] || {
-    # check for libdl.so.2. Might be provided by X container. Prefer one from host.
-    Libdlsofile="$(find "/lib/x86_64-linux-gnu/libdl.so.2" "/usr/local/share/x11docker/libdl.so.2" "$Localsharedir/libdl.so.2"  2>/dev/null | head -n1 )"
-    [ -n "$Libdlsofile" ] && cp "$Libdlsofile" "$Sharefolder/libdl.so.2" && Libdlsofile="$Sharefolder/libdl.so.2"
-    [ ! -f "$Libdlsofile" ] && Libdlsofile=""
-    [ -f "$Libdlsofile" ] && {
-      cp "$Libdlsofile" "$Localsharedir/libdl.so.2"
-      debugnote "check_xlibnoshm(): Found libdl.so.2"
-      return 0
-    }
+    #
+    # Check for libdl.so.2, or to libdl.so as a fallback.
+    #
+    if [ ! -e $Sharefolder/libdl.so* ] ; then
+        #
+        # Might be provided by X container. Prefer one from host (LOC_A).
+        #
+        # LOC_A
+        Libdlsofile="$(find       "/lib/x86_64-linux-gnu/libdl.so.2" \
+                             "/usr/local/share/x11docker/libdl.so.2" \
+                                         "$Localsharedir/libdl.so.2" \
+                              2>/dev/null                            \
+                       | head -n1
+                       )"
+        #
+        if [ -n "$Libdlsofile" ] ; then
+            # Copy from host to Sharefolder (Copy A to B)
+            # Update Libdlsofile on success.
+            cp "$Libdlsofile" "$Sharefolder/libdl.so.2" \
+            && Libdlsofile="$Sharefolder/libdl.so.2"
+        fi
 
-    # fallback check for libdl.so
-    Libdlsofile="$(find "/lib/x86_64-linux-gnu/libdl.so" "/usr/local/share/x11docker/libdl.so" "$Localsharedir/libdl.so"  2>/dev/null | head -n1 )"
-    [ -n "$Libdlsofile" ] && cp "$Libdlsofile" "$Sharefolder/libdl.so" && Libdlsofile="$Sharefolder/libdl.so"
-    [ ! -f "$Libdlsofile" ] && Libdlsofile=""
-    [ -f "$Libdlsofile" ] && {
-      cp "$Libdlsofile" "$Localsharedir/libdl.so"
-      debugnote "check_xlibnoshm(): Found libdl.so"
-      return 0
-    }
-  }
+        if [ -f "$Libdlsofile" ] ; then
+            # Copy B (or A) to A_last
+            #
+            # Since we did not have it under Sharefolder, we are
+            # practically copying a file found on host, or its copy
+            # (B), to A_last.
+            #
+            # And this copying only happens if we did not find
+            # the file under Sharefolder originally.
+            #
+            cp "$Libdlsofile" "$Localsharedir/libdl.so.2"
+            debugnote "check_xlibnoshm(): Found libdl.so.2"
+            return 0
+        else
+            Libdlsofile=""
+        fi
 
-  debugnote "check_xlibnoshm(): Did NOT find libdl.so or libdl.so.2"
+        #
+        # Fallback: check for libdl.so
+        #
+        Libdlsofile="$( find      "/lib/x86_64-linux-gnu/libdl.so" \
+                             "/usr/local/share/x11docker/libdl.so" \
+                                         "$Localsharedir/libdl.so" \
+                              2>/dev/null                          \
+                         | head -n1
+                         )"
+        #
+        if [ -n "$Libdlsofile" ] ; then
+            # Copy A to B
+            cp "$Libdlsofile" "$Sharefolder/libdl.so" \
+            && Libdlsofile="$Sharefolder/libdl.so"
+        fi
+        
+        if [ -f "$Libdlsofile" ] ; then
+            # Copy B (or A) to A_last
+            cp "$Libdlsofile" "$Localsharedir/libdl.so"
+            debugnote "check_xlibnoshm(): Found libdl.so"
+            return 0
+        else
+            Libdlsofile=""
+        fi
+    else
+        #    Found something matching $Sharefolder/libdl.so*
+        #    Not copying to host.
+        #    Not setting Libdlsofile
+        #  FIXME: should we not set Libdlsofile ?
+    fi
+
+  debugnote "check_xlibnoshm(): Did NOT find either libdl.so or libdl.so.2"
   return 1
 }
+
 check_xpraoption() {            # check if xpra option $1 is available
   local Option
 
