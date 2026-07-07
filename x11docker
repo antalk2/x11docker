@@ -8075,8 +8075,18 @@ check_xpraoption() {
         #                        Use OpenGL accelerated rendering. Default: False.
         # -------
         # Presumably we are looking for "Default: probe" (or noprobe?)
-        # Which versions of xpra supported "--opengl=noprobe" according to xpra --help?
-        # Which versions of xpra supported the use of "--opengl=noprobe"?
+        # FIXME: Which versions of xpra supported "--opengl=noprobe" according to xpra --help?
+        #        Which versions of xpra support(ed) the use of "--opengl=noprobe"?
+        #
+        # Added in x11docker v6.4.0, in 2019, commit
+        # https://github.com/mviereck/x11docker/commit/b9c14352bd82572bbc69d6a0fe4e867e0fd590e8
+        #
+        # 2029-06-01 : xpra version 6.6 apprently had --opengl=probe
+        #
+        # 2018-10-29 : "add a new opengl-probe subcommand and use it to
+        #              safely test for opengl support before enabling
+        #              it in the client"
+        # https://github.com/Xpra-org/xpra/commit/d4967dba43bc121c4a15acba65edff59eee8820b
         #
         if grep "OpenGL" <<< "$Xprahelp" | grep -q "probe" ; then
             echo "$@"
