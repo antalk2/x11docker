@@ -16006,11 +16006,17 @@ check_options_interferences() { # check multiple option interferences, change se
           *)
             case $BackendKind in
               docker|host) # BackendKind_host
-                [ -f "$Libdlsofile" ] && {
-                  store_runoption_env "LD_PRELOAD=$Sharefoldercontainer/$(basename "$Libdlsofile"):$Sharefoldercontainer/XlibNoSHM.so"
-                } || {
-                  store_runoption_env "LD_PRELOAD=$Sharefoldercontainer/XlibNoSHM.so"
-                }
+                  if [ -f "$Libdlsofile" ] ; then
+                      # Ignore the directory, assume there is a copy
+                      # in Sharefoldercontainer.
+                      store_runoption_env "$(trim_to_mark \
+                       "|LD_PRELOAD
+                        :=$Sharefoldercontainer/$(basename "$Libdlsofile")
+                        ::$Sharefoldercontainer/XlibNoSHM.so"
+                        )"
+                  else
+                      store_runoption_env "LD_PRELOAD=$Sharefoldercontainer/XlibNoSHM.so"
+                  fi
               ;;
               podman)
                 note "Option --hostdisplay: Cannot set LD_PRELOAD with
