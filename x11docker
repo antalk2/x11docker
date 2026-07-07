@@ -1900,13 +1900,23 @@ watchpidlist() {
 #     return 1
 # }
 
+
+# Function: check_envvar
 #
-# function check_envvar()
+# Description: Test if string="$1" contains any characters
+#   we do not expect in the value of environment variables.
 #
-#       Allow only chars in string $1 that can be expected in
-#       the value of environment variables
+# return: 0 for OK
+#         1 for not OK.
+#
+# stdout: The input string if OK, a "corrected" value if not OK.
+#         In the latter case also emits a debugnote.
 #
 #  Usage:  check_envvar [ -w ] "string"
+#
+#  Argument:
+#    -w : adds space to the list of acceptable characters
+#   "string" : The string to test.
 #
 #  Examples:
 #    ALSA_CARD="$(check_envvar "${ALSA_CARD:-}")"
@@ -1914,7 +1924,11 @@ watchpidlist() {
 #
 #  Note: The returned value is not used anywhere.
 #        This leaves us with the debugnote emitted.
-#        Or maybe when set -e is set for debugging.
+#        Or maybe when @code{set -e} is applied for debugging.
+#
+#  Note: The value on stdout is used in many cases, but I could not
+#        find a case where would the "corrected" value would be
+#        useful.
 #
 check_envvar() {
     # Allows only chars in "a-zA-Z0-9_:/.,@=-"
@@ -1945,15 +1959,21 @@ check_envvar() {
     return 1
 }
 
+# Group: check_parent_sshd
 
-
+# Function: find_first_print_second
+# Usage:  cat "$file" | find_first_print_second query
 #
-# cat "$file" | find_first_print_second query
-#
-# - file: A file with at least two whitespace-separated columns.
+# stdin: A file with at least two whitespace-separated columns.
 #         Whitespace before the first column is ignored.
 #
-# - query : a string, containing no whitespace
+# Argument:
+#   query : a string, containing no whitespace
+#
+# stdout: The value (or values) from column2 of the lines
+#         where column1 == query. The output values are separated by newlines.
+#
+# Used-by: get_ppid, check_parent_sshd
 #
 find_first_print_second() {
     local query="${1:-}"
@@ -1964,15 +1984,23 @@ find_first_print_second() {
 
 
 #
-# function get_ppid( pid_to_check ) :  Get ppid of pid $1. Result goes to stdout.
+# Function: get_ppid
+# Usage: get_ppid  pid_to_check
+# Brief: Get ppid of pid_to_check. Result goes to stdout.
 #
-#  - If pid_to_check is empty or not an integer,
-#    call error(). If error returns, return 2.
+# Argument:
+#    pid_to_check : An integer
 #
-#  - If pid_to_check not found, return 1
+# return: 0 on success. In this case ppid goes to stdout
+#         1 If pid_to_check not found
+#         2 If pid_to_check is empty or not an integer,
+#           call error(). If error() returns, return 2.
 #
-#  - Otherwise echo ppid, return 0.  Note: ppid seems to be 0 if there
-#    is no parent.
+# stdout: the ppid on success, otherwise nothing.
+#
+# Note: ppid seems to be 0 if there is no parent.
+#
+# Used-by: check_parent_sshd
 #
 get_ppid() {
     local pid_to_check="${1:-}"
@@ -1995,10 +2023,17 @@ get_ppid() {
 
 
 #
-# function check_parent_sshd() : Check whether pid $1 runs in SSH session
+# Function check_parent_sshd
+# Usage:  check_parent_sshd pid_to_check
+# Brief: Check whether pid_to_check runs in an SSH session
 #
-# - return 0 if it does.
-# - Walks the parent chain, not only the direct parent.
+# Argument:
+#   pid_to_check : an integer
+#
+# return: 0 if "sshd" found in the parent chain.
+#
+# Note: Modified to walk the parent chain. Earlier it only checked the
+#       direct parent of pid_to_check.
 #
 check_parent_sshd() {
     local pid ppid
@@ -2027,18 +2062,26 @@ check_parent_sshd() {
 }
 
 #
-# function cookiebaker()
+# Function: cookiebaker
+# Brief: Create an X cookie without using xauth
 #
-# Usage: cookiebaker( Display )
+# Usage: cookiebaker [Display]
 #
-#  Display defaults to $DISPLAY
+# Argument:
+#   Display : defaults to $DISPLAY
 #
-#     Examples:
+#     Example values for Display:
 #        :0.0
 #        paxbox1.paxco.com:0.2
 #        192.168.1.100:0.0
 #
-cookiebaker() {                 # create an X cookie without xauth
+# Note: used under /bin/sh in xinitrc like this:
+#       @code{cookiebaker '$Newdisplay' >> $Xclientcookie}
+#
+#       Only used, if creating the cookie using xauth failed.
+#       Probably rarely if at all.
+#
+cookiebaker() {
     # $1  DISPLAY
     # Write directly to file, bash cannot store nullbytes in a string.
     # Based on https://stackoverflow.com/questions/70932880/what-is-the-internal-format-of-xauthority-file
@@ -2115,12 +2158,13 @@ cookiebaker() {                 # create an X cookie without xauth
         |    printf \"${Code}\"
         |  }"
         )"
-}
+} # cookiebaker
 
 #
-# function devicelist_gpu()
+# Function: devicelist_gpu
+# Brief: Print list of GPU devices (device files under /dev)
 #
-devicelist_gpu() {              # print list of GPU devices
+devicelist_gpu() {
     find                 \
         /dev/dri/*       \
         /dev/nvidia*     \
@@ -2133,20 +2177,23 @@ devicelist_gpu() {              # print list of GPU devices
 }
 
 #
-# function devicelist_input()
+# Function: devicelist_input
+# Brief: print list of input devices (/dev/input/*)
 #
-devicelist_input() {            # print list of input devices
+devicelist_input() {
     find /dev/input/* -maxdepth 0 -type c 2>/dev/null || true
 }
 
 #
-# function download( URL, output_file )
+# Function: download
 #
 # Usage:
-#   download URL output_file # Download file at URL and store it in output_file
-#   download                 # Test if at least one of curl and wget is available
 #
-#    return 1 if neither curl or wget found.
+#   download                 # Test if at least one of curl and wget is available
+#      return 1 if neither curl or wget found, 0 if at least one of them is present.
+
+#   download URL output_file # Download file at URL and store it in output_file
+#       return 0 for succees, 1 for failure.
 #
 download() {
     # Uses wget or curl. If both are missing, returns 1.
@@ -2171,11 +2218,16 @@ download() {
 }
 
 #
-# function escapestring(s) : Escape special chars of "$s" by inserting a
-#                            backslash before each.
+# Function: escapestring
 #
+# Usage: escapestring s
+#
+# Brief:: Escape special chars of @code{s} by inserting a backslash
+#         before each.
+#
+# Description:
 # - Escape all characters except those described in [^a-zA-Z0-9,._+@=:/-]
-# - single_quote is not allowed in "$s" :  error() if it does.
+# - single_quote is not allowed in @code{s} :  error() if it contains one.
 #
 # Examples:  Backendcommand="$Backendcommand --env '$( escapestring "$Line" )'"
 #            echo "export $( escapestring "SHELL=$Containerusershell" )"
@@ -2190,24 +2242,25 @@ escapestring() {
     echo "${1:-}" | LC_ALL=C sed -e 's/[^a-zA-Z0-9,._+@=:/-]/\\&/g; '
 }
 
-#
-# function getrandomnumber()
-#
-getrandomnumber() {             # get random number
-    # chosen by fair dice roll
-    # guaranteed to be random
-    echo "4"
-}
+# #
+# # Function: getrandomnumber
+# #
+# getrandomnumber() {             # get random number
+#     # chosen by fair dice roll
+#     # guaranteed to be random
+#     echo "4"
+# }
 
 #
-# function isint() : Check if $1 is a positive integer (no sign)
+# Function: isint
+# Brief: Check if $1 is a positive integer (no sign allowed)
 #
 isint() {
     [[ "${1:-EMPTY}" =~ ^[0-9]+$ ]]
 }
 
-#
-# function isnum() : Check if $1 is a number (according to awk)
+# Function isnum
+# Brief: Check if $1 is a number (according to awk)
 #
 #  For example `isnum -2.1e-3` is true
 #              `isnum 0xff`    is false
@@ -2216,11 +2269,11 @@ isnum() {
     [ "1" = "$(awk -v a="${1:-}" 'BEGIN {print (a == a + 0)}')" ]
 }
 
-
+# Group: makecookie
 #
-# function makecookie()
+# Function: makecookie
 #
-# bake a cookie
+# Brief:  bake a cookie
 #
 # /usr/bin/mcookie : mcookie generates a 128-bit random
 #                    hexadecimal number for use with the X
@@ -2275,13 +2328,18 @@ makecookie() {
     makecookie_v1 || makecookie_v2 || makecookie_v3
     #
 }
+# EndGroup: makecookie
+
 
 #
-# function mygetent()
-#    /usr/bin/getent with a fallback implementation
-#    "$1" is "group" or "passwd"
+# Function:  mygetent
 #
-# Used as:
+# Brief: /usr/bin/getent with a fallback implementation
+#
+# Argument:
+#   "$1" is "group" or "passwd"
+#
+# Used-as:
 #    `mygetent group video`
 #    `mygetent group input`
 #    `mygetent group render`
@@ -2289,8 +2347,22 @@ makecookie() {
 #
 #    `mygetent passwd "$Containeruser"`
 #
-# Print the line corresponding to "$2" from "/etc/$1", or print nothing
-# Return true on success (found line), false on failure (no corresponding line)
+# Description:
+#   Print the line corresponding to "$2" from "/etc/$1", or print nothing
+#
+# return: 0 on success (found line)
+#         nonzero on failure (no corresponding line or other error)
+#
+# If /usr/bin/getent is used (man getent)
+#
+# EXIT STATUS
+#       One of the following exit values can be returned by getent:
+#
+#       0      Command completed successfully.
+#       1      Missing arguments, or database unknown.
+#       2      One or more supplied key could not be found in the database.
+#       3      Enumeration not supported on this database.
+#
 #
 mygetent() {                    # custom getent command
     # fixes #477 #496
@@ -2302,27 +2374,41 @@ mygetent() {                    # custom getent command
 }
 
 #
-# function mysleep()
+# Function: mysleep
+# Usage: mysleep seconds
+# Brief: If sleep only supports integer, use @code{sleep 1}
 #
 #   Called with "$1" in 0.1 0.2 1.4 or `$Count * 0.1` or "$Schlaf"
 #
-mysleep() {                     # catch cases where sleep only supports integer
+# Argument:
+#   seconds : can be fractional, like 0.1
+#
+mysleep() {
     sleep "${1:-1}" 2>/dev/null || sleep 1
 }
 
 #
-# function oneline()
+# Function: oneline
+# Usage: oneline str
+# Brief: Remove backslash and newline characters from str
 #
-#  Note: backslash and newline are removed, no space is inserted in their place.
+# Argument:
+#    str
 #
-oneline() {                     # remove \\ and newline from string
+# stdout: modified str
+#
+oneline() {
     echo "${1:-}" | tr -d '\\\n'
 }
 
 #
-# function parse_inspect( json_string, key1, ..., keyn )
+# Function: parse_inspect
+# Usage: parse_inspect json_string  key1 ...  keyn
+# Brief: get some values from the JSON output of @code{docker inspect}
 #
-parse_inspect() {               # parse json of inspect output using python
+# Description: JSON processing uses either @code{jq} or @code{python}
+#
+parse_inspect() {
     # parse for keys in output of docker|podman|nerdctl inspect.
     # Uses python json parser.
     # $1 String containing inspect output
@@ -2426,11 +2512,12 @@ parse_inspect() {               # parse json of inspect output using python
              "|parse_inspect(): Error while parsing json for
               |  ${2:-} ${3:-} ${4:-} ${5:-} ${6:-} (Line ${BASH_LINENO[0]})"
   #
-}
+} # parse_inspect
 
 
+# Group: storeinfo
 #
-# storeinfo() : The functions storeinfo_dump_sh, storeinfo_drop_sh,
+# The functions storeinfo_dump_sh, storeinfo_drop_sh,
 #    storeinfo_test_sh, storeinfo_add_kv_sh manage the content of
 #    Storeinfofile ("~/.cache/x11docker/SUBDIR/share/store.info")
 #
@@ -2441,14 +2528,20 @@ parse_inspect() {               # parse json of inspect output using python
 #    - They are used under /bin/sh in cmdrc
 #
 
+# Function: storeinfo_dump_sh
 #
-# storeinfo_dump_sh( key ) : Get value for a key
+# Usage: storeinfo_dump_sh key
+# Brief: Get value for a key
 #
-#  - stdout: Value corresponding to key. May be empty.
-#  - return
-#      - If Storeinfofile does not exist: 1
-#      - on success: ?
-#      - if key not found: ? 
+# Argument:
+#  key : string, on the left of "=" in Storeinfofile.
+#        Note: used as part of a BRE for grep and sed,
+#              avoid BRE special characters.
+#
+# stdout: Value corresponding to key. May be empty.
+# return: 1 If Storeinfofile does not exist
+#         ? on success
+#         ? if key not found
 #
 storeinfo_dump_sh() {
     # POSIX
@@ -2462,8 +2555,8 @@ storeinfo_dump_sh() {
 }
 
 
-#
-# storeinfo_drop_sh( key )
+# Function: storeinfo_drop_sh
+# Usage: storeinfo_drop_sh key
 #
 storeinfo_drop_sh() {
     [ -e "$Storeinfofile" ] || return 1
@@ -2478,10 +2571,11 @@ storeinfo_drop_sh() {
     sed -i  "/^${1:-}=/d" "$Storeinfofile"
 }
 
+# Function: storeinfo_test_sh
+# Usage: storeinfo_test_sh key
 #
-# storeinfo_test_sh( key )
-#
-#  return 1 if not found
+# return: 1 if not found
+#         0 if found
 #
 storeinfo_test_sh() {
     [ -e "$Storeinfofile" ] || return 1
@@ -2490,14 +2584,17 @@ storeinfo_test_sh() {
     grep -q  "^${1:-}="   "$Storeinfofile"
 }
 
+# Function: storeinfo_add_kv_sh
 #
-# storeinfo_add_kv_sh( key_and_value ) : Store a "key=value" in "$Storeinfofile"
+# Usage: storeinfo_add_kv_sh key_and_value
+# Brief: Store a "key=value" in "$Storeinfofile"
 #
-# $1: key_and_value : "key=value"
+# Argument:
+#   key_and_value : String in the format "key=value"
 #
-# - Old entry for `key` is removed.
+# Note: Old entry for `key` is removed if exists.
 #
-# Requires storeinfo_test_sh and storeinfo_drop_sh
+# Calls: storeinfo_test_sh, storeinfo_drop_sh
 #
 storeinfo_add_kv_sh() {
     [ -e "$Storeinfofile" ] || return 1
@@ -2524,15 +2621,27 @@ storeinfo_add_kv_sh() {
 
 
 #
-# function rmcr( filepath )
+# Function: rmcr
 #
-# Remove carriage return to translate DOS/Windows newlines into UNIX
-# newlines
+# Description: Remove carriage return to translate DOS/Windows
+#    newlines into UNIX newlines.
 #
-#  Usage1: cat  $filepath | rmcr # result on stdout
-#  Usage2: rmcr $filepath        # inplace edit $filepath Never used in this way
+# Usage: rmcr
+# Usage: rmcr filepath # disabled
 #
-#   Warning: rmcr is redefined and/or unset in some places!
+# Argument:
+#
+#  filepath :
+#             If not supplied, read stdin, write stdout
+#
+#             If supplied, the file for inplace editing.
+#             Commented out this unused possibility.
+#
+#
+# Example: cat  $filepath | rmcr # result on stdout
+# Example: rmcr $filepath        # inplace edit $filepath Never used in this way
+#
+# Warning: rmcr is redefined and/or unset in some places!
 #
 #
 rmcr() {
@@ -2556,16 +2665,17 @@ rmcr() {
 }
 
 #
-# function strlenhex()
+# Function: strlenhex
+# Brief: print byte length of string $1 as hex value
 #
-#  Only use in cookiebaker()
+#  Used-by: cookiebaker()
 #
-strlenhex() {                   # print byte length of string $1 as hex value
+strlenhex() {
     printf '%x' "$(printf "%s" "${1:-}" | wc -c)"
 }
 
 #
-# function timestamp()
+# Function: timestamp
 #
 timestamp() {                   # print HH:MM:SS,NNN
     # %N prints nanoseconds. cut truncates it to millisecods
@@ -2574,9 +2684,11 @@ timestamp() {                   # print HH:MM:SS,NNN
     return 0
 }
 
+# Function: unspecialstring
 #
-# function unspecialstring(s,extra_allowed_chars) : Replace special
-#                     chars of `s` with `-`
+# Usage: unspecialstring s [extra_allowed_chars]
+#
+# Brief: Replace special chars of `s` with `-`
 #
 unspecialstring() {
     #
@@ -2604,8 +2716,10 @@ unspecialstring() {
         | sed -e 's/^-// ; s/-$//'
 }
 
-#
-# function version_less_than() : a < b for dot-separated version numbers
+
+# Function: version_less_than
+# Usage: version_less_than a b
+# Brief:  a < b for dot-separated version numbers
 #
 # was: verlt
 #
@@ -2623,7 +2737,9 @@ version_less_than() {
 }
 
 #
-# function version_less_equal(a,b) : a <= b for dot-separated version numbers
+# Function: version_less_equal
+# Usage: version_less_equal a b
+# Brief: a <= b for dot-separated version numbers
 #
 # was: verlte
 #
@@ -2640,10 +2756,11 @@ version_less_equal() {
     [ "${a}" = "${the_smaller_one}" ] # the result
 }
 
+
+# Function wincmd
+# Brief: Execute a command on MS Windows with cmd.exe
 #
-# function wincmd() : Execute a command on MS Windows with cmd.exe
-#
-#  Used as:   "$(wincmd "echo %userprofile%")"
+#  Used-as:   "$(wincmd "echo %userprofile%")"
 #
 # Q: Why "${@//&/^&}" ?
 #
@@ -2659,7 +2776,7 @@ wincmd() {
 }
 
 #
-# function mswindowsipcheck()
+# Function: mswindowsipcheck
 #
 #  return 1 (false) on failure
 #
@@ -2772,18 +2889,28 @@ mswindowsipcheck() {            # get WSL host IP and Windows host ip
     # xhost permissions.
 }
 
-#### file routines
+# Group: file_routines
 
+# Function: convertpath_split_Readwritemode
 #
-# convertpath_split_Readwritemode( Readwritemode_out, Path_out,  Path )
+# Usage: convertpath_split_Readwritemode Readwritemode_out Path_out  Path
 #
-# If the last 3 characters of Path starts with ":",
-# then Readwritemode_out is these 3 characters,
-#      and these are removed from Path_out.
+# Argument:
+#   Readwritemode_out : name of variable to write Readwritemode to
+#
+#   Path_out : Name of output variable for Path
+#
+#   Path : input
+#
+# On return:
+#    If the last 3 characters of Path starts with ":",
+#    then Readwritemode_out is these 3 characters,
+#    and these are removed from Path_out.
 #
 # otherwise Readwritemode_out=":rw"
 #
-# used_global: FDstderr # via warning
+# Globals:
+#    FDstderr # via warning()
 #
 convertpath_split_Readwritemode() {
     ##
@@ -2820,10 +2947,12 @@ convertpath_split_Readwritemode() {
     esac
 }
 
+# Function: convertpath_split_Drive
 #
-# local Drive
-# local Path
-# convertpath_split_Drive "Drive" "Path" "${Path}"
+# Usage: 
+#    local Drive
+#    local Path
+#    convertpath_split_Drive "Drive" "Path" "${Path}"
 #
 # Path may be /c/path2
 #          or C:/path2
@@ -2831,6 +2960,11 @@ convertpath_split_Readwritemode() {
 #
 # Out: Drive: "c" or ""
 #      Path: /path2
+#
+# Argument:
+#   "Drive": Name of output variable for drive letter
+#   "Path" : Name of output variable for Path
+#   "${Path}" : input. The path to split.
 #
 convertpath_split_Drive() {
     declare -n x1_Drive_out="$1"
@@ -2862,7 +2996,7 @@ convertpath_split_Drive() {
 
 
 #
-# function convertpath()
+# Function: convertpath
 #
 # --- subsystem ---
 # convertpath subsystem /home/antalk/.cache/x11docker
@@ -2918,11 +3052,11 @@ convertpath_split_Drive() {
 # convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/xhostready
 # convertpath share /home/antalk/.cache/x11docker/644222941101-xfce/share/containerrootrc
 #
-
+#
 #convertpath(){
 #    SPY_STDOUT convertpath_orig "${@}"
 #}
-
+#
 convertpath() {                 # convert unix and windows paths
     # $1: Mode:
     #     windows   echo Windows path                            - result: c:/path
@@ -3284,9 +3418,10 @@ createmountopt() {
     ;;
   esac
 }
+# EndGroup: convertpath
 
-#
-# function getwslpath() :  Get path to currently running WSL system
+# Function: getwslpath
+# Brief:  Get path to currently running WSL system
 #
 getwslpath() {
 
@@ -3335,13 +3470,19 @@ getwslpath() {
     return 0
 }
 
+
+# Function: get_xpath
+# Usage: get_xpath arg
 #
-# function get_xpath( arg ) : $arg can be: Xorg Xvfb Xephyr Xwayland
-#                             xwayland-satellite nxagent
+# Argument:
+#   arg can be: Xorg Xvfb Xephyr Xwayland
+#               xwayland-satellite nxagent
 #
-# Depends on global Xcontainer_option (--xc: path to X server)
+# Globals:
+#   Xcontainer_option (--xc: path to X server)
 #
-# Used when building command to start the Xserver
+# Description:
+# - Used when building command to start the Xserver
 #
 get_xpath() { 
     #
@@ -3353,16 +3494,22 @@ get_xpath() {
     esac
 }
 
+
+# Function: mkfile
+# Usage: mkfile  path
+# Usage: mkfile  path mode
 #
-# function mkfile( path ) Create file path=$1 owned by "$Hostuser:$Hostusergid"
+# Brief: Create file path=$1 owned by "$Hostuser:$Hostusergid"
 #
-#  mkfile path [mode]
-#      mode defaults to 644
+# Argument:
+#    path : which file to create
+#    mode : for chmod, defaults to 644
 #
-#  mkfile $path
-#  mkfile $path 666
+#  Example: mkfile $path
+#  Example: mkfile $path 666
 #
-#
+# return: 0 on success
+#         1 on error
 # 
 mkfile() {
   :> "${1:-}"                   || return 1 # create as empty
@@ -3377,13 +3524,22 @@ mkfile() {
 }
 
 #
-# function mkfolder(  path, mode=755 ) : # Create folder $1 owned by $Hostuser
+# Function: mkfolder
+# Usage: mkfolder path mode=755 )
+# Brief: Create folder "path" owned by $Hostuser
 #
+# Argument:
+#    path : which folder to create
+#    mode: for chmod, default=755
+#
+# Description:
 #  - path must be an  absolute unix path
 #  - Each part in the directory chain created gets `chmod mode`
-#  - return 1 if failed, 0 on success.
 #
-#  examples:
+#  return: 1 if failed
+#          0 on success.
+#
+# Examples:
 #
 #  mkfolder "$Hostuserhome/.config/compiz-1/compizconfig"
 #  mkfolder "$Persistanthomevolume"
@@ -3418,10 +3574,21 @@ mkfolder() {
     #unpriv "mkdir -p  '${1:-}'"   || return 1
 }
 
+
+# Function: 
+# Usage: myrealpath path
+# Brief: Real path of a possible symlink
 #
-# function myrealpath( path )
+# Description:
+#  - call realpath if available
+#  - Otherwise
+#      - warning() if path is a symlink
+#      - echo $path
 #
-myrealpath() {                  # real path of possible symlink
+# Q: why "$*" instead of "$1"
+# Note: Only used with a single argument.
+#
+myrealpath() {
     # No args is a failure
     [ -z "$*" ] && return 1
     # If have realpath, use that.
@@ -3443,9 +3610,19 @@ myrealpath() {                  # real path of possible symlink
     fi
 }
 
+
+# Function waitforlogentry_sh
+# Usage: waitforlogentry_sh application logfile keyword error_keywords [time_to_wait]
+# Brief: wait until keyword appears in logfile
 #
-# function waitforlogentry_sh( application, logfile, keyword, error_keywords, time_to_wait=60 )
+# Argument:
+#   application
+#   logfile : file to read
+#   keyword : success if keyword is found in logfile
+#   error_keywords : failure if any of these is found in logfile
+#   time_to_wait : seconds, default=60. Can be "infinity" for a very long wait
 #
+# Description:
 #  - Wait for keyword ($3) in logfile ($2) of application ($1)
 #  - error() on timeout and error_keywords in logfile
 #  - return success if found keyword in logfile
@@ -3568,7 +3745,9 @@ waitforlogentry_sh() {
 }
 
 #
-# function writeaccess( useruid, folderPath )
+# Function: writeaccess( useruid, folderPath )
+# Usage: writeaccess useruid  folderPath
+# Brief: Try to tell if useruid could write in folderPath
 #
 # writeaccess 1000 test1 ; echo $?
 #
@@ -3812,11 +3991,17 @@ writeaccess() {                 # check if useruid $1 has write access to folder
     return 1
 }
 
-#### special jobs of x11docker
+# EndGroup:
+
+# Group: special_jobs_of_x11docker
 #
-# function buildimage( Imagename )
+# Function: buildimage
+# Usage: buildimage  Imagename
+# Brief: Build image from x11docker repository Dockerfile
 #
-buildimage() {                  # --build: build image from x11docker repository Dockerfile
+# CommandlineOption: --build: build image from x11docker repository Dockerfile
+#
+buildimage() {
     # Build image $1 from x11docker repository
     #
     local Wwwpath Buildpath local_Imagename  flat_Imagename
@@ -3876,9 +4061,11 @@ buildimage() {                  # --build: build image from x11docker repository
     return 0
 }
 
+# Function: cleanup
+# Usage: cleanup
+# CommandlineOption: --cleanup
 #
-# function cleanup() : --cleanup : Check for non-removed containers
-#                      and left cache files.
+# Brief: Check for non-removed containers and left cache files.
 #
 # - Cleans x11docker cache and removes running and stopped x11docker
 #   containers.
@@ -4032,9 +4219,11 @@ cleanup() {
 }
 
 
-# function create_launcher()
+# Function: create_launcher
+# Usage: create_launcher
 #
-# --launcher: create application launcher on desktop
+# CommandlineOption: --launcher
+# Brief: Create application launcher on desktop
 #
 create_launcher() {
     local Name=""
@@ -4111,8 +4300,12 @@ create_launcher() {
     unpriv "xdg-desktop-icon install --novendor '$Cachefolder/$Name.desktop'"
 }
 
+# Function: CHANGELOG_md_get_Releaseversion
+# Usage: CHANGELOG_md_get_Releaseversion CHANGELOG_md
+# Argument:
+#   CHANGELOG_md : path to downloaded "CHANGELOG.md"
 #
-# Get version of the latest release from downloaded "CHANGELOG.md"
+# Brief: Get version of the latest release from downloaded "CHANGELOG.md"
 #
 CHANGELOG_md_get_Releaseversion() {
     local CHANGELOG_md="$1"
@@ -4147,29 +4340,30 @@ CHANGELOG_md_get_Releaseversion() {
     echo "${Releaseversion}"
 }
 
+# Function: installer
 #
-# function installer( installer_option )
+# Usage: installer installer_option
 #
+# Argument:
+#    installer_option:
 #
-# installer_option:
-#
-# --install, --update, --update-master, --remove: Installer for x11docker
-#
-# --install:
-#   - copies x11docker to /usr/local/bin
-#   - installs icon in /usr/share/icons
-#   - creates x11docker.desktop file in /usr/share/applications
-#
-# --update:
-#   - download and install latest release from github, regard
-#     existing installation location
-#
-# --update-master:
-#   - download and install latest master version from github,
-#     regard existing installation location
-#
-# --remove
-#   - remove installed files
+#       --install, --update, --update-master, --remove: Installer for x11docker
+#      
+#       --install:
+#         - copies x11docker to /usr/local/bin
+#         - installs icon in /usr/share/icons
+#         - creates x11docker.desktop file in /usr/share/applications
+#      
+#       --update:
+#         - download and install latest release from github, regard
+#           existing installation location
+#      
+#       --update-master:
+#         - download and install latest master version from github,
+#           regard existing installation location
+#      
+#       --remove
+#         - remove installed files
 #
 installer() {
 
@@ -4524,9 +4718,17 @@ installer() {
     note "Ready."
 }
 
-# mkpasswd( Password ) : Create a salted password suitable for
-#                        /etc/shadow, and put it into
-#                        Containeruserpassword
+# Function: mkpasswd
+# Usage: mkpasswd  Password
+#
+# Brief: Create a salted password suitable for /etc/shadow, and put it
+#        into Containeruserpassword
+#
+# Argument:
+#   Password
+#
+# Globals:
+#    Containeruserpassword : output goes here
 #
 mkpasswd() {
     local Password Salt perlScript
@@ -4561,9 +4763,21 @@ mkpasswd() {
     Containeruserpassword="$Password"
 }
 
-# function set_password()
+# Function: set_password
+# Usage: set_password Password
+# Brief: Set container user password
 #
-# option --password: set container user password
+# CommandlineOption: --password
+#
+# Argument:
+#   Password : the password, or INTERACTIVE
+#
+# - calls mkpasswd
+# - Created Passwordfile
+#
+# Globals:
+#    Passwordfile
+#    Containeruserpassword
 #
 set_password() {
   local Password
@@ -4595,15 +4809,20 @@ set_password() {
   return 0
 }
 
-#### host integration features
+# EndGroup:
 
-#
-# function check_windowmanager() : option --wm: search a host window manager
+# Group: host_integration_features
+
+# Function: check_windowmanager
+# CommandlineOption:  --wm: search a host window manager
 #
 #  Attempts to fill Windowmanagercommand and Windowmanagermode
 #
-#  Considers:  Xcontainer_option (--xc)
-#  On exit, Windowmanagermode can be { none | host }
+# Globals:
+#     Xcontainer_option  (--xc) Read.
+#
+#     Windowmanagermode    : On exit,  can be { none | host }
+#     Windowmanagercommand : Can be set
 #
 check_windowmanager() {
     #
@@ -4756,9 +4975,10 @@ check_windowmanager() {
 
 
 
-# function clean_xhost() : option --clean-xhost:
+# Function clean_xhost
+# CommandlineOption:  --clean-xhost
 #
-#    Disable access to X (granted via `xhost` permissions) on the host.
+# Brief: Disable access to X (granted via `xhost` permissions) on the host.
 #
 #    Q: Why are we messing with permissions on the host?
 #    A: This is only done if the user explicitly asked for it
@@ -4786,10 +5006,11 @@ clean_xhost() {
 }
 
 #
-# create_clipboardrc() : option --clipboard: create shareclipboard
-#                        script
+# Function: create_clipboardrc
+# CommandlineOption: --clipboard
+# Brief: Create shareclipboard script
 #
-# - Writes content of the file to stdout.
+# stdout: Writes generated content of the file to stdout.
 #
 create_clipboardrc() {
     #
@@ -5207,8 +5428,10 @@ create_clipboardrc() {
 
 
 #
-# function setup_gpu() : option --gpu: share /dev/dri and check nvidia
-#                        driver
+# Function: setup_gpu
+# CommandlineOption:  --gpu
+#
+# Brief: share /dev/dri and check nvidia driver
 #
 setup_gpu() {
     #
@@ -5358,8 +5581,10 @@ setup_gpu() {
 }
 
 #
-# function setup_hostdbus() : option --hostdbus: connect to host DBus
-#                             session daemon.
+# Function setup_hostdbus
+# CommandlineOption: --hostdbus
+#
+# Brief: Connect to host DBus session daemon.
 #
 setup_hostdbus() {
 
@@ -5448,8 +5673,9 @@ setup_hostdbus() {
 } # setup_hostdbus
 
 #
-# function setup_hostdbus() : option --printer: connect to cups
-#                             printer server
+# Function setup_printer
+# CommandlineOption: --printer
+# Brief: Connect to cups printer server
 #
 setup_printer() {
     #
@@ -5595,8 +5821,10 @@ setup_sound_alsa() {
 }
 
 #
-# function setup_sound_pipewire() : option --pipewire: pipewire sound
-#                                   in container
+# Function: setup_sound_pipewire
+# CommandlineOption:  --pipewire
+#
+# Brief: pipewire sound in container
 #
 setup_sound_pipewire() {
 
@@ -5657,8 +5885,10 @@ setup_sound_pipewire() {
     fi
 }
 
-# function setup_sound_pulseaudio() : option --pulseaudio: set up
-#                                     pulseaudio connection
+# Function: setup_sound_pulseaudio
+# CommandlineOption:  --pulseaudio
+#
+# Brief: set up pulseaudio connection
 #
 setup_sound_pulseaudio() {
     #
@@ -5835,8 +6065,10 @@ setup_sound_pulseaudio() {
 } # setup_sound_pulseaudio()
 
 #
-# function setup_vaapi() : option --gpu: setup for VAAPI and VDPAU
-#                          video decoding acceleration
+# Function setup_vaapi
+# CommandlineOption:  --gpu
+#
+# Brief: setup for VAAPI and VDPAU video decoding acceleration
 #
 setup_vaapi() {
     local Line
@@ -5930,7 +6162,9 @@ setup_vaapi() {
     return 0
 }
 
-# function setup_webcam() : option --webcam: share webcam devices
+# Function: setup_webcam
+# CommandlineOption: --webcam
+# Brief: share webcam devices
 setup_webcam() {
     # Webcam devices appear as /dev/video* files.
     # Unprivileged users need to be in group video.
@@ -5944,23 +6178,26 @@ setup_webcam() {
              |  at you and also might take screenshots of your Desktop."
     fi
 
-  while read -r Webcamdevice ; do
-    store_runoption_volume "$Webcamdevice"
-  done < <(  find /dev/video* -maxdepth 0 2>/dev/null \
-                 || note_ttm "|Option --webcam: No webcam devices /dev/video* found.
-                              |  Webcam in container will fail."
-          )
+    while read -r Webcamdevice ; do
+        store_runoption_volume "$Webcamdevice"
+    done < <(  find /dev/video* -maxdepth 0 2>/dev/null \
+                   || note_ttm "|Option --webcam: No webcam devices /dev/video* found.
+                                |  Webcam in container will fail."
+            )
 
-  Containerusergroups="$Containerusergroups video"
+    Containerusergroups="$Containerusergroups video"
 
-  # At least cheese and gnome-ring need some device information from udev.
-  store_runoption_volume "/run/udev/data:ro"
-  return 0
+    # At least cheese and gnome-ring need some device information from udev.
+    store_runoption_volume "/run/udev/data:ro"
+    return 0
 }
 
-#### X server setup
-#
-# function check_newxenv() : Find a free display number
+# EndGroup:
+
+# Group: X_server_setup
+
+# Function: check_newxenv
+# Brief: Find a free display number
 #
 check_newxenv()  {
     local Line Newwaylandnumber
@@ -6167,11 +6404,16 @@ check_newxenv()  {
   return 0
 } # check_newxenv()
 
-# function check_nvidiainstaller() : option --gpu: look for nvidia
-#                                    driver installer file
+# Function: check_nvidiainstaller
+# CommandlineOption:  --gpu
 #
-# globals in:  Nvidiaversion Localsharedir
-# globals out: Nvidiainstallerfile
+# Brief: Look for nvidia driver installer file
+#
+# Globals:
+#     Nvidiaversion read
+#     Localsharedir read
+#
+#     Nvidiainstallerfile write
 #
 check_nvidiainstaller() {
     if [ -n "$Nvidiaversion" ] ; then
@@ -6188,13 +6430,16 @@ check_nvidiainstaller() {
     fi
 }
 
-#
-# function calculate_floor_a_per_b(a,b)
+
+# Function: calculate_floor_a_per_b
+# Usage:  calculate_floor_a_per_b a b
 #
 # Example:   calculate_floor_a_per_b  1000 3   # prints 333
 # Example:   calculate_floor_a_per_b  1000 1.5 # prints 666
 #
 # Note: Used in xinitrc, under /bin/sh
+#
+# stdout: the result (on success)
 #
 calculate_floor_a_per_b() {
     #
@@ -6224,8 +6469,12 @@ calculate_floor_a_per_b() {
     fi
 }
 
-# function check_screensize() : Check physical and virtual screen size
-#                               (also option --size)
+# Function check_screensize
+#
+# Brief: Check physical and virtual screen size
+#
+# CommandlineOption: --size
+#
 check_screensize() {
     local Line="" Xrandroutput=""
     local mysed=""
@@ -6438,13 +6687,16 @@ check_screensize() {
     return 0
 } # check_screensize()
 
+
+# Function: check_vt
+# CommandlineOption:  --xorg
+# Brief: Find free vt / tty
 #
-# function check_vt() : option --xorg: find free vt / tty
+# Globals:
+#    Newxvt : On success, contains the number of the chosen tty.
 #
-# - On success, global Newxvt contains the number of the chosen tty.
-#
-# - If on entry Newxvt is not empty and is not "auto", just return 0
-#   without testing anything.
+#            If on entry Newxvt is not empty and is not "auto", just
+#            return 0 without testing anything.
 #
 check_vt() {
     local Line=""
@@ -6560,9 +6812,11 @@ check_vt() {
 } # check_vt()
 
 
+
+# Function: check_xcontainer
+# CommandlineOption:  --xc
 #
-# function check_xcontainer() : option --xc: check backend, rootless
-#                               and image x11docker/xserver
+# Brief: Check backend, rootless and image x11docker/xserver
 #
 check_xcontainer() {
     local Auto=""
@@ -6852,13 +7106,18 @@ check_xcontainer() {
     return 0
 } # check_xcontainer()
 
+
+# Function: check_xdepends
+# Usage: check_xdepends X_option_to_check
 #
-# function check_xdepends( X_option_to_check ) : Check dependencies on host for X
-#                                                server option in X_option_to_check
+# Brief: Check dependencies on host for X server option in
+#        X_option_to_check
 #
-# Return 1 if something is missing or not possible
+# return: 1 if something is missing or not possible
 #
-#  X_option_to_check may be:
+# Argument:
+#
+#  X_option_to_check : may be:
 #
 #    "$Xserver"
 #
@@ -7606,8 +7865,12 @@ check_xdepends() {
     return "$Return"
 } # check_xdepends()
 
-
-check_xlibnoshm() {             # search XlibNoSHM.so and libdl.so.2 for fake MIT-SHM
+# Function: check_xlibnoshm
+#
+# Brief: search XlibNoSHM.so and libdl.so.2 for fake MIT-SHM
+#
+#
+check_xlibnoshm() {
   # check for XlibNoSHM.so
   Xlibnoshmfile="$(find "/usr/local/share/x11docker/XlibNoSHM.so" "$Localsharedir/XlibNoSHM.so"  2>/dev/null | tail -n1 )"
   [ -z "$Xlibnoshmfile" ] && {
