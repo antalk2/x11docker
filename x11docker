@@ -7938,7 +7938,7 @@ check_xlibnoshm() {
     fi
     
     if [ -f "$Xlibnoshmfile" ] ;
-    then  debugnote "check_xlibnoshm(): Found XlibNoSHM.so, and have it at ${$Xlibnoshmfile}"
+    then  debugnote "check_xlibnoshm(): Found XlibNoSHM.so, and have it at ${Xlibnoshmfile}"
     else  debugnote "check_xlibnoshm(): Did NOT find XlibNoSHM.so"
           return 1
     fi
