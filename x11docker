@@ -8538,14 +8538,16 @@ check_xserver() {
             check_xdepends --xpra2           && Xserver="--xpra2"
         fi
 
-        case "$Sharegpu" in
-            yes|direct)
+        if word_is_in "${Sharegpu:-EMPTY}" "yes direct" ; then
+            #case "$Sharegpu" in
+            #yes|direct)
                 case "$Desktopmode" in
                     yes)                                  check_xdepends --weston-xwayland && Xserver="--weston-xwayland" ;;
                     no)                                   check_xdepends --hostdisplay     && Xserver="--hostdisplay" ;;
                 esac
-                ;;
-        esac
+             #   ;;
+                #        esac
+        fi
         [ "$Runsonconsole" = "yes" ] && {
             check_xdepends --weston-xwayland && Xserver="--weston-xwayland"
             check_xdepends --xorg            && Xserver="--xorg"
