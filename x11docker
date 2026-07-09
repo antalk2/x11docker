@@ -8520,6 +8520,14 @@ check_xserver() {
 
     if [ "$Xserver" = "--xephyr" ] ; then
 
+        #
+        # Note: check_xdepends arg and Xserver differ here.
+        #       Replaced Xserver references in check_xdepends with
+        #       references to the arg, ${X_option_to_check}
+        #
+        #       This makes (I hope) the following check_xdepends
+        #       calls order independent.
+        #
         if [ "$Runsonconsole" = "yes" ] ; then
             if   check_xdepends --xorg            ; then  Xserver="--xorg" 
             elif check_xdepends --weston-xwayland ; then  Xserver="--weston-xwayland"
@@ -8532,15 +8540,6 @@ check_xserver() {
                 no)  if check_xdepends --hostdisplay     ; then  Xserver="--hostdisplay"     ; fi ;;
             esac
         elif ! check_xdepends --xephyr ; then
-            #
-            # Note: check_xdepends arg and Xserver differ here.
-            #       Replaced Xserver references in check_xdepends with
-            #       references to the arg, ${X_option_to_check}
-            #
-            #       This makes (I hope) the following check_xdepends
-            #       calls order independent.
-            #
-
             if   check_xdepends --xpra2           ; then Xserver="--xpra2"
             elif check_xdepends --xpra            ; then Xserver="--xpra"
             elif check_xdepends --runx            ; then Xserver="--runx"
