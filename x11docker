@@ -8252,6 +8252,7 @@ check_xserver() {
     #                           matching and available X server
     
     if [ "$Autochooseserver" = "yes" ] ; then
+
         #
         # Last setter wins.
         # I will try to reorder.
@@ -8263,21 +8264,28 @@ check_xserver() {
         
         if [ "$Sharegpu" = "yes" ]    && [ -n "$Hostwaylandsocket" ] ; then  Xserver="--satellite" ; fi
         if [ "$Sharegpu" = "direct" ] && [ -n "$Hostwaylandsocket" ] ; then  Xserver="--satellite" ; fi
+
+        ############
         
-        if [ "$Xfishtank" = "yes" ]    ; then  Xserver="--xephyr" ; fi
-        if [ "$Desktopmode" = "yes"  ] ; then  Xserver="--xephyr" ; fi
+        if [ "$Xfishtank"   = "yes"  ] \
+        || [ "$Desktopmode" = "yes"  ] ; then  Xserver="--xephyr" ; fi
         
-        if [ "$Xpraborder" ] ; then
-            Xserver="--xpra2"
-        fi
+        if [ "$Xpraborder" ] ; then  Xserver="--xpra2" ;  fi
         
         if [ "$Xserver" = "--xephyr" ] ; then
             ### FIXME: don't use check_xdepends() here
-            check_xdepends --xephyr || Xserver="--xpra2"
+            if ! check_xdepends --xephyr ; then
+                Xserver="--xpra2" ;
+            elif word_is_in "${Sharegpu:-EMPTY}" "yes direct"   ;  then
+                Xserver="--weston-xwayland" ;
+            fi
         fi
+       
         
-        if [ "$Sharegpu" = "yes" ]     && [ "$Xserver" = "--xephyr" ] ; then  Xserver="--weston-xwayland" ; fi
-        if [ "$Sharegpu" = "direct" ]  && [ "$Xserver" = "--xephyr" ] ; then  Xserver="--weston-xwayland" ; fi
+        
+        
+
+        ############
         if [ "$Outputcount" != "1" ]                                  ; then  Xserver="--weston-xwayland" ; fi
         if [ -n "$Rotation" ]                                         ; then  Xserver="--weston-xwayland" ; fi
         
@@ -8303,8 +8311,63 @@ check_xserver() {
         if [ "$Setupwayland" = "yes" ] ; then
             if [ -n "$Hostwaylandsocket" ] && [ "$Desktopmode" = "no" ]  ;
             then Xserver="--hostwayland"
-            else Xserver="--weston"     ; fi
-        fi
+            else Xserver="--weston"     ;
+            fi
+        
+        #        #
+        #        # The reordered version.
+        #        #
+        #        # Possible problem: Some tests depend on Xserver. The result
+        #        # of these tests may have changed.
+        #        #
+        #        if [ "$Setupwayland" = "yes" ] ; then
+        #            if [ -n "$Hostwaylandsocket" ] && [ "$Desktopmode" = "no" ]  ; then
+        #                Xserver="--hostwayland"
+        #            else
+        #                Xserver="--weston"
+        #            fi
+        #        elif [ "$Winsubsystem" = "CYGWIN" ] ; then
+        #            Xserver="--xwin"
+        #        elif [ "$Winsubsystem" ] && [ -z "$DISPLAY" ] ; then
+        #            Xserver="--runx"
+        #        elif [ -z "$Hostdisplay" ] && [ -n "$Hostwaylandsocket" ]  && [ "$Desktopmode" = "yes"  ] ; then
+        #            Xserver="--weston-xwayland"
+        #        elif [ -z "$Hostdisplay" ] && [ -n "$Hostwaylandsocket" ] ; then
+        #                Xserver="--satellite"
+        #        elif [ -n "$Newxvt" ]             ; then
+        #            Xserver="--xorg"
+        #        elif [ "$Runsonconsole" = "yes" ] ; then
+        #            Xserver="--xorg"
+        #        elif [ -n "$Rotation" ] ; then
+        #            Xserver="--weston-xwayland"
+        #        elif [ "$Outputcount" != "1" ] ; then
+        #            Xserver="--weston-xwayland"
+        #            ######################################################################
+        #        elif [ "$Sharegpu" = "direct" ]  && [ "$Xserver" = "--xephyr" ] ; then
+        #            Xserver="--weston-xwayland"
+        #        elif [ "$Sharegpu" = "yes" ]     && [ "$Xserver" = "--xephyr" ] ; then
+        #            Xserver="--weston-xwayland"
+        #        elif [ "$Xserver" = "--xephyr" ] ; then
+        #            ### FIXME: don't use check_xdepends() here
+        #            check_xdepends --xephyr || Xserver="--xpra2"
+        #            ##################################################
+        #        elif [ "$Xpraborder" ] ; then
+        #            Xserver="--xpra2"
+        #        elif [ "$Desktopmode" = "yes"  ] ; then
+        #            Xserver="--xephyr"
+        #        elif [ "$Xfishtank" = "yes" ]    ; then
+        #            Xserver="--xephyr"
+        #        elif [ "$Sharegpu" = "direct" ] && [ -n "$Hostwaylandsocket" ] ; then
+        #            Xserver="--satellite"
+        #        elif [ "$Sharegpu" = "yes" ]    && [ -n "$Hostwaylandsocket" ] ; then
+        #            Xserver="--satellite"
+        #        elif [ "$Sharegpu" = "direct" ]  ; then
+        #            Xserver="--xpra2-xwayland"
+        #        elif [ "$Sharegpu" = "yes" ]     ; then
+        #            Xserver="--xpra2-xwayland"
+        #        else
+        #            Xserver="--xpra2"
+        #        fi
 
     fi # Autochooseserver
 
