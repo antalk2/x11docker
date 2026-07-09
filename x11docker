@@ -8310,20 +8310,24 @@ check_xserver() {
         fi
     fi
 
-  # some first --gpu checks
-  case "$Sharegpu" in
-    yes|direct)
-      [ "$Nvidiaversion" ] && case "$Xserver" in
-        --xpra-xwayland|--xpra2-xwayland|--weston-xwayland|--xwayland|--satellite|--weston|--kwin|--kwin-xwayland|--hostwayland)
-          version_less_than "$Nvidiaversion" "470" && note "Option $Xserver --gpu: Your system uses closed source NVIDIA
-  driver version $Nvidiaversion.
-  GPU support might work only with options --hostdisplay and --xorg.
-  Consider to use free open source driver nouveau instead.
-  Using NVIDIA driver>=v470.x  and Xwayland>=v21.1.2 might work for $Xserver --gpu."
+    #
+    # Some first --gpu checks
+    #
+    case "$Sharegpu" in
+        yes|direct)
+            [ "$Nvidiaversion" ] && case "$Xserver" in
+                --xpra-xwayland|--xpra2-xwayland|--weston-xwayland|--xwayland|--satellite|--weston|--kwin|--kwin-xwayland|--hostwayland)
+                    version_less_than "$Nvidiaversion" "470" && note_ttm \
+                                                                    "|Option $Xserver --gpu: Your system uses closed source NVIDIA
+                                                                     |  driver version $Nvidiaversion.
+                                                                     |  GPU support might work only with options --hostdisplay and --xorg.
+                                                                     |  Consider to use free open source driver nouveau instead.
+                                                                     |  Using NVIDIA driver>=v470.x  and Xwayland>=v21.1.2 might work for $Xserver --gpu."
         ;;
       esac
     ;;
   esac
+
   case "$Runtime" in
     kata-runtime|sysbox-runc)
       case "$Sharegpu" in
