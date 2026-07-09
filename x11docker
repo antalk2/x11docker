@@ -8587,19 +8587,20 @@ check_xserver() {
                     |  or run x11docker with --runx:  https://github.com/mviereck/runx"
                 #
                 ;;
-      MSYS2|WSL1|WSL2)
-        [ "$Hostdisplay" ] && {
+            MSYS2|WSL1|WSL2)
+                [ "$Hostdisplay" ] && {
           error "Did not find a possibility to provide a nested display.
   Please install package 'xinit' and one or all of:  nxagent Xephyr xpra
   $Wikipackages"
-        } || {
-        error "Did not find a possibility to provide a display.
+          #
+                } || {
+                    error "Did not find a possibility to provide a display.
   Please use --runx to provide an X server on MS Windows:
     https://github.com/mviereck/runx"
-        }
-      ;;
-    esac
-  }
+                }
+                ;;
+        esac
+    }
 
   [ "$Xorgautochoice" = "yes" ] && [ "$Runsonconsole" = "no" ] && [ -z "$Newxvt" ] && error "Option --xorg was chosen automatically
   as the best one fitting your specified options and installed dependencies.
