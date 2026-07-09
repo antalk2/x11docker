@@ -8278,29 +8278,37 @@ check_xserver() {
 
     fi # Autochooseserver
 
-    [ "$Printcheck" = "yes" ] && note "--printcheck: Starting checks with $Xserver"
+    if [ "$Printcheck" = "yes" ] ; then
+        note "--printcheck: Starting checks with $Xserver"
+    fi
 
-  [ "$Autochooseserver" = "no" ] && [ "$Xserver" = "--xorg" ] && Newxvt="${Newxvt:-auto}"
+    if [ "$Autochooseserver" = "no" ] && [ "$Xserver" = "--xorg" ] ; then
+        Newxvt="${Newxvt:-auto}"
+    fi
 
-  grep -q -i "GNOME" <<< "$XDG_CURRENT_DESKTOP" && {
-    Gnomeversion="$(gnome-shell --version)"
-    [ "$Gnomeversion" ] && version_less_than "$Gnomeversion" "GNOME Shell 3.38" && {
-      case "$Xserver" in
-        --hostdisplay|--xorg) ;;
-        *)
-          warning "You are running GNOME desktop in outdated version
-  $Gnomeversion
-  This might cause issues with host applications if using additional X servers.
-  It is recommended to use another desktop environment or GNOME >= 3.38.
-  Only --xorg or discouraged option --hostdisplay might work as expected."
-          [ "$Autochooseserver" = "yes" ] && case "$Desktopmode" in
-            "yes") Xserver="--xorg" && Xorgautochoice="yes" ;;
-            "no")  Xserver="--hostdisplay" ;;
-          esac
-        ;;
-      esac
-    }
-  }
+    if grep -q -i "GNOME" <<< "$XDG_CURRENT_DESKTOP" ; then
+        Gnomeversion="$(gnome-shell --version)"
+        if [ "$Gnomeversion" ] && version_less_than "$Gnomeversion" "GNOME Shell 3.38" ; then
+            case "$Xserver" in
+                --hostdisplay|--xorg) ;;
+                *)
+                    warning_ttm \
+                        "|You are running GNOME desktop in outdated version
+                         |  $Gnomeversion
+                         |  This might cause issues with host applications if using additional X servers.
+                         |  It is recommended to use another desktop environment or GNOME >= 3.38.
+                         |  Only --xorg or discouraged option --hostdisplay might work as expected."
+                    #
+                    if [ "$Autochooseserver" = "yes" ] ; then
+                        case "$Desktopmode" in
+                            "yes") Xserver="--xorg" && Xorgautochoice="yes" ;;
+                            "no")  Xserver="--hostdisplay" ;;
+                        esac
+                    fi
+                    ;;
+            esac
+        fi
+    fi
 
   # some first --gpu checks
   case "$Sharegpu" in
