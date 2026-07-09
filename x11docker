@@ -8290,9 +8290,6 @@ check_xserver() {
         Gnomeversion="$(gnome-shell --version)"
         if [ "$Gnomeversion" ] && version_less_than "$Gnomeversion" "GNOME Shell 3.38" ; then
             if ! word_is_in "${Xserver:-EMPTY}" "--hostdisplay --xorg" ; then
-               #case "$Xserver" in
-               # --hostdisplay|--xorg) ;;
-               # *)
                     warning_ttm \
                         "|You are running GNOME desktop in outdated version
                          |  $Gnomeversion
@@ -8306,8 +8303,6 @@ check_xserver() {
                             "no")  Xserver="--hostdisplay" ;;
                         esac
                     fi
-               #     ;;
-                    # esac
             fi
         fi
     fi
