@@ -8510,27 +8510,28 @@ check_xserver() {
     # Xephyr as fallback for all options. Last fallback: Xorg
     if ! check_xdepends $Xserver ; then  Xserver="--xephyr" ; fi
 
-    if [ "$Xserver" = "--xephyr" ] ; then           check_xdepends --xephyr || {
-                                                  check_xdepends --hostdisplay     && [ "$Desktopmode" = "no" ] && Xserver="--hostdisplay"
-                                                  check_xdepends --nxagent         && Xserver="--nxagent"
-                                                  check_xdepends --weston-xwayland && Xserver="--weston-xwayland"
-                                                  check_xdepends --runx            && Xserver="--runx"
-                                                  check_xdepends --xpra            && Xserver="--xpra"
-                                                  check_xdepends --xpra2           && Xserver="--xpra2"
-                                              }
-                                              case "$Sharegpu" in
-                                                  yes|direct)
-                                                      case "$Desktopmode" in
-                                                          yes)                                  check_xdepends --weston-xwayland && Xserver="--weston-xwayland" ;;
-                                                          no)                                   check_xdepends --hostdisplay     && Xserver="--hostdisplay" ;;
-                                                      esac
-                                                      ;;
-                                              esac
-                                              [ "$Runsonconsole" = "yes" ] && {
-                                                  check_xdepends --weston-xwayland && Xserver="--weston-xwayland"
-                                                  check_xdepends --xorg            && Xserver="--xorg"
-                                              }
-                                              check_xdepends $Xserver || { Xserver="--xorg" && [ "$Autochooseserver" = "yes" ] && Xorgautochoice="yes" ; }
+    if [ "$Xserver" = "--xephyr" ] ; then
+        check_xdepends --xephyr || {
+            check_xdepends --hostdisplay     && [ "$Desktopmode" = "no" ] && Xserver="--hostdisplay"
+            check_xdepends --nxagent         && Xserver="--nxagent"
+            check_xdepends --weston-xwayland && Xserver="--weston-xwayland"
+            check_xdepends --runx            && Xserver="--runx"
+            check_xdepends --xpra            && Xserver="--xpra"
+            check_xdepends --xpra2           && Xserver="--xpra2"
+        }
+        case "$Sharegpu" in
+            yes|direct)
+                case "$Desktopmode" in
+                    yes)                                  check_xdepends --weston-xwayland && Xserver="--weston-xwayland" ;;
+                    no)                                   check_xdepends --hostdisplay     && Xserver="--hostdisplay" ;;
+                esac
+                ;;
+        esac
+        [ "$Runsonconsole" = "yes" ] && {
+            check_xdepends --weston-xwayland && Xserver="--weston-xwayland"
+            check_xdepends --xorg            && Xserver="--xorg"
+        }
+        check_xdepends $Xserver || { Xserver="--xorg" && [ "$Autochooseserver" = "yes" ] && Xorgautochoice="yes" ; }
     fi
 
   Autochooseserver="no" check_xdepends $Xserver || {
