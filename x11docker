@@ -8190,7 +8190,7 @@ check_xserver() {
             case "$Xserver" in
                 "")
                     Sharehostwayland="yes"
-                    Setupwayland="yes"
+                    # Setupwayland="yes"
                     case "$Desktopmode" in
                         yes)
                             Xserver="--xwayland"
@@ -8202,17 +8202,18 @@ check_xserver() {
                     ;;
                 --weston|--weston-xwayland)
                     Xserver="--weston-xwayland"
-                    Setupwayland="yes"
+                    # Setupwayland="yes"
                     ;;
                 --hostwayland)
                     Xserver="--satellite"
-                    Setupwayland="yes"
+                    # Setupwayland="yes"
                     ;;
                 *)
                     Sharehostwayland="yes"
-                    Setupwayland="yes"
+                    # Setupwayland="yes"
                     ;;
             esac
+            Setupwayland="yes"
         fi
     fi
 
