@@ -12,6 +12,37 @@ error(){
     echo "ERROR: $*" >&2
 }
 
+if false ; then
+    get_ppid_orig() {                    # get ppid of pid $1
+        $Myps ax -o pid,ppid | awk '$1 ~ /'${1:-}'/ { SUM += $2 } END { print SUM } '
+    }
+
+
+    printf "1 2\n13 14\n" | awk '$1 ~ /'13'/ { SUM += $2 } END { print SUM } ' # 14, OK
+    printf "1 2\n13 14\n" | awk '$1 ~ /'1'/ { SUM += $2 } END { print SUM } '  # 16, wrong
+    # Problem: 13 also matches /1/, thus we calculated 2+14
+    #
+    printf "1 2\n13 14\n" | awk '$1 ~ /^'1'$/ { SUM += $2 } END { print SUM } ' # 2, OK
+    printf "1 2\n13 14\n" | awk '$1 == '1' { SUM += $2 } END { print SUM } '    # 2, OK
+    printf "1 2\n13 14\n" | awk '$1 == '99' { SUM += $2 } END { print SUM } '   # EMPTY
+    printf "1 2\n13 14\n" | awk -e 'BEGIN { SUM=0 }' -e '$1 == '99' { SUM += $2 } END { print SUM } '   # 0, OK
+
+    printf "1 2\n13 sshd\n" | awk -e 'BEGIN { SUM=0 }' -e '$1 == '13' { SUM += $2 } END { print SUM } '   # 0, wrong
+    printf "1 2\n13 sshd\n14 xx" | awk -e '$1 == '13' { print $2 } '   # sshd, OK
+
+
+
+    check_parent_sshd_orig() {           # check whether pid $1 runs in SSH session
+        $Myps ax -o pid,comm | awk '$1 ~ /'$(get_ppid "${1:-}")'/ { SUM += $2 } END { print SUM } ' | grep -q "sshd"
+    }
+
+    if false ; then
+        get_ppid(){
+            get_ppid_orig "${@}"
+        }
+    fi
+
+fi
 
 
 test_ppid_success() {

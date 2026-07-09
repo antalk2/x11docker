@@ -18,10 +18,9 @@
 # Used-by: get_ppid, check_parent_sshd
 #
 find_in_first_print_second() {
-    local query="${1:-}"
-    # Extra quotes to around query, to force it to be interpreted as a
-    # string and not vary with the value of the first field. 
-    awk ' BEGIN { QUERY="'"${query}"'" ; } ; $1 == QUERY { print $2 } '
+    # Extra "" quotes around query, to make it a string for awk.
+    local query="\"${1:-}\""
+    awk ' $1 == '"${query}"' { print $2 } '
 }
 # -------------------------------------
 

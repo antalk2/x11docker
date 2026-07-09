@@ -1976,12 +1976,10 @@ check_envvar() {
 # Used-by: get_ppid, check_parent_sshd
 #
 find_in_first_print_second() {
-    local query="${1:-}"
-    # Extra quotes to around query, to force it to be interpreted as a
-    # string and not vary with the value of the first field. 
-    awk ' BEGIN { QUERY="'"${query}"'" ; } ; $1 == QUERY { print $2 } '
+    # Extra "" quotes around query, to make it a string for awk.
+    local query="\"${1:-}\""
+    awk ' $1 == '"${query}"' { print $2 } '
 }
-
 
 #
 # Function: get_ppid
@@ -2029,9 +2027,12 @@ get_ppid() {
     #
     #  awk '{ print $1 }' : remove  whitespace before number
     #
-    #  However, busybox ps does not support the -p ppid option.
-    #
     # res="$( $Myps -p "${pid_to_check}" -o ppid=  2>/dev/null | awk '{ print $1 }' )"
+    #
+    #  Note: "busybox ps" does not support the -p ppid option.
+    #
+    #  If we need compatibility with "busybox ps", then we have to filter
+    #  the pid,ppid pairs ourselves.
     #
     # busybox ps
     res="$( $Myps ax -o pid,ppid                         \
@@ -2072,6 +2073,12 @@ check_parent_sshd() {
         case  "$ppid" in
             "")
                 error "check_parent_sshd(): Could not get ppid for pid '${pid}'"
+                # This may also happen, if the process with pid exited.
+                # In general, a warning() or note() may be more appropriate.
+                #
+                # On the other hand, the only call to check_parent_sshd()
+                # tests if x11docker is running under sshd. Losing x11docker
+                # or one of its parents might warrant an error() here.
                 ;;
             0|1)
                 # reached the end of the parent chain
