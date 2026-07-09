@@ -8272,6 +8272,7 @@ check_xserver() {
 
         elif [ -n "$Rotation" ]           ; then Xserver="--weston-xwayland"
         elif [ "$Outputcount" != "1" ]    ; then Xserver="--weston-xwayland"
+
         elif [ "$Xpraborder" ]            ; then Xserver="--xpra2" ;
         elif [ "$Xfishtank"   = "yes"  ] || [ "$Desktopmode" = "yes"  ] ; then
             ### FIXME: don't use check_xdepends() here
