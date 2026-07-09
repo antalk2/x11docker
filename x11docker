@@ -8327,13 +8327,13 @@ check_xserver() {
             --kwin            |
             --kwin-xwayland   |
             --hostwayland     )
-                    note_ttm \
-                        "|Option $Xserver --gpu: Your system uses closed source NVIDIA
-                         |  driver version $Nvidiaversion.
-                         |  GPU support might work only with options --hostdisplay and --xorg.
-                         |  Consider to use free open source driver nouveau instead.
-                         |  Using NVIDIA driver>=v470.x  and Xwayland>=v21.1.2 might work for $Xserver --gpu."
-                    #
+                note_ttm \
+                    "|Option $Xserver --gpu: Your system uses closed source NVIDIA
+                     |  driver version $Nvidiaversion.
+                     |  GPU support might work only with options --hostdisplay and --xorg.
+                     |  Consider to use free open source driver nouveau instead.
+                     |  Using NVIDIA driver>=v470.x  and Xwayland>=v21.1.2 might work for $Xserver --gpu."
+                #
                 ;;
         esac
     fi
