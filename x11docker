@@ -8408,10 +8408,11 @@ check_xserver() {
         #
     fi
 
-  # --wayland
-  case "$Xserver" in
-    --weston|--kwin|--hostwayland) Setupwayland="yes" ;;
-  esac
+    # --wayland
+    case "$Xserver" in
+        --weston|--kwin|--hostwayland) Setupwayland="yes" ;;
+    esac
+
   [ "$Setupwayland" = "yes" ]          && { check_xdepends "$Xserver"        || Xserver="--hostwayland" ; }
   [ "$Xserver" = "--kwin" ]            && { check_xdepends --kwin            || Xserver="--weston" ; }
   [ "$Xserver" = "--hostwayland" ]     && { check_xdepends --hostwayland     || Xserver="--weston"  ; }
