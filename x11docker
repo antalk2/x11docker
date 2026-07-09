@@ -8267,10 +8267,16 @@ check_xserver() {
 
         ############
         
-        if [ "$Xfishtank"   = "yes"  ] \
-        || [ "$Desktopmode" = "yes"  ] ; then  Xserver="--xephyr" ; fi
+        if [ "$Xpraborder" ] ; then
+            Xserver="--xpra2" ;
+        else
+            if [ "$Xfishtank"   = "yes"  ] \
+            || [ "$Desktopmode" = "yes"  ] ;
+            then  Xserver="--xephyr" ; fi
+        fi
         
-        if [ "$Xpraborder" ] ; then  Xserver="--xpra2" ;  fi
+
+        ## --------
         
         if [ "$Xserver" = "--xephyr" ] ; then
             ### FIXME: don't use check_xdepends() here
