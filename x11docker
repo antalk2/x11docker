@@ -8218,9 +8218,7 @@ check_xserver() {
         if [ -z "$Hostwaylandsocket" ] ; then
             Sharehostwayland="no"
 
-            if [ "$Xserver" = "--hostwayland" ] ; then
-                : # nothing
-            else
+            if [ "$Xserver" != "--hostwayland" ] ; then
                 note_ttm "|Option --hostwayland: WAYLAND_DISPLAY is not set.
                           |  Fallback: Disabling option --hostwayland."
                 check_fallback
