@@ -8393,7 +8393,7 @@ check_xserver() {
 
 
   
-  [ "$Runsoverssh" = "yes" ] && [ -z "$Hostdisplay$Hostwaylandsocket" ] && [ "$Xserver" != "--tty" ] && {
+    if [ "$Runsoverssh" = "yes" ] && [ -z "$Hostdisplay$Hostwaylandsocket" ] && [ "$Xserver" != "--tty" ] ; then
       note_ttm \
           "|You are running x11docker over SSH without providing a display.
            |  DISPLAY and WAYLAND_DISPLAY are empty.
@@ -8401,7 +8401,7 @@ check_xserver() {
            |  If there is already an X or Wayland session running on the remote system
            |  that you want to use,  please set either DISPLAY and XAUTHORITY
            |  or WAYLAND_DISPLAY and XDG_RUNTIME_DIR accordingly."
-  }
+    fi
 
   # --wayland
   case "$Xserver" in
