@@ -8255,25 +8255,22 @@ check_xserver() {
 
         #
         if [ "$Setupwayland" = "yes" ] ; then
-
             if [ -n "$Hostwaylandsocket"  ] && [ "$Desktopmode" = "no" ]  ; then Xserver="--hostwayland"
             else                                                                 Xserver="--weston"
             fi
-
         elif [ "$Winsubsystem" = "CYGWIN" ]                               ; then Xserver="--xwin"
         elif [ "$Winsubsystem"            ] && [ -z "$DISPLAY" ]          ; then Xserver="--runx"
 
         elif  [ -n "$Hostwaylandsocket"   ] && [ -z "$Hostdisplay" ] ; then
-
             if [ "$Desktopmode" = "yes"  ]                                ; then Xserver="--weston-xwayland"
             else                                                                 Xserver="--satellite"
             fi
-
         elif [ -n "$Newxvt"   ] || [ "$Runsonconsole" = "yes" ]            ; then Xserver="--xorg"
         elif [ -n "$Rotation" ] || [ "$Outputcount" != "1"    ]            ; then Xserver="--weston-xwayland"
         elif [ "$Xpraborder"  ]                                            ; then Xserver="--xpra2" ;
 
         elif [ "$Desktopmode" = "yes"  ] || [ "$Xfishtank"   = "yes"  ]    ; then
+
             ### FIXME: don't use check_xdepends() here
             if ! check_xdepends --xephyr                                   ; then Xserver="--xpra2" ;
             elif word_is_in "${Sharegpu:-EMPTY}" "yes direct"              ; then Xserver="--weston-xwayland" ;
