@@ -8175,49 +8175,49 @@ check_xserver() {
     # --xw
     if [ "$Xwogether" = "yes" ] ; then
         if [ -z "$Hostwaylandsocket" ] ; then
-                
-                case "$Xserver" in
-                    ""|--hostwayland|--weston|--weston-xwayland)
-                        Xserver="--weston-xwayland"
-                        Setupwayland="yes"
-                        ;;
-                    *)
-                        note_ttm "|Option --xw: Option '$Xserver' provides
-                                  |  no possibility to also run a Wayland environment.
-                                  |  This could work only within a Wayland compositor.
-                                  |  Fallback: Using option --weston-xwayland."
-                        check_fallback
-                        Xserver="--weston-xwayland"
-                        Setupwayland="yes"
-                        ;;
-                esac
+            
+            case "$Xserver" in
+                ""|--hostwayland|--weston|--weston-xwayland)
+                    Xserver="--weston-xwayland"
+                    Setupwayland="yes"
+                    ;;
+                *)
+                    note_ttm "|Option --xw: Option '$Xserver' provides
+                              |  no possibility to also run a Wayland environment.
+                              |  This could work only within a Wayland compositor.
+                              |  Fallback: Using option --weston-xwayland."
+                    check_fallback
+                    Xserver="--weston-xwayland"
+                    Setupwayland="yes"
+                    ;;
+            esac
         else
-                case "$Xserver" in
-                    "")
-                        Sharehostwayland="yes"
-                        Setupwayland="yes"
-                        case "$Desktopmode" in
-                            yes)
-                                Xserver="--xwayland"
-                                ;;
-                            no)
-                                Xserver="--satellite"
-                                ;;
-                        esac
-                        ;;
-                    --weston|--weston-xwayland)
-                        Xserver="--weston-xwayland"
-                        Setupwayland="yes"
-                        ;;
-                    --hostwayland)
-                        Xserver="--satellite"
-                        Setupwayland="yes"
-                        ;;
-                    *)
-                        Sharehostwayland="yes"
-                        Setupwayland="yes"
-                        ;;
-                esac
+            case "$Xserver" in
+                "")
+                    Sharehostwayland="yes"
+                    Setupwayland="yes"
+                    case "$Desktopmode" in
+                        yes)
+                            Xserver="--xwayland"
+                            ;;
+                        no)
+                            Xserver="--satellite"
+                            ;;
+                    esac
+                    ;;
+                --weston|--weston-xwayland)
+                    Xserver="--weston-xwayland"
+                    Setupwayland="yes"
+                    ;;
+                --hostwayland)
+                    Xserver="--satellite"
+                    Setupwayland="yes"
+                    ;;
+                *)
+                    Sharehostwayland="yes"
+                    Setupwayland="yes"
+                    ;;
+            esac
         fi
     fi
 
