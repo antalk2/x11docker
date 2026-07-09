@@ -8313,8 +8313,10 @@ check_xserver() {
     #
     # Some first --gpu checks
     #
-    if word_is_in "${Sharegpu:-EMPTY}" "yes direct" && [ "$Nvidiaversion" ] ; then
-                if version_less_than "$Nvidiaversion" "470" ; then
+    if word_is_in "${Sharegpu:-EMPTY}" "yes direct"       \
+            && [ "$Nvidiaversion" ]                       \
+            &&  version_less_than "$Nvidiaversion" "470"  ;
+    then
         case "$Xserver" in
             --xpra-xwayland   |
             --xpra2-xwayland  |
@@ -8334,7 +8336,6 @@ check_xserver() {
                     #
                 ;;
         esac
-                fi
     fi
 
   case "$Runtime" in
