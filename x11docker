@@ -8184,7 +8184,7 @@ check_xserver() {
                 check_fallback
             fi
             Xserver="--weston-xwayland"
-            Setupwayland="yes"
+            # Setupwayland="yes"
             
         else # [ -n "$Hostwaylandsocket" ]
             case "$Xserver" in
@@ -8201,8 +8201,9 @@ check_xserver() {
                     Sharehostwayland="yes"
                     ;;
             esac
-            Setupwayland="yes"
+            # Setupwayland="yes"
         fi
+        Setupwayland="yes"
     fi
 
     # --hostwayland
