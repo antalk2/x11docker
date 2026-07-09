@@ -8512,6 +8512,9 @@ check_xserver() {
 
     if [ "$Xserver" = "--xephyr" ] ; then
         if ! check_xdepends --xephyr ; then
+            #
+            # Last setter wins
+            #
             check_xdepends --hostdisplay     && [ "$Desktopmode" = "no" ] && Xserver="--hostdisplay"
             check_xdepends --nxagent         && Xserver="--nxagent"
             check_xdepends --weston-xwayland && Xserver="--weston-xwayland"
