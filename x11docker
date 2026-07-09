@@ -8409,9 +8409,9 @@ check_xserver() {
     fi
 
     # --wayland
-    case "$Xserver" in
-        --weston|--kwin|--hostwayland) Setupwayland="yes" ;;
-    esac
+    if word_is_in "${Xserver:-EMPTY}" "--weston --kwin --hostwayland" ; then
+        Setupwayland="yes"
+    fi
 
   [ "$Setupwayland" = "yes" ]          && { check_xdepends "$Xserver"        || Xserver="--hostwayland" ; }
   [ "$Xserver" = "--kwin" ]            && { check_xdepends --kwin            || Xserver="--weston" ; }
