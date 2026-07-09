@@ -8358,7 +8358,8 @@ check_xserver() {
 
     if [ "$Runsonconsole" = "no" ] \
     && [ "$Runsoverssh" = "no"   ] \
-    && [ -z "$Hostdisplay$Hostwaylandsocket" ] \
+    && [ -z "$Hostdisplay"       ] \
+    && [ -z "$Hostwaylandsocket" ] \
     && [ "$Xserver" != "--tty"   ] \
     && [ -z "$Winsubsystem"      ] ;
     then
