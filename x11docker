@@ -8339,20 +8339,20 @@ check_xserver() {
     fi
 
     if word_is_in "${Runtime:-EMPTY}" "kata-runtime sysbox-runc" ; then
-            case "$Sharegpu" in
-                yes) Sharegpu="iglx"  ;;
-                no)                   ;;
+        case "$Sharegpu" in
+            yes) Sharegpu="iglx"  ;;
+            no)                   ;;
+            #
+            virgl|iglx)           ;;
+            *)
+                note "|Option --gpu=$Sharegpu is not supported with --runtime=$Runtime.
+                      |  You can try --gpu=iglx instead (--xorg only).
+                      |  Fallback: Disabling option --gpu."
                 #
-                virgl|iglx)           ;;
-                *)
-                    note "|Option --gpu=$Sharegpu is not supported with --runtime=$Runtime.
-                          |  You can try --gpu=iglx instead (--xorg only).
-                          |  Fallback: Disabling option --gpu."
-                    #
-                    check_fallback
-                    Sharegpu="no"
-                    ;;
-            esac
+                check_fallback
+                Sharegpu="no"
+                ;;
+        esac
     fi
 
   [ "$Runsonconsole" = "no" ] && [ "$Runsoverssh" = "no" ] && [ -z "$Hostdisplay$Hostwaylandsocket" ] && [ "$Xserver" != "--tty" ] && [ -z "$Winsubsystem" ] && {
