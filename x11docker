@@ -8356,7 +8356,7 @@ check_xserver() {
         esac
     fi
 
-  [ "$Runsonconsole" = "no" ] && [ "$Runsoverssh" = "no" ] && [ -z "$Hostdisplay$Hostwaylandsocket" ] && [ "$Xserver" != "--tty" ] && [ -z "$Winsubsystem" ] && {
+  if [ "$Runsonconsole" = "no" ] && [ "$Runsoverssh" = "no" ] && [ -z "$Hostdisplay$Hostwaylandsocket" ] && [ "$Xserver" != "--tty" ] && [ -z "$Winsubsystem" ] ; then
       warning_ttm \
           "|Environment variables DISPLAY and WAYLAND_DISPLAY are empty,
            |  but it looks like x11docker was started within X, not from console.
@@ -8369,15 +8369,20 @@ check_xserver() {
            |  Otherwise, you can use tools like gksu/gksudo/kdesu/kdesudo/lxsu/lxsudo."
       #
 
-      [ -n "${PKEXEC_UID:-}" ] && note_ttm \
+      if [ -n "${PKEXEC_UID:-}" ] ; then
+          note_ttm \
                                       "|It seems you have started x11docker with pkexec.
                                        |  Can not determine DISPLAY and XAUTHORITY, can not use your X server.
                                        |  To allow other X server options, please provide environment variables with
                                        |    pkexec env DISPLAY=\$DISPLAY XAUTHORITY=\$XAUTHORITY x11docker [ARGS]."
-      #
+          #
+      fi
 
-      [ "$Autochooseserver" = "yes" ] && Xserver="--xorg" && Xorgautochoice="yes"
-  }
+      if [ "$Autochooseserver" = "yes" ] ; then
+          Xserver="--xorg"
+          Xorgautochoice="yes"
+      fi
+  fi
 
 
 
