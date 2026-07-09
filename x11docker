@@ -8417,9 +8417,13 @@ check_xserver() {
   [ "$Xserver" = "--kwin" ]            && { check_xdepends --kwin            || Xserver="--weston" ; }
   [ "$Xserver" = "--hostwayland" ]     && { check_xdepends --hostwayland     || Xserver="--weston"  ; }
   #[ "$Xserver" = "--weston" ]          && { check_xdepends --weston          || Xserver="--kwin" ; }
-  [ "$Setupwayland" = "yes" ]          && { Autochooseserver="no" check_xdepends $Xserver || error "Failed to set up a Wayland environment.
-  Please install 'weston' or start x11docker
-  within a wayland environment." ; }
+
+  [ "$Setupwayland" = "yes" ]          && { Autochooseserver="no" check_xdepends $Xserver || error_ttm \
+                                                                                                 "|Failed to set up a Wayland environment.
+                                                                                                 |  Please install 'weston' or start x11docker
+                                                                                                 |  within a wayland environment."
+                                            #
+  }
 
   ## check if dependencies for chosen X server are installed, fall back to best alternatives if not
   [ "$Xserver" = "--xwin" ]            && { check_xdepends --xwin            || Xserver="--runx" ; }
