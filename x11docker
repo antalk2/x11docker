@@ -8548,8 +8548,9 @@ check_xserver() {
         fi
 
         if [ "$Runsonconsole" = "yes" ] ; then
-            if check_xdepends --weston-xwayland ; then  Xserver="--weston-xwayland" ; fi
-            if check_xdepends --xorg            ; then  Xserver="--xorg" ; fi
+            if   check_xdepends --xorg            ; then  Xserver="--xorg" 
+            elif check_xdepends --weston-xwayland ; then  Xserver="--weston-xwayland"
+            fi
         fi
 
         check_xdepends $Xserver || { Xserver="--xorg" && [ "$Autochooseserver" = "yes" ] && Xorgautochoice="yes" ; }
