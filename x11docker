@@ -8290,19 +8290,22 @@ check_xserver() {
         Gnomeversion="$(gnome-shell --version)"
         if [ "$Gnomeversion" ] && version_less_than "$Gnomeversion" "GNOME Shell 3.38" ; then
             if ! word_is_in "${Xserver:-EMPTY}" "--hostdisplay --xorg" ; then
-                    warning_ttm \
-                        "|You are running GNOME desktop in outdated version
-                         |  $Gnomeversion
-                         |  This might cause issues with host applications if using additional X servers.
-                         |  It is recommended to use another desktop environment or GNOME >= 3.38.
-                         |  Only --xorg or discouraged option --hostdisplay might work as expected."
-                    #
-                    if [ "$Autochooseserver" = "yes" ] ; then
-                        case "$Desktopmode" in
-                            "yes") Xserver="--xorg" && Xorgautochoice="yes" ;;
-                            "no")  Xserver="--hostdisplay" ;;
-                        esac
-                    fi
+                warning_ttm \
+                    "|You are running GNOME desktop in outdated version
+                     |  $Gnomeversion
+                     |  This might cause issues with host applications if using additional X servers.
+                     |  It is recommended to use another desktop environment or GNOME >= 3.38.
+                     |  Only --xorg or discouraged option --hostdisplay might work as expected."
+                #
+                if [ "$Autochooseserver" = "yes" ] ; then
+                    case "$Desktopmode" in
+                        "yes") Xserver="--xorg"
+                               Xorgautochoice="yes"
+                               ;;
+                        "no")  Xserver="--hostdisplay"
+                               ;;
+                    esac
+                fi
             fi
         fi
     fi
