@@ -8339,8 +8339,6 @@ check_xserver() {
     fi
 
     if word_is_in "${Runtime:-EMPTY}" "kata-runtime sysbox-runc" ; then
-        #case "$Runtime" in
-        #kata-runtime | sysbox-runc )
             case "$Sharegpu" in
                 yes) Sharegpu="iglx"  ;;
                 no)                   ;;
@@ -8355,8 +8353,6 @@ check_xserver() {
                     Sharegpu="no"
                     ;;
             esac
-            #            ;;
-            #    esac
     fi
 
   [ "$Runsonconsole" = "no" ] && [ "$Runsoverssh" = "no" ] && [ -z "$Hostdisplay$Hostwaylandsocket" ] && [ "$Xserver" != "--tty" ] && [ -z "$Winsubsystem" ] && {
