@@ -8442,37 +8442,37 @@ check_xserver() {
 
     ## check if dependencies for chosen X server are installed, fall back to best alternatives if not
     #
-    if   $XNF "--xwin"              ; then Xserver="--runx"                           ; fi
-    if   $XNF "--runx"              ; then Xserver="--satellite"                      ; fi
+    if   $XNF "--xwin"            ; then          Xserver="--runx"                           ; fi
+    if   $XNF "--runx"            ; then          Xserver="--satellite"                      ; fi
 
-    if   $XNF "--satellite"         ; then if word_is_in "${Sharegpu:-EMPTY}" "yes direct" ;
-                                           then Xserver="--xpra2-xwayland"
-                                           else Xserver="--xpra2"                     ; fi ; fi
+    if   $XNF "--satellite"       ; then if word_is_in "${Sharegpu:-EMPTY}" "yes direct" ;
+                                         then     Xserver="--xpra2-xwayland"
+                                         else     Xserver="--xpra2"                          ; fi ; fi
 
-    if   $XNF "--nxagent"           ; then if [ "$Desktopmode" = "yes" ] ;
-                                           then  Xserver="--xephyr"
-                                           else Xserver="--xpra2"                     ; fi ; fi
+    if   $XNF "--nxagent"         ; then if [ "$Desktopmode" = "yes" ] ;
+                                         then     Xserver="--xephyr"
+                                         else     Xserver="--xpra2"                          ; fi ; fi
 
-    if   $XNF "--xpra2"             ; then Xserver="--xpra"                           ; fi
-    if   $XNF "--xpra2-xwayland"    ; then Xserver="--xpra-xwayland"                  ; fi
+    if   $XNF "--xpra2"           ; then          Xserver="--xpra"                           ; fi
+    if   $XNF "--xpra2-xwayland"  ; then          Xserver="--xpra-xwayland"                  ; fi
 
-    # if $XNF "--nxagent"           ; then if [ "$Desktopmode" = "no" ] ;
-    #                                      then  Xserver="--hostdisplay"
-    #                                      else  Xserver="--xephyr"                   ; fi ; fi
+    # if $XNF "--nxagent"         ; then if [ "$Desktopmode" = "no" ] ;
+    #                                    then     Xserver="--hostdisplay"
+    #                                    else     Xserver="--xephyr"                         ; fi ; fi
 
-    if   $XNF "--xephyr"            ; then Xserver="--xpra2"                          ; fi
-    if   $XNF "--xpra2"             ; then Xserver="--xpra"                           ; fi
+    if   $XNF "--xephyr"          ; then          Xserver="--xpra2"                          ; fi
+    if   $XNF "--xpra2"           ; then          Xserver="--xpra"                           ; fi
 
-    if   $XNF "--xpra"              ; then if check_xdepends --nxagent
-                                           then  Xserver="--nxagent"
-                                           else  Xserver="--xephyr"                   ; fi ; fi
+    if   $XNF "--xpra"            ; then if check_xdepends --nxagent
+                                         then     Xserver="--nxagent"
+                                         else     Xserver="--xephyr"                         ; fi ; fi
 
-    if   $XNF "--xorg"              ; then Xserver="--weston-xwayland"                ; fi
-    if   $XNF "--xpra2-xwayland"    ; then Xserver="--xpra-xwayland"                  ; fi
-    if   $XNF "--xpra-xwayland"     ; then Xserver="--weston-xwayland"                ; fi
-    if   $XNF "--xwayland"          ; then Xserver="--weston-xwayland"                ; fi
-    if   $XNF "--kwin-xwayland"     ; then Xserver="--weston-xwayland"                ; fi
-    # if $XNF "--weston-xwayland"   ; then Xserver="--kwin-xwayland"                  ; fi
+    if   $XNF "--xorg"            ; then          Xserver="--weston-xwayland"                ; fi
+    if   $XNF "--xpra2-xwayland"  ; then          Xserver="--xpra-xwayland"                  ; fi
+    if   $XNF "--xpra-xwayland"   ; then          Xserver="--weston-xwayland"                ; fi
+    if   $XNF "--xwayland"        ; then          Xserver="--weston-xwayland"                ; fi
+    if   $XNF "--kwin-xwayland"   ; then          Xserver="--weston-xwayland"                ; fi
+    # if $XNF "--weston-xwayland" ; then          Xserver="--kwin-xwayland"                  ; fi
 
    # Xephyr as fallback for all options. Last fallback: Xorg
   check_xdepends $Xserver || Xserver="--xephyr"
