@@ -7594,7 +7594,7 @@ check_xdepends() {
 
     # --border
     [ "$Xpraborder" ] && {
-        case "$Xserver" in # Xserver_in_check_xdepends
+        case "${X_option_to_check}" in # Xserver_in_check_xdepends
             --xpra*) ;;
             *)
                 xdepends_message_ttm \
@@ -7607,7 +7607,7 @@ check_xdepends() {
 
     # --checkwindow
     [ -n "$Checkforopenwindow" ] && {
-        case "$Xserver" in # Xserver_in_check_xdepends
+        case "${X_option_to_check}" in # Xserver_in_check_xdepends
             --weston|--kwin|--hostwayland)
                 xdepends_message_ttm \
                     "|${X_option_to_check} does not support option --checkwindow."
@@ -7617,7 +7617,7 @@ check_xdepends() {
     }
 
     # --desktop
-    case "$Xserver" in # Xserver_in_check_xdepends
+    case "${X_option_to_check}" in # Xserver_in_check_xdepends
         --hostdisplay|--hostwayland|--satellite)
             [ "$Desktopmode" = "yes" ] && {
                 xdepends_message_ttm \
@@ -7628,7 +7628,7 @@ check_xdepends() {
     esac
 
     # --dpi
-    [ -n "$Dpi" ] && case "$Xserver" in # Xserver_in_check_xdepends
+    [ -n "$Dpi" ] && case "${X_option_to_check}" in # Xserver_in_check_xdepends
         --weston|--kwin|--hostwayland|--hostdisplay)
             xdepends_message_ttm \
                 "${X_option_to_check} does not support option --dpi."
@@ -7684,7 +7684,7 @@ check_xdepends() {
 
     # --rotate
     [ -n "$Rotation" ] && {
-        case "$Xserver" in # Xserver_in_check_xdepends
+        case "${X_option_to_check}" in # Xserver_in_check_xdepends
             --weston|--weston-xwayland|--xorg) ;;
             *)
                 xdepends_message_ttm \
@@ -7718,7 +7718,7 @@ check_xdepends() {
 
     # --output-count
     [ "$Outputcount" != "1" ] && {
-        case "$Xserver" in # Xserver_in_check_xdepends
+        case "${X_option_to_check}" in # Xserver_in_check_xdepends
             --weston|--kwin|--weston-xwayland|--kwin-xwayland|--xwin) ;;
             *)
                 xdepends_message_ttm \
@@ -7796,7 +7796,7 @@ check_xdepends() {
               |  $Wikipackagesimage"            ;
         then Return=1 ; fi
         #
-        case "$Xserver" in # Xserver_in_check_xdepends
+        case "${X_option_to_check}" in # Xserver_in_check_xdepends
             --weston|--kwin|--hostwayland)
                 xdepends_message_ttm \
                     "|Option ${X_option_to_check} does not support option --xeyes"
@@ -7813,7 +7813,7 @@ check_xdepends() {
               |  $Wikipackagesimage"   ;
         then Return=1 ; fi
         #
-        case "$Xserver" in # Xserver_in_check_xdepends
+        case "${X_option_to_check}" in # Xserver_in_check_xdepends
             --weston|--kwin|--hostwayland)
                 xdepends_message_ttm \
                     "Option ${X_option_to_check} does not support option --xlogo"
@@ -7831,7 +7831,7 @@ check_xdepends() {
               |  $Wikipackagesimage" ;
         then Return=1 ; fi
         #
-        case "$Xserver" in # Xserver_in_check_xdepends
+        case "${X_option_to_check}" in # Xserver_in_check_xdepends
             --weston|--kwin|--hostwayland|--satellite)
                 xdepends_message_ttm \
                     "|Option ${X_option_to_check} does not support option --xfishtank"
@@ -7855,7 +7855,7 @@ check_xdepends() {
                             grep -q socat <<< "$Xcontainertools" || {
                                  # Xserver_in_check_xdepends
                                 xdepends_message_ttm  \
-                                    "|${X_option_to_check} --xoverip $Xserver needs socat.
+                                    "|${X_option_to_check} --xoverip ${X_option_to_check} needs socat.
                                      :  Please update image x11docker/xserver."
                                 Return=1
                             }
@@ -7863,14 +7863,14 @@ check_xdepends() {
                         no)
                              # Xserver_in_check_xdepends
                             if ! check_command_xdepends "socat" \
-                                 "|${X_option_to_check} --xoverip $Xserver needs socat.
+                                 "|${X_option_to_check} --xoverip ${X_option_to_check} needs socat.
                                   |  $Wikipackagesimage" ;
                             then Return=1 ; fi
                             ;;
                     esac
                     #
                     # Xserver_in_check_xdepends
-                    [ "$Xserver" = "--hostdisplay" ] && {
+                    [ "${X_option_to_check}" = "--hostdisplay" ] && {
                         [ -n "$(cut -d: -f1 <<< "$Hostdisplay")" ] && {
                             [ "$Xoverip" = "socat" ] && {
                                 xdepends_message_ttm  \
