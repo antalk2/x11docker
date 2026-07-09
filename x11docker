@@ -8179,6 +8179,10 @@ check_xserver() {
             case "$Xserver" in
                 --hostwayland)                    Xserver="--satellite"       ;;
                 --weston|--weston-xwayland)       Xserver="--weston-xwayland" ;;
+                #
+                #  Q: The above two branches do not set Sharehostwayland="yes". Why?
+                #
+
                 "") case "$Desktopmode" in
                         yes)                      Xserver="--xwayland"        ;;
                         no)                       Xserver="--satellite"       ;;
