@@ -8174,8 +8174,8 @@ check_xserver() {
 
     # --xw
     if [ "$Xwogether" = "yes" ] ; then
-        case "$Hostwaylandsocket" in
-            "")
+        if [ -z "$Hostwaylandsocket" ] ; then
+                
                 case "$Xserver" in
                     ""|--hostwayland|--weston|--weston-xwayland)
                         Xserver="--weston-xwayland"
@@ -8191,8 +8191,7 @@ check_xserver() {
                         Setupwayland="yes"
                         ;;
                 esac
-                ;;
-            *)
+        else
                 case "$Xserver" in
                     "")
                         Sharehostwayland="yes"
@@ -8219,8 +8218,7 @@ check_xserver() {
                         Setupwayland="yes"
                         ;;
                 esac
-                ;;
-        esac
+        fi
     fi
 
     # --hostwayland
