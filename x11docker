@@ -8188,19 +8188,14 @@ check_xserver() {
             
         else # [ -n "$Hostwaylandsocket" ]
             case "$Xserver" in
-                --hostwayland)
-                    Xserver="--satellite"
-                    ;;
-                --weston|--weston-xwayland)
-                    Xserver="--weston-xwayland"
-                    ;;
-                "")
-                    Sharehostwayland="yes"
-                    case "$Desktopmode" in
-                        yes) Xserver="--xwayland"   ;;
-                        no)  Xserver="--satellite"  ;;
+                --hostwayland)                    Xserver="--satellite"                    ;;
+                --weston|--weston-xwayland)       Xserver="--weston-xwayland"              ;;
+                "") case "$Desktopmode" in
+                        yes)                      Xserver="--xwayland"   ;;
+                        no)                       Xserver="--satellite"  ;;
                         # Q: is there a third option here?
                     esac
+                    Sharehostwayland="yes"
                     ;;
                 *)
                     Sharehostwayland="yes"
