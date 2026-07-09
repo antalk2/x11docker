@@ -8547,10 +8547,11 @@ check_xserver() {
             esac
         fi
 
-        [ "$Runsonconsole" = "yes" ] && {
+        if [ "$Runsonconsole" = "yes" ] ; then
             check_xdepends --weston-xwayland && Xserver="--weston-xwayland"
             check_xdepends --xorg            && Xserver="--xorg"
-        }
+        fi
+
         check_xdepends $Xserver || { Xserver="--xorg" && [ "$Autochooseserver" = "yes" ] && Xorgautochoice="yes" ; }
     fi
 
