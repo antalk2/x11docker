@@ -8314,8 +8314,6 @@ check_xserver() {
     # Some first --gpu checks
     #
     if word_is_in "${Sharegpu:-EMPTY}" "yes direct" ; then
-        #    case "$Sharegpu" in
-        #        yes|direct)
             [ "$Nvidiaversion" ] && case "$Xserver" in
                 --xpra-xwayland|--xpra2-xwayland|--weston-xwayland|--xwayland|--satellite|--weston|--kwin|--kwin-xwayland|--hostwayland)
                     version_less_than "$Nvidiaversion" "470" && note_ttm \
@@ -8326,8 +8324,6 @@ check_xserver() {
                                                                      |  Using NVIDIA driver>=v470.x  and Xwayland>=v21.1.2 might work for $Xserver --gpu."
                     ;;
             esac
-            #    ;;
-            #  esac
     fi
 
   case "$Runtime" in
