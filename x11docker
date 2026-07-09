@@ -8279,8 +8279,7 @@ check_xserver() {
             fi
         elif [ -n "$Hostwaylandsocket" ] && word_is_in "${Sharegpu:-EMPTY}" "yes direct" ; then  Xserver="--satellite"
                                                                                                  #
-        elif [ "$Sharegpu" = "direct" ]                                ; then  Xserver="--xpra2-xwayland"
-        elif [ "$Sharegpu" = "yes" ]                                   ; then  Xserver="--xpra2-xwayland"
+        elif word_is_in "${Sharegpu:-EMPTY}" "yes direct"              ; then  Xserver="--xpra2-xwayland"
                                                                                #
         else                                                                   Xserver="--xpra2"
         fi
