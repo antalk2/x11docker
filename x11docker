@@ -8521,8 +8521,6 @@ check_xserver() {
     if [ "$Xserver" = "--xephyr" ] ; then
         if ! check_xdepends --xephyr ; then
             #
-            # Last setter wins.
-            #
             # Note: check_xdepends arg and Xserver differ here.
             #       Replaced Xserver references in check_xdepends with
             #       references to the arg, ${X_option_to_check}
@@ -8530,12 +8528,16 @@ check_xserver() {
             #       This makes (I hope) the following check_xdepends
             #       calls order independent.
             #
-            check_xdepends --hostdisplay     && [ "$Desktopmode" = "no" ] && Xserver="--hostdisplay"
-            check_xdepends --nxagent         && Xserver="--nxagent"
-            check_xdepends --weston-xwayland && Xserver="--weston-xwayland"
-            check_xdepends --runx            && Xserver="--runx"
-            check_xdepends --xpra            && Xserver="--xpra"
-            check_xdepends --xpra2           && Xserver="--xpra2"
+            if   check_xdepends --xpra2           ; then Xserver="--xpra2"
+            elif check_xdepends --xpra            ; then Xserver="--xpra"
+            elif check_xdepends --runx            ; then Xserver="--runx"
+            elif check_xdepends --weston-xwayland ; then Xserver="--weston-xwayland"
+            elif check_xdepends --nxagent         ; then Xserver="--nxagent"
+            elif check_xdepends --hostdisplay  && [ "$Desktopmode" = "no" ] ; then Xserver="--hostdisplay"
+            else
+                : # Ran out of options
+            fi
+            #
         fi
 
         if word_is_in "${Sharegpu:-EMPTY}" "yes direct" ; then
