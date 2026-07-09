@@ -1961,8 +1961,8 @@ check_envvar() {
 
 # Group: check_parent_sshd
 
-# Function: find_first_print_second
-# Usage:  cat "$file" | find_first_print_second query
+# Function: find_in_first_print_second
+# Usage:  cat "$file" | find_in_first_print_second query
 #
 # stdin: A file with at least two whitespace-separated columns.
 #         Whitespace before the first column is ignored.
@@ -1975,11 +1975,11 @@ check_envvar() {
 #
 # Used-by: get_ppid, check_parent_sshd
 #
-find_first_print_second() {
+find_in_first_print_second() {
     local query="${1:-}"
     # Extra quotes to around query, to force it to be interpreted as a
     # string and not vary with the value of the first field. 
-    awk --posix ' BEGIN { QUERY="'"${query}"'" ; } ; $1 == QUERY { print $2 } '
+    awk ' BEGIN { QUERY="'"${query}"'" ; } ; $1 == QUERY { print $2 } '
 }
 
 
@@ -2006,13 +2006,38 @@ get_ppid() {
     local pid_to_check="${1:-}"
     local res=''
     #
-    if [ -z "${pid_to_check}" ] ||  ! isint "${pid_to_check}"  ; then
+    if [ -z "${pid_to_check}" ] || ! isint "${pid_to_check}"  ; then
         error "get_ppid(): The argument '${pid_to_check}' is not an integer"
         return 2
     fi
-    res="$( $Myps ax -o pid,ppid                  \
-           | find_first_print_second "${pid_to_check}"
-         )"
+    #
+    # POSIX
+    #   https://pubs.opengroup.org/onlinepubs/9799919799/utilities/ps.html
+    #   Open Group Base Specifications Issue 8, 2024
+    #
+    #  ps
+    #
+    #   -p proclist : Write information for processes whose process ID
+    #      numbers are given in proclist. [...]  the proclist is a
+    #      single argument in the form of a <blank> or <comma>-separated
+    #      list.
+    #
+    #   -o format : Write information according to the format
+    #      specification given in format.
+    #
+    #      ppid=  : write ppid, with no header
+    #
+    #  awk '{ print $1 }' : remove  whitespace before number
+    #
+    #  However, busybox ps does not support the -p ppid option.
+    #
+    # res="$( $Myps -p "${pid_to_check}" -o ppid=  2>/dev/null | awk '{ print $1 }' )"
+    #
+    # busybox ps
+    res="$( $Myps ax -o pid,ppid                         \
+          | find_in_first_print_second "${pid_to_check}"
+          )"
+    #
     if [ -z "$res" ] ; then
         return 1
     else
@@ -2041,23 +2066,36 @@ check_parent_sshd() {
     if [ -z "$pid" ] ; then
         error "check_parent_sshd(): argument pid is empty"
     fi
+    #
     while [ ! -z "$pid" ] ; do
         ppid="$( get_ppid "${pid}" )"
-        if [ -z "$ppid" ] ; then
-            error "check_parent_sshd(): Could not get ppid for pid '${pid}'"
-        fi
-        if [ "$ppid"  = "1" ] ||  [ "$ppid"  = "0" ] ; then
-            # reached init or the end of the parent chain
-            return 1 # Not running under sshd
-        fi
-        if $Myps ax -o pid,comm                     \
-                | find_first_print_second "${ppid}" \
-                | grep -Fx -q "sshd"                ;
-        then
-            return 0 # found sshd in the parent chain
-        else
-            pid="$ppid"
-        fi
+        case  "$ppid" in
+            "")
+                error "check_parent_sshd(): Could not get ppid for pid '${pid}'"
+                ;;
+            0|1)
+                # reached the end of the parent chain
+                return 1 # Not running under sshd
+                ;;
+            [0-9]*)
+                # POSIX ps
+                #  if $Myps -p "$ppid" -o comm=               \
+                #          | grep -w -F -q  "sshd"            ;
+                #
+                # busybox ps
+                if $Myps ax -o pid,comm                           \
+                        | find_in_first_print_second "${ppid}"    \
+                        | grep -w -F -q  "sshd"                   ;
+                then
+                    return 0 # found sshd in the parent chain
+                else
+                    pid="$ppid"
+                fi
+                ;;
+            *)
+                error "check_parent_sshd(): unexpected ppid '$ppid'"
+                ;;
+        esac
     done
 }
 
