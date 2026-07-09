@@ -7203,6 +7203,11 @@ check_xcontainer() {
 #
 check_xdepends() {
     #
+    # # Xserver_in_check_xdepends marks locations where
+    #  originally $Xserver appeared, but repleced with ${X_option_to_check}
+    #  In messages, where two ${X_option_to_check} appears now, the
+    #  second one was the $Xserver.
+    #
     local X_option_to_check="${1:-}"
     #
     local Return=""
