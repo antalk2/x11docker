@@ -8542,8 +8542,8 @@ check_xserver() {
 
         if word_is_in "${Sharegpu:-EMPTY}" "yes direct" ; then
             case "$Desktopmode" in
-                yes) check_xdepends --weston-xwayland && Xserver="--weston-xwayland" ;;
-                no)  check_xdepends --hostdisplay     && Xserver="--hostdisplay" ;;
+                yes) if check_xdepends --weston-xwayland ; then  Xserver="--weston-xwayland" ; fi ;;
+                no)  if check_xdepends --hostdisplay     ; then  Xserver="--hostdisplay"     ; fi ;;
             esac
         fi
 
