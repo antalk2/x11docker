@@ -8561,7 +8561,7 @@ check_xserver() {
         fi
     fi
 
-    Autochooseserver="no" check_xdepends $Xserver || {
+    if ! { Autochooseserver="no" check_xdepends $Xserver } ; then
         case "$Winsubsystem" in
             "")
                 error_ttm \
@@ -8603,7 +8603,7 @@ check_xserver() {
                 }
                 ;;
         esac
-    }
+    fi
 
   [ "$Xorgautochoice" = "yes" ] && [ "$Runsonconsole" = "no" ] && [ -z "$Newxvt" ] && error "Option --xorg was chosen automatically
   as the best one fitting your specified options and installed dependencies.
