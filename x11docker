@@ -8440,7 +8440,16 @@ check_xserver() {
         #
     fi
 
-    ## check if dependencies for chosen X server are installed, fall back to best alternatives if not
+    ##
+    ## Check if dependencies for chosen X server are installed, fall
+    ## back to best alternatives if not
+    ##
+    ## Bottoms: potential Xserver values if all XNF tests fail
+    ##
+
+    #
+    # Chain1: --xwin  --runx  --satellite ( --xpra2-xwayland  or --xpra2  )
+    # Bottoms:  --xpra2-xwayland   --xpra2
     #
     if   $XNF "--xwin"            ; then          Xserver="--runx"                           ; fi
     if   $XNF "--runx"            ; then          Xserver="--satellite"                      ; fi
@@ -8449,10 +8458,17 @@ check_xserver() {
                                          then     Xserver="--xpra2-xwayland"
                                          else     Xserver="--xpra2"                          ; fi ; fi
 
+    # Chain2: --nxagent ( --xephyr or --xpra2 )
+    # Bottoms:  --xpra2-xwayland   --xpra2 --xephyr
+    #
     if   $XNF "--nxagent"         ; then if [ "$Desktopmode" = "yes" ] ;
                                          then     Xserver="--xephyr"
                                          else     Xserver="--xpra2"                          ; fi ; fi
 
+    # Chain3: --xpra2          --xpra
+    # Chain4: --xpra2-xwayland --xpra-xwayland
+    # Bottoms:  --xpra-xwayland   --xpra --xephyr
+    #
     if   $XNF "--xpra2"           ; then          Xserver="--xpra"                           ; fi
     if   $XNF "--xpra2-xwayland"  ; then          Xserver="--xpra-xwayland"                  ; fi
 
@@ -8460,6 +8476,11 @@ check_xserver() {
     #                                    then     Xserver="--hostdisplay"
     #                                    else     Xserver="--xephyr"                         ; fi ; fi
 
+    # Chain5: --xephyr --xpra2 --xpra ( --nxagent or --xephyr )
+    #      Loop1: Chain5 ( --xephyr --xpra2 --xpra --xephyr )
+    #
+    # Bottoms:  --xpra-xwayland   --xephyr
+    #
     if   $XNF "--xephyr"          ; then          Xserver="--xpra2"                          ; fi
     if   $XNF "--xpra2"           ; then          Xserver="--xpra"                           ; fi
 
@@ -8467,16 +8488,29 @@ check_xserver() {
                                          then     Xserver="--nxagent"
                                          else     Xserver="--xephyr"                         ; fi ; fi
 
+    # Chain6: --xorg --weston-xwayland
+    # Bottoms:  --xpra-xwayland   --xephyr --weston-xwayland
+    #
     if   $XNF "--xorg"            ; then          Xserver="--weston-xwayland"                ; fi
+
+    # Chain7: --xpra2-xwayland --xpra-xwayland --weston-xwayland
+    # Bottoms:   --xephyr --weston-xwayland
+    #
     if   $XNF "--xpra2-xwayland"  ; then          Xserver="--xpra-xwayland"                  ; fi
     if   $XNF "--xpra-xwayland"   ; then          Xserver="--weston-xwayland"                ; fi
     if   $XNF "--xwayland"        ; then          Xserver="--weston-xwayland"                ; fi
+
+    # Chain8: --kwin-xwayland --weston-xwayland
+    # Bottoms:   --xephyr --weston-xwayland
     if   $XNF "--kwin-xwayland"   ; then          Xserver="--weston-xwayland"                ; fi
+
     # if $XNF "--weston-xwayland" ; then          Xserver="--kwin-xwayland"                  ; fi
 
-   # Xephyr as fallback for all options. Last fallback: Xorg
-  check_xdepends $Xserver || Xserver="--xephyr"
-  [ "$Xserver" = "--xephyr" ] && {          check_xdepends --xephyr || {
+
+    # Xephyr as fallback for all options. Last fallback: Xorg
+    if ! check_xdepends $Xserver ; then  Xserver="--xephyr" ; fi
+
+    [ "$Xserver" = "--xephyr" ] && {          check_xdepends --xephyr || {
                                               check_xdepends --hostdisplay     && [ "$Desktopmode" = "no" ] && Xserver="--hostdisplay"
                                               check_xdepends --nxagent         && Xserver="--nxagent"
                                               check_xdepends --weston-xwayland && Xserver="--weston-xwayland"
