@@ -8553,7 +8553,13 @@ check_xserver() {
             #
         fi
 
-        if ! check_xdepends $Xserver ; then  { Xserver="--xorg" && [ "$Autochooseserver" = "yes" ] && Xorgautochoice="yes" ; } ; fi
+        ## Last fallback: --xorg
+        if ! check_xdepends $Xserver ; then
+            Xserver="--xorg"
+            if [ "$Autochooseserver" = "yes" ] ; then
+                Xorgautochoice="yes"
+            fi
+        fi
     fi
 
   Autochooseserver="no" check_xdepends $Xserver || {
