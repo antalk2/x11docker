@@ -8519,7 +8519,19 @@ check_xserver() {
     if ! check_xdepends $Xserver ; then  Xserver="--xephyr" ; fi
 
     if [ "$Xserver" = "--xephyr" ] ; then
-        if ! check_xdepends --xephyr ; then
+
+        if [ "$Runsonconsole" = "yes" ] ; then
+            if   check_xdepends --xorg            ; then  Xserver="--xorg" 
+            elif check_xdepends --weston-xwayland ; then  Xserver="--weston-xwayland"
+            else
+                : # Ran out of options
+            fi
+        elif word_is_in "${Sharegpu:-EMPTY}" "yes direct" ; then
+            case "$Desktopmode" in
+                yes) if check_xdepends --weston-xwayland ; then  Xserver="--weston-xwayland" ; fi ;;
+                no)  if check_xdepends --hostdisplay     ; then  Xserver="--hostdisplay"     ; fi ;;
+            esac
+        elif ! check_xdepends --xephyr ; then
             #
             # Note: check_xdepends arg and Xserver differ here.
             #       Replaced Xserver references in check_xdepends with
@@ -8528,6 +8540,7 @@ check_xserver() {
             #       This makes (I hope) the following check_xdepends
             #       calls order independent.
             #
+
             if   check_xdepends --xpra2           ; then Xserver="--xpra2"
             elif check_xdepends --xpra            ; then Xserver="--xpra"
             elif check_xdepends --runx            ; then Xserver="--runx"
@@ -8539,18 +8552,6 @@ check_xserver() {
             fi
             #
         fi
-
-        if [ "$Runsonconsole" = "yes" ] ; then
-            if   check_xdepends --xorg            ; then  Xserver="--xorg" 
-            elif check_xdepends --weston-xwayland ; then  Xserver="--weston-xwayland"
-            fi
-        elif word_is_in "${Sharegpu:-EMPTY}" "yes direct" ; then
-            case "$Desktopmode" in
-                yes) if check_xdepends --weston-xwayland ; then  Xserver="--weston-xwayland" ; fi ;;
-                no)  if check_xdepends --hostdisplay     ; then  Xserver="--hostdisplay"     ; fi ;;
-            esac
-        fi
-
 
         check_xdepends $Xserver || { Xserver="--xorg" && [ "$Autochooseserver" = "yes" ] && Xorgautochoice="yes" ; }
     fi
