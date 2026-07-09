@@ -8262,6 +8262,10 @@ check_xserver() {
             then Xserver="--hostwayland"
             else Xserver="--weston"     ;
             fi
+        elif [ "$Winsubsystem" = "CYGWIN" ] ; then
+            Xserver="--xwin"
+        elif [ "$Winsubsystem" ] && [ -z "$DISPLAY" ] ; then
+                Xserver="--runx"
         else
 
             Xserver="--xpra2"
@@ -8302,13 +8306,6 @@ check_xserver() {
                 Xserver="--weston-xwayland"
             fi
             
-            if [ "$Winsubsystem" ] && [ -z "$DISPLAY" ] ; then
-                Xserver="--runx"
-            fi
-            
-            if [ "$Winsubsystem" = "CYGWIN" ] ; then
-                Xserver="--xwin"
-            fi
         
         fi
         
