@@ -8357,24 +8357,31 @@ check_xserver() {
     fi
 
   [ "$Runsonconsole" = "no" ] && [ "$Runsoverssh" = "no" ] && [ -z "$Hostdisplay$Hostwaylandsocket" ] && [ "$Xserver" != "--tty" ] && [ -z "$Winsubsystem" ] && {
-    warning "Environment variables DISPLAY and WAYLAND_DISPLAY are empty,
-  but it looks like x11docker was started within X, not from console.
-  Please set DISPLAY and XAUTHORITY.
-  If you have started x11docker with su or sudo, su/sudo may be configured to
-  unset X environment variables. It may work if you run x11docker with
-    sudo -E x11docker [...]
-  If your system does not support 'sudo -E', you can try
-    sudo env DISPLAY=\$DISPLAY XAUTHORITY=\$XAUTHORITY x11docker [...]
-  Otherwise, you can use tools like gksu/gksudo/kdesu/kdesudo/lxsu/lxsudo."
+      warning_ttm \
+          "|Environment variables DISPLAY and WAYLAND_DISPLAY are empty,
+           |  but it looks like x11docker was started within X, not from console.
+           |  Please set DISPLAY and XAUTHORITY.
+           |  If you have started x11docker with su or sudo, su/sudo may be configured to
+           |  unset X environment variables. It may work if you run x11docker with
+           |    sudo -E x11docker [...]
+           |  If your system does not support 'sudo -E', you can try
+           |    sudo env DISPLAY=\$DISPLAY XAUTHORITY=\$XAUTHORITY x11docker [...]
+           |  Otherwise, you can use tools like gksu/gksudo/kdesu/kdesudo/lxsu/lxsudo."
+      #
 
-    [ -n "${PKEXEC_UID:-}" ] && note "It seems you have started x11docker with pkexec.
-  Can not determine DISPLAY and XAUTHORITY, can not use your X server.
-  To allow other X server options, please provide environment variables with
-    pkexec env DISPLAY=\$DISPLAY XAUTHORITY=\$XAUTHORITY x11docker [ARGS]."
+      [ -n "${PKEXEC_UID:-}" ] && note_ttm \
+                                      "|It seems you have started x11docker with pkexec.
+                                       |  Can not determine DISPLAY and XAUTHORITY, can not use your X server.
+                                       |  To allow other X server options, please provide environment variables with
+                                       |    pkexec env DISPLAY=\$DISPLAY XAUTHORITY=\$XAUTHORITY x11docker [ARGS]."
+      #
 
-    [ "$Autochooseserver" = "yes" ] && Xserver="--xorg" && Xorgautochoice="yes"
+      [ "$Autochooseserver" = "yes" ] && Xserver="--xorg" && Xorgautochoice="yes"
   }
 
+
+
+  
   [ "$Runsoverssh" = "yes" ] && [ -z "$Hostdisplay$Hostwaylandsocket" ] && [ "$Xserver" != "--tty" ] && {
     note "You are running x11docker over SSH without providing a display.
   DISPLAY and WAYLAND_DISPLAY are empty. 
