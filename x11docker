@@ -8257,6 +8257,12 @@ check_xserver() {
         # Last setter wins.
         # I will try to reorder.
         #
+        if [ "$Setupwayland" = "yes" ] ; then
+            if [ -n "$Hostwaylandsocket" ] && [ "$Desktopmode" = "no" ]  ;
+            then Xserver="--hostwayland"
+            else Xserver="--weston"     ;
+            fi
+        else
 
         Xserver="--xpra2"
         if [ "$Sharegpu" = "yes" ]     ; then  Xserver="--xpra2-xwayland" ; fi
@@ -8281,14 +8287,6 @@ check_xserver() {
             #
         fi
         
-
-        ## --------
-        
-       
-        
-        
-        
-
         ############
         if [ "$Outputcount" != "1" ]                                  ; then  Xserver="--weston-xwayland" ; fi
         if [ -n "$Rotation" ]                                         ; then  Xserver="--weston-xwayland" ; fi
@@ -8312,11 +8310,7 @@ check_xserver() {
             Xserver="--xwin"
         fi
         
-        if [ "$Setupwayland" = "yes" ] ; then
-            if [ -n "$Hostwaylandsocket" ] && [ "$Desktopmode" = "no" ]  ;
-            then Xserver="--hostwayland"
-            else Xserver="--weston"     ;
-            fi
+        fi
         
         #        #
         #        # The reordered version.
