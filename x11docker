@@ -8278,9 +8278,11 @@ check_xserver() {
             else                                                        Xserver="--xephyr"
             fi
             #
-        elif [ -n "$Hostwaylandsocket" ] && [ "$Sharegpu" = "direct" ]; then  Xserver="--satellite"
-        elif [ -n "$Hostwaylandsocket" ] && [ "$Sharegpu" = "yes" ]   ; then  Xserver="--satellite"
-                                                                               
+        elif [ -n "$Hostwaylandsocket" ] ; then
+            if [ "$Sharegpu" = "direct" ]; then  Xserver="--satellite" ; fi
+        elif [ -n "$Hostwaylandsocket" ] ; then
+            if [ "$Sharegpu" = "yes" ]   ; then  Xserver="--satellite" ; fi
+            #
         elif [ "$Sharegpu" = "direct" ]                                ; then  Xserver="--xpra2-xwayland"
         elif [ "$Sharegpu" = "yes" ]                                   ; then  Xserver="--xpra2-xwayland"
         else                                                                   Xserver="--xpra2"
