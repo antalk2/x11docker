@@ -8338,24 +8338,25 @@ check_xserver() {
         esac
     fi
 
-  case "$Runtime" in
-    kata-runtime|sysbox-runc)
-      case "$Sharegpu" in
-        yes)
-          Sharegpu="iglx"
-        ;;
-        no) ;;
-        virgl|iglx) ;;
-        *) 
-          note "Option --gpu=$Sharegpu is not supported with --runtime=$Runtime.
-  You can try --gpu=iglx instead (--xorg only).
-  Fallback: Disabling option --gpu."
-          check_fallback
-          Sharegpu="no"
-        ;;
-      esac
-    ;;
-  esac
+    case "$Runtime" in
+        kata-runtime|sysbox-runc)
+            case "$Sharegpu" in
+                yes)
+                    Sharegpu="iglx"
+                    ;;
+                no) ;;
+                virgl|iglx) ;;
+                *) 
+                    note "|Option --gpu=$Sharegpu is not supported with --runtime=$Runtime.
+                          |  You can try --gpu=iglx instead (--xorg only).
+                          |  Fallback: Disabling option --gpu."
+                    #
+                    check_fallback
+                    Sharegpu="no"
+                    ;;
+            esac
+            ;;
+    esac
 
   [ "$Runsonconsole" = "no" ] && [ "$Runsoverssh" = "no" ] && [ -z "$Hostdisplay$Hostwaylandsocket" ] && [ "$Xserver" != "--tty" ] && [ -z "$Winsubsystem" ] && {
     warning "Environment variables DISPLAY and WAYLAND_DISPLAY are empty,
