@@ -8166,105 +8166,149 @@ check_xpraoption() {
     return 0
 }
 
-check_xserver() {               # check chosen X server, auto-choose X server
-  local Xorgautochoice=
+# Function: check_xserver
+# Brief: Check chosen X server, auto-choose X server
+#
+check_xserver() {
+    local Xorgautochoice=""
 
-  # --xw
-  if [ "$Xwogether" = "yes" ] ; then
-    case "$Hostwaylandsocket" in
-      "")
-        case "$Xserver" in
-          ""|--hostwayland|--weston|--weston-xwayland)
-            Xserver="--weston-xwayland"
-            Setupwayland="yes"
-          ;;
-          *)
-            note "Option --xw: Option '$Xserver' provides
-  no possibility to also run a Wayland environment.
-  This could work only within a Wayland compositor.
-  Fallback: Using option --weston-xwayland."
-            check_fallback
-            Xserver="--weston-xwayland"
-            Setupwayland="yes"
-          ;;
+    # --xw
+    if [ "$Xwogether" = "yes" ] ; then
+        case "$Hostwaylandsocket" in
+            "")
+                case "$Xserver" in
+                    ""|--hostwayland|--weston|--weston-xwayland)
+                        Xserver="--weston-xwayland"
+                        Setupwayland="yes"
+                        ;;
+                    *)
+                        note_ttm "|Option --xw: Option '$Xserver' provides
+                                  |  no possibility to also run a Wayland environment.
+                                  |  This could work only within a Wayland compositor.
+                                  |  Fallback: Using option --weston-xwayland."
+                        check_fallback
+                        Xserver="--weston-xwayland"
+                        Setupwayland="yes"
+                        ;;
+                esac
+                ;;
+            *)
+                case "$Xserver" in
+                    "")
+                        Sharehostwayland="yes"
+                        Setupwayland="yes"
+                        case "$Desktopmode" in
+                            yes)
+                                Xserver="--xwayland"
+                                ;;
+                            no)
+                                Xserver="--satellite"
+                                ;;
+                        esac
+                        ;;
+                    --weston|--weston-xwayland)
+                        Xserver="--weston-xwayland"
+                        Setupwayland="yes"
+                        ;;
+                    --hostwayland)
+                        Xserver="--satellite"
+                        Setupwayland="yes"
+                        ;;
+                    *)
+                        Sharehostwayland="yes"
+                        Setupwayland="yes"
+                        ;;
+                esac
+                ;;
         esac
-      ;;
-      *)
-        case "$Xserver" in
-          "")
-            Sharehostwayland="yes"
-            Setupwayland="yes"
-            case "$Desktopmode" in
-              yes)
-                Xserver="--xwayland"
-              ;;
-              no)
-                Xserver="--satellite"
-              ;;
-            esac
-          ;;
-          --weston|--weston-xwayland)
-            Xserver="--weston-xwayland"
-            Setupwayland="yes"
-          ;;
-          --hostwayland)
+    fi
+
+    # --hostwayland
+    if [ "$Sharehostwayland" = "yes" ] ; then
+        if [ -z "$Xserver" ] ; then
+            Xserver="--hostwayland"
+        fi
+        case "$Hostwaylandsocket" in
+            "") 
+                Sharehostwayland="no"
+                case "$Xserver" in
+                    --hostwayland) ;;
+                    *)
+                        note_ttm "|Option --hostwayland: WAYLAND_DISPLAY is not set.
+                                  |  Fallback: Disabling option --hostwayland."
+                        check_fallback
+                        ;;
+                esac
+                ;;
+            *)
+                Setupwayland="yes"
+                ;;
+        esac
+    fi
+
+    if [ -n "$Xserver" ] ; then Autochooseserver="no" ; fi
+    
+    # default option '--auto': Try to automatically choose best
+    #                           matching and available X server
+    
+    if [ "$Autochooseserver" = "yes" ] ; then
+        #
+        # Last setter wins.
+        # I will try to reorder.
+        #
+
+        Xserver="--xpra2"
+        if [ "$Sharegpu" = "yes" ]     ; then  Xserver="--xpra2-xwayland" ; fi
+        if [ "$Sharegpu" = "direct" ]  ; then  Xserver="--xpra2-xwayland" ; fi
+        
+        if [ "$Sharegpu" = "yes" ]    && [ -n "$Hostwaylandsocket" ] ; then  Xserver="--satellite" ; fi
+        if [ "$Sharegpu" = "direct" ] && [ -n "$Hostwaylandsocket" ] ; then  Xserver="--satellite" ; fi
+        
+        if [ "$Xfishtank" = "yes" ]    ; then  Xserver="--xephyr" ; fi
+        if [ "$Desktopmode" = "yes"  ] ; then  Xserver="--xephyr" ; fi
+        
+        if [ "$Xpraborder" ] ; then
+            Xserver="--xpra2"
+        fi
+        
+        if [ "$Xserver" = "--xephyr" ] ; then
+            ### FIXME: don't use check_xdepends() here
+            check_xdepends --xephyr || Xserver="--xpra2"
+        fi
+        
+        if [ "$Sharegpu" = "yes" ]     && [ "$Xserver" = "--xephyr" ] ; then  Xserver="--weston-xwayland" ; fi
+        if [ "$Sharegpu" = "direct" ]  && [ "$Xserver" = "--xephyr" ] ; then  Xserver="--weston-xwayland" ; fi
+        if [ "$Outputcount" != "1" ]                                  ; then  Xserver="--weston-xwayland" ; fi
+        if [ -n "$Rotation" ]                                         ; then  Xserver="--weston-xwayland" ; fi
+        
+        if [ "$Runsonconsole" = "yes" ] ; then Xserver="--xorg"  ; fi
+        if [ -n "$Newxvt" ]             ; then  Xserver="--xorg" ; fi
+        
+        if [ -z "$Hostdisplay" ] && [ -n "$Hostwaylandsocket" ] ; then
             Xserver="--satellite"
-            Setupwayland="yes"
-          ;;
-          *)
-            Sharehostwayland="yes"
-            Setupwayland="yes"
-          ;;
-        esac
-      ;;
-    esac
-  fi
+        fi
+        
+        if [ -z "$Hostdisplay" ] && [ -n "$Hostwaylandsocket" ]  && [ "$Desktopmode" = "yes"  ] ; then
+            Xserver="--weston-xwayland"
+        fi
+        
+        if [ "$Winsubsystem" ] && [ -z "$DISPLAY" ] ; then
+            Xserver="--runx"
+        fi
+        
+        if [ "$Winsubsystem" = "CYGWIN" ] ; then
+            Xserver="--xwin"
+        fi
+        
+        if [ "$Setupwayland" = "yes" ] ; then
+            if [ -n "$Hostwaylandsocket" ] && [ "$Desktopmode" = "no" ]  ;
+            then Xserver="--hostwayland"
+            else Xserver="--weston"     ; fi
+        fi
 
-  # --hostwayland
-  [ "$Sharehostwayland" = "yes" ] && {
-    [ -z "$Xserver" ] && Xserver="--hostwayland"
-    case "$Hostwaylandsocket" in
-      "") 
-        Sharehostwayland="no"
-        case "$Xserver" in
-          --hostwayland) ;;
-          *)
-            note "Option --hostwayland: WAYLAND_DISPLAY is not set.
-  Fallback: Disabling option --hostwayland."
-            check_fallback
-          ;;
-        esac
-      ;;
-      *)
-        Setupwayland="yes"
-      ;;
-    esac
-  }
+    fi # Autochooseserver
 
-  [ -n "$Xserver" ] && Autochooseserver="no"
-  ## default option '--auto': Try to automatically choose best matching and available X server
-  [ "$Autochooseserver" = "yes" ] && {                              Xserver="--xpra2"
-    [ "$Sharegpu" = "yes" ]                                      && Xserver="--xpra2-xwayland"
-    [ "$Sharegpu" = "direct" ]                                   && Xserver="--xpra2-xwayland"
-    [ "$Sharegpu" = "yes" ]    && [ -n "$Hostwaylandsocket" ]    && Xserver="--satellite"
-    [ "$Sharegpu" = "direct" ] && [ -n "$Hostwaylandsocket" ]    && Xserver="--satellite"
-    [ "$Xfishtank" = "yes" ]                                     && Xserver="--xephyr"
-    [ "$Desktopmode" = "yes"  ]                                  && Xserver="--xephyr"
-    [ "$Xpraborder" ]                                            && Xserver="--xpra2"
-    [ "$Xserver" = "--xephyr" ] && { check_xdepends --xephyr     || Xserver="--xpra2" ; }  ### FIXME: don't use check_xdepends() here
-    [ "$Sharegpu" = "yes" ]     && [ "$Xserver" = "--xephyr" ]   && Xserver="--weston-xwayland"
-    [ "$Sharegpu" = "direct" ]  && [ "$Xserver" = "--xephyr" ]   && Xserver="--weston-xwayland"
-    [ "$Outputcount" != "1" ]                                    && Xserver="--weston-xwayland"
-    [ -n "$Rotation" ]                                           && Xserver="--weston-xwayland"
-    [ "$Runsonconsole" = "yes" ]                                 && Xserver="--xorg"
-    [ -n "$Newxvt" ]                                             && Xserver="--xorg"
-    [ -z "$Hostdisplay" ]       && [ -n "$Hostwaylandsocket" ]   && Xserver="--satellite"
-    [ -z "$Hostdisplay" ]       && [ -n "$Hostwaylandsocket" ]   && [ "$Desktopmode" = "yes"  ]  && Xserver="--weston-xwayland"
-    [ "$Winsubsystem" ]         && [ -z "$DISPLAY" ]             && Xserver="--runx"
-    [ "$Winsubsystem" = "CYGWIN" ]                               && Xserver="--xwin"
-    [ "$Setupwayland" = "yes" ] && { [ -n "$Hostwaylandsocket" ] && [ "$Desktopmode" = "no" ]    && Xserver="--hostwayland" || Xserver="--weston" ; }
-  }
-  [ "$Printcheck" = "yes" ] && note "--printcheck: Starting checks with $Xserver"
+    [ "$Printcheck" = "yes" ] && note "--printcheck: Starting checks with $Xserver"
 
   [ "$Autochooseserver" = "no" ] && [ "$Xserver" = "--xorg" ] && Newxvt="${Newxvt:-auto}"
 
