@@ -8246,12 +8246,15 @@ check_xserver() {
         esac
     fi
 
-    if [ -n "$Xserver" ] ; then Autochooseserver="no" ; fi
-    
-    # default option '--auto': Try to automatically choose best
-    #                           matching and available X server
+    if [ -n "$Xserver" ] ; then
+        Autochooseserver="no"
+    fi
     
     if [ "$Autochooseserver" = "yes" ] ; then
+        # default option '--auto': Try to automatically choose best
+        #                           matching and available X server
+        #
+        # Note: at this point, Xserver is empty
 
         #
         if [ "$Setupwayland" = "yes" ] ; then
