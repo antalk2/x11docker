@@ -8264,51 +8264,51 @@ check_xserver() {
             fi
         else
 
-        Xserver="--xpra2"
-        if [ "$Sharegpu" = "yes" ]     ; then  Xserver="--xpra2-xwayland" ; fi
-        if [ "$Sharegpu" = "direct" ]  ; then  Xserver="--xpra2-xwayland" ; fi
-        
-        if [ "$Sharegpu" = "yes" ]    && [ -n "$Hostwaylandsocket" ] ; then  Xserver="--satellite" ; fi
-        if [ "$Sharegpu" = "direct" ] && [ -n "$Hostwaylandsocket" ] ; then  Xserver="--satellite" ; fi
+            Xserver="--xpra2"
+            if [ "$Sharegpu" = "yes" ]     ; then  Xserver="--xpra2-xwayland" ; fi
+            if [ "$Sharegpu" = "direct" ]  ; then  Xserver="--xpra2-xwayland" ; fi
+            
+            if [ "$Sharegpu" = "yes" ]    && [ -n "$Hostwaylandsocket" ] ; then  Xserver="--satellite" ; fi
+            if [ "$Sharegpu" = "direct" ] && [ -n "$Hostwaylandsocket" ] ; then  Xserver="--satellite" ; fi
 
-        ############
-        
-        if [ "$Xpraborder" ]                                            ; then
-            Xserver="--xpra2" ;
-        elif [ "$Xfishtank"   = "yes"  ] || [ "$Desktopmode" = "yes"  ] ; then
-            #
-            if ! check_xdepends --xephyr ; then ### FIXME: don't use check_xdepends() here
+            ############
+            
+            if [ "$Xpraborder" ]                                            ; then
                 Xserver="--xpra2" ;
-            elif word_is_in "${Sharegpu:-EMPTY}" "yes direct"   ;  then
-                Xserver="--weston-xwayland" ;
-            else
-                Xserver="--xephyr"
+            elif [ "$Xfishtank"   = "yes"  ] || [ "$Desktopmode" = "yes"  ] ; then
+                #
+                if ! check_xdepends --xephyr ; then ### FIXME: don't use check_xdepends() here
+                    Xserver="--xpra2" ;
+                elif word_is_in "${Sharegpu:-EMPTY}" "yes direct"   ;  then
+                    Xserver="--weston-xwayland" ;
+                else
+                    Xserver="--xephyr"
+                fi
+                #
             fi
-            #
-        fi
-        
-        ############
-        if [ "$Outputcount" != "1" ]                                  ; then  Xserver="--weston-xwayland" ; fi
-        if [ -n "$Rotation" ]                                         ; then  Xserver="--weston-xwayland" ; fi
-        
-        if [ "$Runsonconsole" = "yes" ] ; then Xserver="--xorg"  ; fi
-        if [ -n "$Newxvt" ]             ; then  Xserver="--xorg" ; fi
-        
-        if [ -z "$Hostdisplay" ] && [ -n "$Hostwaylandsocket" ] ; then
-            Xserver="--satellite"
-        fi
-        
-        if [ -z "$Hostdisplay" ] && [ -n "$Hostwaylandsocket" ]  && [ "$Desktopmode" = "yes"  ] ; then
-            Xserver="--weston-xwayland"
-        fi
-        
-        if [ "$Winsubsystem" ] && [ -z "$DISPLAY" ] ; then
-            Xserver="--runx"
-        fi
-        
-        if [ "$Winsubsystem" = "CYGWIN" ] ; then
-            Xserver="--xwin"
-        fi
+            
+            ############
+            if [ "$Outputcount" != "1" ]                                  ; then  Xserver="--weston-xwayland" ; fi
+            if [ -n "$Rotation" ]                                         ; then  Xserver="--weston-xwayland" ; fi
+            
+            if [ "$Runsonconsole" = "yes" ] ; then Xserver="--xorg"  ; fi
+            if [ -n "$Newxvt" ]             ; then  Xserver="--xorg" ; fi
+            
+            if [ -z "$Hostdisplay" ] && [ -n "$Hostwaylandsocket" ] ; then
+                Xserver="--satellite"
+            fi
+            
+            if [ -z "$Hostdisplay" ] && [ -n "$Hostwaylandsocket" ]  && [ "$Desktopmode" = "yes"  ] ; then
+                Xserver="--weston-xwayland"
+            fi
+            
+            if [ "$Winsubsystem" ] && [ -z "$DISPLAY" ] ; then
+                Xserver="--runx"
+            fi
+            
+            if [ "$Winsubsystem" = "CYGWIN" ] ; then
+                Xserver="--xwin"
+            fi
         
         fi
         
