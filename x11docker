@@ -8522,7 +8522,9 @@ check_xserver() {
         if ! check_xdepends --xephyr ; then
             #
             # Last setter wins.
-            # Note: check_xdepends arg and Xserver differ here
+            # Note: check_xdepends arg and Xserver differ here.
+            #       Replaced Xserver references in check_xdepends with
+            #       references to the arg, ${X_option_to_check}
             #
             check_xdepends --hostdisplay     && [ "$Desktopmode" = "no" ] && Xserver="--hostdisplay"
             check_xdepends --nxagent         && Xserver="--nxagent"
