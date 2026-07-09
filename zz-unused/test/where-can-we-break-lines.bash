@@ -60,3 +60,19 @@ Container_user_will_be="$(
 
 
 echo "${Container_user_will_be}"
+
+case "b" in
+    a       \
+        | b \
+        | c )
+        echo yes
+        ;;
+esac
+
+case "b" in
+    a  | \
+    b  | \
+    c  )
+        echo yes
+        ;;
+esac
