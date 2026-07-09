@@ -8424,7 +8424,7 @@ check_xserver() {
     fi
     # if [ "$Xserver" = "--weston" ] &&  ! check_xdepends --weston ; then  Xserver="--kwin" ; fi
 
-    if [ "$Setupwayland" = "yes" ] ; then {
+    if [ "$Setupwayland" = "yes" ] ; then
         Autochooseserver="no" check_xdepends $Xserver \
           || error_ttm \
                  "|Failed to set up a Wayland environment.
