@@ -8434,15 +8434,15 @@ check_xserver() {
 
     if [ "$Xserver" = "--xwin"              ] && ! check_xdepends --xwin            ; then { Xserver="--runx" ; } ; fi
     if [ "$Xserver" = "--runx"              ] && ! check_xdepends --runx            ; then { Xserver="--satellite" ; } ; fi
-    if [ "$Xserver" = "--satellite"         ] && ! check_xdepends --satellite       ; then { { [ "$Sharegpu" = "yes" ]    && Xserver="--xpra2-xwayland" || Xserver="--xpra2" ; } ; } ; fi
-    if [ "$Xserver" = "--satellite"         ] && ! check_xdepends --satellite       ; then { { [ "$Sharegpu" = "direct" ] && Xserver="--xpra2-xwayland" || Xserver="--xpra2" ; } ; } ; fi
-    if [ "$Xserver" = "--nxagent"           ] && ! check_xdepends --nxagent         ; then { { [ "$Desktopmode" = "yes" ] && Xserver="--xephyr"         || Xserver="--xpra2" ; } ; } ; fi
+    if [ "$Xserver" = "--satellite"         ] && ! check_xdepends --satellite       ; then { [ "$Sharegpu" = "yes" ]    && Xserver="--xpra2-xwayland" || Xserver="--xpra2" ; } ; fi
+    if [ "$Xserver" = "--satellite"         ] && ! check_xdepends --satellite       ; then { [ "$Sharegpu" = "direct" ] && Xserver="--xpra2-xwayland" || Xserver="--xpra2" ; } ; fi
+    if [ "$Xserver" = "--nxagent"           ] && ! check_xdepends --nxagent         ; then { [ "$Desktopmode" = "yes" ] && Xserver="--xephyr"         || Xserver="--xpra2" ; } ; fi
     if [ "$Xserver" = "--xpra2"             ] && ! check_xdepends --xpra2           ; then { Xserver="--xpra" ; } ; fi
     if [ "$Xserver" = "--xpra2-xwayland"    ] && ! check_xdepends --xpra2-xwayland  ; then { Xserver="--xpra-xwayland" ; } ; fi
-    # if [ "$Xserver" = "--nxagent"         ] && ! check_xdepends --nxagent         ; then { { [ "$Desktopmode" = "no" ]  && Xserver="--hostdisplay"    || Xserver="--xephyr" ; } ; } ; fi
+    # if [ "$Xserver" = "--nxagent"         ] && ! check_xdepends --nxagent         ; then { [ "$Desktopmode" = "no" ]  && Xserver="--hostdisplay"    || Xserver="--xephyr" ; } ; fi
     if [ "$Xserver" = "--xephyr"            ] && ! check_xdepends --xephyr          ; then { Xserver="--xpra2" ; } ; fi
     if [ "$Xserver" = "--xpra2"             ] && ! check_xdepends --xpra2           ; then { Xserver="--xpra" ; } ; fi
-    if [ "$Xserver" = "--xpra"              ] && ! check_xdepends --xpra            ; then { { check_xdepends --nxagent   && Xserver="--nxagent"        || Xserver="--xephyr" ; } ; } ; fi
+    if [ "$Xserver" = "--xpra"              ] && ! check_xdepends --xpra            ; then { check_xdepends --nxagent   && Xserver="--nxagent"        || Xserver="--xephyr" ; } ; fi
     if [ "$Xserver" = "--xorg"              ] && ! check_xdepends --xorg            ; then { Xserver="--weston-xwayland" ; } ; fi
     if [ "$Xserver" = "--xpra2-xwayland"    ] && ! check_xdepends --xpra2-xwayland  ; then { Xserver="--xpra-xwayland" ; } ; fi
     if [ "$Xserver" = "--xpra-xwayland"     ] && ! check_xdepends --xpra-xwayland   ; then { Xserver="--weston-xwayland" ; } ; fi
