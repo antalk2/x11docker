@@ -8216,17 +8216,17 @@ check_xserver() {
         fi
 
         if [ -z "$Hostwaylandsocket" ] ; then
-                Sharehostwayland="no"
-                case "$Xserver" in
-                    --hostwayland) ;;
-                    *)
-                        note_ttm "|Option --hostwayland: WAYLAND_DISPLAY is not set.
-                                  |  Fallback: Disabling option --hostwayland."
-                        check_fallback
-                        ;;
-                esac
+            Sharehostwayland="no"
+            case "$Xserver" in
+                --hostwayland) ;;
+                *)
+                    note_ttm "|Option --hostwayland: WAYLAND_DISPLAY is not set.
+                              |  Fallback: Disabling option --hostwayland."
+                    check_fallback
+                    ;;
+            esac
         else
-                Setupwayland="yes"
+            Setupwayland="yes"
         fi
     fi
 
