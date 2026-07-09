@@ -2347,12 +2347,6 @@ isnum() {
 #
 #            That is 15 random bits. We need 32*4 = 16*2*4
 #
-# TODO: The command
-#       echo $RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM | cut -b1-32
-#       only generates decimal digits.
-#       Use "%02x" to generate 8 random bits per use of $RANDOM
-#
-#
 makecookie_v1() {
     mcookie 2>/dev/null
 }
