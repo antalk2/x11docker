@@ -8345,9 +8345,10 @@ check_xserver() {
             #
             virgl|iglx)           ;;
             *)
-                note "|Option --gpu=$Sharegpu is not supported with --runtime=$Runtime.
-                      |  You can try --gpu=iglx instead (--xorg only).
-                      |  Fallback: Disabling option --gpu."
+                note_ttm \
+                    "|Option --gpu=$Sharegpu is not supported with --runtime=$Runtime.
+                     |  You can try --gpu=iglx instead (--xorg only).
+                     |  Fallback: Disabling option --gpu."
                 #
                 check_fallback
                 Sharegpu="no"
