@@ -8581,10 +8581,12 @@ check_xserver() {
                 #
                 ;;
             CYGWIN)
-                error "Did not find a possibility to provide a display.
-  Please install packages 'xinit' and 'xauth' in Cygwin,
-  or run x11docker with --runx:  https://github.com/mviereck/runx"
-      ;;
+                error_ttm \
+                    "|Did not find a possibility to provide a display.
+                    |  Please install packages 'xinit' and 'xauth' in Cygwin,
+                    |  or run x11docker with --runx:  https://github.com/mviereck/runx"
+                #
+                ;;
       MSYS2|WSL1|WSL2)
         [ "$Hostdisplay" ] && {
           error "Did not find a possibility to provide a nested display.
