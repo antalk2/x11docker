@@ -8605,12 +8605,16 @@ check_xserver() {
         esac
     fi
 
-  [ "$Xorgautochoice" = "yes" ] && [ "$Runsonconsole" = "no" ] && [ -z "$Newxvt" ] && error "Option --xorg was chosen automatically
-  as the best one fitting your specified options and installed dependencies.
-  However, x11docker does not run another Xorg without being specified.
-  Please run with option --xorg.
-  It might help you to see dependency check messages with option --printcheck."
-
+    if [ "$Xorgautochoice" = "yes" ] && [ "$Runsonconsole" = "no" ] && [ -z "$Newxvt" ] ; then
+        error_ttm \
+            "|Option --xorg was chosen automatically
+             |  as the best one fitting your specified options and installed dependencies.
+             |  However, x11docker does not run another Xorg without being specified.
+             |  Please run with option --xorg.
+             |  It might help you to see dependency check messages with option --printcheck."
+        #
+    fi
+    
   case "$Xserver" in
     --hostwayland)
       [ "$Xcontainer_option" = "yes" ] && {
