@@ -8176,9 +8176,7 @@ check_xserver() {
     if [ "$Xwogether" = "yes" ] ; then
         if [ -z "$Hostwaylandsocket" ] ; then
 
-            if word_is_in  "${Xserver:-EMPTY}" "EMPTY --hostwayland --weston --weston-xwayland" ; then
-                :
-            else
+            if ! word_is_in  "${Xserver:-EMPTY}" "EMPTY --hostwayland --weston --weston-xwayland" ; then
                 note_ttm "|Option --xw: Option '$Xserver' provides
                           |  no possibility to also run a Wayland environment.
                           |  This could work only within a Wayland compositor.
