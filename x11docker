@@ -8421,10 +8421,10 @@ check_xserver() {
     # We use this test a lot below.
     # Since cannot have a local function, give it a long name,
     # and put its name in a local variable.
-    check_xserver_needs_fallback() {
+    check_xserver_INTERNAL_xserver_needs_fallback() {
         [ "$Xserver" = "$1"  ] &&  ! check_xdepends "$1"
     }
-    local XNF="check_xserver_needs_fallback"
+    local XNF="check_xserver_INTERNAL_xserver_needs_fallback"
     #
 
     if $XNF "--kwin"        ; then  Xserver="--weston" ; fi
