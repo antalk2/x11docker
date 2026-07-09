@@ -8175,13 +8175,15 @@ check_xserver() {
     # --xw
     if [ "$Xwogether" = "yes" ] ; then
         if [ -z "$Hostwaylandsocket" ] ; then
-            
-            case "$Xserver" in
-                ""|--hostwayland|--weston|--weston-xwayland)
+
+            if word_is_in  "${Xserver:-EMPTY}" "EMPTY --hostwayland --weston --weston-xwayland" ; then
+               #case "$Xserver" in
+               # ""|--hostwayland|--weston|--weston-xwayland)
                     Xserver="--weston-xwayland"
                     Setupwayland="yes"
-                    ;;
-                *)
+               #     ;;
+                    # *)
+            else
                     note_ttm "|Option --xw: Option '$Xserver' provides
                               |  no possibility to also run a Wayland environment.
                               |  This could work only within a Wayland compositor.
@@ -8189,8 +8191,9 @@ check_xserver() {
                     check_fallback
                     Xserver="--weston-xwayland"
                     Setupwayland="yes"
-                    ;;
-            esac
+                 #   ;;
+                    # esac
+            fi
         else
             case "$Xserver" in
                 "")
