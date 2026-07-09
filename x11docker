@@ -8210,11 +8210,14 @@ check_xserver() {
 
     # --hostwayland
     if [ "$Sharehostwayland" = "yes" ] ; then
+
         if [ -z "$Xserver" ] ; then
             Xserver="--hostwayland"
         fi
-        case "$Hostwaylandsocket" in
-            "") 
+
+        #case "$Hostwaylandsocket" in
+        #    "")
+        if [ -z "$Hostwaylandsocket" ] ; then
                 Sharehostwayland="no"
                 case "$Xserver" in
                     --hostwayland) ;;
@@ -8224,11 +8227,13 @@ check_xserver() {
                         check_fallback
                         ;;
                 esac
-                ;;
-            *)
+           #     ;;
+                # *)
+        else
                 Setupwayland="yes"
-                ;;
-        esac
+              #  ;;
+                # esac
+        fi
     fi
 
     if [ -n "$Xserver" ] ; then
