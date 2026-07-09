@@ -8445,11 +8445,7 @@ check_xserver() {
     if   $XNF "--xwin"              ; then Xserver="--runx"                           ; fi
     if   $XNF "--runx"              ; then Xserver="--satellite"                      ; fi
 
-    if   $XNF "--satellite"         ; then if [ "$Sharegpu" = "yes"    ] ;
-                                           then Xserver="--xpra2-xwayland"
-                                           else Xserver="--xpra2"                     ; fi ; fi
-
-    if   $XNF "--satellite"         ; then if [ "$Sharegpu" = "direct" ] ;
+    if   $XNF "--satellite"         ; then if word_is_in "${Sharegpu:-EMPTY}" "yes direct" ;
                                            then Xserver="--xpra2-xwayland"
                                            else Xserver="--xpra2"                     ; fi ; fi
 
