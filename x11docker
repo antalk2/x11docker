@@ -8262,7 +8262,7 @@ check_xserver() {
 
         elif [ "$Winsubsystem" = "CYGWIN" ]                               ; then Xserver="--xwin"
         elif [ "$Winsubsystem"            ] && [ -z "$DISPLAY" ]          ; then Xserver="--runx"
-                                                                                
+
         elif  [ -n "$Hostwaylandsocket"   ] && [ -z "$Hostdisplay" ] ; then
 
             if [ "$Desktopmode" = "yes"  ]                                ; then Xserver="--weston-xwayland"
