@@ -8413,22 +8413,16 @@ check_xserver() {
         Setupwayland="yes"
     fi
 
-    if [ "$Setupwayland" = "yes" ] ; then
-        if ! check_xdepends "$Xserver" ; then
-            Xserver="--hostwayland"
-        fi
+    if [ "$Setupwayland" = "yes" ] && ! check_xdepends "$Xserver" ; then
+        Xserver="--hostwayland"
     fi
-    if [ "$Xserver" = "--kwin" ]  ; then
-        if ! check_xdepends --kwin ; then
-            Xserver="--weston"
-        fi
+    if [ "$Xserver" = "--kwin" ]  &&  ! check_xdepends --kwin ; then
+        Xserver="--weston"
     fi
-    if [ "$Xserver" = "--hostwayland" ] ; then
-        if ! check_xdepends --hostwayland ; then
-            Xserver="--weston"
-        fi
+    if [ "$Xserver" = "--hostwayland" ] &&  ! check_xdepends --hostwayland ; then
+        Xserver="--weston"
     fi
-    # if [ "$Xserver" = "--weston" ] ; then if ! check_xdepends --weston ; then  Xserver="--kwin" ; fi ; fi
+    # if [ "$Xserver" = "--weston" ] &&  ! check_xdepends --weston ; then  Xserver="--kwin" ; fi
 
     if [ "$Setupwayland" = "yes" ] ; then {
         Autochooseserver="no" check_xdepends $Xserver \
