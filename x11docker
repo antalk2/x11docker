@@ -8561,27 +8561,27 @@ check_xserver() {
         fi
     fi
 
-  Autochooseserver="no" check_xdepends $Xserver || {
-    case "$Winsubsystem" in
-      "")
-          error_ttm \
-              "|Did not find a possibility to provide a display.
-|  Recommendations:
-|    Either pull image x11docker/xserver that provides
-|    almost everything that x11docker could use,
-|    or install 'xinit' and one or all of:
-|      Xephyr xpra nxagent
-|    To run with GPU acceleration, install:
-|      weston and Xwayland, optionally also: xpra and xdotool
-|    To run from TTY or within Wayland, install:
-|      Xorg, or weston and Xwayland
-|  $Wikipackagesimage
-|
-|  It might help you to see dependency check messages with option --printcheck."
-
-        ;;
-      CYGWIN)
-        error "Did not find a possibility to provide a display.
+    Autochooseserver="no" check_xdepends $Xserver || {
+        case "$Winsubsystem" in
+            "")
+                error_ttm \
+                    "|Did not find a possibility to provide a display.
+                     |  Recommendations:
+                     |    Either pull image x11docker/xserver that provides
+                     |    almost everything that x11docker could use,
+                     |    or install 'xinit' and one or all of:
+                     |      Xephyr xpra nxagent
+                     |    To run with GPU acceleration, install:
+                     |      weston and Xwayland, optionally also: xpra and xdotool
+                     |    To run from TTY or within Wayland, install:
+                     |      Xorg, or weston and Xwayland
+                     |  $Wikipackagesimage
+                     |
+                     |  It might help you to see dependency check messages with option --printcheck."
+                #
+                ;;
+            CYGWIN)
+                error "Did not find a possibility to provide a display.
   Please install packages 'xinit' and 'xauth' in Cygwin,
   or run x11docker with --runx:  https://github.com/mviereck/runx"
       ;;
