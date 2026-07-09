@@ -8356,8 +8356,13 @@ check_xserver() {
         esac
     fi
 
-  if [ "$Runsonconsole" = "no" ] && [ "$Runsoverssh" = "no" ] && [ -z "$Hostdisplay$Hostwaylandsocket" ] && [ "$Xserver" != "--tty" ] && [ -z "$Winsubsystem" ] ; then
-      warning_ttm \
+    if [ "$Runsonconsole" = "no" ] \
+    && [ "$Runsoverssh" = "no"   ] \
+    && [ -z "$Hostdisplay$Hostwaylandsocket" ] \
+    && [ "$Xserver" != "--tty"   ] \
+    && [ -z "$Winsubsystem"      ] ;
+    then
+        warning_ttm \
           "|Environment variables DISPLAY and WAYLAND_DISPLAY are empty,
            |  but it looks like x11docker was started within X, not from console.
            |  Please set DISPLAY and XAUTHORITY.
