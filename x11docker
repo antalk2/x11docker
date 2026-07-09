@@ -8338,8 +8338,9 @@ check_xserver() {
         esac
     fi
 
-    case "$Runtime" in
-        kata-runtime | sysbox-runc )
+    if word_is_in "${Runtime:-EMPTY}" "kata-runtime sysbox-runc" ; then
+        #case "$Runtime" in
+        #kata-runtime | sysbox-runc )
             case "$Sharegpu" in
                 yes) Sharegpu="iglx"  ;;
                 no)                   ;;
@@ -8354,8 +8355,9 @@ check_xserver() {
                     Sharegpu="no"
                     ;;
             esac
-            ;;
-    esac
+            #            ;;
+            #    esac
+    fi
 
   [ "$Runsonconsole" = "no" ] && [ "$Runsoverssh" = "no" ] && [ -z "$Hostdisplay$Hostwaylandsocket" ] && [ "$Xserver" != "--tty" ] && [ -z "$Winsubsystem" ] && {
     warning "Environment variables DISPLAY and WAYLAND_DISPLAY are empty,
