@@ -8186,7 +8186,7 @@ check_xserver() {
             Xserver="--weston-xwayland"
             Setupwayland="yes"
             
-        else
+        else # [ -n "$Hostwaylandsocket" ]
             case "$Xserver" in
                 "")
                     Sharehostwayland="yes"
