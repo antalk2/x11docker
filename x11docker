@@ -8314,6 +8314,7 @@ check_xserver() {
     # Some first --gpu checks
     #
     if word_is_in "${Sharegpu:-EMPTY}" "yes direct" && [ "$Nvidiaversion" ] ; then
+                if version_less_than "$Nvidiaversion" "470" ; then
         case "$Xserver" in
             --xpra-xwayland   |
             --xpra2-xwayland  |
@@ -8324,7 +8325,6 @@ check_xserver() {
             --kwin            |
             --kwin-xwayland   |
             --hostwayland     )
-                if version_less_than "$Nvidiaversion" "470" ; then
                     note_ttm \
                         "|Option $Xserver --gpu: Your system uses closed source NVIDIA
                          |  driver version $Nvidiaversion.
@@ -8332,9 +8332,9 @@ check_xserver() {
                          |  Consider to use free open source driver nouveau instead.
                          |  Using NVIDIA driver>=v470.x  and Xwayland>=v21.1.2 might work for $Xserver --gpu."
                     #
-                fi
                 ;;
         esac
+                fi
     fi
 
   case "$Runtime" in
