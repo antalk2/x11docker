@@ -8270,13 +8270,10 @@ check_xserver() {
         if [ "$Xpraborder" ]                                            ; then Xserver="--xpra2" ;
         elif [ "$Xfishtank"   = "yes"  ] || [ "$Desktopmode" = "yes"  ] ; then
             Xserver="--xephyr" ;
-            if [ "$Xserver" = "--xephyr" ] ; then
-                ### FIXME: don't use check_xdepends() here
-                if ! check_xdepends --xephyr ; then
-                    Xserver="--xpra2" ;
-                elif word_is_in "${Sharegpu:-EMPTY}" "yes direct"   ;  then
-                    Xserver="--weston-xwayland" ;
-                fi
+            if ! check_xdepends --xephyr ; then ### FIXME: don't use check_xdepends() here
+                Xserver="--xpra2" ;
+            elif word_is_in "${Sharegpu:-EMPTY}" "yes direct"   ;  then
+                Xserver="--weston-xwayland" ;
             fi
         fi
         
