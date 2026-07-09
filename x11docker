@@ -8318,14 +8318,14 @@ check_xserver() {
             &&  version_less_than "$Nvidiaversion" "470"  ;
     then
         case "$Xserver" in
-            --xpra-xwayland   |
-            --xpra2-xwayland  |
-            --weston-xwayland |
-            --xwayland        |
-            --satellite       |
-            --weston          |
-            --kwin            |
-            --kwin-xwayland   |
+            --xpra-xwayland   | \
+            --xpra2-xwayland  | \
+            --weston-xwayland | \
+            --xwayland        | \
+            --satellite       | \
+            --weston          | \
+            --kwin            | \
+            --kwin-xwayland   | \
             --hostwayland     )
                 note_ttm \
                     "|Option $Xserver --gpu: Your system uses closed source NVIDIA
