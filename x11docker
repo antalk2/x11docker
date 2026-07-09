@@ -8175,24 +8175,22 @@ check_xserver() {
     # --xw
     if [ "$Xwogether" = "yes" ] ; then
         if [ -n "$Hostwaylandsocket" ] ; then
-            #
+
             case "$Xserver" in
-                --hostwayland)                    Xserver="--satellite"                    ;;
-                --weston|--weston-xwayland)       Xserver="--weston-xwayland"              ;;
+                --hostwayland)                    Xserver="--satellite"       ;;
+                --weston|--weston-xwayland)       Xserver="--weston-xwayland" ;;
                 "") case "$Desktopmode" in
-                        yes)                      Xserver="--xwayland"   ;;
-                        no)                       Xserver="--satellite"  ;;
+                        yes)                      Xserver="--xwayland"        ;;
+                        no)                       Xserver="--satellite"       ;;
                         # Q: is there a third option here?
                     esac
-                    Sharehostwayland="yes"
-                    ;;
-                *)
-                    Sharehostwayland="yes"
-                    ;;
+                    #
+                    Sharehostwayland="yes"  ;;
+                *)  Sharehostwayland="yes"  ;;
             esac
-            #
+
         else # [ -z "$Hostwaylandsocket" ]
-            #
+
             if ! word_is_in  "${Xserver:-EMPTY}" "EMPTY --hostwayland --weston --weston-xwayland" ; then
                 note_ttm "|Option --xw: Option '$Xserver' provides
                           |  no possibility to also run a Wayland environment.
@@ -8201,7 +8199,7 @@ check_xserver() {
                 check_fallback
             fi
             Xserver="--weston-xwayland"
-            #
+
         fi
         Setupwayland="yes"
     fi
