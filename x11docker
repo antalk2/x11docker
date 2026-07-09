@@ -8414,18 +8414,24 @@ check_xserver() {
     fi
 
     if [ "$Setupwayland" = "yes" ] ; then
-        { check_xdepends "$Xserver"        || Xserver="--hostwayland" ; }
+        if ! check_xdepends "$Xserver" ; then
+            Xserver="--hostwayland"
+        fi
     fi
     if [ "$Xserver" = "--kwin" ]  ; then
-        { check_xdepends --kwin            || Xserver="--weston" ; }
+        if ! check_xdepends --kwin ; then
+            Xserver="--weston"
+        fi
     fi
     if [ "$Xserver" = "--hostwayland" ] ; then
-        { check_xdepends --hostwayland     || Xserver="--weston"  ; }
+        if ! check_xdepends --hostwayland ; then
+            Xserver="--weston"
+        fi
     fi
-    # if [ "$Xserver" = "--weston" ] ; then { check_xdepends --weston          || Xserver="--kwin" ; } ; fi
+    # if [ "$Xserver" = "--weston" ] ; then if ! check_xdepends --weston ; then  Xserver="--kwin" ; fi ; fi
 
     if [ "$Setupwayland" = "yes" ] ; then {
-      Autochooseserver="no" check_xdepends $Xserver \
+        Autochooseserver="no" check_xdepends $Xserver \
           || error_ttm \
                  "|Failed to set up a Wayland environment.
                   |  Please install 'weston' or start x11docker
