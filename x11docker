@@ -8314,16 +8314,16 @@ check_xserver() {
     # Some first --gpu checks
     #
     if word_is_in "${Sharegpu:-EMPTY}" "yes direct" ; then
-            [ "$Nvidiaversion" ] && case "$Xserver" in
-                --xpra-xwayland|--xpra2-xwayland|--weston-xwayland|--xwayland|--satellite|--weston|--kwin|--kwin-xwayland|--hostwayland)
-                    version_less_than "$Nvidiaversion" "470" && note_ttm \
-                                                                    "|Option $Xserver --gpu: Your system uses closed source NVIDIA
-                                                                     |  driver version $Nvidiaversion.
-                                                                     |  GPU support might work only with options --hostdisplay and --xorg.
-                                                                     |  Consider to use free open source driver nouveau instead.
-                                                                     |  Using NVIDIA driver>=v470.x  and Xwayland>=v21.1.2 might work for $Xserver --gpu."
-                    ;;
-            esac
+        [ "$Nvidiaversion" ] && case "$Xserver" in
+            --xpra-xwayland|--xpra2-xwayland|--weston-xwayland|--xwayland|--satellite|--weston|--kwin|--kwin-xwayland|--hostwayland)
+                version_less_than "$Nvidiaversion" "470" && note_ttm \
+                                                                "|Option $Xserver --gpu: Your system uses closed source NVIDIA
+                                                                 |  driver version $Nvidiaversion.
+                                                                 |  GPU support might work only with options --hostdisplay and --xorg.
+                                                                 |  Consider to use free open source driver nouveau instead.
+                                                                 |  Using NVIDIA driver>=v470.x  and Xwayland>=v21.1.2 might work for $Xserver --gpu."
+                ;;
+        esac
     fi
 
   case "$Runtime" in
