@@ -8265,7 +8265,7 @@ check_xserver() {
                                                                                 
         elif [ -z "$Hostdisplay" ] && [ -n "$Hostwaylandsocket" ]  && [ "$Desktopmode" = "yes"  ] ; then Xserver="--weston-xwayland"
         elif [ -z "$Hostdisplay" ] && [ -n "$Hostwaylandsocket" ]                                 ; then Xserver="--satellite"
-                                                                                                         #
+
         elif [ -n "$Newxvt" ]             ; then Xserver="--xorg"
         elif [ "$Runsonconsole" = "yes" ] ; then Xserver="--xorg"
         elif [ -n "$Rotation" ]           ; then Xserver="--weston-xwayland"
