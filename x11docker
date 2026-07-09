@@ -8588,19 +8588,19 @@ check_xserver() {
                 #
                 ;;
             MSYS2|WSL1|WSL2)
-                [ "$Hostdisplay" ] && {
+                if [ "$Hostdisplay" ] ; then
                     error_ttm \
                         "|Did not find a possibility to provide a nested display.
                          |  Please install package 'xinit' and one or all of:  nxagent Xephyr xpra
                          |  $Wikipackages"
                     #
-                } || {
+                else
                     error_ttm \
                         "|Did not find a possibility to provide a display.
                          |  Please use --runx to provide an X server on MS Windows:
                          |    https://github.com/mviereck/runx"
                     #
-                }
+                fi
                 ;;
         esac
     fi
