@@ -8267,12 +8267,9 @@ check_xserver() {
 
         ############
         
-        if [ "$Xpraborder" ] ; then
-            Xserver="--xpra2" ;
-        else
-            if [ "$Xfishtank"   = "yes"  ] \
-            || [ "$Desktopmode" = "yes"  ] ;
-            then  Xserver="--xephyr" ; fi
+        if [ "$Xpraborder" ]                                            ; then Xserver="--xpra2" ;
+        elif [ "$Xfishtank"   = "yes"  ] || [ "$Desktopmode" = "yes"  ] ; then
+            Xserver="--xephyr" ;
         fi
         
 
