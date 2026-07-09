@@ -8202,7 +8202,7 @@ check_xserver() {
 
         fi
         Setupwayland="yes"
-    fi
+    fi # [ "$Xwogether" = "yes" ]
 
     # --hostwayland
     if [ "$Sharehostwayland" = "yes" ] ; then
