@@ -8267,9 +8267,10 @@ check_xserver() {
             if [ "$Desktopmode" = "yes"  ]                               ; then Xserver="--weston-xwayland"
             else                                                                Xserver="--satellite"
             fi
-            #
+
         elif [ -n "$Newxvt" ]             ; then Xserver="--xorg"
         elif [ "$Runsonconsole" = "yes" ] ; then Xserver="--xorg"
+
         elif [ -n "$Rotation" ]           ; then Xserver="--weston-xwayland"
         elif [ "$Outputcount" != "1" ]    ; then Xserver="--weston-xwayland"
         elif [ "$Xpraborder" ]            ; then Xserver="--xpra2" ;
