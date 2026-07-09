@@ -8511,14 +8511,15 @@ check_xserver() {
     if ! check_xdepends $Xserver ; then  Xserver="--xephyr" ; fi
 
     if [ "$Xserver" = "--xephyr" ] ; then
-        check_xdepends --xephyr || {
+        if ! check_xdepends --xephyr ; then
             check_xdepends --hostdisplay     && [ "$Desktopmode" = "no" ] && Xserver="--hostdisplay"
             check_xdepends --nxagent         && Xserver="--nxagent"
             check_xdepends --weston-xwayland && Xserver="--weston-xwayland"
             check_xdepends --runx            && Xserver="--runx"
             check_xdepends --xpra            && Xserver="--xpra"
             check_xdepends --xpra2           && Xserver="--xpra2"
-        }
+        fi
+
         case "$Sharegpu" in
             yes|direct)
                 case "$Desktopmode" in
