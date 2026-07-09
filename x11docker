@@ -8614,15 +8614,15 @@ check_xserver() {
              |  It might help you to see dependency check messages with option --printcheck."
         #
     fi
-    
-  case "$Xserver" in
-    --hostwayland)
-      [ "$Xcontainer_option" = "yes" ] && {
-        Xcontainer_option="no"
-        note "Option --xc disabled for option --hostwayland."
-      }
-    ;;
-  esac
+
+    case "$Xserver" in
+        --hostwayland)
+            if [ "$Xcontainer_option" = "yes" ] ; then
+                Xcontainer_option="no"
+                note "Option --xc disabled for option --hostwayland."
+            fi
+            ;;
+    esac
 
   # need host Wayland socket
   case "$Xserver" in
