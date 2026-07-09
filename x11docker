@@ -8393,7 +8393,11 @@ check_xserver() {
 
 
   
-    if [ "$Runsoverssh" = "yes" ] && [ -z "$Hostdisplay$Hostwaylandsocket" ] && [ "$Xserver" != "--tty" ] ; then
+    if [ "$Runsoverssh" = "yes"  ] \
+    && [ -z "$Hostdisplay"       ] \
+    && [ -z "$Hostwaylandsocket" ] \
+    && [ "$Xserver" != "--tty"   ] ;
+    then
       note_ttm \
           "|You are running x11docker over SSH without providing a display.
            |  DISPLAY and WAYLAND_DISPLAY are empty.
