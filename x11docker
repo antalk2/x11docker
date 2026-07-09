@@ -8270,8 +8270,7 @@ check_xserver() {
 
         elif [ -n "$Newxvt" ] || [ "$Runsonconsole" = "yes" ]             ; then Xserver="--xorg"
 
-        elif [ -n "$Rotation" ]           ; then Xserver="--weston-xwayland"
-        elif [ "$Outputcount" != "1" ]    ; then Xserver="--weston-xwayland"
+        elif [ -n "$Rotation" ] || [ "$Outputcount" != "1" ]              ; then Xserver="--weston-xwayland"
 
         elif [ "$Xpraborder" ]            ; then Xserver="--xpra2" ;
         elif [ "$Xfishtank"   = "yes"  ] || [ "$Desktopmode" = "yes"  ] ; then
