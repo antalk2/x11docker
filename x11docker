@@ -8219,6 +8219,9 @@ check_xserver() {
             Sharehostwayland="no"
 
             if [ "$Xserver" != "--hostwayland" ] ; then
+                # FIXME: Why testing for ' != "--hostwayland" ' here?
+                #        Should it not be ' = "--hostwayland" ' ?
+                #
                 note_ttm "|Option --hostwayland: WAYLAND_DISPLAY is not set.
                           |  Fallback: Disabling option --hostwayland."
                 check_fallback
