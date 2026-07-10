@@ -9186,8 +9186,12 @@ create_xcommand() {
             echo >> "$Westonini"
 
             # --keymap: keyboard layout
-            [ -n "$Xkblayout" ] && echo "keymap_layout=$Xkblayout" >> "$Westonini"
-            [ -z "$Xkblayout" ] && [ -n "$Newxvt" ] && echo "$(echo -n "keymap_layout=" && grep XKBLAYOUT <"/etc/default/keyboard" | cut -d= -f2 | cut -d'"' -f2)" >> "$Westonini"
+            if [ -n "$Xkblayout" ] ; then
+                echo "keymap_layout=$Xkblayout" >> "$Westonini"
+            elif [ -n "$Newxvt" ] ; then
+                echo "$( echo -n "keymap_layout=" && grep XKBLAYOUT <"/etc/default/keyboard" | cut -d= -f2 | cut -d'"' -f2)" >> "$Westonini"
+            fi
+
             # --westonini
             [ -n "$Customwestonini" ] && unpriv "cp '$Customwestonini' '$Westonini'"
             echo "
