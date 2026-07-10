@@ -9356,12 +9356,12 @@ create_xcommand() {
             esac
             ;;
 
-    --weston|--weston-xwayland)
-      Xcommand="$(get_xpath Xwayland) :$Newdisplaynumber"
+        --weston|--weston-xwayland)
+            Xcommand="$(get_xpath Xwayland) :$Newdisplaynumber"
 
-      Xserveroptions="$Xserveroptions \\
-$Xwaylandoptions"
-      Xcommand="$Xcommand $Xserveroptions"
+            $append_ops_to Xserveroptions "$Xwaylandoptions"
+
+            Xcommand="$Xcommand $Xserveroptions"
 
       [ -n "${Westonoutput:-$Connectorlist}" ] && for ((Count=1 ; Count<="$Outputcount" ; Count++)) ; do
         [ "$Westonoutput" = "WL" ] || [ "$Westonoutput" = "X" ] || {
