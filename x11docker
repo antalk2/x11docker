@@ -8819,9 +8819,8 @@ create_xcommand() {
     # adjust Usemitshm
     
     if   case_match "$Runtime" 'kata-runtime | sysbox-runc'                               ; then Usemitshm="no"
-    elif [ "$Xcontainer_option" = "yes"    ]                                              \
-    &&   case_match "$Xserver" '--weston* | --xpra*-xwayland'                             \
-    &&   [ "$Shareipc" != "host"           ]                                              ; then  Usemitshm="no"
+    elif [ "$Xcontainer_option" = "yes"    ] && [ "$Shareipc" != "host" ]                 \
+    &&   case_match "$Xserver" '--weston* | --xpra*-xwayland'                             ; then  Usemitshm="no"
     elif [ "$Xoverip" != "no"              ]                                              ; then Usemitshm="no"
     elif [ "$Containeruser" != "$Hostuser" ]                                              ; then Usemitshm="no"
     elif [ "$Xcontainer_option" = "no"     ] && [ "$Shareipc" != "host" ]                 ; then Usemitshm="no"
