@@ -8933,11 +8933,7 @@ create_xcommand() {
         --satellite) ;; # nothing
         *)
             if [ "$Xserver" != "--nxagent" ] ; then
-                Xserveroptions="$( trim_to_bar \
-                                "|$Xserveroptions \\
-                                 |  -retro"
-                                 )"
-                #
+                $append_ops_to Xserveroptions "-retro"
             fi
             # Disable screensaver
             Xserveroptions="$( trim_to_bar \
