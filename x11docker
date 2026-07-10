@@ -8818,23 +8818,20 @@ create_xcommand() {
 
     # begin Usemitshm
     
-    if case_match "$Runtime" 'kata-runtime | sysbox-runc' ; then
-        Usemitshm="no"
-    elif [ "$Xcontainer_option" = "yes" ]                          \
-             && case_match "$Xserver" '--weston*|--xpra*-xwayland' \
-             && [ "$Shareipc" != "host" ] ;
-    then  Usemitshm="no" # Shareipc_host
-    elif [ "$Xoverip" != "no" ] ; then Usemitshm="no"
-    elif [ "$Containeruser" != "$Hostuser" ]       ; then Usemitshm="no"
-    elif [ "$Xcontainer_option" = "no" ]  && [ "$Shareipc" != "host" ]           ; then   Usemitshm="no"  # Shareipc_host
-    elif [ "$Xcontainer_option" = "yes" ] && [ -n "$Newxvt" ]                    ; then  Usemitshm="no"
-    elif [ "$Shareipc" = "host" ] ; then                                           Usemitshm="yes"  # Shareipc_host
-    elif [ "$Xcontainer_option" = "yes" ] && [ "$Xcontainerbackend" = "nerdctl" ]  ; then Usemitshm="no"
-    elif [ "$Xcontainer_option" = "yes" ] && [ "$Xcontainerbackend" = "$BackendKind" ] ; then Usemitshm="yes"
+    if   case_match "$Runtime" 'kata-runtime | sysbox-runc'                               ; then Usemitshm="no"
+    elif [ "$Xcontainer_option" = "yes"    ]                                              \
+    &&   case_match "$Xserver" '--weston*|--xpra*-xwayland'                               \
+    &&   [ "$Shareipc" != "host"           ]                                              ; then  Usemitshm="no"
+    elif [ "$Xoverip" != "no"              ]                                              ; then Usemitshm="no"
+    elif [ "$Containeruser" != "$Hostuser" ]                                              ; then Usemitshm="no"
+    elif [ "$Xcontainer_option" = "no"     ] && [ "$Shareipc" != "host" ]                 ; then Usemitshm="no"
+    elif [ "$Xcontainer_option" = "yes"    ] && [ -n "$Newxvt" ]                          ; then Usemitshm="no"
+    elif [ "$Shareipc" = "host"            ]                                              ; then Usemitshm="yes"
+    elif [ "$Xcontainer_option" = "yes"    ] && [ "$Xcontainerbackend" = "nerdctl"      ] ; then Usemitshm="no"
+    elif [ "$Xcontainer_option" = "yes"    ] && [ "$Xcontainerbackend" = "$BackendKind" ] ; then Usemitshm="yes"
     else
         : # nothing
     fi
-
 
     # end Usemitshm
     
