@@ -9013,8 +9013,7 @@ create_xcommand() {
 
     # --xopt
     if [ -n "$Xserveroptions_custom" ] ; then
-        Xserveroptions="$Xserveroptions \\
-  $Xserveroptions_custom"
+        $append_ops_to Xserveroptions "$Xserveroptions_custom"
     fi
 
   # --keymap
