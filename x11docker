@@ -9325,8 +9325,10 @@ create_xcommand() {
             ;;
 
         --xpra-xwayland|--xpra2-xwayland)
-            Xcommand="$(get_xpath Xwayland) :$Newdisplaynumber $Xserveroptions \\
-  $Xrandremulation"
+            Xcommand="$( trim_to_bar \
+                      "|$(get_xpath Xwayland) :$Newdisplaynumber $Xserveroptions \\
+                       |  $Xrandremulation"
+                       )"
 
       echo "[output]
 name=${Westonoutput}1
