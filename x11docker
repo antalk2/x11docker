@@ -9298,33 +9298,32 @@ create_xcommand() {
             $append_ops_to Xserveroptions "-resizeable" "-noxv"
             #   $append_ops_to  Xserveroptions="-glamor"  # disabled because of lagginess reported in #196
 
-            case "$Fullscreen" in
-                yes)
+            if [ "$Fullscreen" = yes ] ; then
                     $append_ops_to Xserveroptions "-fullscreen"
-                    ;;
-                no)
-                    if ! grep -q -- "-output " <<< "$Xserveroptions_custom" ; then
-                        $append_ops_to Xserveroptions "-screen $Screensize"
-                    fi
-                    ;;
-            esac
-      Xcommand="$(get_xpath Xephyr) :$Newdisplaynumber $Xserveroptions"
-   ;;
+            else
+                if ! grep -q -- "-output " <<< "$Xserveroptions_custom" ; then
+                    $append_ops_to Xserveroptions "-screen $Screensize"
+                fi
+            fi
+            Xcommand="$(get_xpath Xephyr) :$Newdisplaynumber $Xserveroptions"
+            ;;
 
-    --xwayland)
-      Xcommand="$(get_xpath Xwayland) :$Newdisplaynumber $Xserveroptions \\
-  $Decorate \\
-  $Xrandremulation"
-    ;;
+        --xwayland)
+            Xcommand="$(trim_to_bar\
+                      "|$(get_xpath Xwayland) :$Newdisplaynumber $Xserveroptions \\
+                       |  $Decorate \\
+                       |  $Xrandremulation"
+                       )"
+            ;;
 
-    --satellite)
-      version_less_than "$Satelliteversion" "0.8.1" && {
-        Xcommand="$(get_xpath xwayland-satellite) :$Newdisplaynumber"
-      } || {
-        Xcommand="$(get_xpath xwayland-satellite) :$Newdisplaynumber $Xserveroptions"
-      }
-      store_runoption_env "_JAVA_AWT_WM_NONREPARENTING=1"
-    ;;
+        --satellite)
+            version_less_than "$Satelliteversion" "0.8.1" && {
+                Xcommand="$(get_xpath xwayland-satellite) :$Newdisplaynumber"
+            } || {
+                Xcommand="$(get_xpath xwayland-satellite) :$Newdisplaynumber $Xserveroptions"
+            }
+            store_runoption_env "_JAVA_AWT_WM_NONREPARENTING=1"
+            ;;
 
     --xpra-xwayland|--xpra2-xwayland)
       Xcommand="$(get_xpath Xwayland) :$Newdisplaynumber $Xserveroptions \\
