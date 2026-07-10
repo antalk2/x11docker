@@ -8826,17 +8826,19 @@ create_xcommand() {
     # We can freely reorder them.
     #
     if   case_match "$Runtime" 'kata-runtime | sysbox-runc'                               ; then Usemitshm="no"
+    elif [ "$Xoverip" != "no"              ]                                              ; then Usemitshm="no"
+    elif [ "$Containeruser" != "$Hostuser" ]                                              ; then Usemitshm="no"
+
+    elif [ "$Xcontainer_option" = "yes"    ] && [ -n "$Newxvt" ]                          ; then Usemitshm="no"
 
     elif [ "$Xcontainer_option" = "yes"    ] && [ "$Shareipc" != "host" ]                 \
     &&   case_match "$Xserver" '--weston* | --xpra*-xwayland'                             ; then Usemitshm="no"
 
-    elif [ "$Xoverip" != "no"              ]                                              ; then Usemitshm="no"
-    elif [ "$Containeruser" != "$Hostuser" ]                                              ; then Usemitshm="no"
     elif [ "$Xcontainer_option" = "no"     ] && [ "$Shareipc" != "host" ]                 ; then Usemitshm="no"
-    elif [ "$Xcontainer_option" = "yes"    ] && [ -n "$Newxvt" ]                          ; then Usemitshm="no"
+
+    elif                                        [ "$Shareipc" = "host"  ]                 ; then   Usemitshm="yes"
 
     # -----
-    elif                                        [ "$Shareipc" = "host"  ]                 ; then   Usemitshm="yes"
 
     elif [ "$Xcontainer_option" = "yes"    ] && [ "$Xcontainerbackend" = "nerdctl"      ] ; then Usemitshm="no"
 
