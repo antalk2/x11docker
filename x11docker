@@ -8624,31 +8624,31 @@ check_xserver() {
             ;;
     esac
 
-  # need host Wayland socket
-  case "$Xserver" in
-    --hostwayland|--xwayland|--satellite) Sharehostwayland="yes" ;;
-  esac
+    # need host Wayland socket
+    case "$Xserver" in
+        --hostwayland|--xwayland|--satellite) Sharehostwayland="yes" ;;
+    esac
 
-  case "$Xserver" in
-    --satellite)
-      case "$Xcontainer_option" in
-        yes) Satelliteversion="0.8.1" ;;
-        no)
-          Satelliteversion="$(xwayland-satellite -version | cut -c2-)"
-          version_less_than "$Satelliteversion" "0.8.1" && warning "Option $Xserver: You have xwayland-satellite
+    case "$Xserver" in
+        --satellite)
+            case "$Xcontainer_option" in
+                yes) Satelliteversion="0.8.1" ;;
+                no)
+                    Satelliteversion="$(xwayland-satellite -version | cut -c2-)"
+                    version_less_than "$Satelliteversion" "0.8.1" && warning "Option $Xserver: You have xwayland-satellite
   version v$Satelliteversion. Please update to at least v0.8.1
   or provide image x11docker/xserver.
   Otherwise some setup like cookie authentication
   or options like --xoverip might fail."
-        ;;
-      esac
-    ;;
-  esac
+                    ;;
+            esac
+            ;;
+    esac
 
-  [ "$Autochooseserver" = "yes" ] && note "Using X server option $Xserver"
-  storeinfo_add_kv_sh "xserver=$Xserver"
+    [ "$Autochooseserver" = "yes" ] && note "Using X server option $Xserver"
+    storeinfo_add_kv_sh "xserver=$Xserver"
 
-  return 0
+    return 0
 }
 create_modelinefile() {         # generate a set of smaller modelines for screen size $1 and store them in a cache file
   local Newmodelinefile Modeline Size X Y Xcount Ycount
