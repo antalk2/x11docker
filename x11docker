@@ -8978,11 +8978,14 @@ create_xcommand() {
                 $append_ops_to Xserveroptions "-ac"
                 Xauthentication="no"
             fi
-      case "$Xoverip" in
-        socat|listentcp) warning "Option --xauth=no --xoverip=$Xoverip: SECURITY RISK!
-  Allowing access to new X server for everyone.
-  Your X server is accessible over TCP network without any restriction.
-  That can be abused to take control over your system." ;;
+            case "$Xoverip" in
+                socat|listentcp)
+                    warning_ttm \
+                        "|Option --xauth=no --xoverip=$Xoverip: SECURITY RISK!
+                         |  Allowing access to new X server for everyone.
+                         |  Your X server is accessible over TCP network without any restriction.
+                         |  That can be abused to take control over your system."
+                    ;;
         no)
           case "$Xserver" in
             --hostdisplay|--hostwayland|--weston|--kwin|--tty) ;;
