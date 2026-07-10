@@ -9219,9 +9219,13 @@ create_xcommand() {
     if case_match "$Xserver" '*xwayland' ; then
         case "$Xcontainer_option" in
             yes)
-                Xrandremulation="-force-xrandr-emulation"
-                Decorate="-decorate"
-                version_less_than "$Xcontainerversion" "2.0" && Xrandremulation="" && Decorate=""
+                if version_less_than "$Xcontainerversion" "2.0" ; then
+                    Xrandremulation=""
+                    Decorate=""
+                else
+                    Xrandremulation="-force-xrandr-emulation"
+                    Decorate="-decorate"
+                fi
                 ;;
             no)
                 Xwayland -help 2>&1 | grep -q "force-xrandr-emulation" && Xrandremulation="-force-xrandr-emulation"
