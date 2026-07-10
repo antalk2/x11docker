@@ -9109,12 +9109,14 @@ create_xcommand() {
                 "$(check_xpraoption --reconnect=no      || : )" \
                 "$(check_xpraoption --tray=no           || : )"
             #
-      [ "$Fullscreen" = "yes" ]  && Xpraclientcommand="$Xpraclientcommand \\
-  $(check_xpraoption --desktop-fullscreen=yes ||:)"
-      [ "$Scaling" ] && Xpraclientcommand="$Xpraclientcommand \\
-  $(check_xpraoption --desktop-scaling="$Scaling" ||:)"
-#      [ -n "$Dpi" ] && Xpraclientcommand="$Xpraclientcommand \\
-#  $(check_xpraoption --dpi="'$Dpi'")"
+            if [ "$Fullscreen" = "yes" ] ; then
+                $append_ops_to Xpraclientcommand "$(check_xpraoption --desktop-fullscreen=yes || : )"
+            fi
+            if [ "$Scaling" ] ; then
+                $append_ops_to Xpraclientcommand "$(check_xpraoption --desktop-scaling="$Scaling" || : )"
+            fi
+            # if [ -n "$Dpi" ] ; then $append_ops_to Xpraclientcommand "$(check_xpraoption --dpi="'$Dpi'" )" ; fi
+
       [ "$Xpraborder" ] && Xpraclientcommand="$Xpraclientcommand \\
   $(check_xpraoption --border="$Xpraborder" ||:)"
 
