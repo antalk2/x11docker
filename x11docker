@@ -9240,21 +9240,22 @@ create_xcommand() {
     
     if [ "$Xwaylandrootless" = "no" ] ; then
         case "$Setupwayland" in
-        yes) Xwaylandoptions="$Decorate" ;;
-        no)
-            case "$Runsonconsole" in
-                yes) Xwaylandoptions="-fullscreen" ;;
-                no)
-                    case "$Fullscreen" in
-                        yes) Xwaylandoptions="-fullscreen" ;;
-                        no) Xwaylandoptions="$Decorate" ;;
-                    esac
-                    ;;
-            esac
-            ;;
+            yes) Xwaylandoptions="$Decorate" ;;
+            no)
+                case "$Runsonconsole" in
+                    yes) Xwaylandoptions="-fullscreen" ;;
+                    no)
+                        case "$Fullscreen" in
+                            yes) Xwaylandoptions="-fullscreen" ;;
+                            no) Xwaylandoptions="$Decorate" ;;
+                        esac
+                        ;;
+                esac
+                ;;
         esac
     fi
-  [ "$Xwaylandrootless" = "no" ] && [ -n "$Xrandremulation" ] && Xwaylandoptions="$Xwaylandoptions \\
+
+    [ "$Xwaylandrootless" = "no" ] && [ -n "$Xrandremulation" ] && Xwaylandoptions="$Xwaylandoptions \\
   $Xrandremulation"
 
   # Xwayland wrapper script for rootless mode
