@@ -9000,11 +9000,9 @@ create_xcommand() {
     # X over IP/TCP
     case "$Xoverip" in
         listentcp)
-            case "$Xserver" in
-                --nxagent) ;;
-                *) $append_ops_to Xserveroptions "-listen tcp"
-                   ;;
-            esac
+            if [ "$Xserver" != "--nxagent" ] ; then
+                $append_ops_to Xserveroptions "-listen tcp"
+            fi
             ;;
         no|socat) Xserveroptions="$Xserveroptions \\
   -nolisten tcp" ;;
