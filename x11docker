@@ -9079,18 +9079,19 @@ create_xcommand() {
             fi
 
             Xpraservercommand+=" :$Newdisplaynumber --use-display"
+            Xpraservercommand+=" $Xpraoptions
+            $append_ops_to Xpraservercommand                           \
+                "$(check_xpraoption --dbus-launch=no           || : )" \
+                "$(check_xpraoption --daemon=no                || : )" \
+                "$(check_xpraoption --file-transfer=off        || : )" \
+                "$(check_xpraoption --html=off                 || : )" \
+                "$(check_xpraoption --opengl=noprobe           || : )" \
+                "$(check_xpraoption --mdns=no                  || : )" \
+                "$(check_xpraoption --printing=no              || : )" \
+                "$(check_xpraoption --session-name="$Codename" || : )" \
+                "$(check_xpraoption --start-new-commands=no    || : )" \
+                "$(check_xpraoption --systemd-run=no           || : )"
 
-            Xpraservercommand="$Xpraservercommand $Xpraoptions \\
-  $(check_xpraoption --dbus-launch=no ||:) \\
-  $(check_xpraoption --daemon=no ||:) \\
-  $(check_xpraoption --file-transfer=off ||:) \\
-  $(check_xpraoption --html=off ||:) \\
-  $(check_xpraoption --opengl=noprobe ||:) \\
-  $(check_xpraoption --mdns=no ||:) \\
-  $(check_xpraoption --printing=no ||:) \\
-  $(check_xpraoption --session-name="$Codename" ||:) \\
-  $(check_xpraoption --start-new-commands=no ||:) \\
-  $(check_xpraoption --systemd-run=no ||:)"
       [ -n "$Dpi" ] && Xpraservercommand="$Xpraservercommand \\
   $(check_xpraoption --dpi="$Dpi" ||:)"
       case "$Xserver" in
