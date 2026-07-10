@@ -9295,16 +9295,12 @@ create_xcommand() {
             ;;
 
         --xephyr)
-            Xserveroptions="$(trim_to_bar\
-                            "|$Xserveroptions \\
-                             |  -resizeable \\
-                             |  -noxv"
-                             )"
-            #      Xserveroptions="$Xserveroptions \\
-            #  -glamor"  # disabled because of lagginess reported in #196
-      case "$Fullscreen" in
-        yes)
-          Xserveroptions="$Xserveroptions \\
+            $append_ops_to Xserveroptions "-resizeable" "-noxv"
+            #   $append_ops_to  Xserveroptions="-glamor"  # disabled because of lagginess reported in #196
+
+            case "$Fullscreen" in
+                yes)
+                    Xserveroptions="$Xserveroptions \\
   -fullscreen"
         ;;
         no)
