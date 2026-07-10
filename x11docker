@@ -8987,17 +8987,15 @@ create_xcommand() {
                          |  That can be abused to take control over your system."
                     ;;
                 no)
-                    case "$Xserver" in
-                        --hostdisplay|--hostwayland|--weston|--kwin|--tty) ;;
-                        *) warning_ttm \
-                               "|Option --xauth=no: SECURITY RISK!
-                                |  Allowing access to new X server for everyone."
-                           ;;
-                    esac
+                    if ! case_match "$Xserver" "--hostdisplay|--hostwayland|--weston|--kwin|--tty" ; then
+                        warning_ttm \
+                            "|Option --xauth=no: SECURITY RISK!
+                             |  Allowing access to new X server for everyone."
+                    fi
                     ;;
-            esac
+            esac # Xoverip
             ;;
-    esac
+    esac # Xauthentication
 
   # X over IP/TCP
   case "$Xoverip" in
