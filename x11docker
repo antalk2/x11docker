@@ -9165,59 +9165,55 @@ create_xcommand() {
             done
         fi
 
-        ## begin writing Westonini
-        
-        # --westonini
-        if [ -n "$Customwestonini" ] ; then
+        if [ -n "$Customwestonini" ] ; then  # --westonini
             unpriv "cp '$Customwestonini' '$Westonini'"
         else
+            # write our own
             {
-                echo "[core]" >> "$Westonini"
+                echo "[core]"
                 case "$Westonoutput" in
-                    WL) echo "backend=wayland-backend.so" >> $Westonini ;;
-                    X)  echo "backend=x11-backend.so"     >> $Westonini ;;
-                    *)  echo "backend=drm-backend.so"     >> $Westonini ;;
+                    WL) echo "backend=wayland-backend.so" ;;
+                    X)  echo "backend=x11-backend.so"     ;;
+                    *)  echo "backend=drm-backend.so"     ;;
                 esac
                 trim_to_bar "|
-                         |shell=desktop-shell.so
-                         |idle-time=0
-                         |[shell]
-                         |panel-location=none
-                         |panel-position=none
-                         |locking=false
-                         |background-color=0xff002244
-                         |animation=fade
-                         |startup-animation=fade
-                         |[keyboard]
-                         |vt-switching=true" >> "$Westonini"
-                echo >> "$Westonini"
+                             |shell=desktop-shell.so
+                             |idle-time=0
+                             |[shell]
+                             |panel-location=none
+                             |panel-position=none
+                             |locking=false
+                             |background-color=0xff002244
+                             |animation=fade
+                             |startup-animation=fade
+                             |[keyboard]
+                             |vt-switching=true"
+                echo
 
                 # --keymap: keyboard layout
                 if [ -n "$Xkblayout" ] ; then
-                    echo "keymap_layout=$Xkblayout" >> "$Westonini"
+                    echo "keymap_layout=$Xkblayout"
                 elif [ -n "$Newxvt" ] ; then
-                    {
-                        echo -n "keymap_layout="
-                        #
-                        # Example: XKBLAYOUT="us"
-                        # The 2nd cut drops the quotes
-                        grep XKBLAYOUT < "/etc/default/keyboard" \
-                            | cut -d= -f2                        \
-                            | cut -d'"' -f2
-                        echo # ensure Newline
-                    }  >> "$Westonini"
+                    echo -n "keymap_layout="
+                    #
+                    # Example: XKBLAYOUT="us"
+                    # The 2nd cut drops the quotes
+                    grep XKBLAYOUT < "/etc/default/keyboard" \
+                        | cut -d= -f2                        \
+                        | cut -d'"' -f2
+                    echo # ensure Newline
                 fi
-            }
+            }  >> "$Westonini"
         fi
 
+        # Extend Westonini
         {
             trim_to_bar "|
-                             |[xwayland]
-                             |path=$Xwaylandwrapper"
+                         |[xwayland]
+                         |path=$Xwaylandwrapper"
             echo
         }   >> "$Westonini"
-
-    fi
+    fi # Customwestonini
 
   # Xwayland: check -decorate -force-xrandr-emulation
   case "$Xserver" in
