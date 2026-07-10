@@ -9056,24 +9056,10 @@ create_xcommand() {
                 "$(check_xpraoption --xsettings=no                || : )"
 
             case "$Shareclipboard" in
-                native-yes)
-                    $append_ops_to Xpraoptions                 \
-                                   "--clipboard=yes"           \
-                                   "--clipboard-direction=both"
-                    ;;
-                native-c2h)
-                    $append_ops_to Xpraoptions \
-                                   "--clipboard=yes" \
-                                   "--clipboard-direction=to-client"
-                    ;;
-                nativeh2c)
-                    $append_ops_to Xpraoptions \
-                                   "--clipboard=yes" \
-                                   "--clipboard-direction=to-server"
-                    ;;
-                *)
-                    $append_ops_to Xpraoptions "--clipboard=no"
-                    ;;
+                native-yes) $append_ops_to Xpraoptions "--clipboard=yes" "--clipboard-direction=both"      ;;
+                native-c2h) $append_ops_to Xpraoptions "--clipboard=yes" "--clipboard-direction=to-client" ;;
+                nativeh2c)  $append_ops_to Xpraoptions "--clipboard=yes" "--clipboard-direction=to-server" ;;
+                *)          $append_ops_to Xpraoptions "--clipboard=no"  ;;
             esac
 
       # --keymap
