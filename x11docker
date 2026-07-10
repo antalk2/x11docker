@@ -8943,7 +8943,7 @@ create_xcommand() {
                 # Cut out the 96 following the x
                 Dpi="$(grep dots <<< "$Xdpyinfooutput" | cut -dx -f2 | cut -d' ' -f1)"
             fi
-            if [ -n "$Dpi" ]                    \
+            if [ -n "$Dpi" ]                           \
                    && case_match  "$Xserver" '--xpra*' \
                    && [ "$Scaling" ]                   \
                    && [ "$Desktopmode" = "no" ]        ;
