@@ -9317,11 +9317,10 @@ create_xcommand() {
             ;;
 
         --satellite)
-            version_less_than "$Satelliteversion" "0.8.1" && {
-                Xcommand="$(get_xpath xwayland-satellite) :$Newdisplaynumber"
-            } || {
-                Xcommand="$(get_xpath xwayland-satellite) :$Newdisplaynumber $Xserveroptions"
-            }
+            if version_less_than "$Satelliteversion" "0.8.1" ;
+            then Xcommand="$(get_xpath xwayland-satellite) :$Newdisplaynumber"
+            else Xcommand="$(get_xpath xwayland-satellite) :$Newdisplaynumber $Xserveroptions"
+            fi
             store_runoption_env "_JAVA_AWT_WM_NONREPARENTING=1"
             ;;
 
