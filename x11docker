@@ -8971,8 +8971,9 @@ create_xcommand() {
                     fi
                     if [ -n "$Dpi" ] && case_match  "$Xserver" '--xpra*' ; then
                         if [ "$Scaling" ] && [ "$Desktopmode" = "no" ] ; then
+                            # Dpi = Scaling * Scaling * Dpi
                             Dpi="$(awk -v a="$Scaling" -v b="$Dpi" 'BEGIN {print (b * a * a)}')"
-                            Dpi="${Dpi%.*}"
+                            Dpi="${Dpi%.*}" # Remove decimal point and after.
                         fi
                     fi
                     ;;
