@@ -8816,7 +8816,7 @@ create_xcommand() {
 
     Xdpyinfooutput="$( xtool "xdpyinfo 2>> $Xinitlogfile" || : )"
 
-    # begin Usemitshm
+    # adjust Usemitshm
     
     if   case_match "$Runtime" 'kata-runtime | sysbox-runc'                               ; then Usemitshm="no"
     elif [ "$Xcontainer_option" = "yes"    ]                                              \
@@ -8832,8 +8832,6 @@ create_xcommand() {
     else
         : # nothing
     fi
-
-    # end Usemitshm
     
   #### General X server options
   case "$Xserver" in
