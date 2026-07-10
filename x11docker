@@ -9061,21 +9061,20 @@ create_xcommand() {
                                    "--clipboard=yes"           \
                                    "--clipboard-direction=both"
                     ;;
-      native-c2h)
-          Xpraoptions="$Xpraoptions \\
-  --clipboard=yes \\
-  --clipboard-direction=to-client"
-        ;;
-      nativeh2c)
-          Xpraoptions="$Xpraoptions \\
-  --clipboard=yes \\
-  --clipboard-direction=to-server"
-        ;;
-        *) 
-          Xpraoptions="$Xpraoptions \\
-  --clipboard=no"
-        ;;
-      esac
+                native-c2h)
+                    $append_ops_to Xpraoptions \
+                                   "--clipboard=yes" \
+                                   "--clipboard-direction=to-client"
+                    ;;
+                nativeh2c)
+                    $append_ops_to Xpraoptions \
+                                   "--clipboard=yes" \
+                                   "--clipboard-direction=to-server"
+                    ;;
+                *)
+                    $append_ops_to Xpraoptions "--clipboard=no"
+                    ;;
+            esac
 
       # --keymap
       [ "$Xkblayout" ] && Xpraoptions="$Xpraoptions \\
