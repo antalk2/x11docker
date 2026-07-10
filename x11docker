@@ -9150,12 +9150,15 @@ create_xcommand() {
                     fi
                     ;;
 
-                *)  # get monitor name(s)
+                *)
+                    # get monitor name(s) into Connectorlist
+                    #
                     #for Status in /sys/class/drm/*/status; do 
                     #  Connector="${Status%/status}"
                     #  Connector="${Connector#*/card?-}"
                     #  [ "$(cat $Status)" = "connected" ] && Connectorlist="$Connectorlist $Connector"
                     #done
+
                     for Card in /sys/class/drm/*; do
                         Card="$(basename "$Card")"
                         case "$Card" in
