@@ -8841,10 +8841,9 @@ create_xcommand() {
     fi
 
 
-
-    case "$Runtime" in
-        kata-runtime|sysbox-runc)                                           Usemitshm="no" ;;
-    esac
+    if case_match "$Runtime" 'kata-runtime | sysbox-runc' ; then
+        Usemitshm="no"
+    fi
 
     # end Usemitshm
     
