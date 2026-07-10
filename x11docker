@@ -8828,12 +8828,16 @@ create_xcommand() {
     if [ "$Xcontainer_option" = "no" ]  && [ "$Shareipc" != "host" ]           ; then   Usemitshm="no" ; fi # Shareipc_host
     if [ "$Containeruser" != "$Hostuser" ]                                ; then Usemitshm="no" ; fi
     if [ "$Xoverip" != "no" ]                                             ; then Usemitshm="no" ; fi
-    
+
+    # xxxxx
     if [ "$Xcontainer_option" = "yes" ] ; then
-        case "$Xserver" in
-            --weston*|--xpra*-xwayland)
-                if [ "$Shareipc" != "host" ] ; then  Usemitshm="no" ; fi ;;  # Shareipc_host
-        esac
+        if case_match "$Xserver" '--weston*|--xpra*-xwayland' ; then
+            # if case "$Xserver" in  --weston*|--xpra*-xwayland) true ;; *) false ;; esac ; then
+            # case "$Xserver" in
+            #--weston*|--xpra*-xwayland)
+            if [ "$Shareipc" != "host" ] ; then  Usemitshm="no" ; fi   # Shareipc_host
+            # ;; esac
+            fi
     fi
   
     case "$Runtime" in
