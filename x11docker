@@ -9129,10 +9129,20 @@ create_xcommand() {
     #### Prepare weston.ini: config file for Weston
     case "$Xserver" in
         --weston|--weston-xwayland|--xpra-xwayland|--xpra2-xwayland)
-            have_command  weston-launch  && [ -n "$Newxvt" ] && [ "$Runsinteractive" = "yes" ] && Weston="weston-launch -v --" || Weston="weston"
+            if have_command  weston-launch            \
+                    && [ -n "$Newxvt" ]               \
+                    && [ "$Runsinteractive" = "yes" ] ;
+            then Weston="weston-launch -v --"
+            else Weston="weston"
+            fi
+            
             case "$Newxvt" in
-                "")   # Display prefix X or WL; needed to indicate if host Wayland or host X provides the nested window.
+                "")   # Display prefix X or WL; needed to indicate if
+                      # host Wayland or host X provides the nested
+                      # window.
+                    
                     #[ -n "$Hostwaylandsocket" ] && [ "$Xserver" != "--xpra-xwayland" ] && [ "$Hostsystem" != "ubuntu" ] && [ "$Fullscreen" = "no" ] && Westonoutput="WL"
+                    
                     [ -n "$Hostwaylandsocket" ] && Westonoutput="WL"
                     [ -z "$Westonoutput" ] && [ -n "$Hostdisplay" ] && Westonoutput="X"
                     ;;
