@@ -8913,23 +8913,11 @@ create_xcommand() {
     case "$Xcomposite" in
         yes)
             # Old X servers have extension "Composite", recent ones call it "COMPOSITE".
-            Xserverextensions="$( trim_to_bar \
-                               "|$Xserverextensions \\
-                                |  +extension Composite +extension COMPOSITE"
-                                )"
+            $append_ops_to Xserverextensions "+extension Composite +extension COMPOSITE"
             ;;
-        no)
-            Xserverextensions="$( trim_to_bar \
-                               "|$Xserverextensions \\
-                                |  -extension Composite -extension COMPOSITE"
-                                )"
+        no) $append_ops_to Xserverextensions "-extension Composite -extension COMPOSITE"
             if [ "$Xserver" = "nxagent" ] ; then
-                # Note: there was no '$' before Xserveroptions below.
-                #       Added it.
-                Xserveroptions="$( trim_to_bar \
-                                "|$Xserveroptions \\
-                                 |  -nocomposite"
-                                 )"
+                $append_ops_to Xserveroptions "-nocomposite"
             fi
             ;;
     esac
