@@ -9079,7 +9079,7 @@ create_xcommand() {
             fi
 
             Xpraservercommand+=" :$Newdisplaynumber --use-display"
-            Xpraservercommand+=" $Xpraoptions
+            Xpraservercommand+=" $Xpraoptions"
             $append_ops_to Xpraservercommand                           \
                 "$(check_xpraoption --dbus-launch=no           || : )" \
                 "$(check_xpraoption --daemon=no                || : )" \
