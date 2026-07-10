@@ -8943,16 +8943,24 @@ create_xcommand() {
              ;;
     esac
 
-  case "$Xserver" in
-    --satellite) ;;
-    *)
-      [ "$Xserver" != "--nxagent" ] && Xserveroptions="$Xserveroptions \\
-  -retro"
-      # Disable screensaver
-      Xserveroptions="$Xserveroptions \\
-  -dpms \\
-  -s off"
-      # --dpi: check DPI
+    case "$Xserver" in
+        --satellite) ;; # nothing
+        *)
+            if [ "$Xserver" != "--nxagent" ] ; then
+                Xserveroptions="$( trim_to_bar \
+                                "|$Xserveroptions \\
+                                 |  -retro"
+                                 )"
+                #
+            fi
+            # Disable screensaver
+            Xserveroptions="$( trim_to_bar \
+                            "|$Xserveroptions \\
+                             |  -dpms \\
+                             |  -s off"
+                             )"
+            #
+            # --dpi: check DPI
       case "$Xserver" in
         --xwin|--runx) ;;
         *)
