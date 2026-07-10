@@ -8850,13 +8850,13 @@ create_xcommand() {
     #### General X server options
     create_xcommand_INTERNAL_append_ops_to() {
         # local NEWLINE=$'\n'
-        declare -n xxx_VAR_IO="$1"
+        declare -n create_xcommand_INTERNAL_append_ops_to_VAR_IO="$1"
         shift
         #
-        local xxx_op
-        local xxx_SEP=" \\${NEWLINE}  "
-        for xxx_op in "${@}" ; do
-            xxx_VAR_IO+="${xxx_SEP}${xxx_op}"
+        local op
+        local SEP=" \\${NEWLINE}  "
+        for op in "${@}" ; do
+            create_xcommand_INTERNAL_append_ops_to_VAR_IO+="${SEP}${op}"
         done
     }
     local append_ops_to="create_xcommand_INTERNAL_append_ops_to"
