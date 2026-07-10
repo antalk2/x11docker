@@ -9287,10 +9287,12 @@ create_xcommand() {
                        )"
             ;;
 
-    --xvfb)
-      Xcommand="$(get_xpath Xvfb) :$Newdisplaynumber $Xserveroptions \\
-  -screen 0 ${Screensize}x24"   ### FIXME: hardcoded setting of depth 24. Could be better?
-    ;;
+        --xvfb)
+            Xcommand="$(trim_to_bar\
+                      "|$(get_xpath Xvfb) :$Newdisplaynumber $Xserveroptions \\
+                       |  -screen 0 ${Screensize}x24"   ### FIXME: hardcoded setting of depth 24. Could be better?
+                       )"
+            ;;
 
     --xephyr)
       Xserveroptions="$Xserveroptions \\
