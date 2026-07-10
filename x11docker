@@ -9253,15 +9253,19 @@ create_xcommand() {
         $append_ops_to Xwaylandoptions "$Xrandremulation"
     fi
 
-  # Xwayland wrapper script for rootless mode
-#echo \"$(get_xpath Xwayland) \$(sed 's/-terminate//' <<< \"\$@\") $Xserveroptions\" >> $Xinitlogfile 2>&1
-  echo "#! /bin/bash
-# x11docker wrapper for Xwayland
-$(get_xpath Xwayland) \$(sed 's/-terminate//' <<< \"\$@\") \\
-$Xserveroptions \\
-$Xwaylandoptions \\
->> $Xinitlogfile 2>&1
-" >> "$Xwaylandwrapper"
+    # Xwayland wrapper script for rootless mode
+    
+    #echo \"$(get_xpath Xwayland) \$(sed 's/-terminate//' <<< \"\$@\") $Xserveroptions\" >> $Xinitlogfile 2>&1
+
+    {   trim_to_bar "|#! /bin/bash
+                     |# x11docker wrapper for Xwayland
+                     |$(get_xpath Xwayland) \$(sed 's/-terminate//' <<< \"\$@\") \\
+                     |$Xserveroptions \\
+                     |$Xwaylandoptions \\
+                     |>> $Xinitlogfile 2>&1
+                     |"
+        echo
+    } >> "$Xwaylandwrapper"
 
   #### create command to run X server
   case "$Xserver" in
