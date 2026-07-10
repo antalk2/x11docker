@@ -8989,8 +8989,9 @@ create_xcommand() {
                 no)
                     case "$Xserver" in
                         --hostdisplay|--hostwayland|--weston|--kwin|--tty) ;;
-                        *) warning "Option --xauth=no: SECURITY RISK!
-  Allowing access to new X server for everyone."
+                        *) warning_ttm \
+                               "|Option --xauth=no: SECURITY RISK!
+                                |  Allowing access to new X server for everyone."
                            ;;
                     esac
                     ;;
