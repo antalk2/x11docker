@@ -9012,8 +9012,10 @@ create_xcommand() {
     Xserveroptions="$Xserveroptions $Xserverextensions"
 
     # --xopt
-    [ -n "$Xserveroptions_custom" ] && Xserveroptions="$Xserveroptions \\
+    if [ -n "$Xserveroptions_custom" ] ; then
+        Xserveroptions="$Xserveroptions \\
   $Xserveroptions_custom"
+    fi
 
   # --keymap
   # Regard possible custom keyboard model like rmlvo.
