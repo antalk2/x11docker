@@ -9215,36 +9215,35 @@ create_xcommand() {
         }   >> "$Westonini"
     fi # Customwestonini
 
-  # Xwayland: check -decorate -force-xrandr-emulation
-  case "$Xserver" in
-    *xwayland)
-      case "$Xcontainer_option" in
-        yes)
-          Xrandremulation="-force-xrandr-emulation"
-          Decorate="-decorate"
-          version_less_than "$Xcontainerversion" "2.0" && Xrandremulation="" && Decorate=""
-        ;;
+    # Xwayland: check -decorate -force-xrandr-emulation
+    if case_match "$Xserver" '*xwayland' ; then
+            case "$Xcontainer_option" in
+                yes)
+                    Xrandremulation="-force-xrandr-emulation"
+                    Decorate="-decorate"
+                    version_less_than "$Xcontainerversion" "2.0" && Xrandremulation="" && Decorate=""
+                    ;;
+                no)
+                    Xwayland -help 2>&1 | grep -q "force-xrandr-emulation" && Xrandremulation="-force-xrandr-emulation"
+                    Xwayland -help 2>&1 | grep -q "decorate"               && Decorate="-decorate"
+                    ;;
+            esac
+    fi
+    
+    [ "$Xwaylandrootless" = "no" ] && case "$Setupwayland" in
+        yes) Xwaylandoptions="$Decorate" ;;
         no)
-          Xwayland -help 2>&1 | grep -q "force-xrandr-emulation" && Xrandremulation="-force-xrandr-emulation"
-          Xwayland -help 2>&1 | grep -q "decorate"               && Decorate="-decorate"
-        ;;
-      esac
-    ;;
-  esac
-  [ "$Xwaylandrootless" = "no" ] && case "$Setupwayland" in
-    yes) Xwaylandoptions="$Decorate" ;;
-    no)
-      case "$Runsonconsole" in
-        yes) Xwaylandoptions="-fullscreen" ;;
-        no)
-          case "$Fullscreen" in
-            yes) Xwaylandoptions="-fullscreen" ;;
-            no) Xwaylandoptions="$Decorate" ;;
-          esac
-        ;;
-      esac
-    ;;
-  esac
+            case "$Runsonconsole" in
+                yes) Xwaylandoptions="-fullscreen" ;;
+                no)
+                    case "$Fullscreen" in
+                        yes) Xwaylandoptions="-fullscreen" ;;
+                        no) Xwaylandoptions="$Decorate" ;;
+                    esac
+                    ;;
+            esac
+            ;;
+    esac
   [ "$Xwaylandrootless" = "no" ] && [ -n "$Xrandremulation" ] && Xwaylandoptions="$Xwaylandoptions \\
   $Xrandremulation"
 
