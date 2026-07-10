@@ -8821,28 +8821,27 @@ create_xcommand() {
     if case_match "$Runtime" 'kata-runtime | sysbox-runc' ; then
         Usemitshm="no"
     else
+        #
+        # Last write wins.
+        #
+        if [ "$Xcontainer_option" = "yes" ] && [ "$Xcontainerbackend" = "$BackendKind" ] ; then Usemitshm="yes" ; fi
+        
+        if [ "$Xcontainer_option" = "yes" ] && [ "$Xcontainerbackend" = "nerdctl" ]  ; then Usemitshm="no" ; fi
+        
+        if [ "$Shareipc" = "host" ] ; then                                           Usemitshm="yes" ; fi # Shareipc_host
+        
+        if [ "$Xcontainer_option" = "yes" ] && [ -n "$Newxvt" ]                    ; then  Usemitshm="no" ; fi
+        
+        if [ "$Xcontainer_option" = "no" ]  && [ "$Shareipc" != "host" ]           ; then   Usemitshm="no" ; fi # Shareipc_host
+        if [ "$Containeruser" != "$Hostuser" ]                                ; then Usemitshm="no" ; fi
+        if [ "$Xoverip" != "no" ]                                             ; then Usemitshm="no" ; fi
 
-    #
-    # Last write wins.
-    #
-    if [ "$Xcontainer_option" = "yes" ] && [ "$Xcontainerbackend" = "$BackendKind" ] ; then Usemitshm="yes" ; fi
-    
-    if [ "$Xcontainer_option" = "yes" ] && [ "$Xcontainerbackend" = "nerdctl" ]  ; then Usemitshm="no" ; fi
-    
-    if [ "$Shareipc" = "host" ] ; then                                           Usemitshm="yes" ; fi # Shareipc_host
-    
-    if [ "$Xcontainer_option" = "yes" ] && [ -n "$Newxvt" ]                    ; then  Usemitshm="no" ; fi
-    
-    if [ "$Xcontainer_option" = "no" ]  && [ "$Shareipc" != "host" ]           ; then   Usemitshm="no" ; fi # Shareipc_host
-    if [ "$Containeruser" != "$Hostuser" ]                                ; then Usemitshm="no" ; fi
-    if [ "$Xoverip" != "no" ]                                             ; then Usemitshm="no" ; fi
-
-    # xxxxx
-    if [ "$Xcontainer_option" = "yes" ]                          \
-           && case_match "$Xserver" '--weston*|--xpra*-xwayland' \
-           && [ "$Shareipc" != "host" ] ;
-    then  Usemitshm="no" # Shareipc_host
-    fi
+        # xxxxx
+        if [ "$Xcontainer_option" = "yes" ]                          \
+               && case_match "$Xserver" '--weston*|--xpra*-xwayland' \
+               && [ "$Shareipc" != "host" ] ;
+        then  Usemitshm="no" # Shareipc_host
+        fi
     fi
 
 
