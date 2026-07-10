@@ -8897,10 +8897,13 @@ create_xcommand() {
     esac # Xserver
 
     # X extension COMPOSITE
-  [ "$Xcomposite" ] || case "$Xserver" in
-    --nxagent|--xwin) Xcomposite="no" ;;
-    *) Xcomposite="yes" ;;
-  esac
+    if [ -z "$Xcomposite" ] ; then
+        case "$Xserver" in
+            --nxagent|--xwin) Xcomposite="no"  ;;
+            *)                Xcomposite="yes" ;;
+        esac
+    fi
+  
   case "$Xcomposite" in
     yes)
       # Old X servers have extension "Composite", recent ones call it "COMPOSITE".
