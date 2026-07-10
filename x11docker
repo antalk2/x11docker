@@ -8649,11 +8649,15 @@ check_xserver() {
             ;;
     esac
 
-    [ "$Autochooseserver" = "yes" ] && note "Using X server option $Xserver"
+    if [ "$Autochooseserver" = "yes" ] ; then
+        note "Using X server option $Xserver"
+    fi
     storeinfo_add_kv_sh "xserver=$Xserver"
 
     return 0
-}
+} # check_xserver
+
+
 create_modelinefile() {         # generate a set of smaller modelines for screen size $1 and store them in a cache file
   local Newmodelinefile Modeline Size X Y Xcount Ycount
 
