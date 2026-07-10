@@ -9136,8 +9136,7 @@ create_xcommand() {
             else Weston="weston"
             fi
             
-            case "$Newxvt" in
-                "")
+            if [ -z "$Newxvt" ] ; then
                     # Display prefix X or WL; needed to indicate if
                     # host Wayland or host X provides the nested
                     # window.
@@ -9148,9 +9147,7 @@ create_xcommand() {
                     if   [ -n "$Hostwaylandsocket" ] ; then Westonoutput="WL"
                     elif [ -n "$Hostdisplay"       ] ; then Westonoutput="X"
                     fi
-                    ;;
-
-                *)
+            else
                     # get monitor name(s) into Connectorlist
                     #
                     #for Status in /sys/class/drm/*/status; do 
@@ -9166,8 +9163,7 @@ create_xcommand() {
                             *) Connectorlist="$Connectorlist $Card"
                         esac
                     done
-                    ;;
-            esac
+            fi
 
             echo "[core]" >> "$Westonini"
             case "$Westonoutput" in
