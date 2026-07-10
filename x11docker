@@ -8895,16 +8895,7 @@ create_xcommand() {
                                 )"
             #
             case "$Usemitshm" in
-                yes)
-                    if false; then
-                    Xserverextensions="$( trim_to_bar \
-                                        "|$Xserverextensions \\
-                                         |  +extension MIT-SHM"
-                                         )"
-                    else
-                        $append_ops_to Xserverextensions "+extension MIT-SHM"
-                    fi
-                     ;;
+                yes) $append_ops_to Xserverextensions "+extension MIT-SHM" ;;
                 no) Xserverextensions="$( trim_to_bar \
                                        "|$Xserverextensions \\
                                         |  -extension MIT-SHM"
