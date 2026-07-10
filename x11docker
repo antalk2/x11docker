@@ -8975,6 +8975,7 @@ create_xcommand() {
                     && [ "$Desktopmode" = "no" ]        ;
                     then
                         # Dpi = Scaling * Scaling * Dpi
+                        # Q: Why is Scaling squared?
                         Dpi="$(awk -v a="$Scaling" -v b="$Dpi" 'BEGIN {print (b * a * a)}')"
                         Dpi="${Dpi%.*}" # Remove decimal point and after.
                     fi
