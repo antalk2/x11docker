@@ -8925,16 +8925,8 @@ create_xcommand() {
     # X extension XTEST
     Xtest="${Xtest:-no}"
     case "$Xtest" in
-        yes) Xserverextensions="$( trim_to_bar \
-                                "|$Xserverextensions \\
-                                 |  +extension XTEST"
-                                 )"
-             ;;
-        no)  Xserverextensions="$( trim_to_bar \
-                                "|$Xserverextensions \\
-                                 |  -extension XTEST"
-                                 )"
-             ;;
+        yes) $append_ops_to Xserverextensions "+extension XTEST" ;;
+        no)  $append_ops_to Xserverextensions "-extension XTEST" ;;
     esac
 
     case "$Xserver" in
