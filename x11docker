@@ -8848,6 +8848,20 @@ create_xcommand() {
     fi
     
     #### General X server options
+    create_xcommand_INTERNAL_append_ops_to() {
+        local NEWLINE=$'\n'
+        declare -n VAR_IO="$1"
+        shift
+        #
+        local op
+        local SEP="\\${NEWLINE}  "
+        for op in "${@}" ; do
+            VAR_IO+="${SEP}${op}"
+        done
+    }
+    local append_ops_to="create_xcommand_INTERNAL_append_ops_to"
+    # Usage example: $append_ops_to Xserveroptions '-shmem' '-shpix'
+    #
     case "$Xserver" in
         --nxagent)
             case "$Usemitshm" in
