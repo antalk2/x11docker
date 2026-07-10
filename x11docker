@@ -9043,16 +9043,16 @@ create_xcommand() {
             fi
 
             Xpraoptions="\\
-  $(check_xpraoption --microphone=no ||:) \\
+  $(check_xpraoption --microphone=no               ||:) \\
   $(check_xpraoption --mmap=$Sharefolder/xpra.mmap ||:) \\
-  $(check_xpraoption --notifications=no ||:) \\
-  $(check_xpraoption --pulseaudio=no ||:) \\
-  $(check_xpraoption --socket-dirs="$Sharefolder" ||:) \\
-  $(check_xpraoption --speaker=no ||:) \\
-  $(check_xpraoption --start-via-proxy=no ||:) \\
-  $(check_xpraoption --system-tray=no ||:) \\
-  $(check_xpraoption --webcam=no ||:) \\
-  $(check_xpraoption --xsettings=no ||:)"
+  $(check_xpraoption --notifications=no            ||:) \\
+  $(check_xpraoption --pulseaudio=no               ||:) \\
+  $(check_xpraoption --socket-dirs="$Sharefolder"  ||:) \\
+  $(check_xpraoption --speaker=no                  ||:) \\
+  $(check_xpraoption --start-via-proxy=no          ||:) \\
+  $(check_xpraoption --system-tray=no              ||:) \\
+  $(check_xpraoption --webcam=no                   ||:) \\
+  $(check_xpraoption --xsettings=no                ||:)"
 
       case "$Shareclipboard" in
         native-yes)
