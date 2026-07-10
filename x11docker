@@ -8904,19 +8904,28 @@ create_xcommand() {
         esac
     fi
   
-  case "$Xcomposite" in
-    yes)
-      # Old X servers have extension "Composite", recent ones call it "COMPOSITE".
-      Xserverextensions="$Xserverextensions \\
-  +extension Composite +extension COMPOSITE"
-    ;;
-    no)
-      Xserverextensions="$Xserverextensions \\
-  -extension Composite -extension COMPOSITE"
-      [ "$Xserver" = "nxagent" ] && Xserveroptions="Xserveroptions \\
-  -nocomposite"
-    ;;
-  esac
+    case "$Xcomposite" in
+        yes)
+            # Old X servers have extension "Composite", recent ones call it "COMPOSITE".
+            Xserverextensions="$( trim_to_bar \
+                               "|$Xserverextensions \\
+                                |  +extension Composite +extension COMPOSITE"
+                                )"
+            ;;
+        no)
+            Xserverextensions="$( trim_to_bar \
+                               "|$Xserverextensions \\
+                               |  -extension Composite -extension COMPOSITE"
+                               )"
+            if [ "$Xserver" = "nxagent" ] ; then
+                # Note: no '$' before Xserveroptions
+                Xserveroptions="$( trim_to_bar \
+                                "|Xserveroptions \\
+                                 |  -nocomposite"
+                                 )"
+            fi
+            ;;
+    esac
 
   # X extension XTEST
   Xtest="${Xtest:-no}"
