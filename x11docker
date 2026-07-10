@@ -8817,17 +8817,30 @@ create_xcommand() {
     Xdpyinfooutput="$( xtool "xdpyinfo 2>> $Xinitlogfile" || : )"
 
     # adjust Usemitshm
-    
+
+    #
+    # In most cases Usemitshm is set to no.
+    #
+    # The order within a list of consecutive branches with the same
+    # Usemitshm="no" result does not matter, even if they overlap.
+    # We can freely reorder them.
+    #
     if   case_match "$Runtime" 'kata-runtime | sysbox-runc'                               ; then Usemitshm="no"
+
     elif [ "$Xcontainer_option" = "yes"    ] && [ "$Shareipc" != "host" ]                 \
-    &&   case_match "$Xserver" '--weston* | --xpra*-xwayland'                             ; then  Usemitshm="no"
+    &&   case_match "$Xserver" '--weston* | --xpra*-xwayland'                             ; then Usemitshm="no"
+
     elif [ "$Xoverip" != "no"              ]                                              ; then Usemitshm="no"
     elif [ "$Containeruser" != "$Hostuser" ]                                              ; then Usemitshm="no"
     elif [ "$Xcontainer_option" = "no"     ] && [ "$Shareipc" != "host" ]                 ; then Usemitshm="no"
     elif [ "$Xcontainer_option" = "yes"    ] && [ -n "$Newxvt" ]                          ; then Usemitshm="no"
-    elif [ "$Shareipc" = "host"            ]                                              ; then Usemitshm="yes"
+
+    # -----
+    elif                                        [ "$Shareipc" = "host"  ]                 ; then   Usemitshm="yes"
+
     elif [ "$Xcontainer_option" = "yes"    ] && [ "$Xcontainerbackend" = "nerdctl"      ] ; then Usemitshm="no"
-    elif [ "$Xcontainer_option" = "yes"    ] && [ "$Xcontainerbackend" = "$BackendKind" ] ; then Usemitshm="yes"
+
+    elif [ "$Xcontainer_option" = "yes"    ] && [ "$Xcontainerbackend" = "$BackendKind" ] ; then   Usemitshm="yes"
     else
         : # nothing
     fi
