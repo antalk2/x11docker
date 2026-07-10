@@ -8848,6 +8848,15 @@ create_xcommand() {
     fi
     
     #### General X server options
+    #
+    # Function: create_xcommand_INTERNAL_append_ops_to
+    # Usage: create_xcommand_INTERNAL_append_ops_to VARNAME opt1 opt2 ... optn
+    #
+    # Brief: Append op1 ... optn to the variable VARNAME, preceding
+    #        each with a SEP=" \\${NEWLINE} "
+    #
+    # Purpose: Shorten the code, especially when only a few opts added at a time.
+    #
     create_xcommand_INTERNAL_append_ops_to() {
         # local NEWLINE=$'\n'
         declare -n create_xcommand_INTERNAL_append_ops_to_VAR_IO="$1"
@@ -8871,26 +8880,23 @@ create_xcommand() {
             ;;
 
         *) # Xserver != --nxagent
-            Xserverextensions="$( trim_to_bar \
-                               "| \\
-                                |  +extension RANDR \\
-                                |  +extension RENDER \\
-                                |  +extension GLX \\
-                                |  +extension XVideo \\
-                                |  +extension DOUBLE-BUFFER \\
-                                |  +extension SECURITY \\
-                                |  +extension DAMAGE \\
-                                |  +extension X-Resource \\
-                                |  -extension XINERAMA"
-                                )"
+                Xserverextensions=""
+                $append_ops_to Xserverextensions           \
+                               ""                          \
+                               "+extension RANDR"          \
+                               "+extension RENDER"         \
+                               "+extension GLX"            \
+                               "+extension XVideo"         \
+                               "+extension DOUBLE-BUFFER"  \
+                               "+extension SECURITY"       \
+                               "+extension DAMAGE"         \
+                               "+extension X-Resource"     \
+                               "-extension XINERAMA"
             #
             case "$Usemitshm" in
-                yes) $append_ops_to Xserverextensions "+extension MIT-SHM" ;;
-                no) Xserverextensions="$( trim_to_bar \
-                                       "|$Xserverextensions \\
-                                        |  -extension MIT-SHM"
-                                        )"
-                    Xprashm="XPRA_XSHM=0"
+                yes) $append_ops_to Xserverextensions "+extension MIT-SHM"  ;;
+                no)  $append_ops_to Xserverextensions "-extension MIT-SHM"
+                     Xprashm="XPRA_XSHM=0"
                     ;;
             esac
             ;;
