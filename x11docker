@@ -8982,9 +8982,15 @@ create_xcommand() {
                     ;;
             esac
       
-      [ -n "$Dpi" ] && Xserveroptions="$Xserveroptions \\
-  -dpi $Dpi"
-      # --gpu=iglx
+            if [ -n "$Dpi" ] ; then
+                Xserveroptions="$( trim_to_bar \
+                                "|$Xserveroptions \\
+                                 |  -dpi $Dpi"
+                                 )"
+                #
+            fi
+
+            # --gpu=iglx
       case "$Xserver" in
         --tty|--hostdisplay|--runx) ;;
         --weston|--kwin|--hostwayland) ;;
