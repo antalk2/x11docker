@@ -8991,22 +8991,24 @@ create_xcommand() {
             fi
 
             # --gpu=iglx
-      case "$Xserver" in
-        --tty|--hostdisplay|--runx) ;;
-        --weston|--kwin|--hostwayland) ;;
-        --nxagent) ;;
-        *)
-          case "$Sharegpu" in
-            iglx) Xserveroptions="$Xserveroptions \\
-  +iglx" ;;
-            *)
+            case "$Xserver" in
+                --tty|--hostdisplay|--runx) ;;
+                --weston|--kwin|--hostwayland) ;;
+                --nxagent) ;;
+                *)
+                    case "$Sharegpu" in
+                        iglx) Xserveroptions="$Xserveroptions \\
+  +iglx"
+                              ;;
+                        *)
               Xserveroptions="$Xserveroptions \\
-  -iglx" ;;
-          esac
-        ;;
-      esac
-    ;;
-  esac
+  -iglx"
+              ;;
+                    esac
+                    ;;
+            esac
+            ;;
+    esac
 
   # X cookie authentication
   case "$Xauthentication" in
