@@ -8834,16 +8834,14 @@ create_xcommand() {
     if [ "$Xoverip" != "no" ]                                             ; then Usemitshm="no" ; fi
 
     # xxxxx
-    if [ "$Xcontainer_option" = "yes" ] ; then
-        if case_match "$Xserver" '--weston*|--xpra*-xwayland' ; then
-            # if case "$Xserver" in  --weston*|--xpra*-xwayland) true ;; *) false ;; esac ; then
-            # case "$Xserver" in
-            #--weston*|--xpra*-xwayland)
-            if [ "$Shareipc" != "host" ] ; then  Usemitshm="no" ; fi   # Shareipc_host
-            # ;; esac
-            fi
+    if [ "$Xcontainer_option" = "yes" ]                          \
+           && case_match "$Xserver" '--weston*|--xpra*-xwayland' \
+           && [ "$Shareipc" != "host" ] ;
+    then  Usemitshm="no" # Shareipc_host
     fi
-  
+
+
+
     case "$Runtime" in
         kata-runtime|sysbox-runc)                                           Usemitshm="no" ;;
     esac
