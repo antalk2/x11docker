@@ -9217,8 +9217,9 @@ create_xcommand() {
 
     # Xwayland: check -decorate -force-xrandr-emulation
     if case_match "$Xserver" '*xwayland' ; then
-        case "$Xcontainer_option" in
-            yes)
+        if ! case_match "$Xcontainer_option"  "yes|no" ; then error "Xcontainer_option is not in yes|no" ; fi
+
+        if [ "$Xcontainer_option" = yes ] ; then
                 if version_less_than "$Xcontainerversion" "2.0" ; then
                     Xrandremulation=""
                     Decorate=""
@@ -9226,16 +9227,14 @@ create_xcommand() {
                     Xrandremulation="-force-xrandr-emulation"
                     Decorate="-decorate"
                 fi
-                ;;
-            no)
+        else
                 if Xwayland -help 2>&1 | grep -q "force-xrandr-emulation" ; then
                     Xrandremulation="-force-xrandr-emulation"
                 fi
                 if Xwayland -help 2>&1 | grep -q "decorate" ; then
                     Decorate="-decorate"
                 fi
-                ;;
-        esac
+        fi
     fi
     
     if [ "$Xwaylandrootless" = "no" ] ; then
@@ -9250,8 +9249,9 @@ create_xcommand() {
         fi
     fi
 
-    [ "$Xwaylandrootless" = "no" ] && [ -n "$Xrandremulation" ] && Xwaylandoptions="$Xwaylandoptions \\
-  $Xrandremulation"
+    if [ "$Xwaylandrootless" = "no" ] && [ -n "$Xrandremulation" ] ; then
+        $append_ops_to Xwaylandoptions "$Xrandremulation"
+    fi
 
   # Xwayland wrapper script for rootless mode
 #echo \"$(get_xpath Xwayland) \$(sed 's/-terminate//' <<< \"\$@\") $Xserveroptions\" >> $Xinitlogfile 2>&1
