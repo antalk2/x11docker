@@ -9096,13 +9096,11 @@ create_xcommand() {
             if [ -n "$Dpi" ] ; then
                 $append_ops_to Xpraservercommand "$(check_xpraoption --dpi="$Dpi" || : )"
             fi
-            case "$Xserver" in
-                --xpra2*)
-                    $append_ops_to Xpraservercommand "--bind=$Sharefolder/$(hostname)-$Newdisplaynumber"
-                    ;;
-            esac
+            if case_match "$Xserver" "--xpra2*" ; then
+                $append_ops_to Xpraservercommand "--bind=$Sharefolder/$(hostname)-$Newdisplaynumber"
+            fi
 
-      # xpra client command
+            # xpra client command
       Xpraclientcommand="xpra attach :$Newdisplaynumber"
       Xpraclientcommand="$Xpraclientcommand $Xpraoptions \\
   $(check_xpraoption --modal-windows=no ||:) \\
