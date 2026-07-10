@@ -8825,6 +8825,7 @@ create_xcommand() {
              && [ "$Shareipc" != "host" ] ;
     then  Usemitshm="no" # Shareipc_host
     elif [ "$Xoverip" != "no" ] ; then Usemitshm="no"
+    elif [ "$Containeruser" != "$Hostuser" ]       ; then Usemitshm="no"
     else
         #
         # Last write wins.
@@ -8838,7 +8839,6 @@ create_xcommand() {
         if [ "$Xcontainer_option" = "yes" ] && [ -n "$Newxvt" ]                    ; then  Usemitshm="no" ; fi
         
         if [ "$Xcontainer_option" = "no" ]  && [ "$Shareipc" != "host" ]           ; then   Usemitshm="no" ; fi # Shareipc_host
-        if [ "$Containeruser" != "$Hostuser" ]                                ; then Usemitshm="no" ; fi
 
         # xxxxx
     fi
