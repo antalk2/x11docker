@@ -8986,16 +8986,17 @@ create_xcommand() {
                          |  Your X server is accessible over TCP network without any restriction.
                          |  That can be abused to take control over your system."
                     ;;
-        no)
-          case "$Xserver" in
-            --hostdisplay|--hostwayland|--weston|--kwin|--tty) ;;
-            *) warning "Option --xauth=no: SECURITY RISK!
-  Allowing access to new X server for everyone." ;;
-          esac
-        ;;
-      esac
-    ;;
-  esac
+                no)
+                    case "$Xserver" in
+                        --hostdisplay|--hostwayland|--weston|--kwin|--tty) ;;
+                        *) warning "Option --xauth=no: SECURITY RISK!
+  Allowing access to new X server for everyone."
+                           ;;
+                    esac
+                    ;;
+            esac
+            ;;
+    esac
 
   # X over IP/TCP
   case "$Xoverip" in
