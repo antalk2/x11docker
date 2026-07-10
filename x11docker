@@ -9062,12 +9062,15 @@ create_xcommand() {
                 *)          $append_ops_to Xpraoptions "--clipboard=no"  ;;
             esac
 
-      # --keymap
-      [ "$Xkblayout" ] && Xpraoptions="$Xpraoptions \\
-  $(check_xpraoption --keyboard-layout="'$Xkblayout'" ||:) \\
-  $(check_xpraoption --keyboard-raw=yes ||:)"
+            # --keymap
+            if [ "$Xkblayout" ] ; then
+                $append_ops_to Xpraoptions                                       \
+                    "$(check_xpraoption --keyboard-layout="'$Xkblayout'" || : )" \
+                    "$(check_xpraoption --keyboard-raw=yes               || : )"
+            fi
 
-#      Xpraoptions="$Xpraoptions  $(check_xpraoption --debug=all ||:)" ; Preservecachefiles="yes"  # Debugging only
+            # Debugging only:
+            # Xpraoptions="$Xpraoptions  $(check_xpraoption --debug=all ||:)" ; Preservecachefiles="yes"
 
       # xpra server command
       [ "$Desktopmode" = "yes" ] && Xpraservercommand="xpra start-desktop" || Xpraservercommand="xpra start"
