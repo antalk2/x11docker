@@ -8820,6 +8820,10 @@ create_xcommand() {
     
     if case_match "$Runtime" 'kata-runtime | sysbox-runc' ; then
         Usemitshm="no"
+    elif [ "$Xcontainer_option" = "yes" ]                          \
+             && case_match "$Xserver" '--weston*|--xpra*-xwayland' \
+             && [ "$Shareipc" != "host" ] ;
+    then  Usemitshm="no" # Shareipc_host
     else
         #
         # Last write wins.
@@ -8837,11 +8841,6 @@ create_xcommand() {
         if [ "$Xoverip" != "no" ]                                             ; then Usemitshm="no" ; fi
 
         # xxxxx
-        if [ "$Xcontainer_option" = "yes" ]                          \
-               && case_match "$Xserver" '--weston*|--xpra*-xwayland' \
-               && [ "$Shareipc" != "host" ] ;
-        then  Usemitshm="no" # Shareipc_host
-        fi
     fi
 
 
