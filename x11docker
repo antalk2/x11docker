@@ -8962,9 +8962,6 @@ create_xcommand() {
             #
             # --dpi: check DPI
             if ! case_match  "$Xserver" '--xwin | --runx' ; then
-                #case "$Xserver" in
-                #--xwin|--runx) ;;
-                #*)
                     if [ -z "$Dpi" ] && [ -n "$Xdpyinfooutput" ] ; then
                         # Looking for line: "  resolution:    96x96 dots per inch"
                         # Cut out the 96 following the x
@@ -8980,8 +8977,6 @@ create_xcommand() {
                         Dpi="$(awk -v a="$Scaling" -v b="$Dpi" 'BEGIN {print (b * a * a)}')"
                         Dpi="${Dpi%.*}" # Remove decimal point and after.
                     fi
-                 #   ;;
-                    #esac
             fi
       
             if [ -n "$Dpi" ] ; then
