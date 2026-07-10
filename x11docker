@@ -8692,7 +8692,34 @@ check_xserver() {
 } # check_xserver
 
 
-create_modelinefile() {         # generate a set of smaller modelines for screen size $1 and store them in a cache file
+# Function: create_modelinefile
+#
+# Usage: create_modelinefile Size
+#
+# Brief: Generate a set of smaller modelines for screen size @code{$1} and
+#        store them in a cache file: "$Modelinefilebasepath/$Size"
+#
+# Files:
+#   "$Modelinefilebasepath/$Size" : write
+#
+# Argument:
+#   Size : string in "%dx%d" format. Example: "800x600"
+#
+# Globals:
+#   Modelinefilebasepath
+#
+# Tools:
+#   cvt : calculate VESA CVT mode lines. https://linux.die.net/man/1/cvt
+#         Usage: cvt [-v|--verbose] [-r|--reduced] h-resolution v-resolution [refresh]
+#         Example output:
+#         ---------------
+#         # 2000x1920 59.97 Hz (CVT) hsync: 119.28 kHz; pclk: 328.25 MHz
+#         Modeline "2000x1920_60.00"  328.25  2000 2160 2376 2752  1920 1923 1933 1989 -hsync +vsync
+#         ---------------
+#   awk
+#   tail
+#
+create_modelinefile() {
   local Newmodelinefile Modeline Size X Y Xcount Ycount
 
   Size="${1:-}"
@@ -8703,10 +8730,14 @@ create_modelinefile() {         # generate a set of smaller modelines for screen
   [ -e "$Newmodelinefile" ] || {
     debugnote "$Xserver: Generating modelines for $Size"
     mkfile "$Newmodelinefile"
-    for Ycount in 25 30 40 45 50 55 60 65 70 75 80 85 90 95 100; do
+    for   Ycount in 25 30 40 45 50 55 60 65 70 75 80 85 90 95 100; do
       for Xcount in 25 30 40 45 50 55 60 65 70 75 80 85 90 95 100; do
-        Modeline="$(cvt "$(awk -v a="$X" -v b="$Xcount" 'BEGIN {print (a * b / 100)}')" "$(awk -v a="$Y" -v b="$Ycount" 'BEGIN {print (a * b / 100)}' )" | tail -n1)"
-        Modeline="${Modeline//"_60.00"/""}"
+          Modeline="$( cvt                                                              \
+                       "$(awk -v a="$X" -v b="$Xcount" 'BEGIN {print (a * b / 100)}' )" \ 
+                       "$(awk -v a="$Y" -v b="$Ycount" 'BEGIN {print (a * b / 100)}' )" \
+                       | tail -n1
+                     )"
+        Modeline="${Modeline//"_60.00"/""}" # "2000x1920_60.00" to "2000x1920"
         echo "$Modeline" >> "$Newmodelinefile"
       done
     done
