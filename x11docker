@@ -9228,8 +9228,12 @@ create_xcommand() {
                 fi
                 ;;
             no)
-                Xwayland -help 2>&1 | grep -q "force-xrandr-emulation" && Xrandremulation="-force-xrandr-emulation"
-                Xwayland -help 2>&1 | grep -q "decorate"               && Decorate="-decorate"
+                if Xwayland -help 2>&1 | grep -q "force-xrandr-emulation" ; then
+                    Xrandremulation="-force-xrandr-emulation"
+                fi
+                if Xwayland -help 2>&1 | grep -q "decorate" ; then
+                    Decorate="-decorate"
+                fi
                 ;;
         esac
     fi
