@@ -9337,21 +9337,24 @@ create_xcommand() {
                 echo
             } >> "$Westonini"
 
-            Compositorcommand="$Weston \\
-  --socket=$Newwaylandsocket \\
-  --backend=x11-backend.so \\
-  --config='$Westonini'"
-      case "$Xserver" in
-        --xpra-xwayland|--xpra2-xwayland)
-          case "$Scaling" in
-            "") Compositorcommand="$Compositorcommand \\
-  --fullscreen" ;;
-            *)  Compositorcommand="$Compositorcommand \\
-  --width=$(cut -dx -f1 <<< "$Screensize") --height=$(cut -dx -f2 <<< "$Screensize")" ;;
-          esac
-        ;;
-      esac
-    ;;
+            Compositorcommand="$( trim_to_bar \
+                               "|$Weston \\
+                                |  --socket=$Newwaylandsocket \\
+                                |  --backend=x11-backend.so \\
+                                |  --config='$Westonini'"
+                                )"
+            case "$Xserver" in
+                --xpra-xwayland|--xpra2-xwayland)
+                    case "$Scaling" in
+                        "") $append_ops_to Compositorcommand "--fullscreen" ;;
+                        *)  $append_ops_to \
+                                Compositorcommand \
+                                "--width=$(cut -dx -f1 <<< "$Screensize") --height=$(cut -dx -f2 <<< "$Screensize")"
+                            ;;
+                    esac
+                    ;;
+            esac
+            ;;
 
     --weston|--weston-xwayland)
       Xcommand="$(get_xpath Xwayland) :$Newdisplaynumber"
