@@ -9171,18 +9171,19 @@ create_xcommand() {
                 X)  echo "backend=x11-backend.so"     >> $Westonini ;;
                 *)  echo "backend=drm-backend.so"     >> $Westonini ;;
             esac
-            echo "
-shell=desktop-shell.so
-idle-time=0
-[shell]
-panel-location=none
-panel-position=none
-locking=false
-background-color=0xff002244
-animation=fade
-startup-animation=fade
-[keyboard]
-vt-switching=true" >> "$Westonini"
+            trim_to_bar "|
+                         |shell=desktop-shell.so
+                         |idle-time=0
+                         |[shell]
+                         |panel-location=none
+                         |panel-position=none
+                         |locking=false
+                         |background-color=0xff002244
+                         |animation=fade
+                         |startup-animation=fade
+                         |[keyboard]
+                         |vt-switching=true" >> "$Westonini"
+            echo >> "$Westonini"
 
             # --keymap: keyboard layout
             [ -n "$Xkblayout" ] && echo "keymap_layout=$Xkblayout" >> "$Westonini"
