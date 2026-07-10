@@ -3631,7 +3631,7 @@ mkfolder() {
 }
 
 
-# Function: 
+# Function: myrealpath
 # Usage: myrealpath path
 # Brief: Real path of a possible symlink
 #
@@ -3801,7 +3801,7 @@ waitforlogentry_sh() {
 }
 
 #
-# Function: writeaccess( useruid, folderPath )
+# Function: writeaccess
 # Usage: writeaccess useruid  folderPath
 # Brief: Try to tell if useruid could write in folderPath
 #
@@ -8177,8 +8177,42 @@ check_xpraoption() {
 # Function: check_xserver
 # Brief: Check chosen X server, auto-choose X server
 #
+# Argument: none
+#
+# Globals:
+#
+#   Autochooseserver : write
+#   DISPLAY
+#   Desktopmode :
+#   Hostdisplay
+#   Hostwaylandsocket
+#   Newxvt : write
+#   Nvidiaversion
+#   Outputcount
+#   PKEXEC_UID
+#   Printcheck
+#   Rotation
+#   Runsonconsole
+#   Runsoverssh
+#   Runtime
+#   Satelliteversion : write
+#   Setupwayland : write
+#   Sharegpu : write
+#   Sharehostwayland : write
+#   Wikipackages
+#   Wikipackagesimage
+#   Winsubsystem
+#   XDG_CURRENT_DESKTOP
+#   Xcontainer_option : write
+#   Xfishtank
+#   Xpraborder
+#   Xserver : write
+#   Xwogether
+#
+#
 check_xserver() {
     local Xorgautochoice=""
+    local Gnomeversion=""
 
     # --xw
     if [ "$Xwogether" = "yes" ] ; then
