@@ -8830,17 +8830,9 @@ create_xcommand() {
     elif [ "$Xcontainer_option" = "yes" ] && [ -n "$Newxvt" ]                    ; then  Usemitshm="no"
     elif [ "$Shareipc" = "host" ] ; then                                           Usemitshm="yes"  # Shareipc_host
     elif [ "$Xcontainer_option" = "yes" ] && [ "$Xcontainerbackend" = "nerdctl" ]  ; then Usemitshm="no"
+    elif [ "$Xcontainer_option" = "yes" ] && [ "$Xcontainerbackend" = "$BackendKind" ] ; then Usemitshm="yes"
     else
-        #
-        # Last write wins.
-        #
-        if [ "$Xcontainer_option" = "yes" ] && [ "$Xcontainerbackend" = "$BackendKind" ] ; then Usemitshm="yes" ; fi
-        
-        
-        
-        
-
-        # xxxxx
+        : # nothing
     fi
 
 
