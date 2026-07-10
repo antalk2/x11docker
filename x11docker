@@ -9267,19 +9267,25 @@ create_xcommand() {
         echo
     } >> "$Xwaylandwrapper"
 
-  #### create command to run X server
-  case "$Xserver" in
-    --xorg)
-      Xserveroptions="$Xserveroptions \\
-  -verbose"
-      [ "$Xorgconf" ] && Xserveroptions="$Xserveroptions \\
-  -config '$Xorgconf'"       # --xorgconf
-      Xcommand="$(get_xpath Xorg) :$Newdisplaynumber vt$Newxvt $Xserveroptions"
-    ;;
-    --xpra|--xpra2)
-      Xcommand="$(get_xpath Xvfb) :$Newdisplaynumber $Xserveroptions \\
-  -screen 0 ${Xaxis}x${Yaxis}x24"
-    ;;
+    #### create command to run X server
+    case "$Xserver" in
+        --xorg)
+            $append_ops_to Xserveroptions "-verbose"
+
+            if [ "$Xorgconf" ] ; then
+                # --xorgconf
+                $append_ops_to Xserveroptions "-config '$Xorgconf'"
+            fi
+
+            Xcommand="$(get_xpath Xorg) :$Newdisplaynumber vt$Newxvt $Xserveroptions"
+            ;;
+
+        --xpra|--xpra2)
+            Xcommand="$(trim_to_bar\
+                      "|$(get_xpath Xvfb) :$Newdisplaynumber $Xserveroptions \\
+                       |  -screen 0 ${Xaxis}x${Yaxis}x24"
+                       )"
+            ;;
 
     --xvfb)
       Xcommand="$(get_xpath Xvfb) :$Newdisplaynumber $Xserveroptions \\
