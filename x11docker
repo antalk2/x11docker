@@ -8929,9 +8929,7 @@ create_xcommand() {
         no)  $append_ops_to Xserverextensions "-extension XTEST" ;;
     esac
 
-    case "$Xserver" in
-        --satellite) ;; # nothing
-        *)
+    if [ "$Xserver" != "--satellite" ] ; then
             if [ "$Xserver" != "--nxagent" ] ; then
                 $append_ops_to Xserveroptions "-retro"
             fi
@@ -8968,8 +8966,7 @@ create_xcommand() {
                     *)    $append_ops_to Xserveroptions "-iglx" ;;
                 esac # Sharegpu
             fi
-            ;;
-    esac # Xserver (again)
+    fi # [ "$Xserver" != "--satellite" ]
 
   # X cookie authentication
   case "$Xauthentication" in
