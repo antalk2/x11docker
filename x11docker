@@ -9117,15 +9117,16 @@ create_xcommand() {
             fi
             # if [ -n "$Dpi" ] ; then $append_ops_to Xpraclientcommand "$(check_xpraoption --dpi="'$Dpi'" )" ; fi
 
-      [ "$Xpraborder" ] && Xpraclientcommand="$Xpraclientcommand \\
-  $(check_xpraoption --border="$Xpraborder" ||:)"
+            if [ "$Xpraborder" ] ; then
+                $append_ops_to Xpraclientcommand "$(check_xpraoption --border="$Xpraborder" || : )"
+            fi
 
-      # xpra environment variables
-      for Line in $Xpracontainerenv; do
-        store_runoption_env "$Line"
-      done
-    ;;
-  esac
+            # xpra environment variables
+            for Line in $Xpracontainerenv; do
+                store_runoption_env "$Line"
+            done
+            ;;
+    esac
 
   #### Prepare weston.ini: config file for Weston
   case "$Xserver" in
