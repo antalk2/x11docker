@@ -8865,18 +8865,8 @@ create_xcommand() {
     case "$Xserver" in
         --nxagent)
             case "$Usemitshm" in
-                yes) Xserveroptions="$( trim_to_bar \
-                                     "|$Xserveroptions \\
-                                      |  -shmem \\
-                                      |  -shpix"
-                                      )"
-                     ;;
-                no) Xserveroptions="$( trim_to_bar \
-                              "|$Xserveroptions \\
-                               |  -noshmem \\
-                               |  -noshpix"
-                               )"
-                    ;;
+                yes) $append_ops_to Xserveroptions "-shmem"   "-shpix"    ;;
+                no)  $append_ops_to Xserveroptions "-noshmem" "-noshpix"  ;;
             esac
             ;;
 
