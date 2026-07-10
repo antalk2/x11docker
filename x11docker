@@ -9300,14 +9300,14 @@ create_xcommand() {
 
             case "$Fullscreen" in
                 yes)
-                    Xserveroptions="$Xserveroptions \\
-  -fullscreen"
-        ;;
-        no)
-          grep -q -- "-output " <<< "$Xserveroptions_custom" || Xserveroptions="$Xserveroptions \\
-  -screen $Screensize"
-        ;;
-      esac
+                    $append_ops_to Xserveroptions "-fullscreen"
+                    ;;
+                no)
+                    if ! grep -q -- "-output " <<< "$Xserveroptions_custom" ; then
+                        $append_ops_to Xserveroptions "-screen $Screensize"
+                    fi
+                    ;;
+            esac
       Xcommand="$(get_xpath Xephyr) :$Newdisplaynumber $Xserveroptions"
    ;;
 
