@@ -8824,6 +8824,7 @@ create_xcommand() {
              && case_match "$Xserver" '--weston*|--xpra*-xwayland' \
              && [ "$Shareipc" != "host" ] ;
     then  Usemitshm="no" # Shareipc_host
+    elif [ "$Xoverip" != "no" ] ; then Usemitshm="no"
     else
         #
         # Last write wins.
@@ -8838,7 +8839,6 @@ create_xcommand() {
         
         if [ "$Xcontainer_option" = "no" ]  && [ "$Shareipc" != "host" ]           ; then   Usemitshm="no" ; fi # Shareipc_host
         if [ "$Containeruser" != "$Hostuser" ]                                ; then Usemitshm="no" ; fi
-        if [ "$Xoverip" != "no" ]                                             ; then Usemitshm="no" ; fi
 
         # xxxxx
     fi
