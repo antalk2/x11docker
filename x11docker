@@ -8970,10 +8970,10 @@ create_xcommand() {
                         Dpi="$(grep dots <<< "$Xdpyinfooutput" | cut -dx -f2 | cut -d' ' -f1)"
                     fi
                     if [ -n "$Dpi" ] && case_match  "$Xserver" '--xpra*' ; then
-                                [ "$Scaling" ] && [ "$Desktopmode" = "no" ] && {
-                                    Dpi="$(awk -v a="$Scaling" -v b="$Dpi" 'BEGIN {print (b * a * a)}')"
-                                    Dpi="${Dpi%.*}"
-                                }
+                        [ "$Scaling" ] && [ "$Desktopmode" = "no" ] && {
+                            Dpi="$(awk -v a="$Scaling" -v b="$Dpi" 'BEGIN {print (b * a * a)}')"
+                            Dpi="${Dpi%.*}"
+                        }
                     fi
                     ;;
             esac
