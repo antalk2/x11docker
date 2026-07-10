@@ -8958,11 +8958,7 @@ create_xcommand() {
             fi
       
             if [ -n "$Dpi" ] ; then
-                Xserveroptions="$( trim_to_bar \
-                                "|$Xserveroptions \\
-                                 |  -dpi $Dpi"
-                                 )"
-                #
+                $append_ops_to Xserveroptions "-dpi $Dpi"
             fi
 
             # --gpu=iglx
@@ -8972,17 +8968,8 @@ create_xcommand() {
                 --nxagent) ;;
                 *)
                     case "$Sharegpu" in
-                        iglx) Xserveroptions="$( trim_to_bar \
-                                              "|$Xserveroptions \\
-                                               |  +iglx"
-                                               )"
-                              ;;
-                        *)
-                            Xserveroptions="$( trim_to_bar \
-                                            "|$Xserveroptions \\
-                                             |  -iglx"
-                                             )"
-                            ;;
+                        iglx) $append_ops_to Xserveroptions "+iglx" ;;
+                        *)    $append_ops_to Xserveroptions "-iglx" ;;
                     esac # Sharegpu
                     ;;
             esac # Xserver
