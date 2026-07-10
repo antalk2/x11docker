@@ -9202,10 +9202,18 @@ create_xcommand() {
             fi
 
             # --westonini
-            [ -n "$Customwestonini" ] && unpriv "cp '$Customwestonini' '$Westonini'"
-            echo "
-[xwayland]
-path=$Xwaylandwrapper" >> "$Westonini"
+            if [ -n "$Customwestonini" ] ; then
+                # If succeeds, all the stuff we wrote above into Westonini
+                # is erased.
+                unpriv "cp '$Customwestonini' '$Westonini'"
+            fi
+
+            {
+                trim_to_bar "|
+                             |[xwayland]
+                             |path=$Xwaylandwrapper"
+                echo
+             }   >> "$Westonini"
             ;;
     esac
 
