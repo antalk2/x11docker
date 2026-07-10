@@ -8997,18 +8997,19 @@ create_xcommand() {
             ;;
     esac # Xauthentication
 
-  # X over IP/TCP
-  case "$Xoverip" in
-    listentcp)
-      case "$Xserver" in
-        --nxagent) ;;
-        *) Xserveroptions="$Xserveroptions \\
-  -listen tcp" ;;
-      esac
-    ;;
-    no|socat) Xserveroptions="$Xserveroptions \\
+    # X over IP/TCP
+    case "$Xoverip" in
+        listentcp)
+            case "$Xserver" in
+                --nxagent) ;;
+                *) Xserveroptions="$Xserveroptions \\
+  -listen tcp"
+                   ;;
+            esac
+            ;;
+        no|socat) Xserveroptions="$Xserveroptions \\
   -nolisten tcp" ;;
-  esac
+    esac
 
   Xserveroptions="$Xserveroptions $Xserverextensions"
 
