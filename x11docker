@@ -9189,7 +9189,16 @@ create_xcommand() {
             if [ -n "$Xkblayout" ] ; then
                 echo "keymap_layout=$Xkblayout" >> "$Westonini"
             elif [ -n "$Newxvt" ] ; then
-                echo "$( echo -n "keymap_layout=" && grep XKBLAYOUT <"/etc/default/keyboard" | cut -d= -f2 | cut -d'"' -f2)" >> "$Westonini"
+                {
+                    echo -n "keymap_layout="
+                    #
+                    # Example: XKBLAYOUT="us"
+                    # The 2nd cut drops the quotes
+                    grep XKBLAYOUT < "/etc/default/keyboard" \
+                        | cut -d= -f2                        \
+                        | cut -d'"' -f2
+                    echo # ensure Newline
+                }  >> "$Westonini"
             fi
 
             # --westonini
