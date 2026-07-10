@@ -9101,7 +9101,7 @@ create_xcommand() {
 
             # xpra client command
             Xpraclientcommand="xpra attach :$Newdisplaynumber"
-            Xpraclientcommand+="$Xpraclientcommand $Xpraoptions"
+            Xpraclientcommand+=" $Xpraoptions"
             $append_ops_to Xpraclientcommand                    \
                 "$(check_xpraoption --modal-windows=no  || : )" \
                 "$(check_xpraoption --opengl=noprobe    || : )" \
