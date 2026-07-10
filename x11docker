@@ -8817,6 +8817,10 @@ create_xcommand() {
     Xdpyinfooutput="$( xtool "xdpyinfo 2>> $Xinitlogfile" || : )"
 
     # begin Usemitshm
+    
+    if case_match "$Runtime" 'kata-runtime | sysbox-runc' ; then
+        Usemitshm="no"
+    else
 
     #
     # Last write wins.
@@ -8839,11 +8843,8 @@ create_xcommand() {
            && [ "$Shareipc" != "host" ] ;
     then  Usemitshm="no" # Shareipc_host
     fi
-
-
-    if case_match "$Runtime" 'kata-runtime | sysbox-runc' ; then
-        Usemitshm="no"
     fi
+
 
     # end Usemitshm
     
