@@ -8969,12 +8969,14 @@ create_xcommand() {
                         # Cut out the 96 following the x
                         Dpi="$(grep dots <<< "$Xdpyinfooutput" | cut -dx -f2 | cut -d' ' -f1)"
                     fi
-                    if [ -n "$Dpi" ] && case_match  "$Xserver" '--xpra*' ; then
-                        if [ "$Scaling" ] && [ "$Desktopmode" = "no" ] ; then
-                            # Dpi = Scaling * Scaling * Dpi
-                            Dpi="$(awk -v a="$Scaling" -v b="$Dpi" 'BEGIN {print (b * a * a)}')"
-                            Dpi="${Dpi%.*}" # Remove decimal point and after.
-                        fi
+                    if [ -n "$Dpi" ]                    \
+                    && case_match  "$Xserver" '--xpra*' \
+                    && [ "$Scaling" ]                   \
+                    && [ "$Desktopmode" = "no" ]        ;
+                    then
+                        # Dpi = Scaling * Scaling * Dpi
+                        Dpi="$(awk -v a="$Scaling" -v b="$Dpi" 'BEGIN {print (b * a * a)}')"
+                        Dpi="${Dpi%.*}" # Remove decimal point and after.
                     fi
                     ;;
             esac
