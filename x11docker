@@ -8997,13 +8997,17 @@ create_xcommand() {
                 --nxagent) ;;
                 *)
                     case "$Sharegpu" in
-                        iglx) Xserveroptions="$Xserveroptions \\
-  +iglx"
+                        iglx) Xserveroptions="$( trim_to_bar \
+                                              "|$Xserveroptions \\
+                                               |  +iglx"
+                                               )"
                               ;;
                         *)
-              Xserveroptions="$Xserveroptions \\
-  -iglx"
-              ;;
+                            Xserveroptions="$( trim_to_bar \
+                                            "|$Xserveroptions \\
+                                             |  -iglx"
+                                             )"
+                            ;;
                     esac
                     ;;
             esac
