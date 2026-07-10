@@ -9055,12 +9055,12 @@ create_xcommand() {
                 "$(check_xpraoption --webcam=no                   || : )" \
                 "$(check_xpraoption --xsettings=no                || : )"
 
-      case "$Shareclipboard" in
-        native-yes)
-          Xpraoptions="$Xpraoptions \\
-  --clipboard=yes \\
-  --clipboard-direction=both"
-        ;;
+            case "$Shareclipboard" in
+                native-yes)
+                    $append_ops_to Xpraoptions                 \
+                                   "--clipboard=yes"           \
+                                   "--clipboard-direction=both"
+                    ;;
       native-c2h)
           Xpraoptions="$Xpraoptions \\
   --clipboard=yes \\
