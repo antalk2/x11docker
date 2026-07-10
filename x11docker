@@ -9129,92 +9129,92 @@ create_xcommand() {
     #### Prepare weston.ini: config file for Weston
     if case_match "$Xserver" '--weston|--weston-xwayland|--xpra-xwayland|--xpra2-xwayland' ; then
 
-            if have_command  weston-launch            \
-                    && [ -n "$Newxvt" ]               \
-                    && [ "$Runsinteractive" = "yes" ] ;
-            then Weston="weston-launch -v --"
-            else Weston="weston"
-            fi
+        if have_command  weston-launch            \
+                && [ -n "$Newxvt" ]               \
+                && [ "$Runsinteractive" = "yes" ] ;
+        then Weston="weston-launch -v --"
+        else Weston="weston"
+        fi
+        
+        if [ -z "$Newxvt" ] ; then
+            # Display prefix X or WL; needed to indicate if
+            # host Wayland or host X provides the nested
+            # window.
             
-            if [ -z "$Newxvt" ] ; then
-                    # Display prefix X or WL; needed to indicate if
-                    # host Wayland or host X provides the nested
-                    # window.
-                    
-                    # [ -n "$Hostwaylandsocket" ] && [ "$Xserver" != "--xpra-xwayland" ] \
-                        # && [ "$Hostsystem" != "ubuntu" ] && [ "$Fullscreen" = "no" ] && Westonoutput="WL"
-                    
-                    if   [ -n "$Hostwaylandsocket" ] ; then Westonoutput="WL"
-                    elif [ -n "$Hostdisplay"       ] ; then Westonoutput="X"
-                    fi
-            else
-                    # get monitor name(s) into Connectorlist
-                    #
-                    #for Status in /sys/class/drm/*/status; do 
-                    #  Connector="${Status%/status}"
-                    #  Connector="${Connector#*/card?-}"
-                    #  [ "$(cat $Status)" = "connected" ] && Connectorlist="$Connectorlist $Connector"
-                    #done
-
-                    for Card in /sys/class/drm/*; do
-                        Card="$(basename "$Card")"
-                        case "$Card" in
-                            render0128|version) ;;
-                            *) Connectorlist="$Connectorlist $Card"
-                        esac
-                    done
+            # [ -n "$Hostwaylandsocket" ] && [ "$Xserver" != "--xpra-xwayland" ] \
+                # && [ "$Hostsystem" != "ubuntu" ] && [ "$Fullscreen" = "no" ] && Westonoutput="WL"
+            
+            if   [ -n "$Hostwaylandsocket" ] ; then Westonoutput="WL"
+            elif [ -n "$Hostdisplay"       ] ; then Westonoutput="X"
             fi
+        else
+            # get monitor name(s) into Connectorlist
+            #
+            #for Status in /sys/class/drm/*/status; do 
+            #  Connector="${Status%/status}"
+            #  Connector="${Connector#*/card?-}"
+            #  [ "$(cat $Status)" = "connected" ] && Connectorlist="$Connectorlist $Connector"
+            #done
 
-            ## begin writing Westonini
-            echo "[core]" >> "$Westonini"
-            case "$Westonoutput" in
-                WL) echo "backend=wayland-backend.so" >> $Westonini ;;
-                X)  echo "backend=x11-backend.so"     >> $Westonini ;;
-                *)  echo "backend=drm-backend.so"     >> $Westonini ;;
-            esac
-            trim_to_bar "|
-                         |shell=desktop-shell.so
-                         |idle-time=0
-                         |[shell]
-                         |panel-location=none
-                         |panel-position=none
-                         |locking=false
-                         |background-color=0xff002244
-                         |animation=fade
-                         |startup-animation=fade
-                         |[keyboard]
-                         |vt-switching=true" >> "$Westonini"
-            echo >> "$Westonini"
+            for Card in /sys/class/drm/*; do
+                Card="$(basename "$Card")"
+                case "$Card" in
+                    render0128|version) ;;
+                    *) Connectorlist="$Connectorlist $Card"
+                esac
+            done
+        fi
 
-            # --keymap: keyboard layout
-            if [ -n "$Xkblayout" ] ; then
-                echo "keymap_layout=$Xkblayout" >> "$Westonini"
-            elif [ -n "$Newxvt" ] ; then
-                {
-                    echo -n "keymap_layout="
-                    #
-                    # Example: XKBLAYOUT="us"
-                    # The 2nd cut drops the quotes
-                    grep XKBLAYOUT < "/etc/default/keyboard" \
-                        | cut -d= -f2                        \
-                        | cut -d'"' -f2
-                    echo # ensure Newline
-                }  >> "$Westonini"
-            fi
+        ## begin writing Westonini
+        echo "[core]" >> "$Westonini"
+        case "$Westonoutput" in
+            WL) echo "backend=wayland-backend.so" >> $Westonini ;;
+            X)  echo "backend=x11-backend.so"     >> $Westonini ;;
+            *)  echo "backend=drm-backend.so"     >> $Westonini ;;
+        esac
+        trim_to_bar "|
+                     |shell=desktop-shell.so
+                     |idle-time=0
+                     |[shell]
+                     |panel-location=none
+                     |panel-position=none
+                     |locking=false
+                     |background-color=0xff002244
+                     |animation=fade
+                     |startup-animation=fade
+                     |[keyboard]
+                     |vt-switching=true" >> "$Westonini"
+        echo >> "$Westonini"
 
-            # --westonini
-            if [ -n "$Customwestonini" ] ; then
-                # If succeeds, all the stuff we wrote above into Westonini
-                # is erased.
-                unpriv "cp '$Customwestonini' '$Westonini'"
-            fi
-
+        # --keymap: keyboard layout
+        if [ -n "$Xkblayout" ] ; then
+            echo "keymap_layout=$Xkblayout" >> "$Westonini"
+        elif [ -n "$Newxvt" ] ; then
             {
-                trim_to_bar "|
+                echo -n "keymap_layout="
+                #
+                # Example: XKBLAYOUT="us"
+                # The 2nd cut drops the quotes
+                grep XKBLAYOUT < "/etc/default/keyboard" \
+                    | cut -d= -f2                        \
+                    | cut -d'"' -f2
+                echo # ensure Newline
+            }  >> "$Westonini"
+        fi
+
+        # --westonini
+        if [ -n "$Customwestonini" ] ; then
+            # If succeeds, all the stuff we wrote above into Westonini
+            # is erased.
+            unpriv "cp '$Customwestonini' '$Westonini'"
+        fi
+
+        {
+            trim_to_bar "|
                              |[xwayland]
                              |path=$Xwaylandwrapper"
-                echo
-             }   >> "$Westonini"
+            echo
+        }   >> "$Westonini"
 
     fi
 
