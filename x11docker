@@ -330,6 +330,41 @@ nlsw_set_difference() {
   echo "$A" | grep -Fvx "$B"
 }
 
+# Function: case_match
+# Usage: case_match value pattern
+# Brief: Does value match a case PATTERN?
+# Arguments:
+#   value   : string. The value to be matched
+#   pattern : string. Used as a case pattern.
+#             Example: "--weston*|--xpra*-xwayland"
+#
+# return: 0 is matches
+#
+# Purpose: Allow to rewrite
+#
+#        case "$value" in a|b*|c?|[e-f]) cmd ;; esac
+#
+#     to
+#
+#        if case_match "$value" "a|b*|c?|[e-f]" ; then cmd ; fi
+#
+# Note: bash has [[ string =~ REGEXP ]]
+#
+case_match() {
+    local value="$1"
+    local pattern="$2"
+    local cmd
+
+    cmd="$(
+         printf "case \"%s\" in %s) true ;; *) false ;; esac" \
+                "${value}"                                    \
+                "${pattern}"
+    )"
+    # echo "$cmd"
+    eval "$cmd"
+}
+
+
 # Filter: trim_to_bar_filter
 # Used-by: trim_to_bar
 #
