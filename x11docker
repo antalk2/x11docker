@@ -9217,17 +9217,17 @@ create_xcommand() {
 
     # Xwayland: check -decorate -force-xrandr-emulation
     if case_match "$Xserver" '*xwayland' ; then
-            case "$Xcontainer_option" in
-                yes)
-                    Xrandremulation="-force-xrandr-emulation"
-                    Decorate="-decorate"
-                    version_less_than "$Xcontainerversion" "2.0" && Xrandremulation="" && Decorate=""
-                    ;;
-                no)
-                    Xwayland -help 2>&1 | grep -q "force-xrandr-emulation" && Xrandremulation="-force-xrandr-emulation"
-                    Xwayland -help 2>&1 | grep -q "decorate"               && Decorate="-decorate"
-                    ;;
-            esac
+        case "$Xcontainer_option" in
+            yes)
+                Xrandremulation="-force-xrandr-emulation"
+                Decorate="-decorate"
+                version_less_than "$Xcontainerversion" "2.0" && Xrandremulation="" && Decorate=""
+                ;;
+            no)
+                Xwayland -help 2>&1 | grep -q "force-xrandr-emulation" && Xrandremulation="-force-xrandr-emulation"
+                Xwayland -help 2>&1 | grep -q "decorate"               && Decorate="-decorate"
+                ;;
+        esac
     fi
     
     [ "$Xwaylandrootless" = "no" ] && case "$Setupwayland" in
