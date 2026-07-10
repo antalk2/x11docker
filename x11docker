@@ -9127,8 +9127,8 @@ create_xcommand() {
     fi # --xpra*
 
     #### Prepare weston.ini: config file for Weston
-    case "$Xserver" in
-        --weston|--weston-xwayland|--xpra-xwayland|--xpra2-xwayland)
+    if case_match "$Xserver" '--weston|--weston-xwayland|--xpra-xwayland|--xpra2-xwayland' ; then
+
             if have_command  weston-launch            \
                     && [ -n "$Newxvt" ]               \
                     && [ "$Runsinteractive" = "yes" ] ;
@@ -9165,6 +9165,7 @@ create_xcommand() {
                     done
             fi
 
+            ## begin writing Westonini
             echo "[core]" >> "$Westonini"
             case "$Westonoutput" in
                 WL) echo "backend=wayland-backend.so" >> $Westonini ;;
@@ -9214,8 +9215,8 @@ create_xcommand() {
                              |path=$Xwaylandwrapper"
                 echo
              }   >> "$Westonini"
-            ;;
-    esac
+
+    fi
 
   # Xwayland: check -decorate -force-xrandr-emulation
   case "$Xserver" in
