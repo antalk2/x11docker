@@ -9101,12 +9101,14 @@ create_xcommand() {
             fi
 
             # xpra client command
-      Xpraclientcommand="xpra attach :$Newdisplaynumber"
-      Xpraclientcommand="$Xpraclientcommand $Xpraoptions \\
-  $(check_xpraoption --modal-windows=no ||:) \\
-  $(check_xpraoption --opengl=noprobe ||:) \\
-  $(check_xpraoption --reconnect=no ||:) \\
-  $(check_xpraoption --tray=no ||:)"
+            Xpraclientcommand="xpra attach :$Newdisplaynumber"
+            Xpraclientcommand+="$Xpraclientcommand $Xpraoptions"
+            $append_ops_to Xpraclientcommand                    \
+                "$(check_xpraoption --modal-windows=no  || : )" \
+                "$(check_xpraoption --opengl=noprobe    || : )" \
+                "$(check_xpraoption --reconnect=no      || : )" \
+                "$(check_xpraoption --tray=no           || : )"
+            #
       [ "$Fullscreen" = "yes" ]  && Xpraclientcommand="$Xpraclientcommand \\
   $(check_xpraoption --desktop-fullscreen=yes ||:)"
       [ "$Scaling" ] && Xpraclientcommand="$Xpraclientcommand \\
