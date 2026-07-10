@@ -8930,42 +8930,42 @@ create_xcommand() {
     esac
 
     if [ "$Xserver" != "--satellite" ] ; then
-            if [ "$Xserver" != "--nxagent" ] ; then
-                $append_ops_to Xserveroptions "-retro"
+        if [ "$Xserver" != "--nxagent" ] ; then
+            $append_ops_to Xserveroptions "-retro"
+        fi
+        # Disable screensaver
+        $append_ops_to Xserveroptions "-dpms" "-s off"
+        #
+        # --dpi: check DPI
+        if ! case_match  "$Xserver" '--xwin | --runx' ; then
+            if [ -z "$Dpi" ] && [ -n "$Xdpyinfooutput" ] ; then
+                # Looking for line: "  resolution:    96x96 dots per inch"
+                # Cut out the 96 following the x
+                Dpi="$(grep dots <<< "$Xdpyinfooutput" | cut -dx -f2 | cut -d' ' -f1)"
             fi
-            # Disable screensaver
-            $append_ops_to Xserveroptions "-dpms" "-s off"
-            #
-            # --dpi: check DPI
-            if ! case_match  "$Xserver" '--xwin | --runx' ; then
-                if [ -z "$Dpi" ] && [ -n "$Xdpyinfooutput" ] ; then
-                    # Looking for line: "  resolution:    96x96 dots per inch"
-                    # Cut out the 96 following the x
-                    Dpi="$(grep dots <<< "$Xdpyinfooutput" | cut -dx -f2 | cut -d' ' -f1)"
-                fi
-                if [ -n "$Dpi" ]                    \
-                       && case_match  "$Xserver" '--xpra*' \
-                       && [ "$Scaling" ]                   \
-                       && [ "$Desktopmode" = "no" ]        ;
-                then
-                    # Dpi = Scaling * Scaling * Dpi
-                    # Q: Why is Scaling squared?
-                    Dpi="$(awk -v a="$Scaling" -v b="$Dpi" 'BEGIN {print (b * a * a)}')"
-                    Dpi="${Dpi%.*}" # Remove decimal point and after.
-                fi
+            if [ -n "$Dpi" ]                    \
+                   && case_match  "$Xserver" '--xpra*' \
+                   && [ "$Scaling" ]                   \
+                   && [ "$Desktopmode" = "no" ]        ;
+            then
+                # Dpi = Scaling * Scaling * Dpi
+                # Q: Why is Scaling squared?
+                Dpi="$(awk -v a="$Scaling" -v b="$Dpi" 'BEGIN {print (b * a * a)}')"
+                Dpi="${Dpi%.*}" # Remove decimal point and after.
             fi
-      
-            if [ -n "$Dpi" ] ; then
-                $append_ops_to Xserveroptions "-dpi $Dpi"
-            fi
+        fi
+        
+        if [ -n "$Dpi" ] ; then
+            $append_ops_to Xserveroptions "-dpi $Dpi"
+        fi
 
-            # --gpu=iglx
-            if ! case_match "$Xserver"  "--tty|--hostdisplay|--runx | --weston|--kwin|--hostwayland | --nxagent" ; then
-                case "$Sharegpu" in
-                    iglx) $append_ops_to Xserveroptions "+iglx" ;;
-                    *)    $append_ops_to Xserveroptions "-iglx" ;;
-                esac # Sharegpu
-            fi
+        # --gpu=iglx
+        if ! case_match "$Xserver"  "--tty|--hostdisplay|--runx | --weston|--kwin|--hostwayland | --nxagent" ; then
+            case "$Sharegpu" in
+                iglx) $append_ops_to Xserveroptions "+iglx" ;;
+                *)    $append_ops_to Xserveroptions "-iglx" ;;
+            esac # Sharegpu
+        fi
     fi # [ "$Xserver" != "--satellite" ]
 
   # X cookie authentication
