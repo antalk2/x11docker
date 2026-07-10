@@ -9239,24 +9239,14 @@ create_xcommand() {
     fi
     
     if [ "$Xwaylandrootless" = "no" ] ; then
-        if ! case_match "$Setupwayland" "yes|no" ; then
-            error "Setupwayland is not in yes|no"
-        fi
-        if ! case_match "$Runsonconsole" "yes|no" ; then
-            error "Runsonconsole is not in yes|no"
-        fi
-        if ! case_match "$Fullscreen" "yes|no" ; then
-            error "Fullscreen is not in yes|no"
-        fi
+        if ! case_match "$Setupwayland"  "yes|no" ; then error "Setupwayland is not in yes|no" ; fi
+        if ! case_match "$Runsonconsole" "yes|no" ; then error "Runsonconsole is not in yes|no"; fi
+        if ! case_match "$Fullscreen"    "yes|no" ; then error "Fullscreen is not in yes|no"   ; fi
         
-        if [ "$Setupwayland" = yes ] ; then
-            Xwaylandoptions="$Decorate"
-        elif [ "$Runsonconsole" = yes ] ; then
-            Xwaylandoptions="-fullscreen"
-        elif [ "$Fullscreen" = yes ] ; then
-            Xwaylandoptions="-fullscreen"
-        else
-            Xwaylandoptions="$Decorate"
+        if   [ "$Setupwayland"  = yes ] ; then      Xwaylandoptions="$Decorate"
+        elif [ "$Runsonconsole" = yes ] ; then      Xwaylandoptions="-fullscreen"
+        elif [ "$Fullscreen"    = yes ] ; then      Xwaylandoptions="-fullscreen"
+        else                                        Xwaylandoptions="$Decorate"
         fi
     fi
 
