@@ -9372,8 +9372,12 @@ create_xcommand() {
                     fi
 
                     for Connector in ${Westonoutput:-$Connectorlist}; do
-          echo "[output]
-name=$Connector$Count" >> "$Westonini"
+                        {
+                            trim_to_bar "|[output]
+                                         |name=$Connector$Count"
+                            echo
+                        } >> "$Westonini"
+
           [ "$Xwaylandrootless" = "no" ] && echo "mode=$Screensize"    >> "$Westonini"
           [ "$Scaling" ]                 && echo "scale=$Scaling"      >> "$Westonini"
           [ -n "$Rotation" ]             && echo "transform=$Rotation" >> "$Westonini"
