@@ -8936,11 +8936,7 @@ create_xcommand() {
                 $append_ops_to Xserveroptions "-retro"
             fi
             # Disable screensaver
-            Xserveroptions="$( trim_to_bar \
-                            "|$Xserveroptions \\
-                             |  -dpms \\
-                             |  -s off"
-                             )"
+            $append_ops_to Xserveroptions "-dpms" "-s off"
             #
             # --dpi: check DPI
             if ! case_match  "$Xserver" '--xwin | --runx' ; then
