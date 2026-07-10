@@ -8915,8 +8915,8 @@ create_xcommand() {
         no)
             Xserverextensions="$( trim_to_bar \
                                "|$Xserverextensions \\
-                               |  -extension Composite -extension COMPOSITE"
-                               )"
+                                |  -extension Composite -extension COMPOSITE"
+                                )"
             if [ "$Xserver" = "nxagent" ] ; then
                 # Note: there was no '$' before Xserveroptions below.
                 #       Added it.
@@ -8928,8 +8928,8 @@ create_xcommand() {
             ;;
     esac
 
-  # X extension XTEST
-  Xtest="${Xtest:-no}"
+    # X extension XTEST
+    Xtest="${Xtest:-no}"
   case "$Xtest" in
     yes) Xserverextensions="$Xserverextensions \\
   +extension XTEST" ;;
