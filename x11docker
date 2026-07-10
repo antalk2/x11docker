@@ -8847,43 +8847,56 @@ create_xcommand() {
         : # nothing
     fi
     
-  #### General X server options
-  case "$Xserver" in
-    --nxagent)
-      case "$Usemitshm" in
-        yes) Xserveroptions="$Xserveroptions \\
-  -shmem \\
-  -shpix" ;;
-        no) Xserveroptions="$Xserveroptions \\
-  -noshmem \\
-  -noshpix" ;;
-      esac
-    ;;
-    *)
-      Xserverextensions=" \\
-  +extension RANDR \\
-  +extension RENDER \\
-  +extension GLX \\
-  +extension XVideo \\
-  +extension DOUBLE-BUFFER \\
-  +extension SECURITY \\
-  +extension DAMAGE \\
-  +extension X-Resource \\
-  -extension XINERAMA"
-      case "$Usemitshm" in
-        yes)
-          Xserverextensions="$Xserverextensions \\
-  +extension MIT-SHM" ;;
-        no)
-          Xserverextensions="$Xserverextensions \\
-  -extension MIT-SHM"
-          Xprashm="XPRA_XSHM=0"
-        ;;
-      esac
-    ;;
-  esac
+    #### General X server options
+    case "$Xserver" in
+        --nxagent)
+            case "$Usemitshm" in
+                yes) Xserveroptions="$( trim_to_bar \
+                                     "|$Xserveroptions \\
+                                      |  -shmem \\
+                                      |  -shpix"
+                                      )"
+                     ;;
+                no) Xserveroptions="$( trim_to_bar \
+                              "|$Xserveroptions \\
+                               |  -noshmem \\
+                               |  -noshpix"
+                               )"
+                    ;;
+            esac
+            ;;
 
-  # X extension COMPOSITE
+        *) # Xserver != --nxagent
+            Xserverextensions="$( trim_to_bar \
+                               "| \\
+                                |  +extension RANDR \\
+                                |  +extension RENDER \\
+                                |  +extension GLX \\
+                                |  +extension XVideo \\
+                                |  +extension DOUBLE-BUFFER \\
+                                |  +extension SECURITY \\
+                                |  +extension DAMAGE \\
+                                |  +extension X-Resource \\
+                                |  -extension XINERAMA"
+                                )"
+            #
+            case "$Usemitshm" in
+                yes) Xserverextensions="$( trim_to_bar \
+                                        "|$Xserverextensions \\
+                                         |  +extension MIT-SHM"
+                                         )"
+                     ;;
+                no) Xserverextensions="$( trim_to_bar \
+                                       "|$Xserverextensions \\
+                                        |  -extension MIT-SHM"
+                                        )"
+                    Xprashm="XPRA_XSHM=0"
+                    ;;
+            esac
+            ;;
+    esac # Xserver
+
+    # X extension COMPOSITE
   [ "$Xcomposite" ] || case "$Xserver" in
     --nxagent|--xwin) Xcomposite="no" ;;
     *) Xcomposite="yes" ;;
