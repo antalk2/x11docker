@@ -9036,8 +9036,7 @@ create_xcommand() {
     Xkbmodel="${Xkbmodel:-evdev}"
 
     #### xpra server and client command
-    case "$Xserver" in
-        --xpra*)
+    if case_match "$Xserver" '--xpra*' ; then
             if [ -z "$Xprahelp" ] ; then
                 Xprahelp="$(xpra --help 2>/dev/null)" || :
             fi
@@ -9125,8 +9124,7 @@ create_xcommand() {
             for Line in $Xpracontainerenv; do
                 store_runoption_env "$Line"
             done
-            ;;
-    esac
+    fi # --xpra*
 
   #### Prepare weston.ini: config file for Weston
   case "$Xserver" in
