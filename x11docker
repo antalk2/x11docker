@@ -9126,38 +9126,38 @@ create_xcommand() {
             done
     fi # --xpra*
 
-  #### Prepare weston.ini: config file for Weston
-  case "$Xserver" in
-    --weston|--weston-xwayland|--xpra-xwayland|--xpra2-xwayland)
-      have_command  weston-launch  && [ -n "$Newxvt" ] && [ "$Runsinteractive" = "yes" ] && Weston="weston-launch -v --" || Weston="weston"
-      case "$Newxvt" in
-        "")   # Display prefix X or WL; needed to indicate if host Wayland or host X provides the nested window.
-          #[ -n "$Hostwaylandsocket" ] && [ "$Xserver" != "--xpra-xwayland" ] && [ "$Hostsystem" != "ubuntu" ] && [ "$Fullscreen" = "no" ] && Westonoutput="WL"
-          [ -n "$Hostwaylandsocket" ] && Westonoutput="WL"
-          [ -z "$Westonoutput" ] && [ -n "$Hostdisplay" ] && Westonoutput="X"
-        ;;
-        *)  # get monitor name(s)
-          #for Status in /sys/class/drm/*/status; do 
-          #  Connector="${Status%/status}"
-          #  Connector="${Connector#*/card?-}"
-          #  [ "$(cat $Status)" = "connected" ] && Connectorlist="$Connectorlist $Connector"
-          #done
-          for Card in /sys/class/drm/*; do
-            Card="$(basename "$Card")"
-            case "$Card" in
-              render0128|version) ;;
-              *) Connectorlist="$Connectorlist $Card"
+    #### Prepare weston.ini: config file for Weston
+    case "$Xserver" in
+        --weston|--weston-xwayland|--xpra-xwayland|--xpra2-xwayland)
+            have_command  weston-launch  && [ -n "$Newxvt" ] && [ "$Runsinteractive" = "yes" ] && Weston="weston-launch -v --" || Weston="weston"
+            case "$Newxvt" in
+                "")   # Display prefix X or WL; needed to indicate if host Wayland or host X provides the nested window.
+                    #[ -n "$Hostwaylandsocket" ] && [ "$Xserver" != "--xpra-xwayland" ] && [ "$Hostsystem" != "ubuntu" ] && [ "$Fullscreen" = "no" ] && Westonoutput="WL"
+                    [ -n "$Hostwaylandsocket" ] && Westonoutput="WL"
+                    [ -z "$Westonoutput" ] && [ -n "$Hostdisplay" ] && Westonoutput="X"
+                    ;;
+                *)  # get monitor name(s)
+                    #for Status in /sys/class/drm/*/status; do 
+                    #  Connector="${Status%/status}"
+                    #  Connector="${Connector#*/card?-}"
+                    #  [ "$(cat $Status)" = "connected" ] && Connectorlist="$Connectorlist $Connector"
+                    #done
+                    for Card in /sys/class/drm/*; do
+                        Card="$(basename "$Card")"
+                        case "$Card" in
+                            render0128|version) ;;
+                            *) Connectorlist="$Connectorlist $Card"
+                        esac
+                    done
+                    ;;
             esac
-          done
-        ;;
-      esac
-      echo "[core]" >> "$Westonini"
-      case "$Westonoutput" in
-        WL) echo "backend=wayland-backend.so" >> $Westonini ;;
-        X)  echo "backend=x11-backend.so"     >> $Westonini ;;
-        *)  echo "backend=drm-backend.so"     >> $Westonini ;;
-      esac
-      echo "
+            echo "[core]" >> "$Westonini"
+            case "$Westonoutput" in
+                WL) echo "backend=wayland-backend.so" >> $Westonini ;;
+                X)  echo "backend=x11-backend.so"     >> $Westonini ;;
+                *)  echo "backend=drm-backend.so"     >> $Westonini ;;
+            esac
+            echo "
 shell=desktop-shell.so
 idle-time=0
 [shell]
@@ -9169,16 +9169,17 @@ animation=fade
 startup-animation=fade
 [keyboard]
 vt-switching=true" >> "$Westonini"
-      # --keymap: keyboard layout
-      [ -n "$Xkblayout" ] && echo "keymap_layout=$Xkblayout" >> "$Westonini"
-      [ -z "$Xkblayout" ] && [ -n "$Newxvt" ] && echo "$(echo -n "keymap_layout=" && grep XKBLAYOUT <"/etc/default/keyboard" | cut -d= -f2 | cut -d'"' -f2)" >> "$Westonini"
-      # --westonini
-      [ -n "$Customwestonini" ] && unpriv "cp '$Customwestonini' '$Westonini'"
-      echo "
+
+            # --keymap: keyboard layout
+            [ -n "$Xkblayout" ] && echo "keymap_layout=$Xkblayout" >> "$Westonini"
+            [ -z "$Xkblayout" ] && [ -n "$Newxvt" ] && echo "$(echo -n "keymap_layout=" && grep XKBLAYOUT <"/etc/default/keyboard" | cut -d= -f2 | cut -d'"' -f2)" >> "$Westonini"
+            # --westonini
+            [ -n "$Customwestonini" ] && unpriv "cp '$Customwestonini' '$Westonini'"
+            echo "
 [xwayland]
 path=$Xwaylandwrapper" >> "$Westonini"
-    ;;
-  esac
+            ;;
+    esac
 
   # Xwayland: check -decorate -force-xrandr-emulation
   case "$Xserver" in
