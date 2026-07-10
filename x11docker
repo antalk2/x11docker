@@ -8962,11 +8962,11 @@ create_xcommand() {
             fi
 
             # --gpu=iglx
-            if ! case_match "--tty|--hostdisplay|--runx | --weston|--kwin|--hostwayland | --nxagent" ; then
-                    case "$Sharegpu" in
-                        iglx) $append_ops_to Xserveroptions "+iglx" ;;
-                        *)    $append_ops_to Xserveroptions "-iglx" ;;
-                    esac # Sharegpu
+            if ! case_match "$Xserver"  "--tty|--hostdisplay|--runx | --weston|--kwin|--hostwayland | --nxagent" ; then
+                case "$Sharegpu" in
+                    iglx) $append_ops_to Xserveroptions "+iglx" ;;
+                    *)    $append_ops_to Xserveroptions "-iglx" ;;
+                esac # Sharegpu
             fi
             ;;
     esac # Xserver (again)
