@@ -9281,14 +9281,14 @@ create_xcommand() {
             ;;
 
         --xpra|--xpra2)
-            Xcommand="$(trim_to_bar\
+            Xcommand="$( trim_to_bar \
                       "|$(get_xpath Xvfb) :$Newdisplaynumber $Xserveroptions \\
                        |  -screen 0 ${Xaxis}x${Yaxis}x24"
                        )"
             ;;
 
         --xvfb)
-            Xcommand="$(trim_to_bar\
+            Xcommand="$( trim_to_bar \
                       "|$(get_xpath Xvfb) :$Newdisplaynumber $Xserveroptions \\
                        |  -screen 0 ${Screensize}x24"   ### FIXME: hardcoded setting of depth 24. Could be better?
                        )"
@@ -9309,7 +9309,7 @@ create_xcommand() {
             ;;
 
         --xwayland)
-            Xcommand="$(trim_to_bar\
+            Xcommand="$( trim_to_bar \
                       "|$(get_xpath Xwayland) :$Newdisplaynumber $Xserveroptions \\
                        |  $Decorate \\
                        |  $Xrandremulation"
@@ -9324,8 +9324,8 @@ create_xcommand() {
             store_runoption_env "_JAVA_AWT_WM_NONREPARENTING=1"
             ;;
 
-    --xpra-xwayland|--xpra2-xwayland)
-      Xcommand="$(get_xpath Xwayland) :$Newdisplaynumber $Xserveroptions \\
+        --xpra-xwayland|--xpra2-xwayland)
+            Xcommand="$(get_xpath Xwayland) :$Newdisplaynumber $Xserveroptions \\
   $Xrandremulation"
 
       echo "[output]
