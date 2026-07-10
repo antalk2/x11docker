@@ -9098,8 +9098,7 @@ create_xcommand() {
             fi
             case "$Xserver" in
                 --xpra2*)
-                    Xpraservercommand="$Xpraservercommand \\
-  --bind=$Sharefolder/$(hostname)-$Newdisplaynumber"
+                    $append_ops_to Xpraservercommand "--bind=$Sharefolder/$(hostname)-$Newdisplaynumber"
                     ;;
             esac
 
