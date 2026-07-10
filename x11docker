@@ -8918,9 +8918,10 @@ create_xcommand() {
                                |  -extension Composite -extension COMPOSITE"
                                )"
             if [ "$Xserver" = "nxagent" ] ; then
-                # Note: no '$' before Xserveroptions
+                # Note: there was no '$' before Xserveroptions below.
+                #       Added it.
                 Xserveroptions="$( trim_to_bar \
-                                "|Xserveroptions \\
+                                "|$Xserveroptions \\
                                  |  -nocomposite"
                                  )"
             fi
