@@ -9004,8 +9004,9 @@ create_xcommand() {
                 $append_ops_to Xserveroptions "-listen tcp"
             fi
             ;;
-        no|socat) Xserveroptions="$Xserveroptions \\
-  -nolisten tcp" ;;
+        no|socat)
+            $append_ops_to Xserveroptions "-nolisten tcp"
+            ;;
     esac
 
   Xserveroptions="$Xserveroptions $Xserverextensions"
