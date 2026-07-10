@@ -8561,7 +8561,7 @@ check_xserver() {
         fi
     fi
 
-    if ! { Autochooseserver="no" check_xdepends $Xserver ; } ; then
+    if ! Autochooseserver="no" check_xdepends $Xserver ; then
         case "$Winsubsystem" in
             "")
                 error_ttm \
