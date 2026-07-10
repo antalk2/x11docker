@@ -9330,11 +9330,14 @@ create_xcommand() {
                        |  $Xrandremulation"
                        )"
 
-      echo "[output]
-name=${Westonoutput}1
-mode=$Screensize" >> "$Westonini"
+            {
+                trim_to_bar "|[output]
+                             |name=${Westonoutput}1
+                             |mode=$Screensize"
+                echo
+            } >> "$Westonini"
 
-      Compositorcommand="$Weston \\
+            Compositorcommand="$Weston \\
   --socket=$Newwaylandsocket \\
   --backend=x11-backend.so \\
   --config='$Westonini'"
