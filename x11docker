@@ -9363,12 +9363,15 @@ create_xcommand() {
 
             Xcommand="$Xcommand $Xserveroptions"
 
-      [ -n "${Westonoutput:-$Connectorlist}" ] && for ((Count=1 ; Count<="$Outputcount" ; Count++)) ; do
-        [ "$Westonoutput" = "WL" ] || [ "$Westonoutput" = "X" ] || {
-          Count=""
-          [ -z "$Screensize" ] && Screensize="preferred"
-        }
-        for Connector in ${Westonoutput:-$Connectorlist}; do
+            if [ -n "${Westonoutput:-$Connectorlist}" ] ; then
+                for ((Count=1 ; Count<="$Outputcount" ; Count++)) ; do
+                    
+                    if [ "$Westonoutput" != "WL" ] && [ "$Westonoutput" != "X" ] ; then
+                        Count=""
+                        if [ -z "$Screensize" ] ; then Screensize="preferred" ; fi
+                    fi
+
+                    for Connector in ${Westonoutput:-$Connectorlist}; do
           echo "[output]
 name=$Connector$Count" >> "$Westonini"
           [ "$Xwaylandrootless" = "no" ] && echo "mode=$Screensize"    >> "$Westonini"
@@ -9376,7 +9379,8 @@ name=$Connector$Count" >> "$Westonini"
           [ -n "$Rotation" ]             && echo "transform=$Rotation" >> "$Westonini"
         done
         [ "$Count" ] || break
-      done
+                done
+            fi
 
       Compositorcommand="$Weston \\
   --socket=$Newwaylandsocket"
