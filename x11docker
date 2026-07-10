@@ -9072,10 +9072,15 @@ create_xcommand() {
             # Debugging only:
             # Xpraoptions="$Xpraoptions  $(check_xpraoption --debug=all ||:)" ; Preservecachefiles="yes"
 
-      # xpra server command
-      [ "$Desktopmode" = "yes" ] && Xpraservercommand="xpra start-desktop" || Xpraservercommand="xpra start"
-      Xpraservercommand="$Xpraservercommand :$Newdisplaynumber --use-display"
-      Xpraservercommand="$Xpraservercommand $Xpraoptions \\
+            # xpra server command
+            if [ "$Desktopmode" = "yes" ] ;
+            then Xpraservercommand="xpra start-desktop"
+            else Xpraservercommand="xpra start"
+            fi
+
+            Xpraservercommand+=" :$Newdisplaynumber --use-display"
+
+            Xpraservercommand="$Xpraservercommand $Xpraoptions \\
   $(check_xpraoption --dbus-launch=no ||:) \\
   $(check_xpraoption --daemon=no ||:) \\
   $(check_xpraoption --file-transfer=off ||:) \\
