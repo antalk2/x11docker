@@ -14,6 +14,9 @@ f() {
     }
     local append_ops_to="create_xcommand_INTERNAL_append_ops_to"
     $append_ops_to Xserveroptions '-shmem' '-shpix'
+    #
+    # Can also add multiline op-collection.
+    $append_ops_to Xserveroptions $'a \\\n  b \\\n  c'
 }
 
 Xserveroptions=''
