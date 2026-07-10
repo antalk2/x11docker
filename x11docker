@@ -9035,12 +9035,14 @@ create_xcommand() {
     fi
     Xkbmodel="${Xkbmodel:-evdev}"
 
-  #### xpra server and client command
-  case "$Xserver" in
-    --xpra*)
-      [ "$Xprahelp" ] || Xprahelp="$(xpra --help 2>/dev/null)" ||:
+    #### xpra server and client command
+    case "$Xserver" in
+        --xpra*)
+            if [ -z "$Xprahelp" ] ; then
+                Xprahelp="$(xpra --help 2>/dev/null)" || :
+            fi
 
-      Xpraoptions="\\
+            Xpraoptions="\\
   $(check_xpraoption --microphone=no ||:) \\
   $(check_xpraoption --mmap=$Sharefolder/xpra.mmap ||:) \\
   $(check_xpraoption --notifications=no ||:) \\
