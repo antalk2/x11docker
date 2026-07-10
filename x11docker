@@ -9009,10 +9009,10 @@ create_xcommand() {
             ;;
     esac
 
-  Xserveroptions="$Xserveroptions $Xserverextensions"
+    Xserveroptions="$Xserveroptions $Xserverextensions"
 
-  # --xopt
-  [ -n "$Xserveroptions_custom" ] && Xserveroptions="$Xserveroptions \\
+    # --xopt
+    [ -n "$Xserveroptions_custom" ] && Xserveroptions="$Xserveroptions \\
   $Xserveroptions_custom"
 
   # --keymap
