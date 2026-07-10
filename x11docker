@@ -8968,14 +8968,16 @@ create_xcommand() {
         fi
     fi # [ "$Xserver" != "--satellite" ]
 
-  # X cookie authentication
-  case "$Xauthentication" in
-    yes|trusted|untrusted)
-      Xserveroptions="$Xserveroptions \\
-  -auth $Xservercookie" ;;
-    no|-ac)
-      [ "$Xauthentication" = "-ac" ] && Xserveroptions="$Xserveroptions \\
-  -ac" && Xauthentication="no"
+    # X cookie authentication
+    case "$Xauthentication" in
+        yes|trusted|untrusted)
+            $append_ops_to Xserveroptions "-auth $Xservercookie"
+            ;;
+        no|-ac)
+            if [ "$Xauthentication" = "-ac" ] ; then
+                $append_ops_to Xserveroptions "-ac"
+                Xauthentication="no"
+            fi
       case "$Xoverip" in
         socat|listentcp) warning "Option --xauth=no --xoverip=$Xoverip: SECURITY RISK!
   Allowing access to new X server for everyone.
