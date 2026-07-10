@@ -9238,7 +9238,8 @@ create_xcommand() {
         esac
     fi
     
-    [ "$Xwaylandrootless" = "no" ] && case "$Setupwayland" in
+    if [ "$Xwaylandrootless" = "no" ] ; then
+        case "$Setupwayland" in
         yes) Xwaylandoptions="$Decorate" ;;
         no)
             case "$Runsonconsole" in
@@ -9251,7 +9252,8 @@ create_xcommand() {
                     ;;
             esac
             ;;
-    esac
+        esac
+    fi
   [ "$Xwaylandrootless" = "no" ] && [ -n "$Xrandremulation" ] && Xwaylandoptions="$Xwaylandoptions \\
   $Xrandremulation"
 
