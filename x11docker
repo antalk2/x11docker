@@ -8961,21 +8961,22 @@ create_xcommand() {
                              )"
             #
             # --dpi: check DPI
-      case "$Xserver" in
-        --xwin|--runx) ;;
-        *)
-          [ -z "$Dpi" ] && [ -n "$Xdpyinfooutput" ] && Dpi="$(grep dots <<< "$Xdpyinfooutput" | cut -dx -f2 | cut -d' ' -f1)"
-          [ -n "$Dpi" ] && {
             case "$Xserver" in
-              --xpra*)
-                [ "$Scaling" ] && [ "$Desktopmode" = "no" ] && {
-                  Dpi="$(awk -v a="$Scaling" -v b="$Dpi" 'BEGIN {print (b * a * a)}')"
-                  Dpi="${Dpi%.*}"
-                } ;;
+                --xwin|--runx) ;;
+                *)
+                    [ -z "$Dpi" ] && [ -n "$Xdpyinfooutput" ] && Dpi="$(grep dots <<< "$Xdpyinfooutput" | cut -dx -f2 | cut -d' ' -f1)"
+                    [ -n "$Dpi" ] && {
+                        case "$Xserver" in
+                            --xpra*)
+                                [ "$Scaling" ] && [ "$Desktopmode" = "no" ] && {
+                                    Dpi="$(awk -v a="$Scaling" -v b="$Dpi" 'BEGIN {print (b * a * a)}')"
+                                    Dpi="${Dpi%.*}"
+                                } ;;
+                        esac
+                    }
+                    ;;
             esac
-          }
-        ;;
-      esac
+      
       [ -n "$Dpi" ] && Xserveroptions="$Xserveroptions \\
   -dpi $Dpi"
       # --gpu=iglx
