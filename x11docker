@@ -8798,7 +8798,7 @@ create_xcommand() {
     local Nxagentoptions=
     local Compositorpid=
     local Weston=
-    local Westonoutput=
+    local Westonoutput=""
     local Count=
     local Usemitshm
     local Xkbmodel
@@ -9137,15 +9137,19 @@ create_xcommand() {
             fi
             
             case "$Newxvt" in
-                "")   # Display prefix X or WL; needed to indicate if
-                      # host Wayland or host X provides the nested
-                      # window.
+                "")
+                    # Display prefix X or WL; needed to indicate if
+                    # host Wayland or host X provides the nested
+                    # window.
                     
-                    #[ -n "$Hostwaylandsocket" ] && [ "$Xserver" != "--xpra-xwayland" ] && [ "$Hostsystem" != "ubuntu" ] && [ "$Fullscreen" = "no" ] && Westonoutput="WL"
+                    # [ -n "$Hostwaylandsocket" ] && [ "$Xserver" != "--xpra-xwayland" ] \
+                        # && [ "$Hostsystem" != "ubuntu" ] && [ "$Fullscreen" = "no" ] && Westonoutput="WL"
                     
-                    [ -n "$Hostwaylandsocket" ] && Westonoutput="WL"
-                    [ -z "$Westonoutput" ] && [ -n "$Hostdisplay" ] && Westonoutput="X"
+                    if   [ -n "$Hostwaylandsocket" ] ; then Westonoutput="WL"
+                    elif [ -n "$Hostdisplay"       ] ; then Westonoutput="X"
+                    fi
                     ;;
+
                 *)  # get monitor name(s)
                     #for Status in /sys/class/drm/*/status; do 
                     #  Connector="${Status%/status}"
@@ -9161,6 +9165,7 @@ create_xcommand() {
                     done
                     ;;
             esac
+
             echo "[core]" >> "$Westonini"
             case "$Westonoutput" in
                 WL) echo "backend=wayland-backend.so" >> $Westonini ;;
