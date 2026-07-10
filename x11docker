@@ -9002,8 +9002,7 @@ create_xcommand() {
         listentcp)
             case "$Xserver" in
                 --nxagent) ;;
-                *) Xserveroptions="$Xserveroptions \\
-  -listen tcp"
+                *) $append_ops_to Xserveroptions "-listen tcp"
                    ;;
             esac
             ;;
