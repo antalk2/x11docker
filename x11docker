@@ -9689,30 +9689,33 @@ create_xcontainercommand() {
         Xc_nopriv=""
     fi
 
-    # user
-    if [ "$Xcrootless" = yes ] ; then
-        if [ "$Xcontainerbackend" =  podman ] ; then
-            Xc_user=""
-            $append_ops_to Xc_user                                \
-                           "--user ${Hostuseruid}:${Hostusergid}" \
-                           "--userns=keep-id"
-        else # !podman
-            Xc_user=""
-            $append_ops_to Xc_user "--user 0:0"  # maps to same uid as unprivileged host user
-        fi
-    else # !Xcrootless
+    # Xc_user : only set here
+    {
         Xc_user=""
-        $append_ops_to Xc_user "--user ${Hostuseruid}:${Hostusergid}"
-        ;;
-    fi
+        if [ "$Xcrootless" = yes ] ; then
 
-    # X in container
-    Xc_containerx=""
-    $append_ops_to                                                                             \
-        Xc_containerx                                                                          \
-        "--mount type=bind,source=$Cachefolder/tmp,target=/tmp"                                \
-        "--mount type=bind,source=$Xservercookie,target=$Xservercookie"                        \
-        "--mount type=bind,source=$Modelinefilebasepath,target=$Modelinefilebasepath,readonly"
+            if [ "$Xcontainerbackend" =  podman ] ; then
+                $append_ops_to Xc_user                                \
+                               "--user ${Hostuseruid}:${Hostusergid}" \
+                               "--userns=keep-id"
+            else # !podman
+                $append_ops_to Xc_user "--user 0:0"  # maps to same uid as unprivileged host user
+            fi
+
+        else # !Xcrootless
+            $append_ops_to Xc_user "--user ${Hostuseruid}:${Hostusergid}"
+            ;;
+        fi
+    }
+
+    # Xc_containerx : X in container
+    {
+        Xc_containerx=""
+        $append_ops_to  Xc_containerx                                                              \
+            "--mount type=bind,source=$Cachefolder/tmp,target=/tmp"                                \
+            "--mount type=bind,source=$Xservercookie,target=$Xservercookie"                        \
+            "--mount type=bind,source=$Modelinefilebasepath,target=$Modelinefilebasepath,readonly"
+    }
 
   # access to host X
   [ -n "$Hostdisplay" ] && {
