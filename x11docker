@@ -9446,11 +9446,15 @@ create_xcommand() {
                            "-keystrokefile $Nxagentkeysfile"
 
             case "$Desktopmode" in
-        "yes") Xserveroptions="$Xserveroptions \\
-  -D \\
-  -name '${g_Imagename}_on_${Newdisplay}_(shift+F11_toggles_fullscreen)'" ;;
-        "no")  Xserveroptions="$Xserveroptions \\
-  -R" ;;
+                "yes")
+                    $append_ops_to Xserveroptions             \
+                                   "-D"                       \
+                                   "  -name '${g_Imagename}_on_${Newdisplay}_(shift+F11_toggles_fullscreen)'"
+                    #
+                    ;;
+                "no") $append_ops_to Xserveroptions  \
+                                     "-R"
+                      ;;
       esac
       Xcommand="$(get_xpath nxagent) :$Newdisplaynumber -ac $Xserveroptions"
 
