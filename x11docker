@@ -9719,7 +9719,7 @@ create_xcontainercommand() {
     }
 
     # access to host X
-    [ -n "$Hostdisplay" ] && {
+    if [ -n "$Hostdisplay" ] ; then
         Xc_hostx=""
         $append_ops_to Xc_hostx "--env DISPLAY=$Hostdisplay"
 
@@ -9751,7 +9751,7 @@ create_xcontainercommand() {
                            "--env XAUTHORITY=$Hostxauthority" \
                            "--mount type=bind,source=$Hostxauthority,target=$Hostxauthority"
         fi
-  }
+  fi
 
   # access to host Wayland
   [ -S "$XDG_RUNTIME_DIR/$Hostwaylandsocket" ] && Xc_hostwayland="\\
