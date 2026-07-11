@@ -9567,21 +9567,15 @@ create_xcommand() {
 
     --xwin)
       case "$Sharegpu" in
-        no)
-          Xserveroptions="$Xserveroptions \\
-  -nowgl" ;;
-        *)
-          Xserveroptions="$Xserveroptions \\
-  -wgl" ;;
+        no) $append_ops_to Xserveroptions "-nowgl" ;;
+        *)  $append_ops_to Xserveroptions "-wgl" ;;
       esac
 
       case "$Fullscreen" in
         yes)
-          Xserveroptions="$Xserveroptions \\
-  -fullscreen" ;;
+            $append_ops_to Xserveroptions "-fullscreen" ;;
         no)
-          Xserveroptions="$Xserveroptions \\
-  -lesspointer"
+            $append_ops_to Xserveroptions "-lesspointer"
           case "$Desktopmode" in
             yes)
               for ((Count=0 ; Count<$Outputcount ; Count++)); do
