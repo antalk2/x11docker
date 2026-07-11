@@ -9394,9 +9394,9 @@ create_xcommand() {
             Compositorcommand="$Weston"
             $append_ops_to Compositorcommand "--socket=$Newwaylandsocket"
 
-            [ "$Fullscreen" = "yes" ] && [ "$Runsonconsole" = "no" ] && {
+            if [ "$Fullscreen" = "yes" ] && [ "$Runsonconsole" = "no" ] ; then
                 $append_ops_to Compositorcommand "--fullscreen"
-            }
+            fi
             
       [ "$Outputcount" = "1" ]  || Compositorcommand="$Compositorcommand \\
   --output-count=$Outputcount"
