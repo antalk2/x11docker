@@ -9691,27 +9691,27 @@ create_xcontainercommand() {
             ;;
     esac
 
-  # user
-  case "$Xcrootless" in
-    yes)
-      case "$Xcontainerbackend" in
-          podman)
-              Xc_user=""
-              $append_ops_to Xc_user                                \
-                             "--user ${Hostuseruid}:${Hostusergid}" \
-                             "--userns=keep-id"
-        ;;
-        *)
-          Xc_user="\\
-  --user 0:0"  # maps to same uid as unprivileged host user
-        ;;
-      esac
-    ;;
-    no)
-      Xc_user="\\
-  --user ${Hostuseruid}:${Hostusergid}"
-    ;;
-  esac
+    # user
+    case "$Xcrootless" in
+        yes)
+            case "$Xcontainerbackend" in
+                podman)
+                    Xc_user=""
+                    $append_ops_to Xc_user                                \
+                                   "--user ${Hostuseruid}:${Hostusergid}" \
+                                   "--userns=keep-id"
+                    ;;
+                *)
+                    Xc_user=""
+                    $append_ops_to Xc_user "--user 0:0"  # maps to same uid as unprivileged host user
+                    ;;
+            esac
+            ;;
+        no)
+            Xc_user=""
+            $append_ops_to Xc_user "--user ${Hostuseruid}:${Hostusergid}"
+            ;;
+    esac
 
   # X in container
   Xc_containerx="\\
