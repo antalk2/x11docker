@@ -9415,12 +9415,16 @@ create_xcommand() {
                            "$Xrandremulation" \
                            "$Decorate"
 
-      Compositorcommand="kwin_wayland \\
-  --xwayland \\
-  --socket=$Newwaylandsocket \\
-  --width=$Xaxis --height=$Yaxis"
-      [ "$Outputcount" = "1" ] || Compositorcommand="$Compositorcommand \\
-  --output-count=$Outputcount"
+            Compositorcommand="kwin_wayland"
+            $append_ops_to Compositorcommand                \
+                           "--xwayland"                     \
+                           "--socket=$Newwaylandsocket"     \
+                           "--width=$Xaxis --height=$Yaxis"
+
+            if [ "$Outputcount" != "1" ] ; then
+                $append_ops_to Compositorcommand "--output-count=$Outputcount"
+            fi
+
       [ "$Xkblayout" ] && Compositorcommand="KWIN_XKB_DEFAULT_KEYMAP=$Xkblayout $Compositorcommand"
       Compositorcommand="env QT_XKB_CONFIG_ROOT=/usr/share/X11/xkb $Compositorcommand"
       [ -n "$Newxvt" ] && Compositorcommand="$Compositorcommand \\
