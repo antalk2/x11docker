@@ -8795,7 +8795,6 @@ create_modelinefile() {
 create_xcommand() {
     local Xserveroptions_custom=
     local Xpraoptions=
-    local Nxagentoptions=
     local Compositorpid=
     local Weston=
     local Westonoutput=""
@@ -9472,7 +9471,8 @@ create_xcommand() {
       Xcommand="$(get_xpath nxagent) :$Newdisplaynumber -ac $Xserveroptions"
 
       # Some additional nxagent options are stored in a file
-      {
+      (
+          local Nxagentoptions=""
           Nxagentoptions="nx/nx"
           case "$Shareclipboard" in
               native-yes) Nxagentoptions+=",clipboard=both"   ;;
@@ -9502,9 +9502,10 @@ create_xcommand() {
           esac
 
           Nxagentoptions="${Nxagentoptions}:${Newdisplaynumber}"
+          #
           echo "$Nxagentoptions" >> "$Nxagentoptionsfile"
           debugnote "$Xserver: Additional nxagent options: $Nxagentoptions"
-      }
+      )
 
       # Workaround as nxagent ignores XAUTHORITY and fails to start if
       # option -auth is given without containing the cookie from host
