@@ -9696,11 +9696,11 @@ create_xcontainercommand() {
             $append_ops_to Xc_user                                \
                            "--user ${Hostuseruid}:${Hostusergid}" \
                            "--userns=keep-id"
-        else
+        else # !podman
             Xc_user=""
             $append_ops_to Xc_user "--user 0:0"  # maps to same uid as unprivileged host user
         fi
-    else
+    else # !Xcrootless
         Xc_user=""
         $append_ops_to Xc_user "--user ${Hostuseruid}:${Hostusergid}"
         ;;
