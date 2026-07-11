@@ -9472,37 +9472,39 @@ create_xcommand() {
       Xcommand="$(get_xpath nxagent) :$Newdisplaynumber -ac $Xserveroptions"
 
       # Some additional nxagent options are stored in a file
-      Nxagentoptions="nx/nx"
-      case "$Shareclipboard" in
-        native-yes) Nxagentoptions+=",clipboard=both"   ;;
-        native-c2h) Nxagentoptions+=",clipboard=server" ;;
-        native-h2c) Nxagentoptions+=",clipboard=client" ;;
-        *)          Nxagentoptions+=",clipboard=none"   ;;
-      esac
+      {
+          Nxagentoptions="nx/nx"
+          case "$Shareclipboard" in
+              native-yes) Nxagentoptions+=",clipboard=both"   ;;
+              native-c2h) Nxagentoptions+=",clipboard=server" ;;
+              native-h2c) Nxagentoptions+=",clipboard=client" ;;
+              *)          Nxagentoptions+=",clipboard=none"   ;;
+          esac
 
-      case "$Fullscreen" in
-        yes) Nxagentoptions+=",fullscreen=1" ;;
-        no)  if [ -n "$Screensize" ] ; then
-                 Nxagentoptions+=",geometry=$Screensize"
-             fi
-             ;;
-      esac
+          case "$Fullscreen" in
+              yes) Nxagentoptions+=",fullscreen=1" ;;
+              no)  if [ -n "$Screensize" ] ; then
+                       Nxagentoptions+=",geometry=$Screensize"
+                   fi
+                   ;;
+          esac
 
-      # --composite
-      case "$Xcomposite" in
-        yes) Nxagentoptions+=",composite=1" ;;
-        no)  Nxagentoptions+=",composite=0" ;;
-      esac
+          # --composite
+          case "$Xcomposite" in
+              yes) Nxagentoptions+=",composite=1" ;;
+              no)  Nxagentoptions+=",composite=0" ;;
+          esac
 
-      # --keymap: set keyboard layout
-      case "$Xkblayout" in
-        ""|clone) Nxagentoptions+=",keyboard=clone"                    ;;
-        *)        Nxagentoptions+=",keyboard=${Xkbmodel}/${Xkblayout}" ;;
-      esac
+          # --keymap: set keyboard layout
+          case "$Xkblayout" in
+              ""|clone) Nxagentoptions+=",keyboard=clone"                    ;;
+              *)        Nxagentoptions+=",keyboard=${Xkbmodel}/${Xkblayout}" ;;
+          esac
 
-      Nxagentoptions="${Nxagentoptions}:${Newdisplaynumber}"
-      echo "$Nxagentoptions" >> "$Nxagentoptionsfile"
-      debugnote "$Xserver: Additional nxagent options: $Nxagentoptions"
+          Nxagentoptions="${Nxagentoptions}:${Newdisplaynumber}"
+          echo "$Nxagentoptions" >> "$Nxagentoptionsfile"
+          debugnote "$Xserver: Additional nxagent options: $Nxagentoptions"
+      }
 
       # Workaround as nxagent ignores XAUTHORITY and fails to start if
       # option -auth is given without containing the cookie from host
