@@ -9718,40 +9718,44 @@ create_xcontainercommand() {
             "--mount type=bind,source=$Modelinefilebasepath,target=$Modelinefilebasepath,readonly"
     }
 
-    # access to host X : Xc_hostx
-    if [ -n "$Hostdisplay" ] ; then
+    # Xc_hostx : access to host X
+    {
         Xc_hostx=""
-        $append_ops_to Xc_hostx "--env DISPLAY=$Hostdisplay"
 
-        if [ -S "/tmp/.X11-unix/X$Hostdisplaynumber" ] ; then
-            case "$Xserver" in #### FIXME Is this differenciation needed? Link done in containerrc.
-                --hostdisplay)
-                    $append_ops_to Xc_hostx \
-                                   "$(trim_to_mark \
+        if [ -n "$Hostdisplay" ] ; then
+
+            $append_ops_to Xc_hostx "--env DISPLAY=$Hostdisplay"
+
+            if [ -S "/tmp/.X11-unix/X$Hostdisplaynumber" ] ; then
+                case "$Xserver" in #### FIXME Is this differenciation needed? Link done in containerrc.
+                    --hostdisplay)
+                        $append_ops_to Xc_hostx \
+                                       "$(trim_to_mark \
                                       "|--mount type=bind
                                        :,source=/tmp/.X11-unix/X$Hostdisplaynumber
                                        :,target=/tmp/.X11-unix/X$Hostdisplaynumber
                                        :,readonly"
                                        )"
-                    ;;
-                *)
-                    $append_ops_to Xc_hostx \
-                                   "$(trim_to_mark \
+                        ;;
+                    *)
+                        $append_ops_to Xc_hostx \
+                                       "$(trim_to_mark \
                                     "|--mount type=bind
                                      :,source=/tmp/.X11-unix/X$Hostdisplaynumber
                                      :,target=/X$Hostdisplaynumber
                                      :,readonly"
                                      )"
-                    ;;
-            esac
+                        ;;
+                esac
+            fi
+
+            if [ -s "$Hostxauthority" ] ; then
+                $append_ops_to Xc_hostx \
+                               "--env XAUTHORITY=$Hostxauthority" \
+                               "--mount type=bind,source=$Hostxauthority,target=$Hostxauthority"
+            fi
         fi
-    
-        if [ -s "$Hostxauthority" ] ; then
-            $append_ops_to Xc_hostx \
-                           "--env XAUTHORITY=$Hostxauthority" \
-                           "--mount type=bind,source=$Hostxauthority,target=$Hostxauthority"
-        fi
-  fi
+    }
 
   # access to host Wayland
   [ -S "$XDG_RUNTIME_DIR/$Hostwaylandsocket" ] && Xc_hostwayland="\\
