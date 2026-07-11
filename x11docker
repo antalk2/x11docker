@@ -9718,22 +9718,24 @@ create_xcontainercommand() {
             "--mount type=bind,source=$Modelinefilebasepath,target=$Modelinefilebasepath,readonly"
     }
 
-  # access to host X
-  [ -n "$Hostdisplay" ] && {
-    Xc_hostx="\\
-  --env DISPLAY=$Hostdisplay"
-    [ -S "/tmp/.X11-unix/X$Hostdisplaynumber" ] && {
-      case "$Xserver" in #### FIXME Is this differenciation needed? Link done in containerrc.
-        --hostdisplay)
-          Xc_hostx="$Xc_hostx \\
-  --mount type=bind,source=/tmp/.X11-unix/X$Hostdisplaynumber,target=/tmp/.X11-unix/X$Hostdisplaynumber,readonly"
-        ;;
-        *)
-          Xc_hostx="$Xc_hostx \\
-  --mount type=bind,source=/tmp/.X11-unix/X$Hostdisplaynumber,target=/X$Hostdisplaynumber,readonly"
+    # access to host X
+    [ -n "$Hostdisplay" ] && {
+        Xc_hostx=""
+        $append_ops_to Xc_hostx "--env DISPLAY=$Hostdisplay"
+
+        [ -S "/tmp/.X11-unix/X$Hostdisplaynumber" ] && {
+            case "$Xserver" in #### FIXME Is this differenciation needed? Link done in containerrc.
+                --hostdisplay)
+                    $append_ops_to Xc_hostx \
+  "--mount type=bind,source=/tmp/.X11-unix/X$Hostdisplaynumber,target=/tmp/.X11-unix/X$Hostdisplaynumber,readonly"
+                    ;;
+                *)
+                    $append_ops_to Xc_hostx \
+  "--mount type=bind,source=/tmp/.X11-unix/X$Hostdisplaynumber,target=/X$Hostdisplaynumber,readonly"
         ;;
       esac
     }
+    
     [ -s "$Hostxauthority" ] && Xc_hostx="$Xc_hostx \\
   --env XAUTHORITY=$Hostxauthority \\
   --mount type=bind,source=$Hostxauthority,target=$Hostxauthority"
