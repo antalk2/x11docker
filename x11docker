@@ -9364,26 +9364,26 @@ create_xcommand() {
             Xcommand="$Xcommand $Xserveroptions"
 
             if [ -n "${Westonoutput:-$Connectorlist}" ] ; then
+                #
                 for ((Count=1 ; Count<="$Outputcount" ; Count++)) ; do
                     
                     if [ "$Westonoutput" != "WL" ] && [ "$Westonoutput" != "X" ] ; then
-                        Count=""
+                        Count="" # Last entry to output (break below)
                         if [ -z "$Screensize" ] ; then Screensize="preferred" ; fi
                     fi
 
                     for Connector in ${Westonoutput:-$Connectorlist}; do
-                        {
-                            trim_to_bar "|[output]
-                                         |name=$Connector$Count"
-                            echo
-                        } >> "$Westonini"
+                        trim_to_bar "|[output]
+                                     |name=$Connector$Count"
+                        echo
 
-          [ "$Xwaylandrootless" = "no" ] && echo "mode=$Screensize"    >> "$Westonini"
-          [ "$Scaling" ]                 && echo "scale=$Scaling"      >> "$Westonini"
-          [ -n "$Rotation" ]             && echo "transform=$Rotation" >> "$Westonini"
-        done
-        [ "$Count" ] || break
-                done
+                        [ "$Xwaylandrootless" = "no" ] && echo "mode=$Screensize"
+                        [ "$Scaling" ]                 && echo "scale=$Scaling"
+                        [ -n "$Rotation" ]             && echo "transform=$Rotation"
+                    done
+                    if [ -z "$Count" ] ; then break ; fi
+                done >> "$Westonini"
+                #
             fi
 
       Compositorcommand="$Weston \\
