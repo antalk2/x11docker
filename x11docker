@@ -9669,30 +9669,32 @@ create_xcontainercommand() {
   
     ## code snippets:
 
-    # Note missing \\ after --cap-drop ALL below.
-  # drop privileges
-  Xc_capdrop="\\
-  --cap-drop ALL
-  --cap-add DAC_OVERRIDE"
 
-  Xc_nopriv="\\
-  --security-opt=no-new-privileges"
+    # drop privileges
 
-  case "$BackendKind" in
-    nerdctl)
-      Xc_capdrop=""
-      Xc_nopriv=""
-    ;;
-  esac
+    Xc_capdrop=""
+    # Note  \\ was missing after --cap-drop ALL below, but $append_ops_to will add it.
+    $append_ops_to Xc_capdrop "--cap-drop ALL" "--cap-add DAC_OVERRIDE"
+
+    Xc_nopriv=""
+    $append_ops_to Xc_nopriv "--security-opt=no-new-privileges"
+
+    case "$BackendKind" in
+        nerdctl)
+            Xc_capdrop=""
+            Xc_nopriv=""
+            ;;
+    esac
 
   # user
   case "$Xcrootless" in
     yes)
       case "$Xcontainerbackend" in
-        podman)
-          Xc_user="\\
-  --user ${Hostuseruid}:${Hostusergid} \\
-  --userns=keep-id"
+          podman)
+              Xc_user=""
+              $append_ops_to Xc_user                                \
+                             "--user ${Hostuseruid}:${Hostusergid}" \
+                             "--userns=keep-id"
         ;;
         *)
           Xc_user="\\
