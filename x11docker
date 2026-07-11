@@ -9372,17 +9372,23 @@ create_xcommand() {
                         if [ -z "$Screensize" ] ; then Screensize="preferred" ; fi
                     fi
 
-                    for Connector in ${Westonoutput:-$Connectorlist}; do
-                        trim_to_bar "|[output]
+                    #
+                    {
+                        for Connector in ${Westonoutput:-$Connectorlist}; do
+                            #
+                            trim_to_bar "|[output]
                                      |name=$Connector$Count"
-                        echo
-
-                        [ "$Xwaylandrootless" = "no" ] && echo "mode=$Screensize"
-                        [ "$Scaling" ]                 && echo "scale=$Scaling"
-                        [ -n "$Rotation" ]             && echo "transform=$Rotation"
-                    done
+                            echo
+                            #
+                            [ "$Xwaylandrootless" = "no" ] && echo "mode=$Screensize"
+                            [ "$Scaling" ]                 && echo "scale=$Scaling"
+                            [ -n "$Rotation" ]             && echo "transform=$Rotation"
+                            #
+                        done
+                    } >> "$Westonini"
+                    #
                     if [ -z "$Count" ] ; then break ; fi
-                done >> "$Westonini"
+                done
                 #
             fi
 
