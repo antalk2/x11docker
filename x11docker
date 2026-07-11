@@ -9372,8 +9372,7 @@ create_xcommand() {
                         if [ -z "$Screensize" ] ; then Screensize="preferred" ; fi
                     fi
 
-                    #
-                    {
+                    {   # Emit an [output] entry
                         for Connector in ${Westonoutput:-$Connectorlist}; do
                             #
                             trim_to_bar "|[output]
