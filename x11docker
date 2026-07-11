@@ -9675,19 +9675,20 @@ create_xcontainercommand() {
     ## code snippets:
 
 
-    # drop privileges
-
-    Xc_capdrop=""
-    # Note  \\ was missing after --cap-drop ALL below, but $append_ops_to will add it.
-    $append_ops_to Xc_capdrop "--cap-drop ALL" "--cap-add DAC_OVERRIDE"
-
-    Xc_nopriv=""
-    $append_ops_to Xc_nopriv "--security-opt=no-new-privileges"
-
-    if [  "$BackendKind" =  nerdctl ] ; then
+    # drop privileges: Xc_capdrop , Xc_nopriv
+    {
         Xc_capdrop=""
+        # Note  \\ was missing after --cap-drop ALL below, but $append_ops_to will add it.
+        $append_ops_to Xc_capdrop "--cap-drop ALL" "--cap-add DAC_OVERRIDE"
+
         Xc_nopriv=""
-    fi
+        $append_ops_to Xc_nopriv "--security-opt=no-new-privileges"
+
+        if [  "$BackendKind" =  nerdctl ] ; then
+            Xc_capdrop=""
+            Xc_nopriv=""
+        fi
+    }
 
     # Xc_user : only set here
     {
