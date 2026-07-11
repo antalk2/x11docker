@@ -9566,31 +9566,27 @@ create_xcommand() {
             ;; # --nxagent
 
         --xwin)
-            case "$Sharegpu" in
-                no) $append_ops_to Xserveroptions "-nowgl" ;;
-                *)  $append_ops_to Xserveroptions "-wgl" ;;
-            esac
+            if [ "$Sharegpu" = "no" ] ;
+            then $append_ops_to Xserveroptions "-nowgl"
+            else $append_ops_to Xserveroptions "-wgl"
+            fi
 
-            case "$Fullscreen" in
-                yes)
-                    $append_ops_to Xserveroptions "-fullscreen" ;;
-                no)
-                    $append_ops_to Xserveroptions "-lesspointer"
-                    case "$Desktopmode" in
-                        yes)
-                            for ((Count=0 ; Count<$Outputcount ; Count++)); do
-                                $append_ops_to Xserveroptions "-screen $Count $Screensize"
-                            done
-                            ;;
-                        no) $append_ops_to Xserveroptions "-multiwindow" ;;
-                    esac
-                    ;;
-            esac
+            if [ "$Fullscreen" = "yes" ] ;
+            then $append_ops_to Xserveroptions "-fullscreen"
+            else $append_ops_to Xserveroptions "-lesspointer"
+                 if [ "$Desktopmode" = "yes" ] ; then
+                     for ((Count=0 ; Count<$Outputcount ; Count++)); do
+                         $append_ops_to Xserveroptions "-screen $Count $Screensize"
+                     done
+                 else
+                     $append_ops_to Xserveroptions "-multiwindow"
+                 fi
+            fi
 
-            case "$Shareclipboard" in
-                yes) $append_ops_to Xserveroptions "-clipboard"   ;;
-                no)  $append_ops_to Xserveroptions "-noclipboard" ;;
-            esac
+            if [ "$Shareclipboard" = "yes" ] ;
+            then $append_ops_to Xserveroptions "-clipboard"
+            else $append_ops_to Xserveroptions "-noclipboard"
+            fi
 
             Xcommand="$(command -v XWin) :$Newdisplaynumber $Xserveroptions"
             ;; # 
