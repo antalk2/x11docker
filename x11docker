@@ -9518,12 +9518,13 @@ create_xcommand() {
       fi
 
       Cookie="$(makecookie)"
-# should work, but does not. dirty workaround with -ac
-#      xauth -f "$Xclientcookie" add :$Newdisplaynumber . "$Cookie"
-#      xauth -n -i -f "$Xclientcookie" nlist | sed -e 's/^..../ffff/' | xauth -n -i -f "$Xservercookie" nmerge -
-#      xauth -n -i -f "$Xclientcookie" nlist | sed -e 's/^..../ffff/' >/tmp/cookie.txt
-#      rm $Xclientcookie
-#      cat /tmp/cookie.txt | xauth -n -i -f "$Xclientcookie" nmerge -
+      # should work, but does not. dirty workaround with -ac
+      #      xauth -f "$Xclientcookie" add :$Newdisplaynumber . "$Cookie"
+      #      xauth -n -i -f "$Xclientcookie" nlist | sed -e 's/^..../ffff/' | xauth -n -i -f "$Xservercookie" nmerge -
+      #      xauth -n -i -f "$Xclientcookie" nlist | sed -e 's/^..../ffff/' >/tmp/cookie.txt
+      #      rm $Xclientcookie
+      #      cat /tmp/cookie.txt | xauth -n -i -f "$Xclientcookie" nmerge -
+      
       # fake NXclient
       echo '#! /usr/bin/env bash
 # helper script to terminate nxagent.
