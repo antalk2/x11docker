@@ -9645,27 +9645,29 @@ create_xcontainercommand() {
     mkfile "$Xcontainerrc"
 
     mkfile "$Cachefolder/etcpasswd.xcontainer"
-    # echo "root:x:0:0:root:/root:/bin/bash" >> "$Cachefolder/etcpasswd.xcontainer"
-    # echo "$Containeruser:x:${Containeruseruid:-$Hostuseruid}:${Containerusergid:-$Hostusergid}:$Containeruser,,,:/tmp:/bin/bash" >> "$Cachefolder/etcpasswd.xcontainer"
+    {
+        echo "root:x:0:0:root:/root:/bin/bash"
+        printf "%s:%s:%s:%s:%s:%s:%s\n"            \
+               "$Containeruser"                    \
+               "x"                                 \
+               "${Containeruseruid:-$Hostuseruid}" \
+               "${Containerusergid:-$Hostusergid}" \
+               "$Containeruser,,,"                 \
+               "/tmp"                              \
+               "/bin/bash"
+    } >> "$Cachefolder/etcpasswd.xcontainer"
 
-    trim_to_bar \
-        "|root:x:0:0:root:/root:/bin/bash
-         |$Containeruser
-         ::x
-         ::${Containeruseruid:-$Hostuseruid}
-         ::${Containerusergid:-$Hostusergid}
-         ::$Containeruser,,,
-         ::/tmp:/bin/bash
-         |" >> "$Cachefolder/etcpasswd.xcontainer"
 
-  mkfile "$Cachefolder/etcgroup.xcontainer"
-  echo "video:x:$(mygetent group video   | cut -d: -f3):$Containeruser" >> "$Cachefolder/etcgroup.xcontainer"
-  echo "input:x:$(mygetent group input   | cut -d: -f3):$Containeruser" >> "$Cachefolder/etcgroup.xcontainer"
-  echo "render:x:$(mygetent group render | cut -d: -f3):$Containeruser" >> "$Cachefolder/etcgroup.xcontainer"
-  echo "weston-launch:x:104:$Containeruser"                             >> "$Cachefolder/etcgroup.xcontainer"
-  #                     ^^^ FIXME: Why 104? Could it clash with "mygetent group video"?
+    mkfile "$Cachefolder/etcgroup.xcontainer"
+    {
+        echo "video:x:$(mygetent group video   | cut -d: -f3):$Containeruser"
+        echo "input:x:$(mygetent group input   | cut -d: -f3):$Containeruser"
+        echo "render:x:$(mygetent group render | cut -d: -f3):$Containeruser"
+        echo "weston-launch:x:104:$Containeruser"
+        #                     ^^^ FIXME: Why 104? Could it clash with "mygetent group video"?
+    }  >> "$Cachefolder/etcgroup.xcontainer"
   
-  ## code snippets:
+    ## code snippets:
 
   # drop privileges
   Xc_capdrop="\\
