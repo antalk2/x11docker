@@ -9621,10 +9621,24 @@ create_xcommand() {
   return 0
 } # create_xcommand
 
-create_xcontainercommand() {    # option --xc: create docker command for X in container
-  local Xcontainerrc Gpudevice
-  local Xc_hostx= Xc_hostwayland= Xc_containerwayland Xc_gpu= Xc_nomitshm
-  local Xc_capdrop Xc_nopriv Xc_user Xc_console Xc_systemd
+
+# Function: create_xcontainercommand
+# Brief: option --xc: create docker command for X in container
+#
+create_xcontainercommand() {
+    #
+    local Xcontainerrc
+    local Gpudevice
+    local Xc_hostx=
+    local Xc_hostwayland=
+    local Xc_containerwayland
+    local Xc_gpu=
+    local Xc_nomitshm
+    local Xc_capdrop
+    local Xc_nopriv
+    local Xc_user
+    local Xc_console
+    local Xc_systemd
 
   Xcontainername="x11docker_X${Newdisplaynumber}_xserver_${Cachenumber}"
   Xcontainerrc="$Cachefolder/xcontainerrc"
