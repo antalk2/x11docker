@@ -9663,7 +9663,8 @@ create_xcontainercommand() {
   echo "input:x:$(mygetent group input   | cut -d: -f3):$Containeruser" >> "$Cachefolder/etcgroup.xcontainer"
   echo "render:x:$(mygetent group render | cut -d: -f3):$Containeruser" >> "$Cachefolder/etcgroup.xcontainer"
   echo "weston-launch:x:104:$Containeruser"                             >> "$Cachefolder/etcgroup.xcontainer"
-
+  #                     ^^^ FIXME: Why 104? Could it clash with "mygetent group video"?
+  
   ## code snippets:
 
   # drop privileges
