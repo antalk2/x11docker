@@ -9526,32 +9526,34 @@ create_xcommand() {
       #      cat /tmp/cookie.txt | xauth -n -i -f "$Xclientcookie" nmerge -
       
       # fake NXclient
-      echo '#! /usr/bin/env bash
-# helper script to terminate nxagent.
-# nxagent runs program noted in NX_CLIENT if window close button is pressed.
-# (real nxclient does not exist)
-echo "NXclient: $*" >> '"$Xinitlogfile"'
-parsed="$(getopt --options="" --longoptions="parent:,display:,dialog:,caption:,window:,message:" -- "$@")"
-eval set -- $parsed
-echo "$parsed" >> '$Xinitlogfile'
-while [ -n "${1:-}" ] ; do
-  case "${1:-}" in
-    --dialog) dialog="${2:-}" && shift ;;
-    --display|--caption|--message) shift ;;
-    --window) shift ;;
-    --parent) pid="${2:-}" && shift ;;
-    --) ;;
-  esac
-  shift
-done
-case $dialog in
-  pulldown) ;;
-  yesnosuspend)
-    kill $pid
-    echo timetosaygoodbye >> '"$Timetosaygoodbyefile"'
-  ;;
-esac
-' >> "$Nxagentclientrc"
+      trim_to_bar \
+          '|#! /usr/bin/env bash
+           |# helper script to terminate nxagent.
+           |# nxagent runs program noted in NX_CLIENT if window close button is pressed.
+           |# (real nxclient does not exist)
+           |echo "NXclient: $*" >> '"$Xinitlogfile"'
+           |parsed="$(getopt --options="" --longoptions="parent:,display:,dialog:,caption:,window:,message:" -- "$@")"
+           |eval set -- $parsed
+           |echo "$parsed" >> '$Xinitlogfile'
+           |while [ -n "${1:-}" ] ; do
+           |  case "${1:-}" in
+           |    --dialog) dialog="${2:-}" && shift ;;
+           |    --display|--caption|--message) shift ;;
+           |    --window) shift ;;
+           |    --parent) pid="${2:-}" && shift ;;
+           |    --) ;;
+           |  esac
+           |  shift
+           |done
+           |case $dialog in
+           |  pulldown) ;;
+           |  yesnosuspend)
+           |    kill $pid
+           |    echo timetosaygoodbye >> '"$Timetosaygoodbyefile"'
+           |  ;;
+           |esac
+           |' >> "$Nxagentclientrc"
+      #
       unpriv "chmod +x '$Nxagentclientrc'"
 
       echo '<!DOCTYPE NXKeystroke>
