@@ -9669,12 +9669,15 @@ create_xcontainercommand() {
   
     ## code snippets:
 
+    # Note missing \\ after --cap-drop ALL below.
   # drop privileges
   Xc_capdrop="\\
   --cap-drop ALL
   --cap-add DAC_OVERRIDE"
+
   Xc_nopriv="\\
   --security-opt=no-new-privileges"
+
   case "$BackendKind" in
     nerdctl)
       Xc_capdrop=""
