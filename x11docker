@@ -9684,12 +9684,10 @@ create_xcontainercommand() {
     Xc_nopriv=""
     $append_ops_to Xc_nopriv "--security-opt=no-new-privileges"
 
-    case "$BackendKind" in
-        nerdctl)
-            Xc_capdrop=""
-            Xc_nopriv=""
-            ;;
-    esac
+    if [  "$BackendKind" =  nerdctl ] ; then
+        Xc_capdrop=""
+        Xc_nopriv=""
+    fi
 
     # user
     case "$Xcrootless" in
@@ -10202,7 +10200,7 @@ exit 0
 " >> "$Xcontainerrc"
 
   return 0
-}
+} # create_xcontainercommand
 
 #
 # Create xinitrc: set up X environment, create cookies
