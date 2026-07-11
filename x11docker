@@ -396,14 +396,14 @@ trim_to_bar_filter() {
 #     str: A multiline string with indentation markers.
 #
 # stdout: The string value with indentations and markers removed.
-#         Final newlines are usually lost by "$()".
+#         Final newlines are usually lost by "$()", not trim_to_bar.
 #         If they must be preserved, the following pattern could be used.
 #         ----
 #         x="$(trim_to_bar str)@magic_end_marker@"
 #         x="${x%@magic_end_marker@}"
 #         ----
 #         Unfortunately, if this would be done inside trim_to_bar,
-#         we would still lose the final newlines.
+#         we would still lose the final newlines by the surrounding "$()".
 #
 #         We could probably pass in the target variable and set it
 #         using a variable reference. Then we could:
