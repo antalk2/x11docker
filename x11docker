@@ -9746,9 +9746,11 @@ create_xcontainercommand() {
             esac
         }
     
-    [ -s "$Hostxauthority" ] && Xc_hostx="$Xc_hostx \\
-  --env XAUTHORITY=$Hostxauthority \\
-  --mount type=bind,source=$Hostxauthority,target=$Hostxauthority"
+        if [ -s "$Hostxauthority" ] ; then
+            $append_ops_to Xc_hostx \
+                           "--env XAUTHORITY=$Hostxauthority" \
+                           "--mount type=bind,source=$Hostxauthority,target=$Hostxauthority"
+        fi
   }
 
   # access to host Wayland
