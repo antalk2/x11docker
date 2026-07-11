@@ -8782,6 +8782,28 @@ create_modelinefile() {
     echo "$Newmodelinefile"
 }
 
+
+# Function: create_xcommand_HELPER_append_ops_to
+# Usage: create_xcommand_HELPER_append_ops_to VARNAME opt1 opt2 ... optn
+#
+# Brief: Append op1 ... optn to the variable VARNAME, preceding
+#        each with a SEP=" \\${NEWLINE} "
+#
+# Purpose: Shorten the code, especially when only a few opts added at a time.
+#
+create_xcommand_HELPER_append_ops_to() {
+    # local NEWLINE=$'\n'
+    declare -n create_xcommand_HELPER_append_ops_to_VAR_IO="$1"
+    shift
+    #
+    local op
+    local SEP=" \\${NEWLINE}  "
+    for op in "${@}" ; do
+        create_xcommand_HELPER_append_ops_to_VAR_IO+="${SEP}${op}"
+    done
+}
+
+
 # Function: create_xcommand
 # Brief: Create command to start X server and/or Wayland compositor
 #
@@ -8809,6 +8831,8 @@ create_xcommand() {
     local Xrandremulation=
     local Decorate=
     local Xwaylandoptions=
+    local append_ops_to="create_xcommand_HELPER_append_ops_to"
+    # Usage example: $append_ops_to Xserveroptions '-shmem' '-shpix'
 
     Xserveroptions_custom="$Xserveroptions"
     Xserveroptions=""
@@ -8848,27 +8872,6 @@ create_xcommand() {
     
     #### General X server options
     #
-    # Function: create_xcommand_INTERNAL_append_ops_to
-    # Usage: create_xcommand_INTERNAL_append_ops_to VARNAME opt1 opt2 ... optn
-    #
-    # Brief: Append op1 ... optn to the variable VARNAME, preceding
-    #        each with a SEP=" \\${NEWLINE} "
-    #
-    # Purpose: Shorten the code, especially when only a few opts added at a time.
-    #
-    create_xcommand_INTERNAL_append_ops_to() {
-        # local NEWLINE=$'\n'
-        declare -n create_xcommand_INTERNAL_append_ops_to_VAR_IO="$1"
-        shift
-        #
-        local op
-        local SEP=" \\${NEWLINE}  "
-        for op in "${@}" ; do
-            create_xcommand_INTERNAL_append_ops_to_VAR_IO+="${SEP}${op}"
-        done
-    }
-    local append_ops_to="create_xcommand_INTERNAL_append_ops_to"
-    # Usage example: $append_ops_to Xserveroptions '-shmem' '-shpix'
     #
     case "$Xserver" in
         --nxagent)
