@@ -9579,12 +9579,10 @@ create_xcommand() {
           case "$Desktopmode" in
             yes)
               for ((Count=0 ; Count<$Outputcount ; Count++)); do
-                Xserveroptions="$Xserveroptions \\
-  -screen $Count $Screensize"
+                  $append_ops_to Xserveroptions "-screen $Count $Screensize"
               done
             ;;
-            no) Xserveroptions="$Xserveroptions \\
-  -multiwindow" ;;
+            no) $append_ops_to Xserveroptions "-multiwindow" ;;
           esac
         ;;
       esac
