@@ -9409,10 +9409,11 @@ create_xcommand() {
             $append_ops_to Compositorcommand "--config='$Westonini'"
             ;; # --weston|--weston-xwayland)
 
-    --kwin|--kwin-xwayland)
-      Xcommand="$(get_xpath Xwayland) :$Newdisplaynumber $Xserveroptions \\
-  $Xrandremulation \\
-  $Decorate"
+        --kwin|--kwin-xwayland)
+            Xcommand="$(get_xpath Xwayland) :$Newdisplaynumber $Xserveroptions"
+            $append_ops_to Xcommand           \
+                           "$Xrandremulation" \
+                           "$Decorate"
 
       Compositorcommand="kwin_wayland \\
   --xwayland \\
