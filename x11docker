@@ -9556,11 +9556,13 @@ create_xcommand() {
       #
       unpriv "chmod +x '$Nxagentclientrc'"
 
-      echo '<!DOCTYPE NXKeystroke>
-    <keystrokes>
-    <keystroke action="fullscreen" AltMeta="0" Control="0" Shift="1" key="F11" />
-    <keystroke action="fullscreen" AltMeta="1" Control="1" Shift="1" key="f" />
-</keystrokes>' >> "$Nxagentkeysfile"
+      trim_to_bar \
+          '|<!DOCTYPE NXKeystroke>
+           |    <keystrokes>
+           |    <keystroke action="fullscreen" AltMeta="0" Control="0" Shift="1" key="F11" />
+           |    <keystroke action="fullscreen" AltMeta="1" Control="1" Shift="1" key="f" />
+           |</keystrokes>' >> "$Nxagentkeysfile"
+      #
     ;;
 
     --xwin)
