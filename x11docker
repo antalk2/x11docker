@@ -9640,13 +9640,23 @@ create_xcontainercommand() {
     local Xc_console
     local Xc_systemd
 
-  Xcontainername="x11docker_X${Newdisplaynumber}_xserver_${Cachenumber}"
-  Xcontainerrc="$Cachefolder/xcontainerrc"
-  mkfile "$Xcontainerrc"
+    Xcontainername="x11docker_X${Newdisplaynumber}_xserver_${Cachenumber}"
+    Xcontainerrc="$Cachefolder/xcontainerrc"
+    mkfile "$Xcontainerrc"
 
-  mkfile "$Cachefolder/etcpasswd.xcontainer"
-  echo "root:x:0:0:root:/root:/bin/bash" >> "$Cachefolder/etcpasswd.xcontainer"
-  echo "$Containeruser:x:${Containeruseruid:-$Hostuseruid}:${Containerusergid:-$Hostusergid}:$Containeruser,,,:/tmp:/bin/bash" >> "$Cachefolder/etcpasswd.xcontainer"
+    mkfile "$Cachefolder/etcpasswd.xcontainer"
+    # echo "root:x:0:0:root:/root:/bin/bash" >> "$Cachefolder/etcpasswd.xcontainer"
+    # echo "$Containeruser:x:${Containeruseruid:-$Hostuseruid}:${Containerusergid:-$Hostusergid}:$Containeruser,,,:/tmp:/bin/bash" >> "$Cachefolder/etcpasswd.xcontainer"
+
+    trim_to_bar \
+        "|root:x:0:0:root:/root:/bin/bash
+         |$Containeruser
+         ::x
+         ::${Containeruseruid:-$Hostuseruid}
+         ::${Containerusergid:-$Hostusergid}
+         ::$Containeruser,,,
+         ::/tmp:/bin/bash
+         |" >> "$Cachefolder/etcpasswd.xcontainer"
 
   mkfile "$Cachefolder/etcgroup.xcontainer"
   echo "video:x:$(mygetent group video   | cut -d: -f3):$Containeruser" >> "$Cachefolder/etcgroup.xcontainer"
