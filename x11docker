@@ -9482,28 +9482,37 @@ create_xcommand() {
 
       case "$Fullscreen" in
         yes) Nxagentoptions+=",fullscreen=1" ;;
-        no)  [ -n "$Screensize" ] && Nxagentoptions+=",geometry=$Screensize" ;;
+        no)  if [ -n "$Screensize" ] ; then
+                 Nxagentoptions+=",geometry=$Screensize"
+             fi
+             ;;
       esac
 
       # --composite
       case "$Xcomposite" in
-        yes) Nxagentoptions="$Nxagentoptions,composite=1" ;;
-        no)  Nxagentoptions="$Nxagentoptions,composite=0" ;;
+        yes) Nxagentoptions+=",composite=1" ;;
+        no)  Nxagentoptions+=",composite=0" ;;
       esac
 
       # --keymap: set keyboard layout
       case "$Xkblayout" in
-        ""|clone) Nxagentoptions="$Nxagentoptions,keyboard=clone" ;;
-        *)        Nxagentoptions="$Nxagentoptions,keyboard=${Xkbmodel}/${Xkblayout}" ;;
+        ""|clone) Nxagentoptions+=",keyboard=clone"                    ;;
+        *)        Nxagentoptions+=",keyboard=${Xkbmodel}/${Xkblayout}" ;;
       esac
 
       Nxagentoptions="${Nxagentoptions}:${Newdisplaynumber}"
       echo "$Nxagentoptions" >> "$Nxagentoptionsfile"
       debugnote "$Xserver: Additional nxagent options: $Nxagentoptions"
 
-      # Workaround as nxagent ignores XAUTHORITY and fails to start if option -auth is given without containing the cookie from host display.
+      # Workaround as nxagent ignores XAUTHORITY and fails to start if
+      # option -auth is given without containing the cookie from host
+      # display.
+      #
       # Option -ac above complies "xhost +" and is reverted in xinitrc.
-      [ "$Xauthentication" != "no" ] && [ -s "$Hostxauthority" ] && unpriv "cp '$Hostxauthority' '$Xservercookie'"
+      #
+      if [ "$Xauthentication" != "no" ] && [ -s "$Hostxauthority" ] ; then
+          unpriv "cp '$Hostxauthority' '$Xservercookie'"
+      fi
 
       Cookie="$(makecookie)"
 # should work, but does not. dirty workaround with -ac
