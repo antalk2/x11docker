@@ -8974,6 +8974,14 @@ create_xcommand() {
             $append_ops_to Xserveroptions "-auth $Xservercookie"
             ;;
         no|-ac)
+            # https://manpages.debian.org/experimental/nxagent/nxagent.1.en.html
+            #
+            #  -ac : disables host-based access control
+            #    mechanisms. Enables access by any host, and permits
+            #    any host to modify the access control list. Use with
+            #    extreme caution. This option exists primarily for
+            #    running test suites remotely.
+            #
             if [ "$Xauthentication" = "-ac" ] ; then
                 $append_ops_to Xserveroptions "-ac"
                 Xauthentication="no"
@@ -9440,6 +9448,11 @@ create_xcommand() {
             # files needed by nxagent
             export NX_CLIENT="$Nxagentclientrc"
 
+            # https://manpages.debian.org/experimental/nxagent/nxagent.1.en.html
+            #     -D : enable desktop mode (default)
+            #     -R : enable rootless mode
+            #     -norootlessexit :  don't exit if there are no clients in rootless mode
+            #
             $append_ops_to Xserveroptions                    \
                            "-norootlessexit"                 \
                            "-options $Nxagentoptionsfile"    \
