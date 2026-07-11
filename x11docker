@@ -9607,18 +9607,19 @@ create_xcommand() {
             ;;
 
         --hostwayland|--hostdisplay|--tty) ;;
+    esac # "$Xserver" # create command to run X server
+
+    case "$Xserver" in
+        --weston|--kwin|--hostwayland|--hostdisplay|--tty) Xcommand="" ;;
     esac
 
-  case "$Xserver" in
-    --weston|--kwin|--hostwayland|--hostdisplay|--tty) Xcommand="" ;;
-  esac
-  case "$Xserver" in
-    --weston|--kwin|--weston-xwayland|--kwin-xwayland|--xpra-xwayland|--xpra2-xwayland) ;;
-    *) Compositorcommand="" ;;
-  esac
+    case "$Xserver" in
+        --weston|--kwin|--weston-xwayland|--kwin-xwayland|--xpra-xwayland|--xpra2-xwayland) ;;
+        *) Compositorcommand="" ;;
+    esac
 
   return 0
-}
+} # create_xcommand
 
 create_xcontainercommand() {    # option --xc: create docker command for X in container
   local Xcontainerrc Gpudevice
