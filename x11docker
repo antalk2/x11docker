@@ -9591,32 +9591,23 @@ create_xcommand() {
             Xcommand="$(command -v XWin) :$Newdisplaynumber $Xserveroptions"
             ;; # 
 
-    --runx)
-      Xserveroptions="--display $Newdisplaynumber \
-  --verbose"
-      [ -n "$Hostipwindows" ]       && Xserveroptions="$Xserveroptions \
-  --ip $Hostipwindows"
-      [ "$Xauthentication" = "no" ] && Xserveroptions="$Xserveroptions \
-  --no-auth"
-      [ "$Desktopmode" = "yes" ]    && Xserveroptions="$Xserveroptions \
-  --desktop"
-      [ "$Shareclipboard" = "yes" ] && Xserveroptions="$Xserveroptions \
-  --clipboard"
-      [ "$Screensize" ]             && Xserveroptions="$Xserveroptions \
-  --size=$Screensize"
-      [ "$Sharegpu" = "iglx" ]      && Xserveroptions="$Xserveroptions \
-  --gpu"
-      [ -n "$Xhost" ]               && Xserveroptions="$Xserveroptions \
-  --xhost=$Xhost"
-      grep -q "[.]" <<< "%Hostip"   && Xserveroptions="$Xserveroptions \
-  --xhost +INET:$Hostip"
-      grep -q "[:]" <<< "%Hostip"   && Xserveroptions="$Xserveroptions \
-  --xhost +INET6:$Hostip"
-      Xcommand="$(command -v runx) $Xserveroptions"
-    ;;
+        --runx)
+            Xserveroptions="--display $Newdisplaynumber"
+            $append_ops_to Xserveroptions "--verbose"
+            [ -n "$Hostipwindows" ]       && $append_ops_to Xserveroptions "--ip $Hostipwindows"
+            [ "$Xauthentication" = "no" ] && $append_ops_to Xserveroptions "--no-auth"
+            [ "$Desktopmode" = "yes" ]    && $append_ops_to Xserveroptions "--desktop"
+            [ "$Shareclipboard" = "yes" ] && $append_ops_to Xserveroptions "--clipboard"
+            [ "$Screensize" ]             && $append_ops_to Xserveroptions "--size=$Screensize"
+            [ "$Sharegpu" = "iglx" ]      && $append_ops_to Xserveroptions "--gpu"
+            [ -n "$Xhost" ]               && $append_ops_to Xserveroptions "--xhost=$Xhost"
+            grep -q "[.]" <<< "%Hostip"   && $append_ops_to Xserveroptions "--xhost +INET:$Hostip"
+            grep -q "[:]" <<< "%Hostip"   && $append_ops_to Xserveroptions "--xhost +INET6:$Hostip"
+            Xcommand="$(command -v runx) $Xserveroptions"
+            ;;
 
-    --hostwayland|--hostdisplay|--tty) ;;
-  esac
+        --hostwayland|--hostdisplay|--tty) ;;
+    esac
 
   case "$Xserver" in
     --weston|--kwin|--hostwayland|--hostdisplay|--tty) Xcommand="" ;;
