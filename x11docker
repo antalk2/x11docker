@@ -9434,16 +9434,18 @@ create_xcommand() {
             if [ -n "$Newxvt" ] ; then
                 $append_ops_to Compositorcommand "--drm"
             fi
-    ;;
+            ;; # --kwin|--kwin-xwayland)
 
-    --nxagent)
-      # files needed by nxagent
-      export NX_CLIENT="$Nxagentclientrc"
-      Xserveroptions="$Xserveroptions \\
-  -norootlessexit \\
-  -options $Nxagentoptionsfile \\
-  -keystrokefile $Nxagentkeysfile"
-      case "$Desktopmode" in
+        --nxagent)
+            # files needed by nxagent
+            export NX_CLIENT="$Nxagentclientrc"
+
+            $append_ops_to Xserveroptions                    \
+                           "-norootlessexit"                 \
+                           "-options $Nxagentoptionsfile"    \
+                           "-keystrokefile $Nxagentkeysfile"
+
+            case "$Desktopmode" in
         "yes") Xserveroptions="$Xserveroptions \\
   -D \\
   -name '${g_Imagename}_on_${Newdisplay}_(shift+F11_toggles_fullscreen)'" ;;
