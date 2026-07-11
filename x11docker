@@ -9425,8 +9425,12 @@ create_xcommand() {
                 $append_ops_to Compositorcommand "--output-count=$Outputcount"
             fi
 
-      [ "$Xkblayout" ] && Compositorcommand="KWIN_XKB_DEFAULT_KEYMAP=$Xkblayout $Compositorcommand"
-      Compositorcommand="env QT_XKB_CONFIG_ROOT=/usr/share/X11/xkb $Compositorcommand"
+            if [ "$Xkblayout" ] ; then
+                Compositorcommand="KWIN_XKB_DEFAULT_KEYMAP=$Xkblayout $Compositorcommand"
+            fi
+
+            Compositorcommand="env QT_XKB_CONFIG_ROOT=/usr/share/X11/xkb $Compositorcommand"
+
       [ -n "$Newxvt" ] && Compositorcommand="$Compositorcommand \\
   --drm"
     ;;
