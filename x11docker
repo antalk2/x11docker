@@ -9718,12 +9718,12 @@ create_xcontainercommand() {
             "--mount type=bind,source=$Modelinefilebasepath,target=$Modelinefilebasepath,readonly"
     }
 
-    # access to host X
+    # access to host X : Xc_hostx
     if [ -n "$Hostdisplay" ] ; then
         Xc_hostx=""
         $append_ops_to Xc_hostx "--env DISPLAY=$Hostdisplay"
 
-        [ -S "/tmp/.X11-unix/X$Hostdisplaynumber" ] && {
+        if [ -S "/tmp/.X11-unix/X$Hostdisplaynumber" ] ; then
             case "$Xserver" in #### FIXME Is this differenciation needed? Link done in containerrc.
                 --hostdisplay)
                     $append_ops_to Xc_hostx \
@@ -9744,7 +9744,7 @@ create_xcontainercommand() {
                                      )"
                     ;;
             esac
-        }
+        fi
     
         if [ -s "$Hostxauthority" ] ; then
             $append_ops_to Xc_hostx \
