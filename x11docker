@@ -9643,6 +9643,8 @@ create_xcontainercommand() {
     local Xc_console
     local Xc_systemd
 
+    local append_ops_to="create_xcommand_HELPER_append_ops_to"
+
     Xcontainername="x11docker_X${Newdisplaynumber}_xserver_${Cachenumber}"
     Xcontainerrc="$Cachefolder/xcontainerrc"
     mkfile "$Xcontainerrc"
