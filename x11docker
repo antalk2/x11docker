@@ -9467,105 +9467,105 @@ create_xcommand() {
                 "no") $append_ops_to Xserveroptions  \
                                      "-R"
                       ;;
-      esac
-      Xcommand="$(get_xpath nxagent) :$Newdisplaynumber -ac $Xserveroptions"
+            esac
+            Xcommand="$(get_xpath nxagent) :$Newdisplaynumber -ac $Xserveroptions"
 
-      # Some additional nxagent options are stored in a file
-      (
-          local Nxagentoptions=""
-          Nxagentoptions="nx/nx"
-          case "$Shareclipboard" in
-              native-yes) Nxagentoptions+=",clipboard=both"   ;;
-              native-c2h) Nxagentoptions+=",clipboard=server" ;;
-              native-h2c) Nxagentoptions+=",clipboard=client" ;;
-              *)          Nxagentoptions+=",clipboard=none"   ;;
-          esac
+            # Some additional nxagent options are stored in a file
+            (
+                local Nxagentoptions=""
+                Nxagentoptions="nx/nx"
+                case "$Shareclipboard" in
+                    native-yes) Nxagentoptions+=",clipboard=both"   ;;
+                    native-c2h) Nxagentoptions+=",clipboard=server" ;;
+                    native-h2c) Nxagentoptions+=",clipboard=client" ;;
+                    *)          Nxagentoptions+=",clipboard=none"   ;;
+                esac
 
-          case "$Fullscreen" in
-              yes) Nxagentoptions+=",fullscreen=1" ;;
-              no)  if [ -n "$Screensize" ] ; then
-                       Nxagentoptions+=",geometry=$Screensize"
-                   fi
-                   ;;
-          esac
+                case "$Fullscreen" in
+                    yes) Nxagentoptions+=",fullscreen=1" ;;
+                    no)  if [ -n "$Screensize" ] ; then
+                             Nxagentoptions+=",geometry=$Screensize"
+                         fi
+                         ;;
+                esac
 
-          # --composite
-          case "$Xcomposite" in
-              yes) Nxagentoptions+=",composite=1" ;;
-              no)  Nxagentoptions+=",composite=0" ;;
-          esac
+                # --composite
+                case "$Xcomposite" in
+                    yes) Nxagentoptions+=",composite=1" ;;
+                    no)  Nxagentoptions+=",composite=0" ;;
+                esac
 
-          # --keymap: set keyboard layout
-          case "$Xkblayout" in
-              ""|clone) Nxagentoptions+=",keyboard=clone"                    ;;
-              *)        Nxagentoptions+=",keyboard=${Xkbmodel}/${Xkblayout}" ;;
-          esac
+                # --keymap: set keyboard layout
+                case "$Xkblayout" in
+                    ""|clone) Nxagentoptions+=",keyboard=clone"                    ;;
+                    *)        Nxagentoptions+=",keyboard=${Xkbmodel}/${Xkblayout}" ;;
+                esac
 
-          Nxagentoptions="${Nxagentoptions}:${Newdisplaynumber}"
-          #
-          echo "$Nxagentoptions" >> "$Nxagentoptionsfile"
-          debugnote "$Xserver: Additional nxagent options: $Nxagentoptions"
-      )
+                Nxagentoptions="${Nxagentoptions}:${Newdisplaynumber}"
+                #
+                echo "$Nxagentoptions" >> "$Nxagentoptionsfile"
+                debugnote "$Xserver: Additional nxagent options: $Nxagentoptions"
+            )
 
-      # Workaround as nxagent ignores XAUTHORITY and fails to start if
-      # option -auth is given without containing the cookie from host
-      # display.
-      #
-      # Option -ac above complies "xhost +" and is reverted in xinitrc.
-      #
-      if [ "$Xauthentication" != "no" ] && [ -s "$Hostxauthority" ] ; then
-          unpriv "cp '$Hostxauthority' '$Xservercookie'"
-      fi
+            # Workaround as nxagent ignores XAUTHORITY and fails to start if
+            # option -auth is given without containing the cookie from host
+            # display.
+            #
+            # Option -ac above complies "xhost +" and is reverted in xinitrc.
+            #
+            if [ "$Xauthentication" != "no" ] && [ -s "$Hostxauthority" ] ; then
+                unpriv "cp '$Hostxauthority' '$Xservercookie'"
+            fi
 
-      Cookie="$(makecookie)"
-      # should work, but does not. dirty workaround with -ac
-      #      xauth -f "$Xclientcookie" add :$Newdisplaynumber . "$Cookie"
-      #      xauth -n -i -f "$Xclientcookie" nlist | sed -e 's/^..../ffff/' | xauth -n -i -f "$Xservercookie" nmerge -
-      #      xauth -n -i -f "$Xclientcookie" nlist | sed -e 's/^..../ffff/' >/tmp/cookie.txt
-      #      rm $Xclientcookie
-      #      cat /tmp/cookie.txt | xauth -n -i -f "$Xclientcookie" nmerge -
-      
-      # fake NXclient
-      trim_to_bar \
-          '|#! /usr/bin/env bash
-           |# helper script to terminate nxagent.
-           |# nxagent runs program noted in NX_CLIENT if window close button is pressed.
-           |# (real nxclient does not exist)
-           |echo "NXclient: $*" >> '"$Xinitlogfile"'
-           |parsed="$(getopt --options="" --longoptions="parent:,display:,dialog:,caption:,window:,message:" -- "$@")"
-           |eval set -- $parsed
-           |echo "$parsed" >> '$Xinitlogfile'
-           |while [ -n "${1:-}" ] ; do
-           |  case "${1:-}" in
-           |    --dialog) dialog="${2:-}" && shift ;;
-           |    --display|--caption|--message) shift ;;
-           |    --window) shift ;;
-           |    --parent) pid="${2:-}" && shift ;;
-           |    --) ;;
-           |  esac
-           |  shift
-           |done
-           |case $dialog in
-           |  pulldown) ;;
-           |  yesnosuspend)
-           |    kill $pid
-           |    echo timetosaygoodbye >> '"$Timetosaygoodbyefile"'
-           |  ;;
-           |esac
-           |' >> "$Nxagentclientrc"
-      #
-      unpriv "chmod +x '$Nxagentclientrc'"
+            Cookie="$(makecookie)"
+            # should work, but does not. dirty workaround with -ac
+            #      xauth -f "$Xclientcookie" add :$Newdisplaynumber . "$Cookie"
+            #      xauth -n -i -f "$Xclientcookie" nlist | sed -e 's/^..../ffff/' | xauth -n -i -f "$Xservercookie" nmerge -
+            #      xauth -n -i -f "$Xclientcookie" nlist | sed -e 's/^..../ffff/' >/tmp/cookie.txt
+            #      rm $Xclientcookie
+            #      cat /tmp/cookie.txt | xauth -n -i -f "$Xclientcookie" nmerge -
+            
+            # fake NXclient
+            trim_to_bar \
+                '|#! /usr/bin/env bash
+                 |# helper script to terminate nxagent.
+                 |# nxagent runs program noted in NX_CLIENT if window close button is pressed.
+                 |# (real nxclient does not exist)
+                 |echo "NXclient: $*" >> '"$Xinitlogfile"'
+                 |parsed="$(getopt --options="" --longoptions="parent:,display:,dialog:,caption:,window:,message:" -- "$@")"
+                 |eval set -- $parsed
+                 |echo "$parsed" >> '$Xinitlogfile'
+                 |while [ -n "${1:-}" ] ; do
+                 |  case "${1:-}" in
+                 |    --dialog) dialog="${2:-}" && shift ;;
+                 |    --display|--caption|--message) shift ;;
+                 |    --window) shift ;;
+                 |    --parent) pid="${2:-}" && shift ;;
+                 |    --) ;;
+                 |  esac
+                 |  shift
+                 |done
+                 |case $dialog in
+                 |  pulldown) ;;
+                 |  yesnosuspend)
+                 |    kill $pid
+                 |    echo timetosaygoodbye >> '"$Timetosaygoodbyefile"'
+                 |  ;;
+                 |esac
+                 |' >> "$Nxagentclientrc"
+            #
+            unpriv "chmod +x '$Nxagentclientrc'"
 
-      trim_to_bar \
-          '|<!DOCTYPE NXKeystroke>
-           |    <keystrokes>
-           |    <keystroke action="fullscreen" AltMeta="0" Control="0" Shift="1" key="F11" />
-           |    <keystroke action="fullscreen" AltMeta="1" Control="1" Shift="1" key="f" />
-           |</keystrokes>' >> "$Nxagentkeysfile"
-      #
-    ;;
+            trim_to_bar \
+                '|<!DOCTYPE NXKeystroke>
+                 |    <keystrokes>
+                 |    <keystroke action="fullscreen" AltMeta="0" Control="0" Shift="1" key="F11" />
+                 |    <keystroke action="fullscreen" AltMeta="1" Control="1" Shift="1" key="f" />
+                 |</keystrokes>' >> "$Nxagentkeysfile"
+            #
+            ;; # --nxagent
 
-    --xwin)
+        --xwin)
       case "$Sharegpu" in
         no) $append_ops_to Xserveroptions "-nowgl" ;;
         *)  $append_ops_to Xserveroptions "-wgl" ;;
@@ -9588,14 +9588,12 @@ create_xcommand() {
       esac
 
       case "$Shareclipboard" in
-        yes) Xserveroptions="$Xserveroptions \\
-  -clipboard" ;;
-        no)  Xserveroptions="$Xserveroptions \\
-  -noclipboard" ;;
+        yes) $append_ops_to Xserveroptions "-clipboard"   ;;
+        no)  $append_ops_to Xserveroptions "-noclipboard" ;;
       esac
 
       Xcommand="$(command -v XWin) :$Newdisplaynumber $Xserveroptions"
-    ;;
+    ;; # 
 
     --runx)
       Xserveroptions="--display $Newdisplaynumber \
