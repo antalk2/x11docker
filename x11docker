@@ -9393,11 +9393,11 @@ create_xcommand() {
 
             Compositorcommand="$Weston"
             $append_ops_to Compositorcommand "--socket=$Newwaylandsocket"
-      
-      [ "$Fullscreen" = "yes" ] && [ "$Runsonconsole" = "no" ] && {
-        Compositorcommand="$Compositorcommand \\
-  --fullscreen"
-      }
+
+            [ "$Fullscreen" = "yes" ] && [ "$Runsonconsole" = "no" ] && {
+                $append_ops_to Compositorcommand "--fullscreen"
+            }
+            
       [ "$Outputcount" = "1" ]  || Compositorcommand="$Compositorcommand \\
   --output-count=$Outputcount"
       [ "$Xwaylandrootless" = "yes" ] && Compositorcommand="$Compositorcommand \\
