@@ -9996,15 +9996,16 @@ create_xcontainercommand() {
                        "--mount type=bind,source=/sys/fs/cgroup,target=/sys/fs/cgroup"
     }
 
-  ## create command ##
-  ### FIXME --xc=nerdctl does not take combination --detach --rm
-  Xcontainercommand="$Xcontainerbackend run --pull=never \\
-  --detach \\
-  --name $Xcontainername \\
-  --mount type=bind,source=$Sharefolder,target=$Sharefolder \\
-  --mount type=bind,source=$Cachefolder/etcpasswd.xcontainer,target=/etc/passwd,readonly \\
-  --mount type=bind,source=$Cachefolder/etcgroup.xcontainer,target=/etc/group,readonly \\
-  --mount type=bind,source=$Xcontainerrc,target=/xcontainerrc,readonly"
+    ## create command ##
+    ### FIXME --xc=nerdctl does not take combination --detach --rm
+    Xcontainercommand="$Xcontainerbackend run --pull=never"
+    $append_ops_to Xcontainercommand                                                                        \
+                   "--detach"                                                                               \
+                   "--name $Xcontainername"                                                                 \
+                   "--mount type=bind,source=$Sharefolder,target=$Sharefolder"                              \
+                   "--mount type=bind,source=$Cachefolder/etcpasswd.xcontainer,target=/etc/passwd,readonly" \
+                   "--mount type=bind,source=$Cachefolder/etcgroup.xcontainer,target=/etc/group,readonly"   \
+                   "--mount type=bind,source=$Xcontainerrc,target=/xcontainerrc,readonly"
 
 # https://joelkitching.com/writing/x11docker-gnome-containers/
 # https://github.com/mviereck/x11docker/issues/555
