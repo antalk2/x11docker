@@ -9897,7 +9897,9 @@ create_xcontainercommand() {
 
     # Xc_nomitshm : container X should not use MIT-SHM
     Xc_nomitshm=""
-    $append_ops_to Xc_nomitshm "--env LD_PRELOAD=/lib/x86_64-linux-gnu/libdl.so.2:/XlibNoSHM.so"
+    {
+        $append_ops_to Xc_nomitshm "--env LD_PRELOAD=/lib/x86_64-linux-gnu/libdl.so.2:/XlibNoSHM.so"
+    }
 
     # Xc_gpu : GPU
     Xc_gpu=""
@@ -9917,13 +9919,16 @@ create_xcontainercommand() {
 
             mkfile "$Sharefolder/nvidia_installer"
             {
-                echo ""
-                echo "$Messagefifofuncs"
-                echo "Messagefile=$Messagefifo"
-                echo "Storeinfofile=$Storeinfofile"
-                echo "Timetosaygoodbyefile=$Timetosaygoodbyefile"
-                echo ""
+
+                trim_to_bar "|
+                             |$Messagefifofuncs
+                             |Messagefile=$Messagefifo
+                             |Storeinfofile=$Storeinfofile
+                             |Timetosaygoodbyefile=$Timetosaygoodbyefile
+                             |"
+                #
                 rootrc_nvidia_installer
+                #
             } >> "$Sharefolder/nvidia_installer"
         fi
 
