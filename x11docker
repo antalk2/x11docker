@@ -9797,7 +9797,6 @@ create_xcontainercommand() {
 
         else # !Xcrootless
             $append_ops_to Xc_user "--user ${Hostuseruid}:${Hostusergid}"
-            ;;
         fi
     }
 
