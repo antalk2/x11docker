@@ -10131,7 +10131,10 @@ create_xcontainercommand() {
                        "--cap-add SETGID"       \
                        "--cap-add CHOWN"        \
                        "--env XDG_VTNR=$Newxvt" \
-                       "--mount type=bind,source=$Compositorlogfile,target=/x11docker/compositor.log"
+                       "$(join_with_comma                    \
+                         "--mount type=bind"                 \
+                         "source=$Compositorlogfile"         \
+                         "target=/x11docker/compositor.log"  )"
   
         if case_match "$Xcontainerbackend" 'docker|podman' ; then
             $append_ops_to Xc_weston "--group-add 104" # Magic_104
@@ -10141,7 +10144,7 @@ create_xcontainercommand() {
     # connect to systemd from host
     Xc_systemd=""
     {
-        $append_ops_to Xc_systemd \
+        $append_ops_to Xc_systemd                                                      \
                        "--pid=host"                                                    \
                        "--env XDG_SEAT=$XDG_SEAT"                                      \
                        "--env XDG_SESSION_ID=$XDG_SESSION_ID"                          \
@@ -10151,7 +10154,7 @@ create_xcontainercommand() {
                        "--mount type=bind,source=/sys/fs/cgroup,target=/sys/fs/cgroup"
     }
 
-    ## create command ##
+    ## create command: Xcontainercommand ##
     ### FIXME --xc=nerdctl does not take combination --detach --rm
     Xcontainercommand="$Xcontainerbackend run --pull=never"
     $append_ops_to Xcontainercommand                                                                        \
@@ -10162,25 +10165,25 @@ create_xcontainercommand() {
                    "--mount type=bind,source=$Cachefolder/etcgroup.xcontainer,target=/etc/group,readonly"   \
                    "--mount type=bind,source=$Xcontainerrc,target=/xcontainerrc,readonly"
 
-# https://joelkitching.com/writing/x11docker-gnome-containers/
-# https://github.com/mviereck/x11docker/issues/555
-# sudo systemctl stop apparmor did not help
-#  Xcontainercommand="$Xcontainercommand \\
-#  --privileged \\
-#  --ipc=host \\
-#  --mount type=bind,source=/run/udev,target=/run/udev \\
-#  --mount type=bind,source=/sys/class,target=/sys/class"
+    # https://joelkitching.com/writing/x11docker-gnome-containers/
+    # https://github.com/mviereck/x11docker/issues/555
+    # sudo systemctl stop apparmor did not help
+    #  Xcontainercommand="$Xcontainercommand \\
+    #  --privileged \\
+    #  --ipc=host \\
+    #  --mount type=bind,source=/run/udev,target=/run/udev \\
+    #  --mount type=bind,source=/sys/class,target=/sys/class"
 
-  case "$BackendKind" in
-    docker|podman)
-      Xcontainercommand="$Xcontainercommand \\
-  --rm \\
-  --security-opt label=type:container_runtime_t"
-    ;;
-    nerdctl) ;;
-  esac
-  Xcontainercommand="$Xcontainercommand \\
-  --env HOME=/tmp"
+    case "$BackendKind" in
+        docker|podman)
+        $append_ops_to Xcontainercommand                               \
+                       "--rm"                                          \
+                       "--security-opt label=type:container_runtime_t"
+        ;;
+        nerdctl) ;;
+    esac
+
+    $append_ops_to Xcontainercommand "--env HOME=/tmp"
 
   case "$Hostxoverip" in
     yes)
@@ -14901,6 +14904,7 @@ $(tail "$Containerlogfile")"
 
   return 0
 }
+
 start_compositor() {            # start Wayland compositor Weston or KWin
   local Compositorkeyword Number
 
