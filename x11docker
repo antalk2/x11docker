@@ -9843,7 +9843,7 @@ create_xcontainercommand() {
                     *)
                         $append_ops_to Xc_hostx                                      \
                                        "$(join_with_comma                            \
-                                        "--mount type=bind"                          \
+                                         "--mount type=bind"                         \
                                          "source=/tmp/.X11-unix/X$Hostdisplaynumber" \
                                          "target=/X$Hostdisplaynumber"               \
                                          "readonly"                                  )"
@@ -9854,11 +9854,10 @@ create_xcontainercommand() {
             if [ -s "$Hostxauthority" ] ; then
                 $append_ops_to Xc_hostx \
                                "--env XAUTHORITY=$Hostxauthority" \
-                               "$(trim_to_mark \
-                                "|--mount type=bind
-                                 :,source=$Hostxauthority
-                                 :,target=$Hostxauthority"
-                                 )"
+                               "$(join_with_comma                 \
+                                 "--mount type=bind"              \
+                                 "source=$Hostxauthority"         \
+                                 "target=$Hostxauthority"         )"
             fi
         fi
     }
@@ -9867,13 +9866,12 @@ create_xcontainercommand() {
     Xc_hostwayland=""
     {
         if [ -S "$XDG_RUNTIME_DIR/$Hostwaylandsocket" ] ; then
-            $append_ops_to  Xc_hostwayland  \
-                            "$(trim_to_mark \
-                         "|--mount type=bind
-                          :,source=$XDG_RUNTIME_DIR/$Hostwaylandsocket
-                          :,target=$XDG_RUNTIME_DIR/$Hostwaylandsocket
-                          :,readonly"
-                         )"
+            $append_ops_to  Xc_hostwayland                                 \
+                            "$(join_with_comma                             \
+                              "--mount type=bind"                          \
+                              "source=$XDG_RUNTIME_DIR/$Hostwaylandsocket" \
+                              "target=$XDG_RUNTIME_DIR/$Hostwaylandsocket" \
+                              "readonly"                                   )"
             #
             $append_ops_to  Xc_hostwayland                             \
                             "--env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"   \
