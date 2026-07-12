@@ -7576,7 +7576,6 @@ check_xdepends() {
                     [ "$Xpraversion" ] || {
                         Xpraversion="$(xpra --version 2>/dev/null | cut -d' ' -f2)"
                         verbose "Xpra version: ${Xpraversion:-XPRA_NOT_FOUND}"
-                        [ "$Xprahelp" ] || Xprahelp="$(xpra --help 2>/dev/null)"
                     }
                 }
                 ;;
@@ -8142,9 +8141,19 @@ check_xlibnoshm() {
 #     If yes, then echo "$@", and return 0
 #     If no,  then debugnote, echo nothing, and return 1
 #
+# Used-by: create_xcommand()
+#
 check_xpraoption() {
     local option_with_value="${1:-}"
     local Option
+
+    #
+    # Xprahelp is only global to keep its value between calls to check_xpraoption()
+    #
+    if [ -z "$Xprahelp" ] ; then
+        # Make sure Xprahelp is not empty, so we do not repeat the xpra --help call
+        Xprahelp="The result of xpra --help 2>/dev/null is:${NEWLINE}$(xpra --help 2>/dev/null)"
+    fi
 
     if [ -z "${option_with_value}" ] ; then
         error "check_xpraoption(): option_with_value is '', nothing to check"
@@ -8209,7 +8218,7 @@ check_xpraoption() {
         return 1
     fi
     return 0
-}
+} # end check_xpraoption
 
 # Function: check_xserver
 # Brief: Check chosen X server, auto-choose X server
@@ -9127,22 +9136,20 @@ create_xcommand() {
 
     #### xpra server and client command
     if case_match "$Xserver" '--xpra*' ; then
-            if [ -z "$Xprahelp" ] ; then
-                Xprahelp="$(xpra --help 2>/dev/null)" || :
-            fi
 
-            Xpraoptions=""
+        Xpraoptions=""
+        {
             $append_ops_to Xpraoptions                                    \
-                "$(check_xpraoption --microphone=no               || : )" \
-                "$(check_xpraoption --mmap=$Sharefolder/xpra.mmap || : )" \
-                "$(check_xpraoption --notifications=no            || : )" \
-                "$(check_xpraoption --pulseaudio=no               || : )" \
-                "$(check_xpraoption --socket-dirs="$Sharefolder"  || : )" \
-                "$(check_xpraoption --speaker=no                  || : )" \
-                "$(check_xpraoption --start-via-proxy=no          || : )" \
-                "$(check_xpraoption --system-tray=no              || : )" \
-                "$(check_xpraoption --webcam=no                   || : )" \
-                "$(check_xpraoption --xsettings=no                || : )"
+                           "$(check_xpraoption --microphone=no               || : )" \
+                           "$(check_xpraoption --mmap=$Sharefolder/xpra.mmap || : )" \
+                           "$(check_xpraoption --notifications=no            || : )" \
+                           "$(check_xpraoption --pulseaudio=no               || : )" \
+                           "$(check_xpraoption --socket-dirs="$Sharefolder"  || : )" \
+                           "$(check_xpraoption --speaker=no                  || : )" \
+                           "$(check_xpraoption --start-via-proxy=no          || : )" \
+                           "$(check_xpraoption --system-tray=no              || : )" \
+                           "$(check_xpraoption --webcam=no                   || : )" \
+                           "$(check_xpraoption --xsettings=no                || : )"
 
             case "$Shareclipboard" in
                 native-yes) $append_ops_to Xpraoptions "--clipboard=yes" "--clipboard-direction=both"      ;;
@@ -9154,14 +9161,16 @@ create_xcommand() {
             # --keymap
             if [ "$Xkblayout" ] ; then
                 $append_ops_to Xpraoptions                                       \
-                    "$(check_xpraoption --keyboard-layout="'$Xkblayout'" || : )" \
-                    "$(check_xpraoption --keyboard-raw=yes               || : )"
+                               "$(check_xpraoption --keyboard-layout="'$Xkblayout'" || : )" \
+                               "$(check_xpraoption --keyboard-raw=yes               || : )"
             fi
 
             # Debugging only:
             # Xpraoptions="$Xpraoptions  $(check_xpraoption --debug=all ||:)" ; Preservecachefiles="yes"
+        }
 
-            # xpra server command
+        # Xpraservercommand: xpra server command
+        {
             if [ "$Desktopmode" = "yes" ] ;
             then Xpraservercommand="xpra start-desktop"
             else Xpraservercommand="xpra start"
@@ -9169,17 +9178,17 @@ create_xcommand() {
 
             Xpraservercommand+=" :$Newdisplaynumber --use-display"
             Xpraservercommand+=" $Xpraoptions"
-            $append_ops_to Xpraservercommand                           \
-                "$(check_xpraoption --dbus-launch=no           || : )" \
-                "$(check_xpraoption --daemon=no                || : )" \
-                "$(check_xpraoption --file-transfer=off        || : )" \
-                "$(check_xpraoption --html=off                 || : )" \
-                "$(check_xpraoption --opengl=noprobe           || : )" \
-                "$(check_xpraoption --mdns=no                  || : )" \
-                "$(check_xpraoption --printing=no              || : )" \
-                "$(check_xpraoption --session-name="$Codename" || : )" \
-                "$(check_xpraoption --start-new-commands=no    || : )" \
-                "$(check_xpraoption --systemd-run=no           || : )"
+            $append_ops_to Xpraservercommand                                      \
+                           "$(check_xpraoption --dbus-launch=no           || : )" \
+                           "$(check_xpraoption --daemon=no                || : )" \
+                           "$(check_xpraoption --file-transfer=off        || : )" \
+                           "$(check_xpraoption --html=off                 || : )" \
+                           "$(check_xpraoption --opengl=noprobe           || : )" \
+                           "$(check_xpraoption --mdns=no                  || : )" \
+                           "$(check_xpraoption --printing=no              || : )" \
+                           "$(check_xpraoption --session-name="$Codename" || : )" \
+                           "$(check_xpraoption --start-new-commands=no    || : )" \
+                           "$(check_xpraoption --systemd-run=no           || : )"
             #
 
             if [ -n "$Dpi" ] ; then
@@ -9188,15 +9197,17 @@ create_xcommand() {
             if case_match "$Xserver" "--xpra2*" ; then
                 $append_ops_to Xpraservercommand "--bind=$Sharefolder/$(hostname)-$Newdisplaynumber"
             fi
+        }
 
-            # xpra client command
+        # Xpraclientcommand : xpra client command
+        {
             Xpraclientcommand="xpra attach :$Newdisplaynumber"
             Xpraclientcommand+=" $Xpraoptions"
-            $append_ops_to Xpraclientcommand                    \
-                "$(check_xpraoption --modal-windows=no  || : )" \
-                "$(check_xpraoption --opengl=noprobe    || : )" \
-                "$(check_xpraoption --reconnect=no      || : )" \
-                "$(check_xpraoption --tray=no           || : )"
+            $append_ops_to Xpraclientcommand                               \
+                           "$(check_xpraoption --modal-windows=no  || : )" \
+                           "$(check_xpraoption --opengl=noprobe    || : )" \
+                           "$(check_xpraoption --reconnect=no      || : )" \
+                           "$(check_xpraoption --tray=no           || : )"
             #
             if [ "$Fullscreen" = "yes" ] ; then
                 $append_ops_to Xpraclientcommand "$(check_xpraoption --desktop-fullscreen=yes || : )"
@@ -9209,11 +9220,12 @@ create_xcommand() {
             if [ "$Xpraborder" ] ; then
                 $append_ops_to Xpraclientcommand "$(check_xpraoption --border="$Xpraborder" || : )"
             fi
+        }
 
-            # xpra environment variables
-            for Line in $Xpracontainerenv; do
-                store_runoption_env "$Line"
-            done
+        # xpra environment variables
+        for Line in $Xpracontainerenv; do
+            store_runoption_env "$Line"
+        done
     fi # --xpra*
 
     #### Prepare weston.ini: config file for Weston
@@ -9702,7 +9714,7 @@ create_xcommand() {
     esac
 
   return 0
-} # create_xcommand
+} # end create_xcommand
 
 
 # Function: create_xcontainercommand
@@ -18283,7 +18295,13 @@ declare_variables() {           # declare global variables
                               " GTK_CSD=0"                  \
                               " NO_AT_BRIDGE=1"
   
-  # Xprahelp : Output of 'xpra --help'
+  # Xprahelp :
+  #
+  # Brief: Output of 'xpra --help', cached between calls to check_xpraoption()
+  #
+  # Used-by: check_xpraoption()
+  #
+  #
   Xprahelp=""
 
   # Xprashm : xpra server should use MIT-SHM yes/no
