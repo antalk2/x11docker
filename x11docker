@@ -9790,10 +9790,17 @@ create_xcontainercommand() {
         #
     fi
 
-  # Wayland in container
-  Xc_containerwayland="\\
-  --env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR \\
-  --mount type=bind,source=$Cachefolder/XDG_RUNTIME_DIR,target=$XDG_RUNTIME_DIR"
+    # Xc_containerwayland : Wayland in container
+    Xc_containerwayland=""
+    $append_ops_to Xc_containerwayland                      \
+                   "--env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
+
+    $append_ops_to Xc_containerwayland                      \
+                   "$(trim_to_mark \
+                    "|--mount type=bind
+                     :,source=$Cachefolder/XDG_RUNTIME_DIR
+                     :,target=$XDG_RUNTIME_DIR"
+                     )"
 
   # container X should not use MIT-SHM
   Xc_nomitshm="\\
