@@ -9813,18 +9813,26 @@ create_xcontainercommand() {
     done < <(devicelist_gpu)
 
     # nvidia driver
-  [ "$Nvidiainstallerfile" ] && {
-    Xc_gpu="$Xc_gpu \\
-  --mount type=bind,source=$Nvidiainstallerfile,target=$Nvidiacontainerfile,readonly"
-    mkfile "$Sharefolder/nvidia_installer"
-  echo "
-$Messagefifofuncs
-Messagefile=$Messagefifo
-Storeinfofile=$Storeinfofile
-Timetosaygoodbyefile=$Timetosaygoodbyefile
-" >> "$Sharefolder/nvidia_installer"
-    rootrc_nvidia_installer >> "$Sharefolder/nvidia_installer"
-  }
+    if [ "$Nvidiainstallerfile" ] ; then
+        $append_ops_to Xc_gpu "$(trim_to_mark \
+                       "|--mount type=bind
+                        :,source=$Nvidiainstallerfile
+                        :,target=$Nvidiacontainerfile
+                        :,readonly"
+                        )"
+
+        mkfile "$Sharefolder/nvidia_installer"
+        {
+            echo ""
+            echo "$Messagefifofuncs"
+            echo "Messagefile=$Messagefifo"
+            echo "Storeinfofile=$Storeinfofile"
+            echo "Timetosaygoodbyefile=$Timetosaygoodbyefile"
+            echo ""
+            rootrc_nvidia_installer
+        } >> "$Sharefolder/nvidia_installer"
+    fi
+       
   case "$Xcontainerbackend" in
     docker|podman)
       mygetent group video >/dev/null && Xc_gpu="$Xc_gpu \\
