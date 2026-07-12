@@ -10185,33 +10185,32 @@ create_xcontainercommand() {
 
     $append_ops_to Xcontainercommand "--env HOME=/tmp"
 
-  case "$Hostxoverip" in
-    yes)
-      grep -q "localhost" <<< "$Hostdisplay" && {
-        warning "Option --xc: Sharing host network stack
-  with container of x11docker/xserver to support 'ssh -X'."
-        Xcontainercommand="$Xcontainercommand \\
-  --network=host"
-      } || {
-        Xcontainercommand="$Xcontainercommand \\
-  --network=bridge"
-      }
-    ;;
-    no)
-      case "$Xoverip" in
+    case "$Hostxoverip" in
+        yes)
+            if grep -q "localhost" <<< "$Hostdisplay" ; then
+                #
+                $append_ops_to Xcontainercommand "--network=host"
+                #
+                warning_ttm "|Option --xc: Sharing host network stack
+                             |  with container of x11docker/xserver to support 'ssh -X'."
+                #
+            else
+                $append_ops_to Xcontainercommand "--network=bridge"
+            fi
+            ;;
         no)
-          Xcontainercommand="$Xcontainercommand \\
-  --network=none"
-        ;;
-        listentcp|socat)
-          [ -n "$Xcnetworkid" ] && {
-            Xcontainercommand="$Xcontainercommand \\
-  --network=$Xcnetworkname"
-          }
-        ;;
-      esac
-    ;;
-  esac
+            case "$Xoverip" in
+                no)
+                    $append_ops_to Xcontainercommand "--network=none"
+                    ;;
+                listentcp|socat)
+                    if [ -n "$Xcnetworkid" ] ; then
+                        $append_ops_to Xcontainercommand "--network=$Xcnetworkname"
+                    fi
+                    ;;
+            esac
+            ;;
+    esac
 
   case "$Shareipc" in
     host)
