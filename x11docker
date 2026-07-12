@@ -9807,19 +9807,18 @@ create_xcontainercommand() {
     # Xc_containerx : X in container
     {
         Xc_containerx=""
-        $append_ops_to Xc_containerx "$(join_with_comma            \
-                                       "--mount type=bind"         \
-                                        "source=$Cachefolder/tmp"  \
-                                        "target=/tmp"              )"
+        $append_ops_to Xc_containerx "$(join_with_comma "--mount type=bind"        \
+                                                        "source=$Cachefolder/tmp"  \
+                                                        "target=/tmp"              )"
 
-        $append_ops_to Xc_containerx "$(join_with_comma "--mount type=bind"   \
-                                                      "source=$Xservercookie" \
-                                                      "target=$Xservercookie" )"
+        $append_ops_to Xc_containerx "$(join_with_comma "--mount type=bind"     \
+                                                        "source=$Xservercookie" \
+                                                        "target=$Xservercookie" )"
 
-        $append_ops_to Xc_containerx "$(join_with_comma "--mount type=bind"          \
-                                                      "source=$Modelinefilebasepath" \
-                                                      "target=$Modelinefilebasepath" \
-                                                      "readonly"                     )"
+        $append_ops_to Xc_containerx "$(join_with_comma "--mount type=bind"            \
+                                                        "source=$Modelinefilebasepath" \
+                                                        "target=$Modelinefilebasepath" \
+                                                        "readonly"                     )"
     }
 
     # Xc_hostx : access to host X
