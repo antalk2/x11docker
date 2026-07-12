@@ -9806,12 +9806,13 @@ create_xcontainercommand() {
     Xc_nomitshm=""
     $append_ops_to Xc_nomitshm "--env LD_PRELOAD=/lib/x86_64-linux-gnu/libdl.so.2:/XlibNoSHM.so"
 
-  # GPU
-  while read -r Gpudevice ; do
-    Xc_gpu="$Xc_gpu \\
-  --device $Gpudevice:$Gpudevice"
-  done < <(devicelist_gpu)
-  # nvidia driver
+    # Xc_gpu : GPU
+    Xc_gpu=""
+    while read -r Gpudevice ; do
+        $append_ops_to Xc_gpu "--device $Gpudevice:$Gpudevice"
+    done < <(devicelist_gpu)
+
+    # nvidia driver
   [ "$Nvidiainstallerfile" ] && {
     Xc_gpu="$Xc_gpu \\
   --mount type=bind,source=$Nvidiainstallerfile,target=$Nvidiacontainerfile,readonly"
