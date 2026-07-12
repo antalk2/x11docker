@@ -18259,6 +18259,20 @@ declare_variables() {           # declare global variables
   # Note: The entries go through escapestring(), which does not handle
   #       single-quote characters.
   #
+  # MWNOCAPTURE MWNO_RIT MWWM:
+  #
+  #    They are mentioned here:
+  #    https://github.com/Xpra-org/xpra/issues/785
+  #    "MainSoft MainWin applications lockup the X11 server"
+  #
+  #    https://en.wikipedia.org/wiki/Mainsoft was a company,
+  #
+  #    MainWin was a Mainsoft platform allowing to port Windows
+  #            applications to Unix and Linux.
+  #
+  #    Summary: These variables (MWNOCAPTURE MWNO_RIT MWWM) are set up
+  #             to control misbehaving MainWin-based applications.
+  #
   Xpracontainerenv=""; printf -v Xpracontainerenv "%s"      \
                               'UBUNTU_MENUPROXY=""'         \
                               " QT_X11_NO_NATIVE_MENUBAR=1" \
