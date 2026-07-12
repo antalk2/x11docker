@@ -3558,6 +3558,8 @@ convertpath() {                 # convert unix and windows paths
 #
 # Usage: createmountopt_mount File [{"readonly"|"ro"}]
 #
+# stdout: "--mount type=bind,source=${eFile},target=${eFile}$Rw"
+#
 createmountopt_mount() {
     # $1  File:   file or device to share
     #             If does not exist, emit nothing and return 1
@@ -3586,6 +3588,42 @@ createmountopt_mount() {
   # 
   echo "--mount type=bind,source=${eFile},target=${eFile}$Rw"
 }
+
+# Function: createmountopt_device
+#
+# Brief: Create option for docker to mount a device, check if file exists
+#
+# Usage: createmountopt_device  File [{"readonly"|"ro"}]
+#
+# stdout: "--device ${eFile}$Rw"
+#
+#
+createmountopt_device() {
+    # $1  File:   file or device to share
+    #             If does not exist, emit nothing and return 1
+    #
+    # $2  Rw:     ro, readonly (optional)
+    local File Rw
+    File="${1:-}"
+    Rw="${2:-}"
+
+    if [ ! -e "$File" ] ; then
+        debugnote "createmountopt_device(): ERROR: File not found: '$File'"
+        return 1
+    fi
+  #
+  case "$Rw" in
+      "ro"|"readonly") Rw=":ro"  ;;
+      *)               Rw=""     ;;
+  esac
+  #
+  local eFile
+  eFile="$(escapestring "$File")"
+  #
+  # --device=/dev/host-device:/dev/container-device
+  echo "--device ${eFile}$Rw"
+}
+
 
 # Function: createmountopt
 #
@@ -10030,11 +10068,11 @@ create_xcontainercommand() {
                        "$(createmountopt_mount /var/run/dbus           || : )" \
                        "$(createmountopt_mount /run/udev/data readonly || : )" \
                        "$(createmountopt_mount /var/run/seatd.sock     || : )" \
-                       "$(createmountopt device /dev/tty0              || : )" \
-                       "$(createmountopt device /dev/tty${Newxvt}      || : )" \
-                       "$(createmountopt device /dev/fb0               || : )"
+                       "$(createmountopt_device /dev/tty0              || : )" \
+                       "$(createmountopt_device /dev/tty${Newxvt}      || : )" \
+                       "$(createmountopt_device /dev/fb0               || : )"
         while read Line; do
-            $append_ops_to Xc_console "$(createmountopt device "$Line")"
+            $append_ops_to Xc_console "$(createmountopt_device "$Line")"
         done < <(devicelist_input)
     }
 

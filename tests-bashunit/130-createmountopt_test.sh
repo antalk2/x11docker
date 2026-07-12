@@ -17,7 +17,7 @@ test_createmountopt() {
     res="$(createmountopt_mount  "$File" "ro" )"
     assert_same '--mount type=bind,source=/tmp/xxx\ yyy,target=/tmp/xxx\ yyy,readonly' "${res}"
     #
-    res="$(createmountopt device  "$File" "ro" )"
+    res="$(createmountopt_device  "$File" "ro" )"
     assert_same '--device /tmp/xxx\ yyy:ro' "${res}"
     #
     res="$(createmountopt volume  "$File" "ro" )"
