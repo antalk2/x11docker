@@ -1432,7 +1432,7 @@ finish() {
 
         Pid="$(echo "$Line"  | awk '{print $1}')"
         Name="$(echo "$Line" | awk '{print $2}')"
-        debugnote "finish(): Checking pid $Pid ($Name): $(pspid "$Pid" || echo '(already gone)')"
+        debugnote "finish(): Checking pid $Pid ($Name): $(pspid_sh "$Pid" || echo '(already gone)')"
 
         checkpid "$Pid" && {
             case "$Name" in
@@ -1525,7 +1525,7 @@ finish() {
         checkpid "$Pid" && termpid "$Pid" "$Name"
         checkpid "$Pid" && {
             # should never happen
-            warning "Failed to terminate pid $Pid ($Name): $(pspid "$Pid" || true)"
+            warning "Failed to terminate pid $Pid ($Name): $(pspid_sh "$Pid" || true)"
             storeinfo_add_kv_sh error=64
         }
     done < <(tac "$Storepidfile" 2>/dev/null)
@@ -1670,8 +1670,8 @@ containerisrunning() {
 #
 
 #
-# Function: pspid
-# Usage: pspid pid 
+# Function: pspid_sh
+# Usage: pspid_sh pid
 # Brief:  Get USER and COMMAND for PID=pid (using ps)
 #
 # Argument:
@@ -1691,7 +1691,7 @@ containerisrunning() {
 # Compatibility_requirement: /bin/sh in xinitrc and containerrc
 #
 #
-pspid() {
+pspid_sh() {
     #
     # Three columns: USER PID COMMAND
     #
@@ -1707,7 +1707,7 @@ pspid() {
     # A: No.
     #
     if [ -z "${1:-}" ] ; then
-        error "pspid(): the PID argument is empty"
+        error "pspid_sh(): the PID argument is empty"
     fi
     LC_ALL=C $Myps ax -o user,pid,comm | grep -E -e "^[^ ]+[ ]+${1:-} "
 }
@@ -1785,7 +1785,7 @@ storepid() {      # store pid $1 and name $2 of process in file $Storepidfile.
         test) grep -q -w "${2:-}" "$Storepidfile"                 ;;
         *)
             echo "${1:-NOPID}" "${2:-NONAME}" >> "$Storepidfile"
-            debugnote "storepid(): Stored pid '${1:-}' of '${2:-}': $(pspid "${1:-}" || true)"
+            debugnote "storepid(): Stored pid '${1:-}' of '${2:-}': $(pspid_sh "${1:-}" || true)"
             ;;
     esac
 }
@@ -1803,7 +1803,7 @@ storepid() {      # store pid $1 and name $2 of process in file $Storepidfile.
 #
 termpid() {
     # TERM
-    debugnote "termpid(): Terminating ${1:-} (${2:-}): $(pspid "${1:-}" ||:)"
+    debugnote "termpid(): Terminating ${1:-} (${2:-}): $(pspid_sh "${1:-}" ||:)"
     if checkpid "${1:-}" ; then
         kill "${1:-}" 2>/dev/null
         true
@@ -1818,13 +1818,13 @@ termpid() {
     fi
     #
     # KILL
-    debugnote "termpid(): Killing ${1:-} (${2:-}): $(pspid "${1:-}" ||:)"
+    debugnote "termpid(): Killing ${1:-} (${2:-}): $(pspid_sh "${1:-}" ||:)"
     if checkpid "${1:-}" ; then
         kill -s KILL "${1:-}" 2>/dev/null
     fi
     mysleep 0.2
     if checkpid "${1:-}" ; then 
-        note "Failed to terminate ${1:-} (${2:-}): $(pspid "${1:-}" ||:)"
+        note "Failed to terminate ${1:-} (${2:-}): $(pspid_sh "${1:-}" ||:)"
         return 1
     fi
     #
@@ -1907,7 +1907,7 @@ watchpidlist() {
                 #
                 ListOfLines=""
                 for Line in $Watchpidlist; do
-                    ListOfLines+="$(pspid "$Line" || echo "(pid $Line not found)")" ;
+                    ListOfLines+="$(pspid_sh "$Line" || echo "(pid $Line not found)")" ;
                 done
                 debugnote "watchpidlist(): Watching pids:${NEWLINE}${ListOfLines}"
             fi
@@ -8860,6 +8860,7 @@ join_with_prefix_sh() {
 #        each with a SEP=" \\${NEWLINE} "
 #
 # Purpose: Shorten the code, especially when only a few opts added at a time.
+# 
 #
 create_xcommand_HELPER_append_ops_to() {
     # local NEWLINE=$'\n'
@@ -10353,7 +10354,7 @@ create_xinitrc() {
     #
     declare -f cookiebaker
     declare -f strlenhex
-    declare -f pspid
+    declare -f pspid_sh
     declare -f disable_X_access_via_xhost
     #
     declare -f makecookie_v1
@@ -13431,7 +13432,7 @@ create_containerrc() {          # This script runs as unprivileged user in conta
 [ '$g_Interactive' = 'no' ] && exec >> $(convertpath share "$Containerlogfile") 2>&1
 
 $(declare -f mysleep)
-$(declare -f pspid)
+$(declare -f pspid_sh)
 $(declare -f rocknroll)
 $(declare -f saygoodbye)
 $(declare -f storeinfo_dump_sh)
@@ -14905,16 +14906,16 @@ $Xpraclientcommand"
 
   # catch possible xpra crashes
   while rocknroll; do
-    pspid "$Xpraserverpid" >/dev/null || { debugnote "xpra server terminated" ; break ; }
-    pspid "$Xpraclientpid" >/dev/null || { debugnote "xpra client terminated" ; break ; }
+    pspid_sh "$Xpraserverpid" >/dev/null || { debugnote "xpra server terminated" ; break ; }
+    pspid_sh "$Xpraclientpid" >/dev/null || { debugnote "xpra client terminated" ; break ; }
     sleep 1
   done
 
   sleep 3 && rocknroll && note "Option $Xserver: xpra terminated unexpectedly.
-  Last lines of xpra server log: $(pspid "$Xpraserverpid")
+  Last lines of xpra server log: $(pspid_sh "$Xpraserverpid")
 $(tail "$Xpraserverlogfile")
 ---------------------------------
-  Last lines of xpra client log: $(pspid "$Xpraclientpid")
+  Last lines of xpra client log: $(pspid_sh "$Xpraclientpid")
 $(tail "$Xpraclientlogfile")"
   saygoodbye xpra
 
