@@ -10212,28 +10212,25 @@ create_xcontainercommand() {
             ;;
     esac
 
-  case "$Shareipc" in
-    host)
-      Xcontainercommand="$Xcontainercommand \\
-  --ipc=host"
-    ;;
-    no)
-      case "$Xserver" in
-        --weston*|--xpra*-xwayland)
-          Xcontainercommand="$Xcontainercommand \\
-  --ipc=host"
-        ;;
-        *) # if possible, share IPC with X client container to allow MIT-SHM
-          case "$Xcontainerbackend" in
-            docker)
-              Xcontainercommand="$Xcontainercommand \\
-  --ipc=shareable"
+    case "$Shareipc" in
+        host)
+            $append_ops_to Xcontainercommand "--ipc=host"
             ;;
-          esac
-        ;;
-      esac
-    ;;
-  esac
+        no)
+            case "$Xserver" in
+                --weston*|--xpra*-xwayland)
+                    $append_ops_to Xcontainercommand "--ipc=host"
+                    ;;
+                *) # if possible, share IPC with X client container to allow MIT-SHM
+                    case "$Xcontainerbackend" in
+                        docker)
+                            $append_ops_to Xcontainercommand "--ipc=shareable"
+                            ;;
+                    esac
+                    ;;
+            esac
+            ;;
+    esac
 
   case "$Runtime" in
     "") ;;
