@@ -9714,10 +9714,18 @@ create_xcontainercommand() {
     # Xc_containerx : X in container
     {
         Xc_containerx=""
-        $append_ops_to  Xc_containerx                                                              \
-            "--mount type=bind,source=$Cachefolder/tmp,target=/tmp"                                \
-            "--mount type=bind,source=$Xservercookie,target=$Xservercookie"                        \
-            "--mount type=bind,source=$Modelinefilebasepath,target=$Modelinefilebasepath,readonly"
+        $append_ops_to Xc_containerx "$(trim_to_mark "|--mount type=bind
+                                                      :,source=$Cachefolder/tmp
+                                                      :,target=/tmp"                 )"
+
+        $append_ops_to Xc_containerx "$(trim_to_mark "|--mount type=bind
+                                                      :,source=$Xservercookie
+                                                      :,target=$Xservercookie"        )"
+
+        $append_ops_to Xc_containerx "$(trim_to_mark "|--mount type=bind
+                                                      :,source=$Modelinefilebasepath
+                                                      :,target=$Modelinefilebasepath
+                                                      :,readonly"                     )"
     }
 
     # Xc_hostx : access to host X
