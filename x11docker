@@ -8785,6 +8785,74 @@ create_modelinefile() {
 }
 
 
+# Function: join_with
+# Brief: SEP="$1",  join the rest of "${@}" by SEP
+#
+# Usage: join_with SEP [ s1 ... sn ]
+#
+# Description: Joins the strings s1 ... sn with separator SEP
+#
+# Example: join_with ":" "${groupname}" "${gid}" "$Containeruser"
+# Example: variable="$(join_with " \\${NEWLINE}" "${variable}"  "--option1" "--option2" )"
+# Example: variable+="$(join_with " \\${NEWLINE}" ""  "--option1" "--option2" )"
+#
+# Argument:
+#
+#   SEP : may be empty, may contain newline, may contain
+#         multicharacter string.
+#
+#   s1 ... sn : strings to join.
+#               n=0 is allowed, yields ""
+#               s1="" yields "${SEP}${s2} ... ${SEP}${sn}",
+#                            which is empty for n=1.
+#
+join_with_sh_v1() {
+    local SEP="${1}"
+    local s1="${2:-}"
+    local si
+    shift 2
+    #
+    # Directly to stdout
+    printf "%s" "${s1}"
+    for si in "${@}" ; do
+        printf "%s" "${SEP}${si}"
+    done
+}
+join_with_sh_v2() {
+    local SEP="${1}"
+    local s1="${2:-}"
+    local si
+    shift 2
+    #
+    # Build in res, emit in one
+    local res="${s1}"
+    for si in "${@}" ; do
+        res="${res}${SEP}${si}"
+    done
+    printf "%s" "${res}"
+}
+join_with_sh() {
+    join_with_sh_v2 "${@}" ;
+}
+
+# Function: join_with_prefix_sh
+# Usage: join_with_prefix_sh PREFX s1 ... sn
+# Brief: "${PREFX}${s1} ... ${PREFX}${sn}"
+#
+# Description: Same as join_with PREFX "" s1 ... sn
+#
+join_with_prefix_sh() {
+    local PREFX="${1}"
+    shift
+    local si
+    #
+    local res=""
+    for si in "${@}" ; do
+        res="${res}${SEP}${si}"
+    done
+    printf "%s" "${res}"
+}
+
 # Function: create_xcommand_HELPER_append_ops_to
 # Usage: create_xcommand_HELPER_append_ops_to VARNAME opt1 opt2 ... optn
 #
