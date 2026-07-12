@@ -9978,11 +9978,9 @@ create_xcontainercommand() {
                        "--env XDG_VTNR=$Newxvt" \
                        "--mount type=bind,source=$Compositorlogfile,target=/x11docker/compositor.log"
   
-        case "$Xcontainerbackend" in
-            docker|podman)
-                $append_ops_to Xc_weston "--group-add 104"
-                ;;
-        esac
+        if case_match "$Xcontainerbackend" 'docker|podman' ; then
+            $append_ops_to Xc_weston "--group-add 104"
+        fi
   }
 
   # connect to systemd from host
