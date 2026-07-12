@@ -9772,7 +9772,7 @@ create_xcontainercommand() {
         fi
     }
 
-    # access to host Wayland
+    # Xc_hostwayland : access to host Wayland
     if [ -S "$XDG_RUNTIME_DIR/$Hostwaylandsocket" ] ; then
         Xc_hostwayland=""
         $append_ops_to  Xc_hostwayland  \
@@ -9783,10 +9783,11 @@ create_xcontainercommand() {
                           :,readonly"
                          )"
         #
-        $append_ops_to  Xc_hostwayland \
-            "--env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR" \
-            "--env GDK_BACKEND=wayland" \
-            "--env WAYLAND_DISPLAY=$Hostwaylandsocket"
+        $append_ops_to  Xc_hostwayland                             \
+                        "--env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"   \
+                        "--env GDK_BACKEND=wayland"                \
+                        "--env WAYLAND_DISPLAY=$Hostwaylandsocket"
+        #
     fi
 
   # Wayland in container
