@@ -9802,9 +9802,9 @@ create_xcontainercommand() {
                      :,target=$XDG_RUNTIME_DIR"
                      )"
 
-  # container X should not use MIT-SHM
-  Xc_nomitshm="\\
-  --env LD_PRELOAD=/lib/x86_64-linux-gnu/libdl.so.2:/XlibNoSHM.so"
+    # Xc_nomitshm : container X should not use MIT-SHM
+    Xc_nomitshm=""
+    $append_ops_to Xc_nomitshm "--env LD_PRELOAD=/lib/x86_64-linux-gnu/libdl.so.2:/XlibNoSHM.so"
 
   # GPU
   while read -r Gpudevice ; do
