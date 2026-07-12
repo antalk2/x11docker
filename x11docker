@@ -9102,24 +9102,28 @@ create_xcommand() {
         $append_ops_to Xserveroptions "$Xserveroptions_custom"
     fi
 
-    # --keymap
-    # Regard possible custom keyboard model like rmlvo.
-    # Unofficial feature, see ticket #208. Currently regarded with --nxagent only.
-    #
-    # cut : -s, --only-delimited : do not print lines not containing delimiters
-    #
-    # If Xkblayout matches "a/b", then let (Xkbmodel,Xkblayout)=(a,b)
-    #
-    # Q: the use of cut -s suggests that there may be multiple lines,
-    #    and some of them are ignored in cut -f1.
-    #    But in cut -f2 there is no -s, and the lines may not be in sync
-    #    in Xkbmodel and Xkblayout
-    #
-    Xkbmodel="$(cut -d/ -f1 -s <<< "$Xkblayout")"
-    if [ -n "$Xkbmodel" ] ; then
-        Xkblayout="$(cut -d/ -f2- <<< "$Xkblayout")"
-    fi
-    Xkbmodel="${Xkbmodel:-evdev}"
+    # Xkblayout, Xkbmodel
+    {
+        # --keymap
+        # Regard possible custom keyboard model like rmlvo.
+        # Unofficial feature, see ticket #208. Currently regarded with --nxagent only.
+        #
+        # cut : -s, --only-delimited : do not print lines not containing delimiters
+        #
+        # If Xkblayout matches "a/b", then let (Xkbmodel,Xkblayout)=(a,b)
+        #
+        # Q: the use of cut -s suggests that there may be multiple lines,
+        #    and some of them are ignored in cut -f1.
+        #    But in cut -f2 there is no -s, and the lines may not be in sync
+        #    in Xkbmodel and Xkblayout
+        #
+        Xkbmodel="$(cut -d/ -f1 -s <<< "$Xkblayout")"
+        if [ -n "$Xkbmodel" ] ; then
+            Xkblayout="$(cut -d/ -f2- <<< "$Xkblayout")"
+        else
+            Xkbmodel="evdev"
+        fi
+    }
 
     #### xpra server and client command
     if case_match "$Xserver" '--xpra*' ; then
