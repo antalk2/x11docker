@@ -9841,13 +9841,12 @@ create_xcontainercommand() {
                                          "readonly"                                  )"
                         ;;
                     *)
-                        $append_ops_to Xc_hostx \
-                                       "$(trim_to_mark \
-                                        "|--mount type=bind
-                                         :,source=/tmp/.X11-unix/X$Hostdisplaynumber
-                                         :,target=/X$Hostdisplaynumber
-                                         :,readonly"
-                                         )"
+                        $append_ops_to Xc_hostx                                      \
+                                       "$(join_with_comma                            \
+                                        "--mount type=bind"                          \
+                                         "source=/tmp/.X11-unix/X$Hostdisplaynumber" \
+                                         "target=/X$Hostdisplaynumber"               \
+                                         "readonly"                                  )"
                         ;;
                 esac
             fi
