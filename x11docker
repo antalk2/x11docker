@@ -3624,6 +3624,48 @@ createmountopt_device() {
   echo "--device ${eFile}$Rw"
 }
 
+# Function: createmountopt_volume
+#
+# Brief: Create option for docker to mount a volume, check if it exists
+#
+# Usage: createmountopt_volume  File [{"readonly"|"ro"}]
+#
+#
+# stdout: "--volume ${eFile}:${eFile}$Rw"
+#
+createmountopt_volume() {
+    #             volume -> "--volume ${eFile}:${eFile}$Rw"
+    #
+    # $1  File:   file or device to share
+    #             If does not exist, emit nothing and return 1
+    #
+    # $2  Rw:     ro, readonly (optional)
+    local File Rw
+    File="${1:-}"
+    Rw="${2:-}"
+
+    if [ ! -e "$File" ] ; then
+        debugnote "createmountopt_volume(): ERROR: File not found: '$File'"
+        return 1
+    fi
+  #
+  case "$Rw" in
+      "ro"|"readonly")  Rw=":ro" ;;
+      *)                Rw=""    ;;
+  esac
+  #
+  local eFile
+  eFile="$(escapestring "$File")"
+  #
+  # https://docs.docker.com/engine/storage/volumes/
+  # docker run --mount type=volume,src=<volume-name>,dst=<mount-path>
+  # docker run --volume <volume-name>:<mount-path>
+  # docker run --volume [<volume-name>:]<mount-path>[:opts]
+  #   Here opts is a comma-separated list of options, like ro.
+  #   The colon just separates it from <mount-path>
+  echo "--volume ${eFile}:${eFile}$Rw"
+}
+
 
 # Function: createmountopt
 #
