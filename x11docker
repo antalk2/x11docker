@@ -9677,13 +9677,13 @@ create_xcontainercommand() {
     ## code snippets:
 
 
-    # drop privileges: Xc_capdrop , Xc_nopriv
+    # Xc_capdrop , Xc_nopriv : drop privileges
+    Xc_capdrop=""
+    Xc_nopriv=""
     {
-        Xc_capdrop=""
         # Note  \\ was missing after --cap-drop ALL below, but $append_ops_to will add it.
         $append_ops_to Xc_capdrop "--cap-drop ALL" "--cap-add DAC_OVERRIDE"
 
-        Xc_nopriv=""
         $append_ops_to Xc_nopriv "--security-opt=no-new-privileges"
 
         if [  "$BackendKind" =  nerdctl ] ; then
@@ -9693,8 +9693,8 @@ create_xcontainercommand() {
     }
 
     # Xc_user : only set here
+    Xc_user=""
     {
-        Xc_user=""
         if [ "$Xcrootless" = yes ] ; then
 
             if [ "$Xcontainerbackend" =  podman ] ; then
@@ -9773,34 +9773,38 @@ create_xcontainercommand() {
     }
 
     # Xc_hostwayland : access to host Wayland
-    if [ -S "$XDG_RUNTIME_DIR/$Hostwaylandsocket" ] ; then
-        Xc_hostwayland=""
-        $append_ops_to  Xc_hostwayland  \
-                        "$(trim_to_mark \
+    Xc_hostwayland=""
+    {
+        if [ -S "$XDG_RUNTIME_DIR/$Hostwaylandsocket" ] ; then
+            $append_ops_to  Xc_hostwayland  \
+                            "$(trim_to_mark \
                          "|--mount type=bind
                           :,source=$XDG_RUNTIME_DIR/$Hostwaylandsocket
                           :,target=$XDG_RUNTIME_DIR/$Hostwaylandsocket
                           :,readonly"
                          )"
-        #
-        $append_ops_to  Xc_hostwayland                             \
-                        "--env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"   \
-                        "--env GDK_BACKEND=wayland"                \
-                        "--env WAYLAND_DISPLAY=$Hostwaylandsocket"
-        #
-    fi
+            #
+            $append_ops_to  Xc_hostwayland                             \
+                            "--env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"   \
+                            "--env GDK_BACKEND=wayland"                \
+                            "--env WAYLAND_DISPLAY=$Hostwaylandsocket"
+            #
+        fi
+    }
 
     # Xc_containerwayland : Wayland in container
     Xc_containerwayland=""
-    $append_ops_to Xc_containerwayland                      \
-                   "--env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
+    {
+        $append_ops_to Xc_containerwayland                      \
+                       "--env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
 
-    $append_ops_to Xc_containerwayland                      \
-                   "$(trim_to_mark \
-                    "|--mount type=bind
-                     :,source=$Cachefolder/XDG_RUNTIME_DIR
-                     :,target=$XDG_RUNTIME_DIR"
+        $append_ops_to Xc_containerwayland                      \
+                       "$(trim_to_mark \
+                        "|--mount type=bind
+                         :,source=$Cachefolder/XDG_RUNTIME_DIR
+                         :,target=$XDG_RUNTIME_DIR"
                      )"
+    }
 
     # Xc_nomitshm : container X should not use MIT-SHM
     Xc_nomitshm=""
@@ -9808,43 +9812,49 @@ create_xcontainercommand() {
 
     # Xc_gpu : GPU
     Xc_gpu=""
-    while read -r Gpudevice ; do
-        $append_ops_to Xc_gpu "--device $Gpudevice:$Gpudevice"
-    done < <(devicelist_gpu)
+    {
+        while read -r Gpudevice ; do
+            $append_ops_to Xc_gpu "--device $Gpudevice:$Gpudevice"
+        done < <(devicelist_gpu)
 
-    # nvidia driver
-    if [ "$Nvidiainstallerfile" ] ; then
-        $append_ops_to Xc_gpu "$(trim_to_mark \
+        # nvidia driver
+        if [ "$Nvidiainstallerfile" ] ; then
+            $append_ops_to Xc_gpu "$(trim_to_mark \
                        "|--mount type=bind
                         :,source=$Nvidiainstallerfile
                         :,target=$Nvidiacontainerfile
                         :,readonly"
                         )"
 
-        mkfile "$Sharefolder/nvidia_installer"
-        {
-            echo ""
-            echo "$Messagefifofuncs"
-            echo "Messagefile=$Messagefifo"
-            echo "Storeinfofile=$Storeinfofile"
-            echo "Timetosaygoodbyefile=$Timetosaygoodbyefile"
-            echo ""
-            rootrc_nvidia_installer
-        } >> "$Sharefolder/nvidia_installer"
-    fi
-       
-  case "$Xcontainerbackend" in
-    docker|podman)
-      mygetent group video >/dev/null && Xc_gpu="$Xc_gpu \\
-  --group-add $(mygetent group video  | cut -d: -f3)"
-      mygetent group render >/dev/null && Xc_gpu="$Xc_gpu \\
-  --group-add $(mygetent group render | cut -d: -f3)"
-      mygetent group input >/dev/null && Xc_gpu="$Xc_gpu \\
-  --group-add $(mygetent group input | cut -d: -f3)"
-      mygetent group weston-launch >/dev/null && Xc_gpu="$Xc_gpu \\
-  --group-add $(mygetent group weston-launch | cut -d: -f3)"
-    ;;
-  esac
+            mkfile "$Sharefolder/nvidia_installer"
+            {
+                echo ""
+                echo "$Messagefifofuncs"
+                echo "Messagefile=$Messagefifo"
+                echo "Storeinfofile=$Storeinfofile"
+                echo "Timetosaygoodbyefile=$Timetosaygoodbyefile"
+                echo ""
+                rootrc_nvidia_installer
+            } >> "$Sharefolder/nvidia_installer"
+        fi
+
+        case "$Xcontainerbackend" in
+            docker|podman)
+                if mygetent group video >/dev/null ; then
+                    $append_ops_to Xc_gpu "--group-add $(mygetent group video  | cut -d: -f3)"
+                fi
+                if mygetent group render >/dev/null ; then
+                    $append_ops_to Xc_gpu "--group-add $(mygetent group render | cut -d: -f3)"
+                fi
+                if mygetent group input >/dev/null ; then
+                    $append_ops_to Xc_gpu "--group-add $(mygetent group input | cut -d: -f3)"
+                fi
+                if mygetent group weston-launch >/dev/null ; then
+                    $append_ops_to Xc_gpu "--group-add $(mygetent group weston-launch | cut -d: -f3)"
+                fi
+                ;;
+        esac
+    }
 
   # console
   Xc_console="\\
