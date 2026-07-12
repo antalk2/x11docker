@@ -9909,16 +9909,14 @@ create_xcontainercommand() {
 
         # nvidia driver
         if [ "$Nvidiainstallerfile" ] ; then
-            $append_ops_to Xc_gpu "$(trim_to_mark \
-                       "|--mount type=bind
-                        :,source=$Nvidiainstallerfile
-                        :,target=$Nvidiacontainerfile
-                        :,readonly"
-                        )"
+            $append_ops_to Xc_gpu "$(join_with_comma              \
+                                    "--mount type=bind"           \
+                                    "source=$Nvidiainstallerfile" \
+                                    "target=$Nvidiacontainerfile" \
+                                    "readonly"                    )"
 
             mkfile "$Sharefolder/nvidia_installer"
             {
-
                 trim_to_bar "|
                              |$Messagefifofuncs
                              |Messagefile=$Messagefifo
