@@ -3552,24 +3552,65 @@ convertpath() {                 # convert unix and windows paths
     return 0
 }
 
-# Function: createmountopt_mount
+# Group: createmountopt
 #
-# Brief: Create option for docker to bind mount a file, check if file exists
+# The functions createmountopt_mount createmountopt_device and
+# createmountopt_volume, orionally parts of createmountopt(), were
+# introduced for the purpose of omitting the normally resulting
+# --mount, --device or --volume flag if the corresponding file does
+# not exist.
+#
+# Commit: https://github.com/mviereck/x11docker/commit/8357d9425b603942735a8a036f35488609953e48
+#         --xc: check for existimg files/devices before mount #564
+#         https://github.com/mviereck/x11docker/issues/564
+#
+#
+# Since these flags originally had (should have had) a purpose,
+# createmountopt(), or now its parts are useful in only some specific
+# cases, where the lack of those missing files is not a problem.
+#
+# In other words: createmountopt() seems to be a hack to respond a
+# problem, but the real solution would be if we could tell beforehand
+# that we do not need those flags.
+#
+#                    "$(createmountopt_mount rw /var/run/dbus           || : )" \
+#                    "$(createmountopt_mount ro /run/udev/data          || : )" \
+#                    "$(createmountopt_mount rw /var/run/seatd.sock     || : )" \
+#                    "$(createmountopt_device /dev/tty0              || : )" \
+#                    "$(createmountopt_device /dev/tty${Newxvt}      || : )" \
+#                    "$(createmountopt_device /dev/fb0               || : )"
+#         $append_ops_to Xc_console "$(createmountopt_device "$Line")"
+#
+#
+#  https://sr.ht/~kennylevinsen/seatd/
+#
+
+# Function: createmountopt_mount
 #
 # Usage: createmountopt_mount RW File
 #
-# Argument:
-#   RW:  ro|rw : To be shared readonly, or read-write.
+# Brief: If File exists, create option on stdout for docker to bind
+#        mount File, otherwise emit nothing on stdout.
+#
+# Argument: RW: ro|rw : To be shared readonly, or read-write.
+#
+#          Brought forward (to 1st arg), and made compulsory, in case
+#          we will want to pass another path for the target, that is
+#          optional.
+#
 #   File : Path to file to be shared. Must exist already.
 #
 # stdout: "--mount type=bind,source=${eFile},target=${eFile},readonly" or
 #         "--mount type=bind,source=${eFile},target=${eFile}"
 #
+# Purpose: If the file does not exist, emit no mount option.
+#
 createmountopt_mount() {
     local Rw="${1}"
     local File="${2}"
 
-    if [ ! -e "$File" ] ; then 
+    if [ ! -e "$File" ] ; then
+        # Only a note, not an error.
         debugnote "createmountopt_mount(): ERROR: File not found: '$File'"
         return 1
     fi
@@ -3598,10 +3639,10 @@ createmountopt_mount() {
 #
 #
 createmountopt_device() {
-    # $1  File:   file or device to share
+    # $1  Rw:     {ro|rw} (was ro|readonly (optional)
+    # $2  File:   file or device to share
     #             If does not exist, emit nothing and return 1
     #
-    # $2  Rw:     ro, readonly (optional)
     local File Rw
     File="${1:-}"
     Rw="${2:-}"
@@ -3610,17 +3651,21 @@ createmountopt_device() {
         debugnote "createmountopt_device(): ERROR: File not found: '$File'"
         return 1
     fi
-  #
-  case "$Rw" in
-      "ro"|"readonly") Rw=":ro"  ;;
-      *)               Rw=""     ;;
-  esac
-  #
-  local eFile
-  eFile="$(escapestring "$File")"
-  #
-  # --device=/dev/host-device:/dev/container-device
-  echo "--device ${eFile}$Rw"
+    #
+    #case "$Rw" in
+    #  "ro"|"readonly") Rw=":ro"  ;;
+    #  *)               Rw=""     ;;
+    # esac
+    #
+    local eFile
+    eFile="$(escapestring "$File")"
+    #
+    # --device=/dev/host-device:/dev/container-device
+    case "$Rw" in
+        ro) echo "--device ${eFile}:ro" ;;
+        rw) echo "--device ${eFile}"    ;;
+        *) error  "createmountopt_device(): ERROR: Rw '$Rw' is not in {rw|ro} "  ;;
+    esac
 }
 
 if false ; then
@@ -3630,7 +3675,7 @@ if false ; then
     #
     # Brief: Create option for docker to mount a volume, check if it exists
     #
-    # Usage: createmountopt_volume  File [{"readonly"|"ro"}]
+    # Usage: createmountopt_volume Rw File
     #
     #
     # stdout: "--volume ${eFile}:${eFile}$Rw"
@@ -3638,23 +3683,23 @@ if false ; then
     createmountopt_volume() {
         #             volume -> "--volume ${eFile}:${eFile}$Rw"
         #
-        # $1  File:   file or device to share
+        # $1  Rw:     {ro|rw} (Was: ro|readonly, optional)
+        # $2  File:   file or device to share
         #             If does not exist, emit nothing and return 1
         #
-        # $2  Rw:     ro, readonly (optional)
         local File Rw
-        File="${1:-}"
-        Rw="${2:-}"
+        Rw="${1:-}"
+        File="${2:-}"
 
         if [ ! -e "$File" ] ; then
             debugnote "createmountopt_volume(): ERROR: File not found: '$File'"
             return 1
         fi
         #
-        case "$Rw" in
-            "ro"|"readonly")  Rw=":ro" ;;
-            *)                Rw=""    ;;
-        esac
+        #case "$Rw" in
+        #    "ro"|"readonly")  Rw=":ro" ;;
+        #    *)                Rw=""    ;;
+        #esac
         #
         local eFile
         eFile="$(escapestring "$File")"
@@ -3665,9 +3710,21 @@ if false ; then
         # docker run --volume [<volume-name>:]<mount-path>[:opts]
         #   Here opts is a comma-separated list of options, like ro.
         #   The colon just separates it from <mount-path>
-        echo "--volume ${eFile}:${eFile}$Rw"
+        case "$Rw" in
+            "ro"|"readonly")
+                # Rw=":ro"
+                echo "--volume ${eFile}:${eFile}:ro"
+                ;;
+            "rw")
+                # Rw=""
+                echo "--volume ${eFile}:${eFile}"
+                ;;
+            *) error  "createmountopt_volume(): ERROR: Rw '$Rw' is not in {rw|ro} "  ;;
+        esac
     }
 fi
+
+# EndGroup: createmountopt
 
 # EndGroup: convertpath
 
@@ -10040,13 +10097,18 @@ create_xcontainercommand() {
         $append_ops_to Xc_console                                              \
                        "--cap-add SYS_TTY_CONFIG"                              \
                        "--cap-add DAC_OVERRIDE"                                \
-                       "--cap-add KILL"                                        \
-                       "$(createmountopt_mount rw /var/run/dbus           || : )" \
-                       "$(createmountopt_mount rw /run/udev/data readonly || : )" \
-                       "$(createmountopt_mount rw /var/run/seatd.sock     || : )" \
-                       "$(createmountopt_device /dev/tty0              || : )" \
-                       "$(createmountopt_device /dev/tty${Newxvt}      || : )" \
-                       "$(createmountopt_device /dev/fb0               || : )"
+                       "--cap-add KILL"
+        #
+        # createmountopt_* means : if the file does not exist, we do
+        # not want to pass the --mount or --device option,
+        #
+        $append_ops_to Xc_console                                              \
+                       "$(createmountopt_mount  rw /var/run/dbus          || : )" \
+                       "$(createmountopt_mount  ro /run/udev/data         || : )" \
+                       "$(createmountopt_mount  rw /var/run/seatd.sock    || : )" \
+                       "$(createmountopt_device rw /dev/tty0              || : )" \
+                       "$(createmountopt_device rw /dev/tty${Newxvt}      || : )" \
+                       "$(createmountopt_device rw /dev/fb0               || : )"
         while read Line; do
             $append_ops_to Xc_console "$(createmountopt_device "$Line")"
         done < <(devicelist_input)
