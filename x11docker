@@ -9737,7 +9737,8 @@ create_xcontainercommand() {
             $append_ops_to Xc_hostx "--env DISPLAY=$Hostdisplay"
 
             if [ -S "/tmp/.X11-unix/X$Hostdisplaynumber" ] ; then
-                case "$Xserver" in #### FIXME Is this differenciation needed? Link done in containerrc.
+                case "$Xserver" in
+                    #### FIXME Is this differenciation needed? Link done in containerrc.
                     --hostdisplay)
                         $append_ops_to Xc_hostx \
                                        "$(trim_to_mark \
