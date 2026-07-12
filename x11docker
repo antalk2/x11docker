@@ -10240,23 +10240,19 @@ create_xcontainercommand() {
                     # virgl and Xwayland need shared device files what is not supported yet by sysbox
                     case "$BackendKind" in
                         docker)
-                            Xcontainercommand="$Xcontainercommand \\
-  --runtime runc"
+                            $append_ops_to Xcontainercommand "--runtime runc"
                             ;;
                         podman)
-                            Xcontainercommand="$Xcontainercommand \\
-  --runtime crun"
+                            $append_ops_to Xcontainercommand "--runtime crun"
                             ;;
                         *) ;;
                     esac
                 } || {
-                    Xcontainercommand="$Xcontainercommand \\
-  --runtime $Runtime"
+                    $append_ops_to Xcontainercommand "--runtime $Runtime"
                 }
             ;;
         *)
-            Xcontainercommand="$Xcontainercommand \\
-  --runtime $Runtime"
+            $append_ops_to Xcontainercommand "--runtime $Runtime"
             ;;
     esac
 
