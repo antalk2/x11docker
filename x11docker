@@ -10232,33 +10232,33 @@ create_xcontainercommand() {
             ;;
     esac
 
-  case "$Runtime" in
-    "") ;;
-    kata-runtime) ;; ### FIXME check
-    sysbox-runc)
-      [ "$Sharegpu" = "virgl" ] || grep -q "xwayland" <<< "$Xserver" && {
-        # virgl and Xwayland need shared device files what is not supported yet by sysbox
-        case "$BackendKind" in
-          docker)
-            Xcontainercommand="$Xcontainercommand \\
+    case "$Runtime" in
+        "") ;;
+        kata-runtime) ;; ### FIXME check
+        sysbox-runc)
+            [ "$Sharegpu" = "virgl" ] || grep -q "xwayland" <<< "$Xserver" && {
+                    # virgl and Xwayland need shared device files what is not supported yet by sysbox
+                    case "$BackendKind" in
+                        docker)
+                            Xcontainercommand="$Xcontainercommand \\
   --runtime runc"
-          ;;
-          podman)
-            Xcontainercommand="$Xcontainercommand \\
+                            ;;
+                        podman)
+                            Xcontainercommand="$Xcontainercommand \\
   --runtime crun"
-          ;;
-          *) ;;
-        esac
-      } || {
-        Xcontainercommand="$Xcontainercommand \\
+                            ;;
+                        *) ;;
+                    esac
+                } || {
+                    Xcontainercommand="$Xcontainercommand \\
   --runtime $Runtime"
-      }
-    ;;
-    *)
-      Xcontainercommand="$Xcontainercommand \\
+                }
+            ;;
+        *)
+            Xcontainercommand="$Xcontainercommand \\
   --runtime $Runtime"
-    ;;
-  esac
+            ;;
+    esac
 
   # add code snippets
   case "$Xserver" in
