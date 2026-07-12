@@ -10109,8 +10109,17 @@ create_xcontainercommand() {
                        "$(createmountopt_device rw /dev/tty0              || : )" \
                        "$(createmountopt_device rw /dev/tty${Newxvt}      || : )" \
                        "$(createmountopt_device rw /dev/fb0               || : )"
+        #
+        # Q: Are we calling createmountopt_device to check if the files
+        #    we just found in /dev/input/* still exits?
+        # Q: Or the files we find there may need escaping?
+        #
+        # A: The latter is more likely. Although on my machine none of
+        #    them need. They follow the patterns: (mice, mouse%d, event%d)
+        #
         while read Line; do
-            $append_ops_to Xc_console "$(createmountopt_device "$Line")"
+            # $append_ops_to Xc_console "$(createmountopt_device rw "$Line")"
+            $append_ops_to Xc_console  "--device=$Line"
         done < <(devicelist_input)
     }
 
