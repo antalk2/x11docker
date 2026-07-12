@@ -8831,17 +8831,17 @@ join_with_sh_v2() {
     done
     printf "%s" "${res}"
 }
-join_with_sh() {
+join_with() {
     join_with_sh_v2 "${@}" ;
 }
 
-# Function: join_with_prefix_sh
-# Usage: join_with_prefix_sh PREFX s1 ... sn
+# Function: join_with_prefix
+# Usage: join_with_prefix PREFX s1 ... sn
 # Brief: "${PREFX}${s1} ... ${PREFX}${sn}"
 #
 # Description: Same as join_with PREFX "" s1 ... sn
 #
-join_with_prefix_sh() {
+join_with_prefix() {
     local PREFX="${1}"
     shift
     local si
