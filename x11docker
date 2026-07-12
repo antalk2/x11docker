@@ -9983,16 +9983,18 @@ create_xcontainercommand() {
         fi
   }
 
-  # connect to systemd from host
-  Xc_systemd="\\
-  --pid=host \\
-  --env XDG_SEAT=$XDG_SEAT \\
-  --env XDG_SESSION_ID=$XDG_SESSION_ID \\
-  --mount type=bind,source=/run/systemd,target=/run/systemd \\
-  --mount type=bind,source=/run/user,target=/run/user \\
-  --mount type=bind,source=/run/dbus,target=/run/dbus \\
-  --mount type=bind,source=/sys/fs/cgroup,target=/sys/fs/cgroup"
-
+    # connect to systemd from host
+    Xc_systemd=""
+    {
+        $append_ops_to Xc_systemd \
+                       "--pid=host"                                                    \
+                       "--env XDG_SEAT=$XDG_SEAT"                                      \
+                       "--env XDG_SESSION_ID=$XDG_SESSION_ID"                          \
+                       "--mount type=bind,source=/run/systemd,target=/run/systemd"     \
+                       "--mount type=bind,source=/run/user,target=/run/user"           \
+                       "--mount type=bind,source=/run/dbus,target=/run/dbus"           \
+                       "--mount type=bind,source=/sys/fs/cgroup,target=/sys/fs/cgroup"
+    }
 
   ## create command ##
   ### FIXME --xc=nerdctl does not take combination --detach --rm
