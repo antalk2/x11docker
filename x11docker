@@ -9833,12 +9833,12 @@ create_xcontainercommand() {
                 case "$Xserver" in
                     #### FIXME Is this differenciation needed? Link done in containerrc.
                     --hostdisplay)
-                        $append_ops_to Xc_hostx                                      \
-                                       "$(join_with_comma                            \
-                                        "--mount type=bind"                          \
-                                         "source=/tmp/.X11-unix/X$Hostdisplaynumber" \
-                                         "target=/tmp/.X11-unix/X$Hostdisplaynumber" \
-                                         "readonly"                                  )"
+                        $append_ops_to Xc_hostx                                     \
+                                       "$(join_with_comma                           \
+                                        "--mount type=bind"                         \
+                                        "source=/tmp/.X11-unix/X$Hostdisplaynumber" \
+                                        "target=/tmp/.X11-unix/X$Hostdisplaynumber" \
+                                        "readonly"                                  )"
                         ;;
                     *)
                         $append_ops_to Xc_hostx                                      \
