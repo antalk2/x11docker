@@ -9888,11 +9888,10 @@ create_xcontainercommand() {
                        "--env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
 
         $append_ops_to Xc_containerwayland                      \
-                       "$(trim_to_mark \
-                        "|--mount type=bind
-                         :,source=$Cachefolder/XDG_RUNTIME_DIR
-                         :,target=$XDG_RUNTIME_DIR"
-                     )"
+                       "$(join_with_comma                       \
+                         "--mount type=bind"                    \
+                         "source=$Cachefolder/XDG_RUNTIME_DIR"  \
+                         "target=$XDG_RUNTIME_DIR"              )"
     }
 
     # Xc_nomitshm : container X should not use MIT-SHM
