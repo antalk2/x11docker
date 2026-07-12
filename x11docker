@@ -3556,28 +3556,23 @@ convertpath() {                 # convert unix and windows paths
 #
 # Brief: Create option for docker to bind mount a file, check if file exists
 #
-# Usage: createmountopt_mount File [{"readonly"|"ro"}]
+# Usage: createmountopt_mount RW File
 #
-# stdout: "--mount type=bind,source=${eFile},target=${eFile}$Rw"
+# Argument:
+#   RW:  ro|rw : To be shared readonly, or read-write.
+#   File : Path to file to be shared. Must exist already.
+#
+# stdout: "--mount type=bind,source=${eFile},target=${eFile},readonly" or
+#         "--mount type=bind,source=${eFile},target=${eFile}"
 #
 createmountopt_mount() {
-    # $1  File:   file or device to share
-    #             If does not exist, emit nothing and return 1
-    #
-    # $2  Rw:     ro, readonly (optional)
-    local File Rw
-    File="${1:-}"
-    Rw="${2:-}"
+    local Rw="${1}"
+    local File="${2}"
 
     if [ ! -e "$File" ] ; then 
         debugnote "createmountopt_mount(): ERROR: File not found: '$File'"
         return 1
     fi
-  #
-  case "$Rw" in
-      "ro"|"readonly") Rw=",readonly" ;;
-      *)               Rw=""          ;;
-  esac
   #
   local eFile
   eFile="$(escapestring "$File")"
@@ -3586,7 +3581,11 @@ createmountopt_mount() {
   # To create a bind mount, you can use either the --mount or --volume flag.
   # docker run --mount type=bind,src=<host-path>,dst=<container-path>
   # 
-  echo "--mount type=bind,source=${eFile},target=${eFile}$Rw"
+  case "$Rw" in
+      "ro") echo "--mount type=bind,source=${eFile},target=${eFile},readonly" ;;
+      "rw") echo "--mount type=bind,source=${eFile},target=${eFile}"          ;;
+      *) error  "createmountopt_mount(): ERROR: Rw '$Rw' is not in {rw|ro} "  ;;
+  esac
 }
 
 # Function: createmountopt_device
@@ -10042,9 +10041,9 @@ create_xcontainercommand() {
                        "--cap-add SYS_TTY_CONFIG"                              \
                        "--cap-add DAC_OVERRIDE"                                \
                        "--cap-add KILL"                                        \
-                       "$(createmountopt_mount /var/run/dbus           || : )" \
-                       "$(createmountopt_mount /run/udev/data readonly || : )" \
-                       "$(createmountopt_mount /var/run/seatd.sock     || : )" \
+                       "$(createmountopt_mount rw /var/run/dbus           || : )" \
+                       "$(createmountopt_mount rw /run/udev/data readonly || : )" \
+                       "$(createmountopt_mount rw /var/run/seatd.sock     || : )" \
                        "$(createmountopt_device /dev/tty0              || : )" \
                        "$(createmountopt_device /dev/tty${Newxvt}      || : )" \
                        "$(createmountopt_device /dev/fb0               || : )"
