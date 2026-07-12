@@ -8853,6 +8853,11 @@ join_with_prefix() {
     printf "%s" "${res}"
 }
 
+#
+# create_xcommand_HELPER_append_ops_SEP : Separator used in long command lines
+#
+declare -r create_xcommand_HELPER_append_ops_SEP=" \\${NEWLINE}  "
+
 # Function: create_xcommand_HELPER_append_ops_to
 # Usage: create_xcommand_HELPER_append_ops_to VARNAME opt1 opt2 ... optn
 #
@@ -8868,7 +8873,7 @@ create_xcommand_HELPER_append_ops_to() {
     shift
     #
     local op
-    local SEP=" \\${NEWLINE}  "
+    local SEP="${create_xcommand_HELPER_append_ops_SEP}"
     for op in "${@}" ; do
         create_xcommand_HELPER_append_ops_to_VAR_IO+="${SEP}${op}"
     done
