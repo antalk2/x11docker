@@ -9754,7 +9754,11 @@ create_xcontainercommand() {
             if [ -s "$Hostxauthority" ] ; then
                 $append_ops_to Xc_hostx \
                                "--env XAUTHORITY=$Hostxauthority" \
-                               "--mount type=bind,source=$Hostxauthority,target=$Hostxauthority"
+                               "$(trim_to_mark \
+                                "|--mount type=bind
+                                 :,source=$Hostxauthority
+                                 :,target=$Hostxauthority"
+                                 )"
             fi
         fi
     }
