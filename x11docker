@@ -3552,11 +3552,48 @@ convertpath() {                 # convert unix and windows paths
     return 0
 }
 
+# Function: createmountopt_mount
+#
+# Brief: Create option for docker to bind mount a file, check if file exists
+#
+# Usage: createmountopt_mount File [{"readonly"|"ro"}]
+#
+createmountopt_mount() {
+    # $1  File:   file or device to share
+    #             If does not exist, emit nothing and return 1
+    #
+    # $2  Rw:     ro, readonly (optional)
+    local File Rw
+    File="${1:-}"
+    Rw="${2:-}"
+
+    if [ ! -e "$File" ] ; then 
+        debugnote "createmountopt_mount(): ERROR: File not found: '$File'"
+        return 1
+    fi
+  #
+  case "$Rw" in
+      "ro"|"readonly") Rw=",readonly" ;;
+      *)               Rw=""          ;;
+  esac
+  #
+  local eFile
+  eFile="$(escapestring "$File")"
+  #
+  # https://docs.docker.com/engine/storage/bind-mounts/
+  # To create a bind mount, you can use either the --mount or --volume flag.
+  # docker run --mount type=bind,src=<host-path>,dst=<container-path>
+  # 
+  echo "--mount type=bind,source=${eFile},target=${eFile}$Rw"
+}
+
 # Function: createmountopt
 #
 # Brief: Create option for docker to mount file or device, check if file exists
 #
 # Usage: createmountopt  { "mount" | "device" | "volume" } File [{"readonly"|"ro"}]
+#
+# 
 #
 #
 createmountopt() {
@@ -9990,9 +10027,9 @@ create_xcontainercommand() {
                        "--cap-add SYS_TTY_CONFIG"                              \
                        "--cap-add DAC_OVERRIDE"                                \
                        "--cap-add KILL"                                        \
-                       "$(createmountopt mount /var/run/dbus           || : )" \
-                       "$(createmountopt mount /run/udev/data readonly || : )" \
-                       "$(createmountopt mount /var/run/seatd.sock     || : )" \
+                       "$(createmountopt_mount /var/run/dbus           || : )" \
+                       "$(createmountopt_mount /run/udev/data readonly || : )" \
+                       "$(createmountopt_mount /var/run/seatd.sock     || : )" \
                        "$(createmountopt device /dev/tty0              || : )" \
                        "$(createmountopt device /dev/tty${Newxvt}      || : )" \
                        "$(createmountopt device /dev/fb0               || : )"

@@ -14,7 +14,7 @@ test_createmountopt() {
     # File must exist
     touch "${File}"
     #
-    res="$(createmountopt mount  "$File" "ro" )"
+    res="$(createmountopt_mount  "$File" "ro" )"
     assert_same '--mount type=bind,source=/tmp/xxx\ yyy,target=/tmp/xxx\ yyy,readonly' "${res}"
     #
     res="$(createmountopt device  "$File" "ro" )"
@@ -33,8 +33,8 @@ test_createmountopt() {
     local Debugmode=yes
     local Verbose=not-yes
     local FDstderr=2
-    assert_exec 'createmountopt mount  "$File" "ro"' --exit 1 --stdout "" \
+    assert_exec 'createmountopt_mount  "$File" "ro"' --exit 1 --stdout "" \
                 --stderr-contains "DEBUGNOTE"
-    assert_exec 'createmountopt mount  "$File" "ro"' --exit 1 --stdout "" \
-                --stderr-contains "createmountopt(): ERROR: File not found:"
+    assert_exec 'createmountopt_mount  "$File" "ro"' --exit 1 --stdout "" \
+                --stderr-contains "createmountopt_mount(): ERROR: File not found:"
 }
