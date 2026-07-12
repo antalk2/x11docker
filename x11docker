@@ -3445,10 +3445,12 @@ convertpath() {                 # convert unix and windows paths
     return 0
 }
 
+# Function: createmountopt
 #
-# function createmountopt( Modus, File, Rw )
+# Brief: Create option for docker to mount file or device, check if file exists
 #
-# Create option for docker to mount file or device, check if file exists
+# Usage: createmountopt  { "mount" | "device" | "volume" } File [{"readonly"|"ro"}]
+#
 #
 createmountopt() {
     # $1  Modus:  one of mount, device, volume
