@@ -9968,19 +9968,22 @@ create_xcontainercommand() {
         done < <(devicelist_input)
     }
 
-  # Weston
-  Xc_weston="\\
-  --cap-add SETUID \\
-  --cap-add SETGID \\
-  --cap-add CHOWN \\
-  --env XDG_VTNR=$Newxvt \\
-  --mount type=bind,source=$Compositorlogfile,target=/x11docker/compositor.log"
-  case "$Xcontainerbackend" in
-    docker|podman)
-      Xc_weston="$Xc_weston \\
-  --group-add 104"
-    ;;
-  esac
+    # Weston
+    Xc_weston=""
+    {
+        $append_ops_to Xc_weston \
+                       "--cap-add SETUID" \
+                       "--cap-add SETGID" \
+                       "--cap-add CHOWN" \
+                       "--env XDG_VTNR=$Newxvt" \
+                       "--mount type=bind,source=$Compositorlogfile,target=/x11docker/compositor.log"
+  
+        case "$Xcontainerbackend" in
+            docker|podman)
+                $append_ops_to Xc_weston "--group-add 104"
+                ;;
+        esac
+  }
 
   # connect to systemd from host
   Xc_systemd="\\
