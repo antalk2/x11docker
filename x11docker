@@ -9759,12 +9759,16 @@ create_xcontainercommand() {
         fi
     }
 
-  # access to host Wayland
-  [ -S "$XDG_RUNTIME_DIR/$Hostwaylandsocket" ] && Xc_hostwayland="\\
-  --mount type=bind,source=$XDG_RUNTIME_DIR/$Hostwaylandsocket,target=$XDG_RUNTIME_DIR/$Hostwaylandsocket,readonly \\
-  --env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR \\
-  --env GDK_BACKEND=wayland \\
-  --env WAYLAND_DISPLAY=$Hostwaylandsocket"
+    # access to host Wayland
+    if [ -S "$XDG_RUNTIME_DIR/$Hostwaylandsocket" ] ; then
+        Xc_hostwayland=""
+        $append_ops_to \
+            Xc_hostwayland \
+            "--mount type=bind,source=$XDG_RUNTIME_DIR/$Hostwaylandsocket,target=$XDG_RUNTIME_DIR/$Hostwaylandsocket,readonly" \
+            "--env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR" \
+            "--env GDK_BACKEND=wayland" \
+            "--env WAYLAND_DISPLAY=$Hostwaylandsocket"
+        fi
 
   # Wayland in container
   Xc_containerwayland="\\
