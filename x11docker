@@ -11631,15 +11631,15 @@ xtool() {
     #
     # Check tool availability on host
     #
-    if [ "$Usexcontainer" = no ] ; then
-            if ! have_command  "$Tool"  ; then
-                $Message  "$(trim_to_bar \
-                    "|xtool(): Command '$Tool' not found on host. Please install $Tool.
-                     |  $Toolinfo
-                     |  $Wikipackagesimage"
-                     )"
-                return 1
-            fi
+    if [ "$Usexcontainer" = no ] \
+    && ! have_command  "$Tool"   ;
+    then
+        $Message  "$(trim_to_bar \
+                   "|xtool(): Command '$Tool' not found on host. Please install $Tool.
+                    |  $Toolinfo
+                    |  $Wikipackagesimage"
+                    )"
+        return 1
     fi
 
     if [ "$Check" = "yes" ] ; then
