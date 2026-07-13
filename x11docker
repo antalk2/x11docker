@@ -10878,27 +10878,27 @@ create_xinitrc() {
             fi
 
             if ! case_match "$Xserver" '--hostdisplay|--nxagent | --hostwayland|--weston|--kwin|--tty' ; then
-                    echo       "# Keyboard layout"
-                    [ -n "$Hostdisplay" ] && {
-                        xtool --check setxkbmap && {
-                            case "$Xkblayout" in
-                                "") 
-                                    #setxkbmap -display "$Hostdisplay" -print >> "$Xkbkeymapfile"
-                                    echo "env DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority setxkbmap -display $Hostdisplay -print >> $Xkbkeymapfile"
-                                    ;;
-                                *)
-                                    echo "setxkbmap '$Xkblayout' -print >> $Xkbkeymapfile"
-                                    ;;
-                            esac
-                        }
-                        [ -s "$Xkbkeymapfile" ] && {
-                            echo   "# set keyboard layout on $Newdisplay"
-                            echo   "verbose \"Keyboard layout:"
-                            echo   "\$(cat $Xkbkeymapfile)\""
-                            echo   "xkbcomp $Xkbkeymapfile $Newdisplay"
-                        }
-                        echo     ""
+                echo       "# Keyboard layout"
+                [ -n "$Hostdisplay" ] && {
+                    xtool --check setxkbmap && {
+                        case "$Xkblayout" in
+                            "") 
+                                #setxkbmap -display "$Hostdisplay" -print >> "$Xkbkeymapfile"
+                                echo "env DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority setxkbmap -display $Hostdisplay -print >> $Xkbkeymapfile"
+                                ;;
+                            *)
+                                echo "setxkbmap '$Xkblayout' -print >> $Xkbkeymapfile"
+                                ;;
+                        esac
                     }
+                    [ -s "$Xkbkeymapfile" ] && {
+                        echo   "# set keyboard layout on $Newdisplay"
+                        echo   "verbose \"Keyboard layout:"
+                        echo   "\$(cat $Xkbkeymapfile)\""
+                        echo   "xkbcomp $Xkbkeymapfile $Newdisplay"
+                    }
+                    echo     ""
+                }
             fi
             ;;
     esac
