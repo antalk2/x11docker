@@ -10774,18 +10774,19 @@ create_xinitrc() {
                         ;;
                 esac
                 trim_to_bar "|echo \"Requesting \$Trusted cookie from X server\"
-                             |xauth -v -n -i -f $($with_Sharefolder $Xclientcookie ) \\
-                             |    generate \$Newdisplay . \$Trusted timeout 3600"
+                             |xauth -v -n -i -f \"\$Xclientcookie\" \\
+                             |    generate \$Newdisplay . \$Trusted timeout 3600
+                             |"
 
                 if [ "$Xserver" = '--hostdisplay' ] ; then
                     trim_to_bar "|if [ -n \"\$Hostcookie\" ] ; then
-                                 |    sed -i /\$Hostcookie/d  $($with_Sharefolder $Xclientcookie )
+                                 |    sed -i /\$Hostcookie/d  \"\$Xclientcookie\"
                                  |fi
                                  |"
                 fi
                 
                 if [ "$Xauthentication" = untrusted ] ; then
-                    trim_to_bar "|if [ ! -s '$Xclientcookie' ] ; then
+                    trim_to_bar "|if [ ! -s \"\$Xclientcookie\" ] ; then
                                  |    error_ttm '|--xauth=untrusted: Failed to create cookie
                                  |               |for untrusted clients.
                                  |               |Maybe your X server misses extension SECURITY.'
@@ -10794,39 +10795,39 @@ create_xinitrc() {
                 fi
 
                 [ "$Xserver" = "--hostdisplay" ] && {
-                    echo       "[ ! -s '$Xclientcookie' ] && {"
+                    echo       "[ ! -s \"\$Xclientcookie\" ] && {"
                     echo       "  [ -n \"\$Hostcookie\" ] && {"
                     echo       "    debugnote 'xinitrc() --hostdisplay: Failed to retrieve cookie from X server."
                     echo       "  Maybe your X server misses extension SECURITY. Will bake one with host cookie.'"
-                    echo       "    xauth -v -n -i -f $Xclientcookie add :$Newdisplaynumber . \$Hostcookie"
+                    echo       "    xauth -v -n -i -f \"\$Xclientcookie\" add :$Newdisplaynumber . \$Hostcookie"
                     echo       "  }"
                     echo       "}"
                 }
-                echo         "[ -s '$Xclientcookie' ] || { "
+                echo         "[ -s \"\$Xclientcookie\" ] || { "
                 echo         "  # still no cookie? try to create one without extension security"
                 echo         "  debugnote 'xinitrc(): Failed to retrieve trusted cookie from X server. Will bake one directly with xauth'"
-                echo         "  xauth -v -n -i -f $Xclientcookie add :$Newdisplaynumber . $(makecookie)"
+                echo         "  xauth -v -n -i -f \"\$Xclientcookie\" add :$Newdisplaynumber . $(makecookie)"
                 echo         "}"
-                echo         "[ -s '$Xclientcookie' ] && {"
+                echo         "[ -s \"\$Xclientcookie\" ] && {"
                 echo         "  # Prepare cookie with localhost identification disabled by ffff, needed if X socket is shared. ffff means 'familiy wild'"
-                echo         "  Cookie=\"\$(xauth -n -i -f $Xclientcookie nlist | sed -e 's/^..../ffff/')\""
-                echo         "  truncate -s0 $Xclientcookie"
-                echo         "  echo \"\$Cookie\" | xauth -v -n -i -f $Xclientcookie nmerge -"
+                echo         "  Cookie=\"\$(xauth -n -i -f \"\$Xclientcookie\" nlist | sed -e 's/^..../ffff/')\""
+                echo         "  truncate -s0 \"\$Xclientcookie\"  "
+                echo         "  echo \"\$Cookie\" | xauth -v -n -i -f \"\$Xclientcookie\" nmerge -"
                 echo         "}"
-                echo         "[ -s '$Xclientcookie' ] || {"
+                echo         "[ -s \"\$Xclientcookie\" ] || {"
                 echo         "  debugnote 'xinitrc(): Failed to create cookie with xauth. Will try custom cookie baker script.'"
-                echo         "  cookiebaker '$Newdisplay' >> $Xclientcookie"
+                echo         "  cookiebaker '$Newdisplay' >> \"\$Xclientcookie\" "
                 echo         "}"
-                echo         "ls -l $Xclientcookie"
+                echo         "ls -l \"\$Xclientcookie\" "
                 echo         "truncate -s0 $Xservercookie"
-                echo         "cat $Xclientcookie >> $Xservercookie"
-                echo         "chmod 644 $Xclientcookie"
+                echo         "cat \"\$Xclientcookie\" >> $Xservercookie"
+                echo         "chmod 644 \"\$Xclientcookie\" "
                 echo         ""
-                echo         "[ -s '$Xclientcookie' ] || error 'xinitrc(): Option --xauth=$Xauthentication: Cookie creation failed.'"
+                echo         "[ -s \"\$Xclientcookie\" ] || error 'xinitrc(): Option --xauth=$Xauthentication: Cookie creation failed.'"
             fi # Xauthentication !== no
 
-            echo           "export XAUTHORITY=$Xclientcookie"
-            echo           "[ '$Xauthentication' = 'no' ] || [ ! -s '$Xclientcookie' ] && unset XAUTHORITY && warning 'Option --xauth=no: X server $Newdisplay runs without cookie authentication.'"
+            echo           "export XAUTHORITY=\$Xclientcookie"
+            echo           "[ '$Xauthentication' = 'no' ] || [ ! -s \"\$Xclientcookie\" ] && unset XAUTHORITY && warning 'Option --xauth=no: X server $Newdisplay runs without cookie authentication.'"
             echo           ""
             case "$Xserver" in
                 --hostdisplay) ;;   # do not change host settings
