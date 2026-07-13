@@ -13368,34 +13368,37 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
 }
 
 #
-# function store_runoption()
+# Group: store_runoption
 #
-#  Usage:
+
+# Function: store_runoption_env
+# Brief: Store env for docker command
+#
+# Description: Store a value that will be available in
+#              "$(store_runoption_dump_env)"
+#
+# Usage: store_runoption_env a_value
+#
+# Argument:
+#   a_value : Often, but not always in the format "label=value"
+#
+#  Examples:
 #    store_runoption_env "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS"
 #    store_runoption_env  "${DBUS_SESSION_BUS_PID:-}"  # No name?
 #    store_runoption_env "DISPLAY=$Newdisplay"
 #
-#    store_runoption_volume  "$Gpudevice"
-#    store_runoption_volume "/run/cups"
-#    store_runoption_volume "$Cupsserver"
-#    store_runoption_volume "$(myrealpath "$Path")$Readwritemode"
-#
-#    store_runoption_cap "FSETID FOWNER SETPCAP SYS_BOOT"
-#    store_runoption_cap "SYS_BOOT KILL"
-#    store_runoption_cap "SETUID SETGID DAC_OVERRIDE AUDIT_WRITE"
-#    store_runoption_cap "CHOWN FOWNER DAC_OVERRIDE"
-#
-#    store_runoption_dump_cap
-#    store_runoption_dump_volume
-#    store_runoption_dump_env
-#
-store_runoption_env() {  # store env for docker command
+store_runoption_env() {
     # local Count Line Path Readwritemode
     Containerenvironmentcount="$((Containerenvironmentcount + 1))"
     ContainerenvironmentArray[$Containerenvironmentcount]="${1:-}"
     return 0
 }
 
+# Function: store_runoption_dump_env
+# Brief: Emit the list of values stored using store_runoption_env
+#
+# stdout: The values, each followed by a newline.
+#
 store_runoption_dump_env() {
     # local Count Line Path Readwritemode
     local Count
@@ -13405,6 +13408,12 @@ store_runoption_dump_env() {
     return 0
 }
 
+#  Usage:
+#    store_runoption_volume  "$Gpudevice"
+#    store_runoption_volume "/run/cups"
+#    store_runoption_volume "$Cupsserver"
+#    store_runoption_volume "$(myrealpath "$Path")$Readwritemode"
+#
 store_runoption_volume() {  # store volume/device for docker command
     # local Count
     # local Line
@@ -13443,6 +13452,9 @@ store_runoption_volume() {  # store volume/device for docker command
     return 0
 }
 
+#
+#    store_runoption_dump_volume
+#
 store_runoption_dump_volume() {  # store volume/device for docker command
     local Count
     for ((Count=1 ; Count<=$Sharevolumescount ; Count ++)) ; do
@@ -13468,6 +13480,12 @@ store_runoption_dump_volume() {  # store volume/device for docker command
 #       They may serve as a documentation of which capabilities are
 #       relied on, though.
 #
+#  Usage:
+#    store_runoption_cap "FSETID FOWNER SETPCAP SYS_BOOT"
+#    store_runoption_cap "SYS_BOOT KILL"
+#    store_runoption_cap "SETUID SETGID DAC_OVERRIDE AUDIT_WRITE"
+#    store_runoption_cap "CHOWN FOWNER DAC_OVERRIDE"
+#
 store_runoption_cap() {  # dump cap for docker command
     # local Count Line Path Readwritemode
     local Line
@@ -13478,6 +13496,7 @@ store_runoption_cap() {  # dump cap for docker command
 }
 
 #
+#    store_runoption_dump_cap
 # function store_runoption_dump_cap() : Emit newline-separated list of
 #                     capabilities for "docker --cap-add $capability"
 #
@@ -13521,6 +13540,8 @@ store_runoption_dump_cap() {
     esac
     return 0
 }
+
+# EndGroup: store_runoption
 
 
 #### ##################################################
