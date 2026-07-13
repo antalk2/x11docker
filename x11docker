@@ -10548,6 +10548,7 @@ create_xinitrc() {
     #
     declare -f trim_to_bar_filter
     declare -f trim_to_bar
+    declare -f ws_colon_is_continuation_filter
     declare -f trim_to_mark
     declare -f error_ttm
     #
@@ -10778,15 +10779,16 @@ create_xinitrc() {
                     echo       "    sed -i /\$Hostcookie/d  $($with_Sharefolder $Xclientcookie )"
                     echo       "fi"
                 fi
-                echo         "if [ ! -s '$Xclientcookie' ] ; then"
-                echo         "  :"
+                
                 if [ "$Xauthentication" = untrusted ] ; then
-                    trim_to_bar "|  error_ttm '|--xauth=untrusted: Failed to create cookie
-                                 |             |for untrusted clients.
-                                 |             |Maybe your X server misses extension SECURITY.'
+                    trim_to_bar "|if [ ! -s '$Xclientcookie' ] ; then
+                                 |    error_ttm '|--xauth=untrusted: Failed to create cookie
+                                 |               |for untrusted clients.
+                                 |               |Maybe your X server misses extension SECURITY.'
+                                 |fi
                                  |"
                 fi
-                echo         "fi"
+
                 [ "$Xserver" = "--hostdisplay" ] && {
                     echo       "[ ! -s '$Xclientcookie' ] && {"
                     echo       "  [ -n \"\$Hostcookie\" ] && {"
