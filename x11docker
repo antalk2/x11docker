@@ -10780,6 +10780,7 @@ create_xinitrc() {
                 trim_to_bar "|echo \"Requesting \$Trusted cookie from X server\"
                              |xauth -v -n -i -f \"\$Xclientcookie\" \\
                              |    generate \$Newdisplay . \$Trusted timeout 3600
+                             |#
                              |"
 
                 if [ "$Xserver" = '--hostdisplay' ] ; then
@@ -10811,10 +10812,11 @@ create_xinitrc() {
                                  |"
                 fi
 
-                trim_to_bar     "|if [ ! -s \"\$Xclientcookie\" ] ; then
+                trim_to_bar     "|
+                                 |if [ ! -s \"\$Xclientcookie\" ] ; then
                                  |    # still no cookie? try to create one without extension security
                                  |    debugnote_ttm '|xinitrc(): Failed to retrieve trusted cookie from X server.
-                                 |                   : Will bake one directly with xauth'
+                                 |                   : Will bake one directly with xauth (using makecookie)'
                                  |    #
                                  |    xauth -v -n -i -f \"\$Xclientcookie\" add :\$Newdisplaynumber . $(makecookie)
                                  |fi
