@@ -10940,8 +10940,9 @@ create_xinitrc() {
             ;;
 
         --xorg) # --xorg: --scale, --size, --rotate
+
             echo           "# determine screen size"
-            echo           '[ -n "$(xrandr | grep connected | grep -v disconnected)" ] && {'
+            echo           "[ -n \"\$(xrandr | grep connected | grep -v disconnected)\" ] && {"
             [ -z "$Screensize" ] && {
                 echo         "  getscreensize"
                 echo         "  Xaxis=\"\$CurrentXaxis\""
