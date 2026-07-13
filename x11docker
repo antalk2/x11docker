@@ -10839,7 +10839,8 @@ create_xinitrc() {
                 echo         "cat \"\$Xclientcookie\" >> $Xservercookie"
                 echo         "chmod 644 \"\$Xclientcookie\" "
                 echo         ""
-                echo         "[ -s \"\$Xclientcookie\" ] || error 'xinitrc(): Option --xauth=$Xauthentication: Cookie creation failed.'"
+                echo         "if [ ! -s \"\$Xclientcookie\" ] ; then  error 'xinitrc(): Option --xauth=$Xauthentication: Cookie creation failed.' ; fi"
+
             fi # Xauthentication !== no
 
             echo           "export XAUTHORITY=\$Xclientcookie"
