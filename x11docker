@@ -11015,7 +11015,7 @@ create_xinitrc() {
                      |"
             fi
 
-            [ "$Scaling" ] && {
+            if [ "$Scaling" ] ; then
                 echo         "  # --scale $Scaling"
                 [ "$Screensize" ] && [ "$Scaling" != "1" ] && echo "  note 'Cannot set panning and scaling at the same time.
   Desired screen size $Screensize will be scaled to your monitor size
@@ -11030,7 +11030,7 @@ create_xinitrc() {
                 echo         "  Detected resolution \${CurrentXaxis}x\${CurrentYaxis} instead.\""
                 echo         "  }"
                 echo         ""
-            }
+            fi
 
             [ -n "$Rotation" ] && {
                 echo         "  # --rotate $Rotation"
