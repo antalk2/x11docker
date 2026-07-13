@@ -10659,8 +10659,9 @@ create_xinitrc() {
                      |Storepidfile=$(         $with_Cachefolder "$Storepidfile"           )
                      |Timetosaygoodbyefile=$( $with_Sharefolder "$Timetosaygoodbyefile"   )
                      |Newdisplay='$Newdisplay'
-                     |Xclientcookie=$( $with_Sharefolder $Xclientcookie )
-                     |Xservercookie=$( $with_Cachefolder $Xservercookie )
+                     |Xclientcookie=$( $with_Sharefolder "$Xclientcookie" )
+                     |Xservercookie=$( $with_Cachefolder "$Xservercookie" )
+                     |Xkbkeymapfile=$( $with_Sharefolder "$Xkbkeymapfile" )
                      |"
         #
         # local sed_Sharefolder='sed -e "s|$Sharefolder/|\"\\\$Sharefolder\"/|"'
@@ -10882,18 +10883,21 @@ create_xinitrc() {
                 if [ -n "$Hostdisplay" ] ; then
                     if xtool --check setxkbmap ; then
                         if [ -z "$Xkblayout" ] ; then
-                            #setxkbmap -display "$Hostdisplay" -print >> "$Xkbkeymapfile"
-                            echo "env DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority setxkbmap -display $Hostdisplay -print >> $Xkbkeymapfile"
+                            #setxkbmap -display "$Hostdisplay" -print >> "\$Xkbkeymapfile"
+                            trim_to_bar "|env DISPLAY=$Hostdisplay       \\
+                                         |    XAUTHORITY=$Hostxauthority \\
+                                         |    setxkbmap -display $Hostdisplay -print >> \"\$Xkbkeymapfile\"
+                                         |"
                         else
-                            echo "setxkbmap '$Xkblayout' -print >> $Xkbkeymapfile"
+                            echo "setxkbmap '$Xkblayout' -print >> \"\$Xkbkeymapfile\""
                         fi
                     fi
 
                     [ -s "$Xkbkeymapfile" ] && {
                         echo   "# set keyboard layout on $Newdisplay"
-                        echo   "verbose \"Keyboard layout:"
-                        echo   "\$(cat $Xkbkeymapfile)\""
-                        echo   "xkbcomp $Xkbkeymapfile $Newdisplay"
+                        echo   "NEWLINE=$'\\n'"
+                        echo   "verbose \"Keyboard layout:\${NEWLINE}\$(cat \"\$Xkbkeymapfile\")\""
+                        echo   "xkbcomp \$Xkbkeymapfile $Newdisplay"
                     }
                     echo     ""
                 fi
