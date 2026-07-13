@@ -10946,9 +10946,10 @@ create_xinitrc() {
                          |"
             #
             if [ -z "$Screensize" ] ; then
-                echo         "  getscreensize"
-                echo         "  Xaxis=\"\$CurrentXaxis\""
-                echo         "  Yaxis=\"\$CurrentYaxis\""
+                trim_to_bar "|  getscreensize
+                             |  Xaxis=\"\$CurrentXaxis\"
+                             |  Yaxis=\"\$CurrentYaxis\"
+                             |"
                 #
                 if false ; then
                     [ "$Scaling" ] && echo "  Xaxis=\"\$(awk -v a=\"\$Xaxis\" -v b=\"$Scaling\" 'BEGIN {print (a / b)}')\""
