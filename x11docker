@@ -10834,14 +10834,15 @@ create_xinitrc() {
                                  |fi
                                  |"
 
-                echo         "ls -l \"\$Xclientcookie\" "
-                echo         "truncate -s0 $Xservercookie"
-                echo         "cat \"\$Xclientcookie\" >> $Xservercookie"
-                echo         "chmod 644 \"\$Xclientcookie\" "
-                echo         ""
-                echo         "if [ ! -s \"\$Xclientcookie\" ] ; then"
-                echo         "    error 'xinitrc(): Option --xauth=$Xauthentication: Cookie creation failed.'"
-                echo         "fi"
+                 trim_to_bar    "|ls -l \"\$Xclientcookie\"
+                                 |truncate -s0 $Xservercookie
+                                 |cat \"\$Xclientcookie\" >> $Xservercookie
+                                 |chmod 644 \"\$Xclientcookie\"
+                                 |
+                                 |if [ ! -s \"\$Xclientcookie\" ] ; then
+                                 |    error 'xinitrc(): Option --xauth=$Xauthentication: Cookie creation failed.'
+                                 |fi
+                                 |"
 
             fi # Xauthentication !== no
 
