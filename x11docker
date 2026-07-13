@@ -10886,17 +10886,19 @@ create_xinitrc() {
                 if [ -n "$Hostdisplay" ] ; then
                     #
                     if xtool --check setxkbmap ; then
-                        if [ -z "$Xkblayout" ] ; then
+                        # Create Xkbkeymapfile
+                        if [ -n "$Xkblayout" ] ; then
+                            echo "setxkbmap '$Xkblayout' -print >> \"\$Xkbkeymapfile\""
+                        else
                             #setxkbmap -display "$Hostdisplay" -print >> "\$Xkbkeymapfile"
                             trim_to_bar "|env DISPLAY=$Hostdisplay       \\
                                          |    XAUTHORITY=$Hostxauthority \\
                                          |    setxkbmap -display $Hostdisplay -print >> \"\$Xkbkeymapfile\"
                                          |"
-                        else
-                            echo "setxkbmap '$Xkblayout' -print >> \"\$Xkbkeymapfile\""
                         fi
                     fi
 
+                    # If Xkbkeymapfile is available, load it.
                     trim_to_bar "|if [ -s \"\$Xkbkeymapfile\" ] ; then
                                  |    # set keyboard layout on \$Newdisplay
                                  |    NEWLINE=$'\\n'
@@ -10910,126 +10912,132 @@ create_xinitrc() {
     esac
     echo "# end case Xserver (1)"
 
-  case "$Xserver" in
-    --xpra|--xpra2|--xvfb|--weston-xwayland|--xwayland)
-      echo           "# create set of different screen resolutions"
-      echo           "[ -e \"$Modelinefile\" ] && while read Line; do"
-      echo           "  Line=\"\$(echo \"\$Line\" | sed 's/Modeline//g')\""
-      echo           "  Line=\"\$(echo \"\$Line\" | sed 's/\"//g')\""
-      echo           "  xrandr --newmode \$Line 2>/dev/null"
-      echo           "  xrandr --addmode \"\$Output\" \$(echo \$Line | cut -d' ' -f1) 2>/dev/null"
-      echo           "done < \"$Modelinefile\""
-      [ -n "$Modeline" ] && {
-        echo         "xrandr --newmode $Modeline"
-        echo         "xrandr --addmode \$Output $(echo $Modeline | cut -d " " -f1)"
-        [ "$Xserver" != "--xvfb" ] && [ "$Desktopmode" = "yes" ] && echo "xrandr --output  \$Output --mode $(echo $Modeline | cut -d " " -f1)"
-      }
-      echo           ""
-    ;;
-    --xorg) # --xorg: --scale, --size, --rotate
-      echo           "# determine screen size"
-      echo           '[ -n "$(xrandr | grep connected | grep -v disconnected)" ] && {'
-      [ -z "$Screensize" ] && {
-        echo         "  getscreensize"
-        echo         "  Xaxis=\"\$CurrentXaxis\""
-        echo         "  Yaxis=\"\$CurrentYaxis\""
-        #
-        if false ; then
-            [ "$Scaling" ] && echo "  Xaxis=\"\$(awk -v a=\"\$Xaxis\" -v b=\"$Scaling\" 'BEGIN {print (a / b)}')\""
-            echo         "  Xaxis=\"\${Xaxis%.*}\""
-            [ "$Scaling" ] && echo "  Yaxis=\"\$(awk -v a=\"\$Yaxis\" -v b=\"$Scaling\" 'BEGIN {print (a / b)}')\""
-            echo         "  Yaxis=\"\${Yaxis%.*}\""
-        else
-            [ "$Scaling" ] && echo "  Xaxis=\"\$( calculate_floor_a_per_b \"\$Xaxis\" \"$Scaling\" )\""
-            [ "$Scaling" ] && echo "  Yaxis=\"\$( calculate_floor_a_per_b \"\$Yaxis\" \"$Scaling\" )\""
-            # # The following should not be necessary if Xaxis and Yaxis are already integers.
-            # echo         "  Xaxis=\"\${Xaxis%.*}\""
-            # echo         "  Yaxis=\"\${Yaxis%.*}\""
-        fi
-        #
-      } || {
-        echo         "  Xaxis='$Xaxis'"
-        echo         "  Yaxis='$Yaxis'"
-      }
-      echo           "  Screensize=\"\${Xaxis}x\${Yaxis}\""
-      echo           ""
+    # begin case Xserver (2)
+    case "$Xserver" in
 
-      [ "$Screensize" ] && [ -z "$Scaling" ] && {
-        echo         "  # Switch to desired screen size $Screensize"
-        echo         "  [ -n \"\$(xrandr | grep \$Screensize)\" ] && { "
-        echo         "    note \"Will try to set native resolution \$Screensize."
-        echo         "  If that looks ugly, use --scale=1 to enforce a fake scaled resolution.\""
-        echo         "    xrandr --output \$Output --mode \$Screensize"
-        echo         "  } || note \"Resolution \$Screensize not found in xrandr.\""
-        echo         ""
-      }
+        --xpra|--xpra2|--xvfb|--weston-xwayland|--xwayland)
 
-      [ "$Screensize" ] && [ -z "$Scaling" ] && {
-        echo         "  checkscreensize || {"
-        echo         "    note \"Panning \$Screensize. If virtual screen is greater than "
-        echo         "  maximal screen size, you can move virtual screen with mouse at screen edges."
-        echo         "  You can force the virtual screen to match your monitor with option --scale=1\""
-        echo         "    xrandr --output \$Output --panning \$Screensize+0+0/\$Screensize+0+0/100/100/100/100 --verbose"
-        echo         '  }'
-        echo         "  checkscreensize || {"
-        echo         "    note 'Panning failed, trying to scale instead.'"
-        echo         "    xrandr --output \$Output --scale-from \$Screensize --panning \$Screensize+0+0/\$Screensize+0+0"
-        echo         "    checkscreensize && note \"Successfully set screen size \$Screensize\""
-        echo         '  }'
-        echo         "  checkscreensize || {"
-        echo         "    getscreensize"
-        echo         "    note \"Setting desired resolution \$Screensize failed."
-        echo         "  Fallback: Will use detected \${CurrentXaxis}x\${CurrentYaxis} instead.\""
-        echo         '  }'
-        echo         ""
-      }
+            echo           "# create set of different screen resolutions"
+            echo           "[ -e \"$Modelinefile\" ] && while read Line; do"
+            echo           "  Line=\"\$(echo \"\$Line\" | sed 's/Modeline//g')\""
+            echo           "  Line=\"\$(echo \"\$Line\" | sed 's/\"//g')\""
+            echo           "  xrandr --newmode \$Line 2>/dev/null"
+            echo           "  xrandr --addmode \"\$Output\" \$(echo \$Line | cut -d' ' -f1) 2>/dev/null"
+            echo           "done < \"$Modelinefile\""
 
-      [ "$Scaling" ] && {
-        echo         "  # --scale $Scaling"
-        [ "$Screensize" ] && [ "$Scaling" != "1" ] && echo "  note 'Cannot set panning and scaling at the same time.
+            [ -n "$Modeline" ] && {
+                echo         "xrandr --newmode $Modeline"
+                echo         "xrandr --addmode \$Output $(echo $Modeline | cut -d " " -f1)"
+                [ "$Xserver" != "--xvfb" ] && [ "$Desktopmode" = "yes" ] && echo "xrandr --output  \$Output --mode $(echo $Modeline | cut -d " " -f1)"
+            }
+            echo           ""
+            ;;
+
+        --xorg) # --xorg: --scale, --size, --rotate
+            echo           "# determine screen size"
+            echo           '[ -n "$(xrandr | grep connected | grep -v disconnected)" ] && {'
+            [ -z "$Screensize" ] && {
+                echo         "  getscreensize"
+                echo         "  Xaxis=\"\$CurrentXaxis\""
+                echo         "  Yaxis=\"\$CurrentYaxis\""
+                #
+                if false ; then
+                    [ "$Scaling" ] && echo "  Xaxis=\"\$(awk -v a=\"\$Xaxis\" -v b=\"$Scaling\" 'BEGIN {print (a / b)}')\""
+                    echo         "  Xaxis=\"\${Xaxis%.*}\""
+                    [ "$Scaling" ] && echo "  Yaxis=\"\$(awk -v a=\"\$Yaxis\" -v b=\"$Scaling\" 'BEGIN {print (a / b)}')\""
+                    echo         "  Yaxis=\"\${Yaxis%.*}\""
+                else
+                    [ "$Scaling" ] && echo "  Xaxis=\"\$( calculate_floor_a_per_b \"\$Xaxis\" \"$Scaling\" )\""
+                    [ "$Scaling" ] && echo "  Yaxis=\"\$( calculate_floor_a_per_b \"\$Yaxis\" \"$Scaling\" )\""
+                    # # The following should not be necessary if Xaxis and Yaxis are already integers.
+                    # echo         "  Xaxis=\"\${Xaxis%.*}\""
+                    # echo         "  Yaxis=\"\${Yaxis%.*}\""
+                fi
+                #
+            } || {
+                echo         "  Xaxis='$Xaxis'"
+                echo         "  Yaxis='$Yaxis'"
+            }
+            echo           "  Screensize=\"\${Xaxis}x\${Yaxis}\""
+            echo           ""
+
+            [ "$Screensize" ] && [ -z "$Scaling" ] && {
+                echo         "  # Switch to desired screen size $Screensize"
+                echo         "  [ -n \"\$(xrandr | grep \$Screensize)\" ] && { "
+                echo         "    note \"Will try to set native resolution \$Screensize."
+                echo         "  If that looks ugly, use --scale=1 to enforce a fake scaled resolution.\""
+                echo         "    xrandr --output \$Output --mode \$Screensize"
+                echo         "  } || note \"Resolution \$Screensize not found in xrandr.\""
+                echo         ""
+            }
+
+            [ "$Screensize" ] && [ -z "$Scaling" ] && {
+                echo         "  checkscreensize || {"
+                echo         "    note \"Panning \$Screensize. If virtual screen is greater than "
+                echo         "  maximal screen size, you can move virtual screen with mouse at screen edges."
+                echo         "  You can force the virtual screen to match your monitor with option --scale=1\""
+                echo         "    xrandr --output \$Output --panning \$Screensize+0+0/\$Screensize+0+0/100/100/100/100 --verbose"
+                echo         '  }'
+                echo         "  checkscreensize || {"
+                echo         "    note 'Panning failed, trying to scale instead.'"
+                echo         "    xrandr --output \$Output --scale-from \$Screensize --panning \$Screensize+0+0/\$Screensize+0+0"
+                echo         "    checkscreensize && note \"Successfully set screen size \$Screensize\""
+                echo         '  }'
+                echo         "  checkscreensize || {"
+                echo         "    getscreensize"
+                echo         "    note \"Setting desired resolution \$Screensize failed."
+                echo         "  Fallback: Will use detected \${CurrentXaxis}x\${CurrentYaxis} instead.\""
+                echo         '  }'
+                echo         ""
+            }
+
+            [ "$Scaling" ] && {
+                echo         "  # --scale $Scaling"
+                [ "$Screensize" ] && [ "$Scaling" != "1" ] && echo "  note 'Cannot set panning and scaling at the same time.
   Desired screen size $Screensize will be scaled to your monitor size
   for arbitrary values you may provide with option --scale.'"
-        echo         "  # Scaling $Scaling"
-        echo         "  note \"Setting scaled resolution \$Screensize\" with scale factor $Scaling."
-        # must use --scale-from and --panning because --scale causes mouse barriers/crtc-boundaries
-        echo         "  xrandr --output \$Output --scale-from \$Screensize --panning \$Screensize+0+0/\$Screensize+0+0 --verbose"
-        echo         "  checkscreensize || {"
-        echo         "    getscreensize"
-        echo         "    note \"Setting desired resolution \$Screensize failed."
-        echo         "  Detected resolution \${CurrentXaxis}x\${CurrentYaxis} instead.\""
-        echo         "  }"
-        echo         ""
-      }
+                echo         "  # Scaling $Scaling"
+                echo         "  note \"Setting scaled resolution \$Screensize\" with scale factor $Scaling."
+                # must use --scale-from and --panning because --scale causes mouse barriers/crtc-boundaries
+                echo         "  xrandr --output \$Output --scale-from \$Screensize --panning \$Screensize+0+0/\$Screensize+0+0 --verbose"
+                echo         "  checkscreensize || {"
+                echo         "    getscreensize"
+                echo         "    note \"Setting desired resolution \$Screensize failed."
+                echo         "  Detected resolution \${CurrentXaxis}x\${CurrentYaxis} instead.\""
+                echo         "  }"
+                echo         ""
+            }
 
-      [ -n "$Rotation" ] && {
-        echo         "  # --rotate $Rotation"
-        echo         "  verbose 'Rotation $Rotation'"
-        case "$Rotation" in
-          0|normal)    Rotation="" ;;
-          90)          Rotation="--rotate right";;
-          180)         Rotation="--reflect xy" ;;
-          270)         Rotation="--rotate left";;
-          flipped)     Rotation="--reflect y";;
-          flipped-90)  Rotation="--rotate right --reflect x";;
-          flipped-180) Rotation="--reflect x";;
-          flipped-270) Rotation="--rotate left --reflect x";;
-        esac
-        echo         "  bash -c 'while read Line ; do xrandr --output \$Line $Rotation ; done < <(xrandr | grep \" connected\" | cut -d \" \" -f1)'"
-        echo         ""
-      }
-      echo           "  :"
-      echo           "} || {"
-      echo           "  Xaxis=${Xaxis:-1024}"
-      echo           "  Yaxis=${Yaxis:-768}"
-      echo           "  Screensize=\"\${Xaxis}x\${Yaxis}\""
-      echo           "  note \"Could not detect any connected monitor."
-      echo           "  Running on a server? Is xrandr installed? Will try to set a framebuffer size"
-      echo           "  with \"xrandr --fb \$Screensize\" that may serve as a virtual display.\""
-      echo           "  xrandr --fb \$Screensize"
-      echo           "}"
-      echo           ""
-    ;;
-  esac
+            [ -n "$Rotation" ] && {
+                echo         "  # --rotate $Rotation"
+                echo         "  verbose 'Rotation $Rotation'"
+                case "$Rotation" in
+                    0|normal)    Rotation="" ;;
+                    90)          Rotation="--rotate right";;
+                    180)         Rotation="--reflect xy" ;;
+                    270)         Rotation="--rotate left";;
+                    flipped)     Rotation="--reflect y";;
+                    flipped-90)  Rotation="--rotate right --reflect x";;
+                    flipped-180) Rotation="--reflect x";;
+                    flipped-270) Rotation="--rotate left --reflect x";;
+                esac
+                echo         "  bash -c 'while read Line ; do xrandr --output \$Line $Rotation ; done < <(xrandr | grep \" connected\" | cut -d \" \" -f1)'"
+                echo         ""
+            }
+            echo           "  :"
+            echo           "} || {"
+            echo           "  Xaxis=${Xaxis:-1024}"
+            echo           "  Yaxis=${Yaxis:-768}"
+            echo           "  Screensize=\"\${Xaxis}x\${Yaxis}\""
+            echo           "  note \"Could not detect any connected monitor."
+            echo           "  Running on a server? Is xrandr installed? Will try to set a framebuffer size"
+            echo           "  with \"xrandr --fb \$Screensize\" that may serve as a virtual display.\""
+            echo           "  xrandr --fb \$Screensize"
+            echo           "}"
+            echo           ""
+            ;;
+
+    esac # end case Xserver (2)
 
   [ -n "$Newdisplay" ] && echo "verbose \"Output of xrandr on $Newdisplay
 \$(xrandr)\""
