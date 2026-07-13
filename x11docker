@@ -10867,9 +10867,12 @@ create_xinitrc() {
                 fi
                 #
                 if [ -n "$Xhost" ] ; then
-                    [ "$Xhost" = "auto" ] && Xhost="+SI:localuser:$Containeruser"
-                    echo     "warning \"Option --xhost: Running 'xhost $Xhost' on $Newdisplay\""
-                    echo     "xhost $Xhost"
+                    if [ "$Xhost" = "auto" ] ; then
+                        Xhost="+SI:localuser:$Containeruser"
+                    fi
+                    trim_to_bar "|warning \"Option --xhost: Running 'xhost $Xhost' on $Newdisplay\"
+                                 |xhost $Xhost
+                                 |"
                 fi
                 echo       ""
             fi
