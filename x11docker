@@ -10882,10 +10882,10 @@ create_xinitrc() {
                 if [ -n "$Hostdisplay" ] ; then
                     if xtool --check setxkbmap ; then
                         if [ -z "$Xkblayout" ] ; then
-                                #setxkbmap -display "$Hostdisplay" -print >> "$Xkbkeymapfile"
-                                echo "env DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority setxkbmap -display $Hostdisplay -print >> $Xkbkeymapfile"
-                            else
-                                echo "setxkbmap '$Xkblayout' -print >> $Xkbkeymapfile"
+                            #setxkbmap -display "$Hostdisplay" -print >> "$Xkbkeymapfile"
+                            echo "env DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority setxkbmap -display $Hostdisplay -print >> $Xkbkeymapfile"
+                        else
+                            echo "setxkbmap '$Xkblayout' -print >> $Xkbkeymapfile"
                         fi
                     fi
 
