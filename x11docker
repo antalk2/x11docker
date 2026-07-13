@@ -10857,14 +10857,11 @@ create_xinitrc() {
             if [ "$Xserver" != "--hostdisplay" ] ; then
                 # do not change host settings (if --hostdisplay_
                 if case_match "$Xauthentication" 'yes|trusted|untrusted' ; then
-                    case "$Xserver" in
-                        runx) ;;
-                        *)
+                    if [ "$Xserver" != 'runx' ] ; then
                             echo "# clean xhost"
                             echo "verbose 'Disabling any possible access to new X server possibly granted by xhost'"
                             echo "disable_X_access_via_xhost"
-                            ;;
-                    esac
+                    fi
                 fi
                 [ -n "$Xhost" ] && {
                     [ "$Xhost" = "auto" ] && Xhost="+SI:localuser:$Containeruser"
