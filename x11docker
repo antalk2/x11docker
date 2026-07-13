@@ -10799,7 +10799,8 @@ create_xinitrc() {
                     trim_to_bar "|if [ ! -s \"\$Xclientcookie\" ] ; then
                                  |  if [ -n \"\$Hostcookie\" ] ; then
                                  |    debugnote_ttm '|xinitrc() --hostdisplay: Failed to retrieve cookie from X server.
-                                 |                   |  Maybe your X server misses extension SECURITY. Will bake one with host cookie.'
+                                 |                   |  Maybe your X server misses extension SECURITY.
+                                 |                   : Will bake one with host cookie.'
                                  |    #
                                  |    xauth -v -n -i -f \"\$Xclientcookie\" add :$Newdisplaynumber . \$Hostcookie
                                  |  fi
