@@ -10999,8 +10999,12 @@ create_xinitrc() {
                      |
                      |  if ! checkscreensize ; then
                      |    note 'Panning failed, trying to scale instead.'
-                     |    xrandr --output \$Output --scale-from \$Screensize --panning \$Screensize+0+0/\$Screensize+0+0
-                     |    checkscreensize && note \"Successfully set screen size \$Screensize\"
+                     |
+                     |    xrandr --output \$Output                           \\
+                     |           --scale-from \$Screensize                   \\
+                     |           --panning \$Screensize+0+0/\$Screensize+0+0
+                     |
+                     |    if checkscreensize ; then note \"Successfully set screen size \$Screensize\" ; fi
                      |  fi
                      |
                      |  if ! checkscreensize ; then
