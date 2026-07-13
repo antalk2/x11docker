@@ -10897,13 +10897,13 @@ create_xinitrc() {
                         fi
                     fi
 
-                    if [ -s "$Xkbkeymapfile" ] ; then
-                        echo   "# set keyboard layout on \$Newdisplay"
-                        echo   "NEWLINE=$'\\n'"
-                        echo   "verbose \"Keyboard layout:\${NEWLINE}\$(cat \"\$Xkbkeymapfile\")\""
-                        echo   "xkbcomp \$Xkbkeymapfile \"\$Newdisplay\""
-                    fi
-                    echo     ""
+                    trim_to_bar "|if [ -s \"\$Xkbkeymapfile\" ] ; then
+                                 |    # set keyboard layout on \$Newdisplay
+                                 |    NEWLINE=$'\\n'
+                                 |    verbose \"Keyboard layout:\${NEWLINE}\$(cat \"\$Xkbkeymapfile\")\"
+                                 |    xkbcomp \$Xkbkeymapfile \"\$Newdisplay\"
+                                 |fi
+                                 |"
                 fi
             fi
             ;;
