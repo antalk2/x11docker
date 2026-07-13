@@ -10881,15 +10881,12 @@ create_xinitrc() {
                 echo       "# Keyboard layout"
                 if [ -n "$Hostdisplay" ] ; then
                     if xtool --check setxkbmap ; then
-                        case "$Xkblayout" in
-                            "") 
+                        if [ -z "$Xkblayout" ] ; then
                                 #setxkbmap -display "$Hostdisplay" -print >> "$Xkbkeymapfile"
                                 echo "env DISPLAY=$Hostdisplay XAUTHORITY=$Hostxauthority setxkbmap -display $Hostdisplay -print >> $Xkbkeymapfile"
-                                ;;
-                            *)
+                            else
                                 echo "setxkbmap '$Xkblayout' -print >> $Xkbkeymapfile"
-                                ;;
-                        esac
+                        fi
                     fi
 
                     [ -s "$Xkbkeymapfile" ] && {
