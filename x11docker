@@ -10944,7 +10944,8 @@ create_xinitrc() {
             trim_to_bar "|# determine screen size
                          |[ -n \"\$(xrandr | grep connected | grep -v disconnected)\" ] && {
                          |"
-            [ -z "$Screensize" ] && {
+            #
+            if [ -z "$Screensize" ] ; then
                 echo         "  getscreensize"
                 echo         "  Xaxis=\"\$CurrentXaxis\""
                 echo         "  Yaxis=\"\$CurrentYaxis\""
@@ -10962,10 +10963,10 @@ create_xinitrc() {
                     # echo         "  Yaxis=\"\${Yaxis%.*}\""
                 fi
                 #
-            } || {
+            else
                 echo         "  Xaxis='$Xaxis'"
                 echo         "  Yaxis='$Yaxis'"
-            }
+            fi
             echo           "  Screensize=\"\${Xaxis}x\${Yaxis}\""
             echo           ""
 
