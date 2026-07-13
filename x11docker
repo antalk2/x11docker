@@ -10855,13 +10855,14 @@ create_xinitrc() {
                             |"
 
             if [ "$Xserver" != "--hostdisplay" ] ; then
-                # do not change host settings (if --hostdisplay_
-                if case_match "$Xauthentication" 'yes|trusted|untrusted' ; then
-                    if [ "$Xserver" != 'runx' ] ; then
-                            echo "# clean xhost"
-                            echo "verbose 'Disabling any possible access to new X server possibly granted by xhost'"
-                            echo "disable_X_access_via_xhost"
-                    fi
+                # Do not change host settings (if --hostdisplay)
+                #
+                if case_match "$Xauthentication" 'yes|trusted|untrusted' \
+                && [ "$Xserver" != 'runx' ]                              ;
+                then
+                    echo "# clean xhost"
+                    echo "verbose 'Disabling any possible access to new X server possibly granted by xhost'"
+                    echo "disable_X_access_via_xhost"
                 fi
                 [ -n "$Xhost" ] && {
                     [ "$Xhost" = "auto" ] && Xhost="+SI:localuser:$Containeruser"
