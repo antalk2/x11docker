@@ -10807,11 +10807,13 @@ create_xinitrc() {
                                  |fi
                                  |"
                 }
-                echo         "[ -s \"\$Xclientcookie\" ] || { "
+                
+                echo         "if [ ! -s \"\$Xclientcookie\" ] ; then"
                 echo         "  # still no cookie? try to create one without extension security"
                 echo         "  debugnote 'xinitrc(): Failed to retrieve trusted cookie from X server. Will bake one directly with xauth'"
                 echo         "  xauth -v -n -i -f \"\$Xclientcookie\" add :$Newdisplaynumber . $(makecookie)"
-                echo         "}"
+                echo         "fi"
+                
                 echo         "[ -s \"\$Xclientcookie\" ] && {"
                 echo         "  # Prepare cookie with localhost identification disabled by ffff, needed if X socket is shared. ffff means 'familiy wild'"
                 echo         "  Cookie=\"\$(xauth -n -i -f \"\$Xclientcookie\" nlist | sed -e 's/^..../ffff/')\""
