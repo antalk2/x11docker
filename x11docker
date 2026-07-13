@@ -10951,18 +10951,11 @@ create_xinitrc() {
                              |  Yaxis=\"\$CurrentYaxis\"
                              |"
                 #
-                if false ; then
-                    [ "$Scaling" ] && echo "  Xaxis=\"\$(awk -v a=\"\$Xaxis\" -v b=\"$Scaling\" 'BEGIN {print (a / b)}')\""
-                    echo         "  Xaxis=\"\${Xaxis%.*}\""
-                    [ "$Scaling" ] && echo "  Yaxis=\"\$(awk -v a=\"\$Yaxis\" -v b=\"$Scaling\" 'BEGIN {print (a / b)}')\""
-                    echo         "  Yaxis=\"\${Yaxis%.*}\""
-                else
-                    [ "$Scaling" ] && echo "  Xaxis=\"\$( calculate_floor_a_per_b \"\$Xaxis\" \"$Scaling\" )\""
-                    [ "$Scaling" ] && echo "  Yaxis=\"\$( calculate_floor_a_per_b \"\$Yaxis\" \"$Scaling\" )\""
-                    # # The following should not be necessary if Xaxis and Yaxis are already integers.
-                    # echo         "  Xaxis=\"\${Xaxis%.*}\""
-                    # echo         "  Yaxis=\"\${Yaxis%.*}\""
-                fi
+                [ "$Scaling" ] && echo "  Xaxis=\"\$( calculate_floor_a_per_b \"\$Xaxis\" \"$Scaling\" )\""
+                [ "$Scaling" ] && echo "  Yaxis=\"\$( calculate_floor_a_per_b \"\$Yaxis\" \"$Scaling\" )\""
+                # # The following should not be necessary if Xaxis and Yaxis are already integers.
+                # echo         "  Xaxis=\"\${Xaxis%.*}\""
+                # echo         "  Yaxis=\"\${Yaxis%.*}\""
                 #
             else
                 echo         "  Xaxis='$Xaxis'"
