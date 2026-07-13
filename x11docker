@@ -7488,7 +7488,7 @@ check_xdepends() {
     local xdepends_message_ttm="check_xdepends_HELPER_xdepends_message_ttm"
 
     #
-    # function check_command_generic(
+    # function check_xdepends_HELPER_check_command_generic(
     #         test_type={command|xtool}, the_Message_fun, the_X_option, the_command, the_message_cont
     # )
     #
@@ -7499,9 +7499,9 @@ check_xdepends() {
     #  The whole message is passed through trim_to_mark: starting the_message_cont with ":"
     #  erases the preceding NEWLINE, starting with "|" keeps it.
     #
-    # check_command_generic "note" "--xpra" "xpra" "|  $Wikipackagesimage" || Return=1
+    # check_xdepends_HELPER_check_command_generic "note" "--xpra" "xpra" "|  $Wikipackagesimage" || Return=1
     #
-    check_command_generic() {
+    check_xdepends_HELPER_check_command_generic() {
         local test_type="${1:-MISSING}"
         local the_Message_fun="${2:-MISSING}"
         local the_X_option="${3:-MISSING}"
@@ -7544,33 +7544,34 @@ check_xdepends() {
         fi
     }
     #
-    # function check_command_xdepends( the_command, the_message_cont )
+    # function check_xdepends_HELPER_check_command_xdepends( the_command, the_message_cont )
     #
-    #  Calls `check_command_generic`  with
+    #  Calls `check_xdepends_HELPER_check_command_generic`  with
     #        test_type       = "command"
     #        the_Message_fun = "${Message}"            and
     #        the_X_option    = "${X_option_to_check}"  picked up from the caller.
     #
-    # check_command_xdepends "xpra" "|  $Wikipackagesimage" || Return=1
+    # check_xdepends_HELPER_check_command_xdepends "xpra" "|  $Wikipackagesimage" || Return=1
     #
-    check_command_xdepends() {
-        check_command_generic "command" "${Message}" "${X_option_to_check}" "${1}" "${2}"
+    check_xdepends_HELPER_check_command_xdepends() {
+        check_xdepends_HELPER_check_command_generic "command" "${Message}" "${X_option_to_check}" "${1}" "${2}"
     }
     #
-    # function check_xtool_xdepends( the_command, the_message_cont )
+    # function check_xdepends_HELPER_check_xtool_xdepends( the_command, the_message_cont )
     #
-    #  Calls `check_command_generic`  with
+    #  Calls `check_xdepends_HELPER_check_command_generic`  with
     #        test_type       = "xtool"
     #        the_Message_fun = "${Message}"            and
     #        the_X_option    = "${X_option_to_check}"  picked up from the caller.
     #
-    # check_command_xdepends "xpra" "|  $Wikipackagesimage" || Return=1
+    # check_xdepends_HELPER_check_command_xdepends "xpra" "|  $Wikipackagesimage" || Return=1
     #
-    check_xtool_xdepends() {
-        check_command_generic "xtool"   "${Message}" "${X_option_to_check}" "${1}" "${2}"
+    check_xdepends_HELPER_check_xtool_xdepends() {
+        check_xdepends_HELPER_check_command_generic "xtool"   "${Message}" "${X_option_to_check}" "${1}" "${2}"
     }
     # ----------------------------------------
-
+    local check_command_xdepends="check_xdepends_HELPER_check_command_xdepends"
+    local check_xtool_xdepends="check_xdepends_HELPER_check_xtool_xdepends"
     #
     # Set Xcopt to yes if "${X_option_to_check}"
     #                     appears in "$Xcontaineroptions_normal  --hostdisplay"
@@ -7645,7 +7646,7 @@ check_xdepends() {
         --xephyr   | --xpra      | --xpra-xwayland   | --nxagent       | --xvfb | \
         --xwayland | --satellite | --weston-xwayland | --kwin-xwayland | --xorg )
             #
-            if ! check_xtool_xdepends "xinit" "|  $Wikipackagesimage" ;
+            if ! $check_xtool_xdepends "xinit" "|  $Wikipackagesimage" ;
             then Return=1 ; fi
             #
             ;;
@@ -7666,34 +7667,34 @@ check_xdepends() {
     if [ -z "$Xcopt" ] ; then
         case "${X_option_to_check}" in
             --xpra)
-                if  ! check_command_xdepends "xpra" "|  $Wikipackagesimage"  \
-                ||  ! check_command_xdepends "Xvfb" "|  $Wikipackagesimage"  ;
+                if  ! $check_command_xdepends "xpra" "|  $Wikipackagesimage"  \
+                ||  ! $check_command_xdepends "Xvfb" "|  $Wikipackagesimage"  ;
                 then Return=1 ; fi
                 ;;
             --xpra-xwayland)
-                if ! check_command_xdepends "xpra" "|  $Wikipackagesimage" ;
+                if ! $check_command_xdepends "xpra" "|  $Wikipackagesimage" ;
                 then Return=1 ; fi
                 ;;
             --xephyr)
-                if ! check_command_xdepends "Xephyr" "|  $Wikipackagesimage" ;
+                if ! $check_command_xdepends "Xephyr" "|  $Wikipackagesimage" ;
                 then Return=1 ; fi
                 ;;
             --nxagent)
-                if ! check_command_xdepends "nxagent" "|  $Wikipackagesimage" ;
+                if ! $check_command_xdepends "nxagent" "|  $Wikipackagesimage" ;
                 then Return=1 ; fi
                 ;;
             --xvfb)
-                if ! check_command_xdepends "Xvfb" "|  $Wikipackagesimage" ;
+                if ! $check_command_xdepends "Xvfb" "|  $Wikipackagesimage" ;
                 then Return=1 ; fi
                 ;;
             --xorg)
-                if ! check_command_xdepends "Xorg" "|  $Wikipackages" ;
+                if ! $check_command_xdepends "Xorg" "|  $Wikipackages" ;
                 then Return=1 ; fi
                 ;;
             --xwin)
                 case "$Winsubsystem" in
                     CYGWIN)
-                        if ! check_command_xdepends "XWin"               \
+                        if ! $check_command_xdepends "XWin"               \
                              "|  Need packages 'xinit', 'xauth'
                               : and 'xwininfo' in Cygwin (X11 section)." ;
                         then Return=1 ; fi
@@ -7719,7 +7720,7 @@ check_xdepends() {
                         ;;
                 esac
                 #
-                if ! check_command_xdepends "xwininfo" \
+                if ! $check_command_xdepends "xwininfo" \
                      ": Need 'xwininfo' package from Cygwin/X (X11 section)." ;
                 then Return=1 ; fi
                 #
@@ -7736,7 +7737,7 @@ check_xdepends() {
                     Return=1
                 }
                 #
-                if ! check_command_xdepends "runx" \
+                if ! $check_command_xdepends "runx" \
                      ": Need runx from https://github.com/mviereck/runx" ;
                 then Return=1 ; fi
                 #
@@ -7748,11 +7749,11 @@ check_xdepends() {
     if [ -z "$Xcopt" ] ; then
         case "${X_option_to_check}" in
             --weston|--xpra-xwayland|--weston-xwayland)
-                if ! check_command_xdepends "weston" "|  $Wikipackagesimage" ;
+                if ! $check_command_xdepends "weston" "|  $Wikipackagesimage" ;
                 then Return=1 ; fi
                 ;;
             --kwin|--kwin-xwayland)
-                if ! check_command_xdepends "kwin_wayland" "|  $Wikipackagesimage" ;
+                if ! $check_command_xdepends "kwin_wayland" "|  $Wikipackagesimage" ;
                 then Return=1 ; fi
                 ;;
         esac
@@ -7761,7 +7762,7 @@ check_xdepends() {
     if [ -z "$Xcopt" ] ; then
         case "${X_option_to_check}" in
             --xpra-xwayland|--weston-xwayland|--kwin-xwayland|--xwayland)
-                if ! check_command_xdepends "Xwayland" "|  $Wikipackagesimage" ;
+                if ! $check_command_xdepends "Xwayland" "|  $Wikipackagesimage" ;
                 then Return=1 ; fi
                 ;;
         esac
@@ -7770,7 +7771,7 @@ check_xdepends() {
     if [ -z "$Xcopt" ] ; then
         case "${X_option_to_check}" in
             --satellite)
-                if ! check_command_xdepends "xwayland-satellite" "|  $Wikipackagesimage" ;
+                if ! $check_command_xdepends "xwayland-satellite" "|  $Wikipackagesimage" ;
                 then Return=1 ; fi
                 ;;
         esac
@@ -7779,7 +7780,7 @@ check_xdepends() {
     case "${X_option_to_check}" in
         --xpra-xwayland)
             #
-            if ! check_xtool_xdepends "xdotool" "|  $Wikipackagesimage" ;
+            if ! $check_xtool_xdepends "xdotool" "|  $Wikipackagesimage" ;
             then Return=1 ; fi
             ;;
     esac
@@ -8048,7 +8049,7 @@ check_xdepends() {
     # --xeyes
     [ "$Xeyes" = "yes" ] && {
         #
-        if ! check_xtool_xdepends "xeyes" \
+        if ! $check_xtool_xdepends "xeyes" \
              "|  Please install 'xeyes' for option --xeyes.
               |  $Wikipackagesimage"            ;
         then Return=1 ; fi
@@ -8065,7 +8066,7 @@ check_xdepends() {
     # --xlogo
     [ "$Xlogo" = "yes" ] && {
         #
-        if ! check_xtool_xdepends "xlogo" \
+        if ! $check_xtool_xdepends "xlogo" \
              "|  Please install 'xlogo' for option --xlogo.
               |  $Wikipackagesimage"   ;
         then Return=1 ; fi
@@ -8082,7 +8083,7 @@ check_xdepends() {
     # --xfishtank
     [ "$Xfishtank" = "yes" ] && {
         #
-        if ! check_xtool_xdepends "xfishtank" \
+        if ! $check_xtool_xdepends "xfishtank" \
              ": Can not show a fish tank.
               |  Please install 'xfishtank' for option --xfishtank to show a fish tank.
               |  $Wikipackagesimage" ;
@@ -8119,7 +8120,7 @@ check_xdepends() {
                             ;;
                         no)
                              # Xserver_in_check_xdepends
-                            if ! check_command_xdepends "socat" \
+                            if ! $check_command_xdepends "socat" \
                                  "|${X_option_to_check} --xoverip ${X_option_to_check} needs socat.
                                   |  $Wikipackagesimage" ;
                             then Return=1 ; fi
