@@ -11642,8 +11642,17 @@ xtool() {
         return 1
     fi
 
+    #
+    # At this point, either Usexcontainer and have_command, or
+    # ! Usexcontainer and passed the
+    #
+    #         word_is_in "$Tool" "$Xcontainertools"
+    #
+    # test above.
+    #
+
     if [ "$Check" = "yes" ] ; then
-        # Only cheking
+        # Only checking
         return 0
     fi
 
