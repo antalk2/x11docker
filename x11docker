@@ -10570,10 +10570,11 @@ create_xinitrc() {
     #
     case "$Xcontainer_option" in
         yes)
-            echo           "storepid() { : ; }"
-            echo           "unpriv() {"
-            echo           '  eval "${1:-}"'
-            echo           "}"
+            trim_to_bar '|storepid() { : ; }
+                         |unpriv() {
+                         |  eval "${1:-}"
+                         |}
+                         |'
             ;;
         no)
             declare -f storepid
