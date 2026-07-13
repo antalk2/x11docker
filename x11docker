@@ -11034,8 +11034,8 @@ create_xinitrc() {
                               |
                               |  if ! checkscreensize ; then
                               |    getscreensize
-                              |    note \"Setting desired resolution \$Screensize failed.
-                              |  Detected resolution \${CurrentXaxis}x\${CurrentYaxis} instead.\"
+                              |    note_ttm \"|Setting desired resolution \$Screensize failed.
+                              |               |  Detected resolution \${CurrentXaxis}x\${CurrentYaxis} instead.\"
                               |  fi
                               |"
                 #
