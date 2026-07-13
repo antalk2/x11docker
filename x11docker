@@ -10710,15 +10710,20 @@ create_xinitrc() {
                              |export $Newxenv"
             #
             if [ "$Xoverip" = "socat" ] ; then
-                if [ -n "$Xcnetworkid" ] ; then
-                    echo "echo \"socat -d TCP-LISTEN:$((6000+Newdisplaynumber)),fork,bind=$Xcontainername UNIX-CONNECT:$Newxsocket\""
-                    echo        "socat -d TCP-LISTEN:$((6000+Newdisplaynumber)),fork,bind=$Xcontainername UNIX-CONNECT:$Newxsocket &"
-                else
-                    echo "echo \"socat -d TCP-LISTEN:$((6000+Newdisplaynumber)),fork,bind=${Xcontainerip:-$Hostip} UNIX-CONNECT:$Newxsocket\""
-                    echo        "socat -d TCP-LISTEN:$((6000+Newdisplaynumber)),fork,bind=${Xcontainerip:-$Hostip} UNIX-CONNECT:$Newxsocket &"
-                fi
-                #
-                echo       "storepid \$! socat-tcp"
+                (   # local scope
+                    local TCP_PORT="$((6000+Newdisplaynumber))"
+                    local BIND_VALUE=""
+                    if [ -n "$Xcnetworkid" ] ; then
+                        BIND_VALUE="$Xcontainername"
+                    else
+                        BIND_VALUE="${Xcontainerip:-$Hostip}"
+                        #
+                    fi
+                    #
+                    echo "echo \"socat -d TCP-LISTEN:${TCP_PORT},fork,bind=${BIND_VALUE} UNIX-CONNECT:$Newxsocket\""
+                    echo        "socat -d TCP-LISTEN:${TCP_PORT},fork,bind=${BIND_VALUE} UNIX-CONNECT:$Newxsocket &"
+                    echo        "storepid \$! socat-tcp"
+                )
             fi
             echo           ""
 
