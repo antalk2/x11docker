@@ -3576,10 +3576,10 @@ convertpath() {                 # convert unix and windows paths
 #                    "$(createmountopt_mount rw /var/run/dbus           || : )" \
 #                    "$(createmountopt_mount ro /run/udev/data          || : )" \
 #                    "$(createmountopt_mount rw /var/run/seatd.sock     || : )" \
-#                    "$(createmountopt_device /dev/tty0              || : )" \
-#                    "$(createmountopt_device /dev/tty${Newxvt}      || : )" \
-#                    "$(createmountopt_device /dev/fb0               || : )"
-#         $append_ops_to Xc_console "$(createmountopt_device "$Line")"
+#                    "$(createmountopt_device rw /dev/tty0              || : )" \
+#                    "$(createmountopt_device rw /dev/tty${Newxvt}      || : )" \
+#                    "$(createmountopt_device rw /dev/fb0               || : )"
+#         $append_ops_to Xc_console "$(createmountopt_device rw "$Line")"
 #
 #
 #  https://sr.ht/~kennylevinsen/seatd/
@@ -3643,9 +3643,8 @@ createmountopt_device() {
     # $2  File:   file or device to share
     #             If does not exist, emit nothing and return 1
     #
-    local File Rw
-    File="${1:-}"
-    Rw="${2:-}"
+    local Rw="${1:-}"
+    local File="${2:-}"
 
     if [ ! -e "$File" ] ; then
         debugnote "createmountopt_device(): ERROR: File not found: '$File'"
