@@ -10986,9 +10986,10 @@ create_xinitrc() {
 
             if [ "$Screensize" ] && [ -z "$Scaling" ] ; then
                 trim_to_bar  "|  if [ ! checkscreensize ; then
-                              |    note \"Panning \$Screensize. If virtual screen is greater than
-                              |  maximal screen size, you can move virtual screen with mouse at screen edges.
-                              |  You can force the virtual screen to match your monitor with option --scale=1\"
+                              |    note_ttm \"|Panning \$Screensize. If virtual screen is greater than
+                              |               |  maximal screen size, you can move virtual screen with mouse at screen edges.
+                              |               |  You can force the virtual screen to match your monitor with option --scale=1\"
+                              |
                               |    xrandr --output \$Output --panning \$Screensize+0+0/\$Screensize+0+0/100/100/100/100 --verbose
                               |  fi
                               |
