@@ -10985,23 +10985,23 @@ create_xinitrc() {
             fi
 
             if [ "$Screensize" ] && [ -z "$Scaling" ] ; then
-                echo         "  checkscreensize || {"
-                echo         "    note \"Panning \$Screensize. If virtual screen is greater than "
-                echo         "  maximal screen size, you can move virtual screen with mouse at screen edges."
-                echo         "  You can force the virtual screen to match your monitor with option --scale=1\""
-                echo         "    xrandr --output \$Output --panning \$Screensize+0+0/\$Screensize+0+0/100/100/100/100 --verbose"
-                echo         "  }"
-                echo         "  checkscreensize || {"
-                echo         "    note 'Panning failed, trying to scale instead.'"
-                echo         "    xrandr --output \$Output --scale-from \$Screensize --panning \$Screensize+0+0/\$Screensize+0+0"
-                echo         "    checkscreensize && note \"Successfully set screen size \$Screensize\""
-                echo         "  }"
-                echo         "  checkscreensize || {"
-                echo         "    getscreensize"
-                echo         "    note \"Setting desired resolution \$Screensize failed."
-                echo         "  Fallback: Will use detected \${CurrentXaxis}x\${CurrentYaxis} instead.\""
-                echo         "  }"
-                echo         ""
+                trim_to_bar  "|  checkscreensize || {
+                              |    note \"Panning \$Screensize. If virtual screen is greater than
+                              |  maximal screen size, you can move virtual screen with mouse at screen edges.
+                              |  You can force the virtual screen to match your monitor with option --scale=1\"
+                              |    xrandr --output \$Output --panning \$Screensize+0+0/\$Screensize+0+0/100/100/100/100 --verbose
+                              |  }
+                              |  checkscreensize || {
+                              |    note 'Panning failed, trying to scale instead.'
+                              |    xrandr --output \$Output --scale-from \$Screensize --panning \$Screensize+0+0/\$Screensize+0+0
+                              |    checkscreensize && note \"Successfully set screen size \$Screensize\"
+                              |  }
+                              |  checkscreensize || {
+                              |    getscreensize
+                              |    note \"Setting desired resolution \$Screensize failed.
+                              |  Fallback: Will use detected \${CurrentXaxis}x\${CurrentYaxis} instead.\"
+                              |  }
+                              |"
             fi
 
             [ "$Scaling" ] && {
