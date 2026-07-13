@@ -11254,16 +11254,13 @@ setup_xcnetwork() {
         do_setup)
             if [ "$Xcontainer_option" = "yes" ] && [ "$Hostxoverip" = "no" ] ; then
                 if case_match "$Xoverip" 'yes|listentcp|socat' ; then
-                    # yes|listentcp|socat)
-                        case "$g_Network" in
-                            none) Internal="--internal" ;;
-                            ""|bridge) Internal="";;
-                            *) return 1 ;; ### FIXME
-                        esac
-                        Xcnetworkid="$(unpriv_backend "$Backendbin network create $Internal $Xcnetworkname")" 2>>$Xinitlogfile || return 1
-                        debugnote "setup_xcnetwork(): Creating $Xcnetworkname $Xcnetworkid"
-                        ##       ;;
-                        ## esac
+                    case "$g_Network" in
+                        none) Internal="--internal" ;;
+                        ""|bridge) Internal="";;
+                        *) return 1 ;; ### FIXME
+                    esac
+                    Xcnetworkid="$(unpriv_backend "$Backendbin network create $Internal $Xcnetworkname")" 2>>$Xinitlogfile || return 1
+                    debugnote "setup_xcnetwork(): Creating $Xcnetworkname $Xcnetworkid"
                 fi
             fi
             ;;
