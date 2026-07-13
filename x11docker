@@ -10658,6 +10658,7 @@ create_xinitrc() {
                      |Storepidfile=$(         $with_Cachefolder "$Storepidfile"           )
                      |Timetosaygoodbyefile=$( $with_Sharefolder "$Timetosaygoodbyefile"   )
                      |Newdisplay='$Newdisplay'
+                     |Xclientcookie=$( $with_Sharefolder $Xclientcookie )
                      |"
         #
         # local sed_Sharefolder='sed -e "s|$Sharefolder/|\"\\\$Sharefolder\"/|"'
@@ -10777,9 +10778,10 @@ create_xinitrc() {
                              |    generate \$Newdisplay . \$Trusted timeout 3600"
 
                 if [ "$Xserver" = '--hostdisplay' ] ; then
-                    echo       "if [ -n \"\$Hostcookie\" ] ; then"
-                    echo       "    sed -i /\$Hostcookie/d  $($with_Sharefolder $Xclientcookie )"
-                    echo       "fi"
+                    trim_to_bar "|if [ -n \"\$Hostcookie\" ] ; then
+                                 |    sed -i /\$Hostcookie/d  $($with_Sharefolder $Xclientcookie )
+                                 |fi
+                                 |"
                 fi
                 
                 if [ "$Xauthentication" = untrusted ] ; then
