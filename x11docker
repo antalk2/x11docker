@@ -11030,7 +11030,10 @@ create_xinitrc() {
                 # Must use --scale-from and --panning below, because --scale
                 # causes mouse barriers/crtc-boundaries.
                 #
-                trim_to_bar  "|  xrandr --output \$Output --scale-from \$Screensize --panning \$Screensize+0+0/\$Screensize+0+0 --verbose
+                trim_to_bar  "|  xrandr --output \$Output                           \\
+                              |         --scale-from \$Screensize                   \\
+                              |         --panning \$Screensize+0+0/\$Screensize+0+0 \\
+                              |         --verbose
                               |
                               |  if ! checkscreensize ; then
                               |    getscreensize
