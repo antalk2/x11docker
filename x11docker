@@ -10884,6 +10884,7 @@ create_xinitrc() {
             if ! case_match "$Xserver" '--hostdisplay|--nxagent | --hostwayland|--weston|--kwin|--tty' ; then
                 echo       "# Keyboard layout"
                 if [ -n "$Hostdisplay" ] ; then
+                    #
                     if xtool --check setxkbmap ; then
                         if [ -z "$Xkblayout" ] ; then
                             #setxkbmap -display "$Hostdisplay" -print >> "\$Xkbkeymapfile"
@@ -10896,12 +10897,12 @@ create_xinitrc() {
                         fi
                     fi
 
-                    [ -s "$Xkbkeymapfile" ] && {
+                    if [ -s "$Xkbkeymapfile" ] ; then
                         echo   "# set keyboard layout on \$Newdisplay"
                         echo   "NEWLINE=$'\\n'"
                         echo   "verbose \"Keyboard layout:\${NEWLINE}\$(cat \"\$Xkbkeymapfile\")\""
                         echo   "xkbcomp \$Xkbkeymapfile \"\$Newdisplay\""
-                    }
+                    fi
                     echo     ""
                 fi
             fi
