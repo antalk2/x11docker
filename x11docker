@@ -10860,10 +10860,12 @@ create_xinitrc() {
                 if case_match "$Xauthentication" 'yes|trusted|untrusted' \
                 && [ "$Xserver" != 'runx' ]                              ;
                 then
-                    echo "# clean xhost"
-                    echo "verbose 'Disabling any possible access to new X server possibly granted by xhost'"
-                    echo "disable_X_access_via_xhost"
+                    trim_to_bar "|# clean xhost
+                                 |verbose 'Disabling any possible access to new X server possibly granted by xhost'
+                                 |disable_X_access_via_xhost
+                                 |"
                 fi
+                #
                 [ -n "$Xhost" ] && {
                     [ "$Xhost" = "auto" ] && Xhost="+SI:localuser:$Containeruser"
                     echo     "warning \"Option --xhost: Running 'xhost $Xhost' on $Newdisplay\""
