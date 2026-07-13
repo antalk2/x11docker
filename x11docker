@@ -11082,9 +11082,10 @@ create_xinitrc() {
 
     esac # end case Xserver (2)
 
-  [ -n "$Newdisplay" ] && echo "verbose \"Output of xrandr on $Newdisplay
-\$(xrandr)\""
-  echo ""
+    if [ -n "$Newdisplay" ] ; then
+        echo "verbose \"Output of xrandr on $Newdisplay${NEWLINE}\$(xrandr)\""
+    fi
+    echo ""
 
   # --wm
   [ "$Windowmanagermode" = "host" ] && {  # Windowmanagermode_host
