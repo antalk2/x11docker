@@ -11193,7 +11193,7 @@ disable_X_access_via_xhost() {
     Environment="${1:-"DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY"}"
     local Line=""
     #
-    xtool --check xhost || return 1
+    if ! xtool --check xhost ; then return 1 ; fi
     #
     # Disable every entry
     #
