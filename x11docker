@@ -10967,8 +10967,8 @@ create_xinitrc() {
                               |"
             fi
 
-            echo           "  Screensize=\"\${Xaxis}x\${Yaxis}\""
-            echo           ""
+            trim_to_bar      "|  Screensize=\"\${Xaxis}x\${Yaxis}\"
+                              |"
 
             [ "$Screensize" ] && [ -z "$Scaling" ] && {
                 echo         "  # Switch to desired screen size $Screensize"
