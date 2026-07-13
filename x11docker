@@ -10956,8 +10956,9 @@ create_xinitrc() {
                                  |  Yaxis=\"\$( calculate_floor_a_per_b \"\$Yaxis\" \"$Scaling\" )\"
                                  |"
                     # # The following should not be necessary if Xaxis and Yaxis are already integers.
-                    # echo         "  Xaxis=\"\${Xaxis%.*}\""
-                    # echo         "  Yaxis=\"\${Yaxis%.*}\""
+                    # trim_to_bar  "|  Xaxis=\"\${Xaxis%.*}\"
+                    #               |  Yaxis=\"\${Yaxis%.*}\"
+                    #               |"
                 fi
                 #
             else
