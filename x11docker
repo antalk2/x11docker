@@ -11307,22 +11307,48 @@ setup_xcnetwork() {
     return 0
 }
 
-store_newxenv() {               # store display variables
+# Function: store_newxenv
+# Brief:  Store display variables
+#
+# Globals:
+#    Newdisplay : read,write.
+#    Xcontainerip
+#
+#
+store_newxenv() {
     #
+    #
+    # Replace the placeholder XCONTAINERIP with the actual
+    # Xcontainerip in Newdisplay:
     Newdisplay="${Newdisplay//"XCONTAINERIP"/"$Xcontainerip"}"
     #
-  # create $Newxenv: collection of environment variables to access new X from host (e.g. in xinitrc)
-  [ "$Newdisplay" ]                   && storeinfo_add_kv_sh "DISPLAY=$Newdisplay"                 && Newxenv="$Newxenv DISPLAY=$Newdisplay"
-  [ "$Xauthentication" != "no" ]      && storeinfo_add_kv_sh "XAUTHORITY=$Xclientcookie"           && Newxenv="$Newxenv XAUTHORITY=$Xclientcookie"
-  case "$Newwaylandsocket" in
-    "")
-      [ "$Sharehostwayland" = "yes" ] && storeinfo_add_kv_sh "WAYLAND_DISPLAY=$Hostwaylandsocket"  && Newxenv="$Newxenv WAYLAND_DISPLAY=$Hostwaylandsocket"
-    ;;
-    *)
-                                         storeinfo_add_kv_sh "WAYLAND_DISPLAY=$Newwaylandsocket"   && Newxenv="$Newxenv WAYLAND_DISPLAY=$Newwaylandsocket"
-    ;;
-  esac
-  [ "$Setupwayland" = "yes" ] && for Line in $Waylandtoolkitenv ; do                        Newxenv="$Newxenv $Line" ; done
+    # Create $Newxenv: collection of environment variables to access
+    #                  new X from host (e.g. in xinitrc)
+    #
+    if [ "$Newdisplay" ] ; then
+        storeinfo_add_kv_sh "DISPLAY=$Newdisplay"
+        Newxenv="$Newxenv DISPLAY=$Newdisplay"
+    fi
+
+    if [ "$Xauthentication" != "no" ] ; then
+        storeinfo_add_kv_sh "XAUTHORITY=$Xclientcookie"
+        Newxenv="$Newxenv XAUTHORITY=$Xclientcookie"
+    fi
+
+    case "$Newwaylandsocket" in
+        "")
+            if [ "$Sharehostwayland" = "yes" ] ; then
+                storeinfo_add_kv_sh "WAYLAND_DISPLAY=$Hostwaylandsocket"
+                Newxenv="$Newxenv WAYLAND_DISPLAY=$Hostwaylandsocket"
+            fi
+            ;;
+        *)
+            storeinfo_add_kv_sh "WAYLAND_DISPLAY=$Newwaylandsocket"
+            Newxenv="$Newxenv WAYLAND_DISPLAY=$Newwaylandsocket"
+            ;;
+    esac
+
+    [ "$Setupwayland" = "yes" ] && for Line in $Waylandtoolkitenv ; do                        Newxenv="$Newxenv $Line" ; done
   [ -n "$XDG_RUNTIME_DIR" ]           && storeinfo_add_kv_sh "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"    && Newxenv="$Newxenv XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
   Newxenv="$(awk '{$1=$1;print}' <<< " $Newxenv ")" # Remove superfluous whitespaces
   storeinfo_add_kv_sh "Xenv=$Newxenv"
