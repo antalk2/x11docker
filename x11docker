@@ -11277,8 +11277,7 @@ setup_xcnetwork() {
                     *) return 1 ;; ### FIXME
                 esac
 
-                Xcnetworkid="$(
-                             unpriv_backend "$Backendbin network create $Internal $Xcnetworkname"
+                Xcnetworkid="$( unpriv_backend "$Backendbin network create $Internal $Xcnetworkname"
                           )" 2>>$Xinitlogfile || return 1
 
                 debugnote "setup_xcnetwork(): Creating $Xcnetworkname $Xcnetworkid"
