@@ -10707,7 +10707,7 @@ create_xinitrc() {
             ;;
 
         *) # here something for real X servers
-            trim_to_bar     "|# case Xserver in *), i.e. real X servers
+            trim_to_bar     "|# case Xserver in *), i.e. real_X_servers
                              |export $Newxenv
                              |"
             #
@@ -10732,19 +10732,27 @@ create_xinitrc() {
 
             case "$Xserver" in
                 --hostdisplay)
-                    [ -s "$Hostxauthority" ] && {
-                        echo     "# --hostdisplay: need cookie from host" ### FIXME rather get a trusted one
-                        echo     "Hostcookie=\"\$(xauth -n -i -f $Hostxauthority list | grep :$Hostdisplaynumber | awk '{print \$3}')\""
-                        echo     "xauth -n -i -f $Xclientcookie add $Newdisplay MIT-MAGIC-COOKIE-1 \$Hostcookie"
-                        echo     ""
-                    }
+                    if [ -s "$Hostxauthority" ] ; then
+                        trim_to_bar  "|# real_X_servers / --hostdisplay
+                                      |# --hostdisplay: need cookie from host ### FIXME rather get a trusted one
+                                      |Hostcookie=\"\$(xauth -n -i -f $Hostxauthority list | grep :$Hostdisplaynumber | awk '{print \$3}')\"
+                                      |xauth -n -i -f $Xclientcookie add $Newdisplay MIT-MAGIC-COOKIE-1 \$Hostcookie
+                                      |"
+                    fi
                     ;;
-                --nxagent)
-                    echo       "sleep 1 && xsetroot -solid '#7F7F7F' 2>/dev/null &" ;;
-                *) echo      "xsetroot -solid '#7F7F7F' 2>/dev/null" ;;
+
+                --nxagent)   trim_to_bar "|#real_X_servers / --nxagent
+                                          |sleep 1 && xsetroot -solid '#7F7F7F' 2>/dev/null &
+                                          |"
+                             ;;
+                *)           trim_to_bar "|# real_X_servers / (not --hostdisplay) and (not --nxagent)
+                                          |xsetroot -solid '#7F7F7F' 2>/dev/null
+                                          |"
+                             ;;
             esac
             echo ""
 
+            
             [ "$Xauthentication" != "no" ] && {
                 echo         "# create new XAUTHORITY cookies"
                 case "$Xauthentication" in
