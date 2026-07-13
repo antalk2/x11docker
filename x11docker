@@ -7481,10 +7481,12 @@ check_xdepends() {
 
     # ------ helper functions (conceptually internal)  -------------------
     #
-    xdepends_message_ttm() {
+    check_xdepends_HELPER_xdepends_message_ttm() {
         # inherit Message
         $Message "$( trim_to_mark "${1}" )"
     }
+    local xdepends_message_ttm="check_xdepends_HELPER_xdepends_message_ttm"
+
     #
     # function check_command_generic(
     #         test_type={command|xtool}, the_Message_fun, the_X_option, the_command, the_message_cont
@@ -7602,7 +7604,7 @@ check_xdepends() {
         --hostwayland     )
             #
             if [ "$Nvidiaversion" ] && version_less_than "$Nvidiaversion" "470" ; then
-                xdepends_message_ttm \
+                $xdepends_message_ttm \
                         "|${X_option_to_check}: Closed source NVIDIA driver
                          : $Nvidiaversion < version 470.x does not support Wayland.
                          |  You would need NVIDIA driver>=v470.x and Xwayland>=21.1.2"
@@ -7611,14 +7613,14 @@ check_xdepends() {
             fi
             #
             if [ "$Runtime" = "kata-runtime" ] ; then
-                xdepends_message_ttm \
+                $xdepends_message_ttm \
                     "|${X_option_to_check} is not supported with option --runtime=$Runtime"
                 Return=1
             fi
             #
             case "$Dockervm" in
                 moby|desktop)
-                    xdepends_message_ttm "|${X_option_to_check} is not supported
+                    $xdepends_message_ttm "|${X_option_to_check} is not supported
                                           : with MobyVM / docker-for-win or Docker Desktop."
                     Return=1
                     ;;
@@ -7630,7 +7632,7 @@ check_xdepends() {
     case "${X_option_to_check}" in
         --weston|--kwin)
             if [ "$Containeruser" != "$Hostuser" ] ; then
-                xdepends_message_ttm \
+                $xdepends_message_ttm \
                           "|${X_option_to_check} does not run with a container user
                            |  different from host user $Hostuser (option --user=$Containeruser)."
                 Return=1
@@ -7653,7 +7655,7 @@ check_xdepends() {
     case "${X_option_to_check}" in
         --xpra2*)
             if ! have_command "xpra"  ; then
-                xdepends_message_ttm \
+                $xdepends_message_ttm \
                     "|${X_option_to_check}: xpra not found on host.${NEWLINE}  $Wikipackages"
                 Return=1
             fi
@@ -7697,13 +7699,13 @@ check_xdepends() {
                         then Return=1 ; fi
                         ;;
                     WSL1|WSL2)
-                        xdepends_message_ttm \
+                        $xdepends_message_ttm \
                           "|${X_option_to_check}: XWin is available in Cygwin on MS Windows only.
                            |  Use runx to provide XWin in WSL:  https://github.com/mviereck/runx"
                         Return=1
                         ;;
                     MSYS2)
-                        xdepends_message_ttm \
+                        $xdepends_message_ttm \
                             "|${X_option_to_check}: XWin is available in Cygwin on MS Windows only.
                              |  With runx XWin is available in WSL, too.
                              |  In MSYS2 you can only use runx with VcXsrv to provide an X server:
@@ -7711,7 +7713,7 @@ check_xdepends() {
                         Return=1
                         ;;
                     "")
-                        xdepends_message_ttm \
+                        $xdepends_message_ttm \
                             "|${X_option_to_check}: XWin is available in Cygwin on MS Windows only."
                         Return=1
                         ;;
@@ -7722,14 +7724,14 @@ check_xdepends() {
                 then Return=1 ; fi
                 #
                 [ "$Hostip" ] || {
-                    xdepends_message_ttm \
+                    $xdepends_message_ttm \
                         "|${X_option_to_check}: Failed to get host IP address."
                     Return=1
                 }
                 ;;
             --runx)
                 [ "$Winsubsystem" ] || {
-                    xdepends_message_ttm \
+                    $xdepends_message_ttm \
                         "|${X_option_to_check}: runx is available on MS Windows only."
                     Return=1
                 }
@@ -7799,7 +7801,7 @@ check_xdepends() {
     case "${X_option_to_check}" in
         --hostdisplay|--xpra-xwayland|--xpra2-xwayland|--xephyr|--nxagent)
             [ "$Hostdisplay" ] || {
-                xdepends_message_ttm \
+                $xdepends_message_ttm \
                     "|${X_option_to_check} needs a running X server.
                      : DISPLAY is empty."
                 Return=1
@@ -7807,7 +7809,7 @@ check_xdepends() {
             ;;
         --hostwayland|--xwayland|--satellite)
             [ "$Hostwaylandsocket" ] || {
-                xdepends_message_ttm \
+                $xdepends_message_ttm \
                     "|${X_option_to_check} needs a running Wayland compositor.
                      : WAYLAND_DISPLAY is empty."
                 Return=1
@@ -7819,7 +7821,7 @@ check_xdepends() {
         case "${X_option_to_check}" in
             --xwin|--runx) ;;
             --xpra*)
-                xdepends_message_ttm \
+                $xdepends_message_ttm \
                     "|${X_option_to_check} is not supported on MS Windows."
                 Return=1
                 ;;
@@ -7827,7 +7829,7 @@ check_xdepends() {
                 [ -z "$Hostdisplay" ] && {
                     case "$Winsubsystem" in
                         Cygwin)
-                            xdepends_message_ttm  \
+                            $xdepends_message_ttm  \
                                 "|${X_option_to_check} needs a running X server. DISPLAY is empty.
                                  |  Please install packages in Cygwin:  xinit xauth xwininfo
                                  |  or use runx to provide an X server on MS Windows:
@@ -7835,7 +7837,7 @@ check_xdepends() {
                             ;;
 
                         MSYS2|WSL1|WSL2)
-                            xdepends_message_ttm \
+                            $xdepends_message_ttm \
                                 "|${X_option_to_check} needs a running X server. DISPLAY is empty.
                                  |  Please use runx to provide an X server on MS Windows:
                                  |    https://github.com/mviereck/runx"
@@ -7852,7 +7854,7 @@ check_xdepends() {
         case "${X_option_to_check}" in # Xserver_in_check_xdepends
             --xpra*) ;;
             *)
-                xdepends_message_ttm \
+                $xdepends_message_ttm \
                     "|${X_option_to_check} does not support option --border.
                      |  Try one of --xpra* options instead."
                 Return=1
@@ -7864,7 +7866,7 @@ check_xdepends() {
     [ -n "$Checkforopenwindow" ] && {
         case "${X_option_to_check}" in # Xserver_in_check_xdepends
             --weston|--kwin|--hostwayland)
-                xdepends_message_ttm \
+                $xdepends_message_ttm \
                     "|${X_option_to_check} does not support option --checkwindow."
                 Return=1
                 ;;
@@ -7875,7 +7877,7 @@ check_xdepends() {
     case "${X_option_to_check}" in # Xserver_in_check_xdepends
         --hostdisplay|--hostwayland|--satellite)
             [ "$Desktopmode" = "yes" ] && {
-                xdepends_message_ttm \
+                $xdepends_message_ttm \
                     "|${X_option_to_check} does not support option --desktop."
                 Return=1
             }
@@ -7885,7 +7887,7 @@ check_xdepends() {
     # --dpi
     [ -n "$Dpi" ] && case "${X_option_to_check}" in # Xserver_in_check_xdepends
         --weston|--kwin|--hostwayland|--hostdisplay)
-            xdepends_message_ttm \
+            $xdepends_message_ttm \
                 "${X_option_to_check} does not support option --dpi."
             Return=1
             ;;
@@ -7902,7 +7904,7 @@ check_xdepends() {
                 #
                 --hostdisplay)
                     [ "$Xcontainer_option" = "no" ] && [ "$Shareipc" != "host" ] && { # Shareipc_host
-                        xdepends_message_ttm \
+                        $xdepends_message_ttm \
                             "|${X_option_to_check}: --gpu=$Sharegpu would need insecure and discouraged
                              |  option --ipc=host to avoid MIT-SHM errors. Alternatively you can provide
                              |  image x11docker/xserver (option --xc) that contains a fake MIT-SHM library."
@@ -7910,7 +7912,7 @@ check_xdepends() {
                     }
                     ;;
                 *)
-                    xdepends_message_ttm \
+                    $xdepends_message_ttm \
                         "|${X_option_to_check}: --gpu=$Sharegpu not possible."
                     Return=1
                     ;;
@@ -7920,7 +7922,7 @@ check_xdepends() {
             case "${X_option_to_check}" in
                 --xorg|--xwin|--runx) ;;
                 *)
-                    xdepends_message_ttm \
+                    $xdepends_message_ttm \
                         "|${X_option_to_check}: --gpu=$Sharegpu not possible."
                     Return=1
                     ;;
@@ -7929,7 +7931,7 @@ check_xdepends() {
         virgl)
             case "${X_option_to_check}" in
                 --weston|--kwin|--hostwayland)
-                    xdepends_message_ttm \
+                    $xdepends_message_ttm \
                         "|${X_option_to_check}: --gpu=$Sharegpu not possible. You can try --gpu=direct."
                     Return=1
                     ;;
@@ -7942,7 +7944,7 @@ check_xdepends() {
         case "${X_option_to_check}" in # Xserver_in_check_xdepends
             --weston|--weston-xwayland|--xorg) ;;
             *)
-                xdepends_message_ttm \
+                $xdepends_message_ttm \
                     "|${X_option_to_check} does not support option --rotate.
                      |  Try --weston-xwayland, --weston or --xorg."
                 Return=1
@@ -7956,14 +7958,14 @@ check_xdepends() {
             --xpra*|--xorg) ;;
             --weston|--weston-xwayland)
                 isint "$Scaling" || {
-                    xdepends_message_ttm  \
+                    $xdepends_message_ttm  \
                         "|${X_option_to_check} does support full integers only for option --scale.
                          |  Try one of the --xpra* options instead."
                     Return=1
                 }
                 ;;
             *)
-                xdepends_message_ttm  \
+                $xdepends_message_ttm  \
                     "|${X_option_to_check} does not support scaling (option --scale).
                      |  Try one of the --xpra* or --weston* options instead."
                 Return=1
@@ -7976,7 +7978,7 @@ check_xdepends() {
         case "${X_option_to_check}" in # Xserver_in_check_xdepends
             --weston|--kwin|--weston-xwayland|--kwin-xwayland|--xwin) ;;
             *)
-                xdepends_message_ttm \
+                $xdepends_message_ttm \
                     "|${X_option_to_check} does not support option --output-count."
                 Return=1
                 ;;
@@ -7988,21 +7990,21 @@ check_xdepends() {
         case "${X_option_to_check}" in
             --kwin)
                 [ "$Newxvt" != "auto" ] && {
-                    xdepends_message_ttm \
+                    $xdepends_message_ttm \
                         "|${X_option_to_check} cannot claim a different console (option --vt)."
                     Return=1
                 }
                 ;;
             --xorg|--weston|--weston-wayland)
                 [ "$Xcrootless" = "yes" ] && {
-                    xdepends_message_ttm  \
+                    $xdepends_message_ttm  \
                         "|${X_option_to_check} cannot claim a new virtual terminal (option --vt)
                          : with rootless X container (option --xc)."
                     Return=1
                 }
                 ;;
             *)
-                xdepends_message_ttm \
+                $xdepends_message_ttm \
                     "|${X_option_to_check} cannot claim a new virtual terminal (option --vt)."
                 Return=1
                 ;;
@@ -8015,14 +8017,14 @@ check_xdepends() {
             if [ -z "$Xcopt" ] ; then
                     case "${X_option_to_check}" in
                         --xorg|--kwin)
-                            xdepends_message_ttm  \
+                            $xdepends_message_ttm  \
                                 "|${X_option_to_check} is not supported
                                  : by installed version of x11docker/xserver (option --xc).
                                  : Please update image."
                             Return=1
                             ;;
                         --weston|--weston-xwayland)
-                            xdepends_message_ttm  \
+                            $xdepends_message_ttm  \
                                 "|${X_option_to_check} on console is not supported
                                  : by installed version of x11docker/xserver (option --xc).
                                  : Please update image."
@@ -8035,7 +8037,7 @@ check_xdepends() {
         no)
             case "${X_option_to_check}" in
                 --xpra2*)
-                    xdepends_message_ttm \
+                    $xdepends_message_ttm \
                         "|${X_option_to_check} needs image x11docker/xserver (option --xc)."
                     Return=1
                     ;;
@@ -8053,7 +8055,7 @@ check_xdepends() {
         #
         case "${X_option_to_check}" in # Xserver_in_check_xdepends
             --weston|--kwin|--hostwayland)
-                xdepends_message_ttm \
+                $xdepends_message_ttm \
                     "|Option ${X_option_to_check} does not support option --xeyes"
                 Return=1
                 ;;
@@ -8070,7 +8072,7 @@ check_xdepends() {
         #
         case "${X_option_to_check}" in # Xserver_in_check_xdepends
             --weston|--kwin|--hostwayland)
-                xdepends_message_ttm \
+                $xdepends_message_ttm \
                     "Option ${X_option_to_check} does not support option --xlogo"
                 Return=1
                 ;;
@@ -8088,7 +8090,7 @@ check_xdepends() {
         #
         case "${X_option_to_check}" in # Xserver_in_check_xdepends
             --weston|--kwin|--hostwayland|--satellite)
-                xdepends_message_ttm \
+                $xdepends_message_ttm \
                     "|Option ${X_option_to_check} does not support option --xfishtank"
                 Return=1
                 ;;
@@ -8109,7 +8111,7 @@ check_xdepends() {
                         yes)
                             grep -q socat <<< "$Xcontainertools" || {
                                  # Xserver_in_check_xdepends
-                                xdepends_message_ttm  \
+                                $xdepends_message_ttm  \
                                     "|${X_option_to_check} --xoverip ${X_option_to_check} needs socat.
                                      :  Please update image x11docker/xserver."
                                 Return=1
@@ -8128,7 +8130,7 @@ check_xdepends() {
                     [ "${X_option_to_check}" = "--hostdisplay" ] && {
                         [ -n "$(cut -d: -f1 <<< "$Hostdisplay")" ] && {
                             [ "$Xoverip" = "socat" ] && {
-                                xdepends_message_ttm  \
+                                $xdepends_message_ttm  \
                                     "|${X_option_to_check} --xoverip: host already runs with X over IP.
                                      |  Setting up an additional socat connection is not supported."
                                 Return=1
@@ -8138,7 +8140,7 @@ check_xdepends() {
                     ;;
                 #
                 --weston|--kwin|--hostwayland)
-                    xdepends_message_ttm \
+                    $xdepends_message_ttm \
                         "|${X_option_to_check} does not support X over TCP (--xoverip)."
                     ;;
                 #
@@ -8152,7 +8154,7 @@ check_xdepends() {
                 # NOP
                 ;;
                 *)
-                    xdepends_message_ttm \
+                    $xdepends_message_ttm \
                         "|${X_option_to_check} does not support --xoverip=listentcp."
                     Return=1
                     ;;
