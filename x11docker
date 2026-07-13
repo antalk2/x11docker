@@ -10847,9 +10847,13 @@ create_xinitrc() {
 
             fi # Xauthentication !== no
 
-            echo           "export XAUTHORITY=\$Xclientcookie"
-            echo           "[ '$Xauthentication' = 'no' ] || [ ! -s \"\$Xclientcookie\" ] && unset XAUTHORITY && warning 'Option --xauth=no: X server $Newdisplay runs without cookie authentication.'"
-            echo           ""
+            trim_to_bar    "|export XAUTHORITY=\$Xclientcookie
+                            |if [ '$Xauthentication' = 'no' ] || [ ! -s \"\$Xclientcookie\" ] ; then
+                            |    unset XAUTHORITY
+                            |    warning 'Option --xauth=no: X server $Newdisplay runs without cookie authentication.'
+                            |fi
+                            |"
+
             case "$Xserver" in
                 --hostdisplay) ;;   # do not change host settings
                 *)
