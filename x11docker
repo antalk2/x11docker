@@ -10552,6 +10552,7 @@ create_xinitrc() {
     declare -f trim_to_mark
     declare -f error_ttm
     declare -f debugnote_ttm
+    declare -f note_ttm
     #
     declare -f makecookie_v1
     declare -f makecookie_v2
@@ -10973,8 +10974,9 @@ create_xinitrc() {
             if [ "$Screensize" ] && [ -z "$Scaling" ] ; then
                 trim_to_bar  "|  # Switch to desired screen size $Screensize
                               |  [ -n \"\$(xrandr | grep \$Screensize)\" ] && {
-                              |    note \"Will try to set native resolution \$Screensize.
-                              |  If that looks ugly, use --scale=1 to enforce a fake scaled resolution.\"
+                              |    note_ttm \"|Will try to set native resolution \$Screensize.
+                              |               |  If that looks ugly, use --scale=1 to enforce a fake scaled resolution.\"
+                              |
                               |    xrandr --output \$Output --mode \$Screensize
                               |  } || note \"Resolution \$Screensize not found in xrandr.\"
                               |"
