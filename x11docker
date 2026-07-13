@@ -10735,10 +10735,11 @@ create_xinitrc() {
                     else BIND_VALUE="${Xcontainerip:-$Hostip}"
                     fi
                     #
-                    trim_to_bar "|echo \"socat -d TCP-LISTEN:${TCP_PORT},fork,bind=${BIND_VALUE} UNIX-CONNECT:$Newxsocket\"
-                                 |socat        -d TCP-LISTEN:${TCP_PORT},fork,bind=${BIND_VALUE} UNIX-CONNECT:$Newxsocket &
-                                 |storepid \$! socat-tcp
-                                 |"
+                    trim_to_bar \
+                        "|echo \"socat -d TCP-LISTEN:${TCP_PORT},fork,bind=${BIND_VALUE} UNIX-CONNECT:$Newxsocket\"
+                         |socat        -d TCP-LISTEN:${TCP_PORT},fork,bind=${BIND_VALUE} UNIX-CONNECT:$Newxsocket &
+                         |storepid \$! socat-tcp
+                         |"
                 )
             fi
             echo           ""
