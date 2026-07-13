@@ -10928,11 +10928,11 @@ create_xinitrc() {
                             |fi
                             |"
 
-            [ -n "$Modeline" ] && {
+            if [ -n "$Modeline" ] ; then
                 echo         "xrandr --newmode $Modeline"
                 echo         "xrandr --addmode \$Output $(echo $Modeline | cut -d " " -f1)"
-                [ "$Xserver" != "--xvfb" ] && [ "$Desktopmode" = "yes" ] && echo "xrandr --output  \$Output --mode $(echo $Modeline | cut -d " " -f1)"
-            }
+                if [ "$Xserver" != "--xvfb" ] && [ "$Desktopmode" = "yes" ] && echo "xrandr --output  \$Output --mode $(echo $Modeline | cut -d " " -f1)"
+            fi
             echo           ""
             ;;
 
