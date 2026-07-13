@@ -11017,9 +11017,11 @@ create_xinitrc() {
 
             if [ "$Scaling" ] ; then
                 echo         "  # --scale $Scaling"
-                [ "$Screensize" ] && [ "$Scaling" != "1" ] && echo "  note 'Cannot set panning and scaling at the same time.
-  Desired screen size $Screensize will be scaled to your monitor size
-  for arbitrary values you may provide with option --scale.'"
+                if [ "$Screensize" ] && [ "$Scaling" != "1" ] ; then
+                    trim_to_bar "|  note 'Cannot set panning and scaling at the same time.
+                                 |  Desired screen size $Screensize will be scaled to your monitor size
+                                 |  for arbitrary values you may provide with option --scale.'"
+                fi
                 echo         "  # Scaling $Scaling"
                 echo         "  note \"Setting scaled resolution \$Screensize\" with scale factor $Scaling."
                 # must use --scale-from and --panning because --scale causes mouse barriers/crtc-boundaries
