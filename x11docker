@@ -10583,10 +10583,11 @@ create_xinitrc() {
             ;;
     esac
     #
-    echo               "xtool() {"
+    echo               'xtool() {'
     echo               '  [ "${1:-}" = "--check" ] && command -v "${2:-}" && return'
     echo               '  eval ${1:-}'
-    echo               "}"
+    echo               '}'
+
     echo               "getscreensize() {"
     echo               "  CurrentXaxis=\"\$(xrandr | grep primary | cut -d' ' -f4 | cut -dx -f1 )\""
     echo               "  CurrentYaxis=\"\$(xrandr | grep primary | cut -d' ' -f4 | cut -dx -f2 | cut -d+ -f1)\""
