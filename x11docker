@@ -10710,20 +10710,16 @@ create_xinitrc() {
                              |export $Newxenv"
             #
             if [ "$Xoverip" = "socat" ] ; then
-                    case "$Xcnetworkid" in
-                        "")
-                            echo "echo \"socat -d TCP-LISTEN:$((6000+Newdisplaynumber)),fork,bind=${Xcontainerip:-$Hostip} UNIX-CONNECT:$Newxsocket\""
-                            echo        "socat -d TCP-LISTEN:$((6000+Newdisplaynumber)),fork,bind=${Xcontainerip:-$Hostip} UNIX-CONNECT:$Newxsocket &"
-                            ;;
-                        *)
-                            echo "echo \"socat -d TCP-LISTEN:$((6000+Newdisplaynumber)),fork,bind=$Xcontainername UNIX-CONNECT:$Newxsocket\""
-                            echo        "socat -d TCP-LISTEN:$((6000+Newdisplaynumber)),fork,bind=$Xcontainername UNIX-CONNECT:$Newxsocket &"
-                            ;;
-                    esac
-                    #
-                    echo       "storepid \$! socat-tcp"
+                if [ -n "$Xcnetworkid" ] ; then
+                    echo "echo \"socat -d TCP-LISTEN:$((6000+Newdisplaynumber)),fork,bind=$Xcontainername UNIX-CONNECT:$Newxsocket\""
+                    echo        "socat -d TCP-LISTEN:$((6000+Newdisplaynumber)),fork,bind=$Xcontainername UNIX-CONNECT:$Newxsocket &"
+                else
+                    echo "echo \"socat -d TCP-LISTEN:$((6000+Newdisplaynumber)),fork,bind=${Xcontainerip:-$Hostip} UNIX-CONNECT:$Newxsocket\""
+                    echo        "socat -d TCP-LISTEN:$((6000+Newdisplaynumber)),fork,bind=${Xcontainerip:-$Hostip} UNIX-CONNECT:$Newxsocket &"
+                fi
+                #
+                echo       "storepid \$! socat-tcp"
             fi
-
             echo           ""
 
             case "$Xserver" in
