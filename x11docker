@@ -10984,7 +10984,7 @@ create_xinitrc() {
                               |"
             fi
 
-            [ "$Screensize" ] && [ -z "$Scaling" ] && {
+            if [ "$Screensize" ] && [ -z "$Scaling" ] ; then
                 echo         "  checkscreensize || {"
                 echo         "    note \"Panning \$Screensize. If virtual screen is greater than "
                 echo         "  maximal screen size, you can move virtual screen with mouse at screen edges."
@@ -11002,7 +11002,7 @@ create_xinitrc() {
                 echo         "  Fallback: Will use detected \${CurrentXaxis}x\${CurrentYaxis} instead.\""
                 echo         '  }'
                 echo         ""
-            }
+            fi
 
             [ "$Scaling" ] && {
                 echo         "  # --scale $Scaling"
