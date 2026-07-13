@@ -10659,6 +10659,7 @@ create_xinitrc() {
                      |Storepidfile=$(         $with_Cachefolder "$Storepidfile"           )
                      |Timetosaygoodbyefile=$( $with_Sharefolder "$Timetosaygoodbyefile"   )
                      |Newdisplay='$Newdisplay'
+                     |Newdisplaynumber='$Newdisplaynumber'
                      |Xclientcookie=$( $with_Sharefolder "$Xclientcookie" )
                      |Xservercookie=$( $with_Cachefolder "$Xservercookie" )
                      |Xkbkeymapfile=$( $with_Sharefolder "$Xkbkeymapfile" )
@@ -10804,7 +10805,7 @@ create_xinitrc() {
                                  |                   |  Maybe your X server misses extension SECURITY.
                                  |                   : Will bake one with host cookie.'
                                  |    #
-                                 |    xauth -v -n -i -f \"\$Xclientcookie\" add :$Newdisplaynumber . \$Hostcookie
+                                 |    xauth -v -n -i -f \"\$Xclientcookie\" add :\$Newdisplaynumber . \$Hostcookie
                                  |  fi
                                  |fi
                                  |"
@@ -10815,7 +10816,7 @@ create_xinitrc() {
                                  |    debugnote_ttm '|xinitrc(): Failed to retrieve trusted cookie from X server.
                                  |                   : Will bake one directly with xauth'
                                  |    #
-                                 |    xauth -v -n -i -f \"\$Xclientcookie\" add :$Newdisplaynumber . $(makecookie)
+                                 |    xauth -v -n -i -f \"\$Xclientcookie\" add :\$Newdisplaynumber . $(makecookie)
                                  |fi
                                  |"
                 
