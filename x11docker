@@ -10962,9 +10962,11 @@ create_xinitrc() {
                 fi
                 #
             else
-                echo         "  Xaxis='$Xaxis'"
-                echo         "  Yaxis='$Yaxis'"
+                trim_to_bar  "|  Xaxis='$Xaxis'
+                              |  Yaxis='$Yaxis'
+                              |"
             fi
+
             echo           "  Screensize=\"\${Xaxis}x\${Yaxis}\""
             echo           ""
 
