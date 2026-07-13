@@ -10650,6 +10650,9 @@ create_xinitrc() {
         echo "Storeinfofile=$( $with_Sharefolder "$Storeinfofile" )"
         echo "Storepidfile=$(  $with_Cachefolder "$Storepidfile"  )"
         echo "Timetosaygoodbyefile=$( $with_Sharefolder "$Timetosaygoodbyefile"   )"
+        echo "Newdisplay='$Newdisplay'"
+        #
+        # local sed_Sharefolder='sed -e "s|$Sharefolder/|\"\\\$Sharefolder\"/|"'
     else
         trim_to_bar "|Messagefile='$Messagefifo'
                      |Storeinfofile='$Storeinfofile'
@@ -10672,6 +10675,7 @@ create_xinitrc() {
     echo               "debugnote 'Running xinitrc'"
     echo               ""
 
+    echo "# begin case Xserver (1)"
     case "$Xserver" in
         --weston|--kwin|--hostwayland)
             echo           '# case "$Xserver" in --weston|--kwin|--hostwayland)'
@@ -10695,8 +10699,8 @@ create_xinitrc() {
             echo           "export $Newxenv"
             ;;
         *) # here something for real X servers
-            echo           '# case "$Xserver" in *)'
-            echo           "export $Newxenv"
+            echo           '# case "$Xserver" in *), i.e. real X servers '
+            echo           "export $Newxenv" | sed -e "s|$Sharefolder/|\"\\\$Sharefolder\"/|"
             case "$Xoverip" in
                 socat)
                     case "$Xcnetworkid" in
@@ -10740,7 +10744,7 @@ create_xinitrc() {
                         ;;
                 esac
                 echo         "echo \"Requesting \$Trusted cookie from X server\""
-                echo         "xauth -v -n -i -f $Xclientcookie generate $Newdisplay . \$Trusted timeout 3600"
+                echo         "xauth -v -n -i -f $($with_Sharefolder $Xclientcookie ) generate \$Newdisplay . \$Trusted timeout 3600"
                 [ "$Xserver" = '--hostdisplay' ] && {
                     echo       "[ -n \"\$Hostcookie\" ] && sed -i /\$Hostcookie/d $Xclientcookie"
                 }
@@ -10758,8 +10762,8 @@ create_xinitrc() {
                 [ "$Xserver" = "--hostdisplay" ] && {
                     echo       "[ ! -s '$Xclientcookie' ] && {"
                     echo       "  [ -n \"\$Hostcookie\" ] && {"
-                    echo       "    debugnote 'xinitrc() --hostdisplay: Failed to retrieve cookie from X server.
-  Maybe your X server misses extension SECURITY. Will bake one with host cookie.'"
+                    echo       "    debugnote 'xinitrc() --hostdisplay: Failed to retrieve cookie from X server."
+                    echo       "  Maybe your X server misses extension SECURITY. Will bake one with host cookie.'"
                     echo       "    xauth -v -n -i -f $Xclientcookie add :$Newdisplaynumber . \$Hostcookie"
                     echo       "  }"
                     echo       "}"
@@ -10842,6 +10846,7 @@ create_xinitrc() {
             esac
             ;;
     esac
+    echo "# end case Xserver (1)"
 
   case "$Xserver" in
     --xpra|--xpra2|--xvfb|--weston-xwayland|--xwayland)
