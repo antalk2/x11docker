@@ -10527,10 +10527,16 @@ create_xcontainercommand() {
     return 0
 } # create_xcontainercommand
 
+# Function: create_xinitrc
 #
-# Create xinitrc: set up X environment, create cookies
+# Brief: Create xinitrc: set up X environment, create cookies
+#
+# Compatibility_requirement: the emitted code runs inder /bin/sh
 #
 create_xinitrc() {
+    #
+    # The stdout of this function goes to "$Xinitrc=$Sharefolder/xinitrc",
+    #
     echo "#! /bin/sh"
     #
     # declare -f FUNNAME emits the definition of FUNNAME. This is how
