@@ -10536,7 +10536,9 @@ create_xinitrc() {
     #
     # The stdout of this function goes to "$Xinitrc=$Sharefolder/xinitrc",
     #
-    trim_to_bar "|#! /bin/sh"
+    trim_to_bar "|#! /bin/sh
+                 |
+                 |"
     #
     # declare -f FUNNAME emits the definition of FUNNAME. This is how
     #       unmodified functions are shared with the emitted scripts.
@@ -10544,15 +10546,18 @@ create_xinitrc() {
     #       Note: we start from bash, yet as for /bin/sh
     #             May need to check portability of these functions.
     #
-    declare -f cookiebaker
-    declare -f strlenhex
-    declare -f pspid_sh
-    declare -f disable_X_access_via_xhost
+    declare -f trim_to_bar_filter
+    declare -f trim_to_bar
     #
     declare -f makecookie_v1
     declare -f makecookie_v2
     declare -f makecookie_v3
     declare -f makecookie
+    declare -f strlenhex
+    declare -f cookiebaker
+    #
+    declare -f pspid_sh
+    declare -f disable_X_access_via_xhost
     #
     declare -f rocknroll
     # declare -f storeinfo_test_sh
@@ -10675,7 +10680,8 @@ create_xinitrc() {
                          |
                          |"
 
-    trim_to_bar         "|# begin case Xserver (1)"
+    trim_to_bar         "|# begin case Xserver (1)
+                         |"
     case "$Xserver" in
         --weston|--kwin|--hostwayland)
             trim_to_bar "|# case Xserver in --weston|--kwin|--hostwayland)
