@@ -11026,14 +11026,18 @@ create_xinitrc() {
                 trim_to_bar  "|  # Scaling $Scaling
                               |  note \"Setting scaled resolution \$Screensize with scale factor $Scaling.\"
                               |"
-                # must use --scale-from and --panning because --scale causes mouse barriers/crtc-boundaries
-                echo         "  xrandr --output \$Output --scale-from \$Screensize --panning \$Screensize+0+0/\$Screensize+0+0 --verbose"
-                echo         "  checkscreensize || {"
-                echo         "    getscreensize"
-                echo         "    note \"Setting desired resolution \$Screensize failed."
-                echo         "  Detected resolution \${CurrentXaxis}x\${CurrentYaxis} instead.\""
-                echo         "  }"
-                echo         ""
+                #
+                # Must use --scale-from and --panning below, because --scale
+                # causes mouse barriers/crtc-boundaries.
+                #
+                trim_to_bar  "|  xrandr --output \$Output --scale-from \$Screensize --panning \$Screensize+0+0/\$Screensize+0+0 --verbose
+                              |  checkscreensize || {
+                              |    getscreensize
+                              |    note \"Setting desired resolution \$Screensize failed.
+                              |  Detected resolution \${CurrentXaxis}x\${CurrentYaxis} instead.\"
+                              |  }
+                              |"
+                #
             fi
 
             [ -n "$Rotation" ] && {
