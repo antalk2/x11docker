@@ -10952,12 +10952,13 @@ create_xinitrc() {
                              |"
                 #
                 if [ "$Scaling" ] ; then
-                    echo "  Xaxis=\"\$( calculate_floor_a_per_b \"\$Xaxis\" \"$Scaling\" )\""
-                    echo "  Yaxis=\"\$( calculate_floor_a_per_b \"\$Yaxis\" \"$Scaling\" )\""
+                    trim_to_bar "|  Xaxis=\"\$( calculate_floor_a_per_b \"\$Xaxis\" \"$Scaling\" )\"
+                                 |  Yaxis=\"\$( calculate_floor_a_per_b \"\$Yaxis\" \"$Scaling\" )\"
+                                 |"
                     # # The following should not be necessary if Xaxis and Yaxis are already integers.
                     # echo         "  Xaxis=\"\${Xaxis%.*}\""
                     # echo         "  Yaxis=\"\${Yaxis%.*}\""
-                    fi
+                fi
                 #
             else
                 echo         "  Xaxis='$Xaxis'"
