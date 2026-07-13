@@ -10761,6 +10761,7 @@ create_xinitrc() {
 
             
             if [ "$Xauthentication" != "no" ] ; then
+                #
                 echo         "# create new XAUTHORITY cookies"
                 case "$Xauthentication" in
                     yes|trusted)
@@ -10771,8 +10772,9 @@ create_xinitrc() {
                         echo     "Trusted=untrusted"
                         ;;
                 esac
-                echo         "echo \"Requesting \$Trusted cookie from X server\""
-                echo         "xauth -v -n -i -f $($with_Sharefolder $Xclientcookie ) generate \$Newdisplay . \$Trusted timeout 3600"
+                trim_to_mark "|echo \"Requesting \$Trusted cookie from X server\"
+                              |xauth -v -n -i -f $($with_Sharefolder $Xclientcookie ) \\
+                              |    generate \$Newdisplay . \$Trusted timeout 3600"
 
                 if [ "$Xserver" = '--hostdisplay' ] ; then
                     echo       "if [ -n \"\$Hostcookie\" ] ; then"
