@@ -10970,7 +10970,7 @@ create_xinitrc() {
             trim_to_bar      "|  Screensize=\"\${Xaxis}x\${Yaxis}\"
                               |"
 
-            [ "$Screensize" ] && [ -z "$Scaling" ] && {
+            if [ "$Screensize" ] && [ -z "$Scaling" ] ; then
                 echo         "  # Switch to desired screen size $Screensize"
                 echo         "  [ -n \"\$(xrandr | grep \$Screensize)\" ] && { "
                 echo         "    note \"Will try to set native resolution \$Screensize."
@@ -10978,7 +10978,7 @@ create_xinitrc() {
                 echo         "    xrandr --output \$Output --mode \$Screensize"
                 echo         "  } || note \"Resolution \$Screensize not found in xrandr.\""
                 echo         ""
-            }
+            fi
 
             [ "$Screensize" ] && [ -z "$Scaling" ] && {
                 echo         "  checkscreensize || {"
