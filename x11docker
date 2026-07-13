@@ -10613,41 +10613,45 @@ create_xinitrc() {
                  |}
                  |"
 
-    trim_to_bar "|# Alternative coding for paths. Purpose: reduce diff between runs.
-                 |Cachefolder='$Cachefolder'
-                 |Sharefolder='$Sharefolder'
-                 |"
 
-    # FIXME: with_Sharefolder and with_Cachefolder are globsal functions,
-    #        use prefixed names.
-    #
-    with_Sharefolder() {
-        local value="${1}"
-        if [[ "${value}"  == "$Sharefolder/"* ]] ; then
-            echo "\"\$Sharefolder/\"'${value#$Sharefolder/}'"
-        else
-            echo "'$value'"
-        fi
-    }
-    with_Cachefolder() {
-        local value="${1}"
-        if [[ "${value}"  == "$Cachefolder/"* ]] ; then
-            echo "\"\$Cachefolder/\"'${value#$Cachefolder/}'"
-        else
-            echo "'$value'"
-        fi
-    }
+    if true ; then
+        trim_to_bar "|# Alternative coding for paths. Purpose: reduce diff between runs.
+                     |Cachefolder='$Cachefolder'
+                     |Sharefolder='$Sharefolder'
+                     |"
 
-    echo "Messagefile=$(   with_Sharefolder "$Messagefifo"   )"
-    echo "Storeinfofile=$( with_Sharefolder "$Storeinfofile" )"
-    echo "Storepidfile=$(  with_Cachefolder "$Storepidfile"  )"
-    echo "Timetosaygoodbyefile=$( with_Sharefolder "$Timetosaygoodbyefile"   )"
+        # FIXME: with_Sharefolder and with_Cachefolder are global functions,
+        #        use prefixed names.
+        #
+        with_Sharefolder() {
+            local value="${1}"
+            if [[ "${value}"  == "$Sharefolder/"* ]] ; then
+                echo "\"\$Sharefolder/\"'${value#$Sharefolder/}'"
+            else
+                echo "'$value'"
+            fi
+        }
+        with_Cachefolder() {
+            local value="${1}"
+            if [[ "${value}"  == "$Cachefolder/"* ]] ; then
+                echo "\"\$Cachefolder/\"'${value#$Cachefolder/}'"
+            else
+                echo "'$value'"
+            fi
+        }
+        echo "Messagefile=$(   with_Sharefolder "$Messagefifo"   )"
+        echo "Storeinfofile=$( with_Sharefolder "$Storeinfofile" )"
+        echo "Storepidfile=$(  with_Cachefolder "$Storepidfile"  )"
+        echo "Timetosaygoodbyefile=$( with_Sharefolder "$Timetosaygoodbyefile"   )"
+    else
+        trim_to_bar "|Messagefile='$Messagefifo'
+                     |Storeinfofile='$Storeinfofile'
+                     |Storepidfile='$Storepidfile'
+                     |Timetosaygoodbyefile='$Timetosaygoodbyefile'
+                     |"
+    fi
 
-    trim_to_bar "|# Messagefile='$Messagefifo'
-                 |Output=\"\$(getprimary)\"
-                 |# Storeinfofile='$Storeinfofile'
-                 |# Storepidfile='$Storepidfile'
-                 |# Timetosaygoodbyefile='$Timetosaygoodbyefile'
+    trim_to_bar "|Output=\"\$(getprimary)\"
                  |
                  |export PATH='${PATH:-}'
                  |
