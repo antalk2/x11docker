@@ -10548,6 +10548,8 @@ create_xinitrc() {
     #
     declare -f trim_to_bar_filter
     declare -f trim_to_bar
+    declare -f trim_to_mark
+    declare -f error_ttm
     #
     declare -f makecookie_v1
     declare -f makecookie_v2
@@ -10770,20 +10772,21 @@ create_xinitrc() {
                 esac
                 echo         "echo \"Requesting \$Trusted cookie from X server\""
                 echo         "xauth -v -n -i -f $($with_Sharefolder $Xclientcookie ) generate \$Newdisplay . \$Trusted timeout 3600"
-                [ "$Xserver" = '--hostdisplay' ] && {
-                    echo       "[ -n \"\$Hostcookie\" ] && sed -i /\$Hostcookie/d $Xclientcookie"
-                }
-                echo         "[ -s '$Xclientcookie' ] || { "
+
+                if [ "$Xserver" = '--hostdisplay' ] ; then
+                    echo       "if [ -n \"\$Hostcookie\" ] ; then"
+                    echo       "    sed -i /\$Hostcookie/d  $($with_Sharefolder $Xclientcookie )"
+                    echo       "fi"
+                fi
+                echo         "if [ ! -s '$Xclientcookie' ] ; then"
                 echo         "  :"
-                case "$Xauthentication" in
-                    untrusted)
-                        trim_to_bar "|  error '--xauth=untrusted: Failed to create cookie
-                                     |  for untrusted clients.
-                                     |  Maybe your X server misses extension SECURITY.'
-                                     |"
-                        ;;
-                esac
-                echo         "}"
+                if [ "$Xauthentication" = untrusted ] ; then
+                    trim_to_bar "|  error_ttm '|--xauth=untrusted: Failed to create cookie
+                                 |             |for untrusted clients.
+                                 |             |Maybe your X server misses extension SECURITY.'
+                                 |"
+                fi
+                echo         "fi"
                 [ "$Xserver" = "--hostdisplay" ] && {
                     echo       "[ ! -s '$Xclientcookie' ] && {"
                     echo       "  [ -n \"\$Hostcookie\" ] && {"
