@@ -11044,7 +11044,7 @@ create_xinitrc() {
                 #
             fi # end Scaling
 
-            [ -n "$Rotation" ] && {
+            if [ -n "$Rotation" ] ; then
                 echo         "  # --rotate $Rotation"
                 echo         "  verbose 'Rotation $Rotation'"
                 case "$Rotation" in
@@ -11059,7 +11059,8 @@ create_xinitrc() {
                 esac
                 echo         "  bash -c 'while read Line ; do xrandr --output \$Line $Rotation ; done < <(xrandr | grep \" connected\" | cut -d \" \" -f1)'"
                 echo         ""
-            }
+            fi
+
             echo           "  :"
             echo           "} || {"
             echo           "  Xaxis=${Xaxis:-1024}"
