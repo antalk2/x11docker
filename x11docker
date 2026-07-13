@@ -10583,21 +10583,26 @@ create_xinitrc() {
             ;;
     esac
     #
-    echo               'xtool() {'
-    echo               '  [ "${1:-}" = "--check" ] && command -v "${2:-}" && return'
-    echo               '  eval ${1:-}'
-    echo               '}'
+    trim_to_bar  '|xtool() {
+                  |  [ "${1:-}" = "--check" ] && command -v "${2:-}" && return
+                  |  eval ${1:-}
+                  |}
+                  |'
 
-    echo               "getscreensize() {"
-    echo               "  CurrentXaxis=\"\$(xrandr | grep primary | cut -d' ' -f4 | cut -dx -f1 )\""
-    echo               "  CurrentYaxis=\"\$(xrandr | grep primary | cut -d' ' -f4 | cut -dx -f2 | cut -d+ -f1)\""
-    echo               "}"
-    echo               "checkscreensize() {"
-    echo               "  getscreensize"
-    echo               "  [ \"\$Xaxis\" = \"\$CurrentXaxis\" ] || return 1"
-    echo               "  [ \"\$Yaxis\" = \"\$CurrentYaxis\" ] || return 1"
-    echo               "  return 0"
-    echo               "}"
+    trim_to_bar  "|getscreensize() {
+                  |  CurrentXaxis=\"\$(xrandr | grep primary | cut -d' ' -f4 | cut -dx -f1 )\"
+                  |  CurrentYaxis=\"\$(xrandr | grep primary | cut -d' ' -f4 | cut -dx -f2 | cut -d+ -f1)\"
+                  |}
+                  |"
+
+    trim_to_bar  "|checkscreensize() {
+                  |  getscreensize
+                  |  [ \"\$Xaxis\" = \"\$CurrentXaxis\" ] || return 1
+                  |  [ \"\$Yaxis\" = \"\$CurrentYaxis\" ] || return 1
+                  |  return 0
+                  |}
+                  |"
+
     echo               "getprimary() {"
     echo               "  xrandr | grep -q primary || xrandr --output \$(xrandr | grep ' connected' | head -n1 | cut -d' ' -f1) --primary"
     echo               "  echo \$(xrandr | grep primary | cut -d' ' -f1)"
