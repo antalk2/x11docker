@@ -10747,11 +10747,14 @@ create_xinitrc() {
             case "$Xserver" in
                 --hostdisplay)
                     if [ -s "$Hostxauthority" ] ; then
-                        trim_to_bar  "|# real_X_servers / --hostdisplay
-                                      |# --hostdisplay: need cookie from host ### FIXME rather get a trusted one
-                                      |Hostcookie=\"\$(xauth -n -i -f $Hostxauthority list | grep :$Hostdisplaynumber | awk '{print \$3}')\"
-                                      |xauth -n -i -f \$Xclientcookie add \$Newdisplay MIT-MAGIC-COOKIE-1 \$Hostcookie
-                                      |"
+                        trim_to_bar \
+                            "|# real_X_servers / --hostdisplay
+                             |# --hostdisplay: need cookie from host ### FIXME rather get a trusted one
+                             |Hostcookie=\"\$(xauth -n -i -f $Hostxauthority list \\
+                             |                | grep :$Hostdisplaynumber          \\
+                             |                | awk '{print \$3}'                 )\"
+                             |xauth -n -i -f \$Xclientcookie add \$Newdisplay MIT-MAGIC-COOKIE-1 \$Hostcookie
+                             |"
                     fi
                     ;;
 
