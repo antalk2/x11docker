@@ -10757,7 +10757,7 @@ create_xinitrc() {
             echo ""
 
             
-            [ "$Xauthentication" != "no" ] && {
+            if [ "$Xauthentication" != "no" ] ; then
                 echo         "# create new XAUTHORITY cookies"
                 case "$Xauthentication" in
                     yes|trusted)
@@ -10814,7 +10814,8 @@ create_xinitrc() {
                 echo         "chmod 644 $Xclientcookie"
                 echo         ""
                 echo         "[ -s '$Xclientcookie' ] || error 'xinitrc(): Option --xauth=$Xauthentication: Cookie creation failed.'"
-            }
+            fi # Xauthentication !== no
+
             echo           "export XAUTHORITY=$Xclientcookie"
             echo           "[ '$Xauthentication' = 'no' ] || [ ! -s '$Xclientcookie' ] && unset XAUTHORITY && warning 'Option --xauth=no: X server $Newdisplay runs without cookie authentication.'"
             echo           ""
