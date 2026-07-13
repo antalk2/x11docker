@@ -11253,8 +11253,8 @@ setup_xcnetwork() {
     case "${cmd}" in
         do_setup)
             if [ "$Xcontainer_option" = "yes" ] && [ "$Hostxoverip" = "no" ] ; then
-                case "$Xoverip" in
-                    yes|listentcp|socat)
+                if case_match "$Xoverip" 'yes|listentcp|socat' ; then
+                    # yes|listentcp|socat)
                         case "$g_Network" in
                             none) Internal="--internal" ;;
                             ""|bridge) Internal="";;
@@ -11262,8 +11262,9 @@ setup_xcnetwork() {
                         esac
                         Xcnetworkid="$(unpriv_backend "$Backendbin network create $Internal $Xcnetworkname")" 2>>$Xinitlogfile || return 1
                         debugnote "setup_xcnetwork(): Creating $Xcnetworkname $Xcnetworkid"
-                        ;;
-                esac
+                        ##       ;;
+                        ## esac
+                fi
             fi
             ;;
         remove)
@@ -11272,6 +11273,7 @@ setup_xcnetwork() {
                 unpriv_backend "$Backendbin network remove $Xcnetworkid" >>$Xinitlogfile 2>&1 || return 1
             }
             ;;
+        *) error "setup_xcnetwork(): Unexpected cmd" ;;
     esac
     return 0
 }
