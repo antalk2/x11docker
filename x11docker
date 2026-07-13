@@ -10827,7 +10827,9 @@ create_xinitrc() {
                                  |"
 
                 trim_to_bar     "|if [ ! -s \"\$Xclientcookie\" ] ; then
-                                 |    debugnote 'xinitrc(): Failed to create cookie with xauth. Will try custom cookie baker script.'
+                                 |    debugnote_ttm '|xinitrc(): Failed to create cookie with xauth.
+                                 |                   : Will try custom cookie baker script.'
+                                 |    #
                                  |    cookiebaker '$Newdisplay' >> \"\$Xclientcookie\"
                                  |fi
                                  |"
