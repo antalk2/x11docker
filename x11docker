@@ -10854,11 +10854,9 @@ create_xinitrc() {
                             |fi
                             |"
 
-            case "$Xserver" in
-                --hostdisplay) ;;   # do not change host settings
-                *)
-                    case "$Xauthentication" in
-                        yes|trusted|untrusted)
+            if [ "$Xserver" != "--hostdisplay" ] ; then
+                # do not change host settings (if --hostdisplay_
+                if case_match "$Xauthentication" 'yes|trusted|untrusted' ; then
                             case "$Xserver" in
                                 runx) ;;
                                 *)
@@ -10867,16 +10865,14 @@ create_xinitrc() {
                                     echo "disable_X_access_via_xhost"
                                     ;;
                             esac
-                            ;;
-                    esac
+                fi
                     [ -n "$Xhost" ] && {
                         [ "$Xhost" = "auto" ] && Xhost="+SI:localuser:$Containeruser"
                         echo     "warning \"Option --xhost: Running 'xhost $Xhost' on $Newdisplay\""
                         echo     "xhost $Xhost"
                     }
                     echo       ""
-                    ;;
-            esac
+            fi
 
             case "$Xserver" in
                 --hostdisplay|--nxagent) ;;
