@@ -10702,12 +10702,14 @@ create_xinitrc() {
                              |"
                 #
             fi
-            trim_to_bar     "|export $Newxenv"
+            trim_to_bar     "|export $Newxenv
+                             |"
             ;;
 
         *) # here something for real X servers
             trim_to_bar     "|# case Xserver in *), i.e. real X servers
-                             |export $Newxenv"
+                             |export $Newxenv
+                             |"
             #
             if [ "$Xoverip" = "socat" ] ; then
                 (   # local scope
@@ -10720,9 +10722,10 @@ create_xinitrc() {
                         #
                     fi
                     #
-                    echo "echo \"socat -d TCP-LISTEN:${TCP_PORT},fork,bind=${BIND_VALUE} UNIX-CONNECT:$Newxsocket\""
-                    echo        "socat -d TCP-LISTEN:${TCP_PORT},fork,bind=${BIND_VALUE} UNIX-CONNECT:$Newxsocket &"
-                    echo        "storepid \$! socat-tcp"
+                    trim_to_bar "|echo \"socat -d TCP-LISTEN:${TCP_PORT},fork,bind=${BIND_VALUE} UNIX-CONNECT:$Newxsocket\"
+                                 |socat -d TCP-LISTEN:${TCP_PORT},fork,bind=${BIND_VALUE} UNIX-CONNECT:$Newxsocket &
+                                 |storepid \$! socat-tcp
+                                 |"
                 )
             fi
             echo           ""
