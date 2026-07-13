@@ -10972,16 +10972,17 @@ create_xinitrc() {
                               |"
 
             if [ "$Screensize" ] && [ -z "$Scaling" ] ; then
-                trim_to_bar  "|  # Switch to desired screen size $Screensize
-                              |  if [ -n \"\$(xrandr | grep \$Screensize)\" ] ; then
-                              |    note_ttm \"|Will try to set native resolution \$Screensize.
-                              |               |  If that looks ugly, use --scale=1 to enforce a fake scaled resolution.\"
-                              |
-                              |    xrandr --output \$Output --mode \$Screensize
-                              |  else
-                              |    note \"Resolution \$Screensize not found in xrandr.\"
-                              |  fi
-                              |"
+                trim_to_bar \
+                    "|  # Switch to desired screen size $Screensize
+                     |  if [ -n \"\$(xrandr | grep \$Screensize)\" ] ; then
+                     |    note_ttm \"|Will try to set native resolution \$Screensize.
+                     |               |  If that looks ugly, use --scale=1 to enforce a fake scaled resolution.\"
+                     |
+                     |    xrandr --output \$Output --mode \$Screensize
+                     |  else
+                     |    note \"Resolution \$Screensize not found in xrandr.\"
+                     |  fi
+                     |"
             fi
 
             if [ "$Screensize" ] && [ -z "$Scaling" ] ; then
