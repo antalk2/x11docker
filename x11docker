@@ -10156,305 +10156,308 @@ create_xcontainercommand() {
 
     ## create command: Xcontainercommand ##
     ### FIXME --xc=nerdctl does not take combination --detach --rm
-    Xcontainercommand="$Xcontainerbackend run --pull=never"
-    $append_ops_to Xcontainercommand                                                                        \
-                   "--detach"                                                                               \
-                   "--name $Xcontainername"                                                                 \
-                   "--mount type=bind,source=$Sharefolder,target=$Sharefolder"                              \
-                   "--mount type=bind,source=$Cachefolder/etcpasswd.xcontainer,target=/etc/passwd,readonly" \
-                   "--mount type=bind,source=$Cachefolder/etcgroup.xcontainer,target=/etc/group,readonly"   \
-                   "--mount type=bind,source=$Xcontainerrc,target=/xcontainerrc,readonly"
+    {
+        Xcontainercommand="$Xcontainerbackend run --pull=never"
+        $append_ops_to Xcontainercommand                                                                        \
+                       "--detach"                                                                               \
+                       "--name $Xcontainername"                                                                 \
+                       "--mount type=bind,source=$Sharefolder,target=$Sharefolder"                              \
+                       "--mount type=bind,source=$Cachefolder/etcpasswd.xcontainer,target=/etc/passwd,readonly" \
+                       "--mount type=bind,source=$Cachefolder/etcgroup.xcontainer,target=/etc/group,readonly"   \
+                       "--mount type=bind,source=$Xcontainerrc,target=/xcontainerrc,readonly"
 
-    # https://joelkitching.com/writing/x11docker-gnome-containers/
-    # https://github.com/mviereck/x11docker/issues/555
-    # sudo systemctl stop apparmor did not help
-    #  Xcontainercommand="$Xcontainercommand \\
-    #  --privileged \\
-    #  --ipc=host \\
-    #  --mount type=bind,source=/run/udev,target=/run/udev \\
-    #  --mount type=bind,source=/sys/class,target=/sys/class"
+        # https://joelkitching.com/writing/x11docker-gnome-containers/
+        # https://github.com/mviereck/x11docker/issues/555
+        # sudo systemctl stop apparmor did not help
+        #  Xcontainercommand="$Xcontainercommand \\
+        #  --privileged \\
+        #  --ipc=host \\
+        #  --mount type=bind,source=/run/udev,target=/run/udev \\
+        #  --mount type=bind,source=/sys/class,target=/sys/class"
 
-    case "$BackendKind" in
-        docker|podman)
-        $append_ops_to Xcontainercommand                               \
-                       "--rm"                                          \
-                       "--security-opt label=type:container_runtime_t"
-        ;;
-        nerdctl) ;;
-    esac
+        case "$BackendKind" in
+            docker|podman)
+                $append_ops_to Xcontainercommand                               \
+                               "--rm"                                          \
+                               "--security-opt label=type:container_runtime_t"
+                ;;
+            nerdctl) ;;
+        esac
 
-    $append_ops_to Xcontainercommand "--env HOME=/tmp"
+        $append_ops_to Xcontainercommand "--env HOME=/tmp"
 
-    case "$Hostxoverip" in
-        yes)
-            if grep -q "localhost" <<< "$Hostdisplay" ; then
-                #
-                $append_ops_to Xcontainercommand "--network=host"
-                #
-                warning_ttm "|Option --xc: Sharing host network stack
+        case "$Hostxoverip" in
+            yes)
+                if grep -q "localhost" <<< "$Hostdisplay" ; then
+                    #
+                    $append_ops_to Xcontainercommand "--network=host"
+                    #
+                    warning_ttm "|Option --xc: Sharing host network stack
                              |  with container of x11docker/xserver to support 'ssh -X'."
-                #
-            else
-                $append_ops_to Xcontainercommand "--network=bridge"
-            fi
-            ;;
-        no)
-            case "$Xoverip" in
-                no)
-                    $append_ops_to Xcontainercommand "--network=none"
-                    ;;
-                listentcp|socat)
-                    if [ -n "$Xcnetworkid" ] ; then
-                        $append_ops_to Xcontainercommand "--network=$Xcnetworkname"
-                    fi
-                    ;;
-            esac
-            ;;
-    esac
+                    #
+                else
+                    $append_ops_to Xcontainercommand "--network=bridge"
+                fi
+                ;;
+            no)
+                case "$Xoverip" in
+                    no)
+                        $append_ops_to Xcontainercommand "--network=none"
+                        ;;
+                    listentcp|socat)
+                        if [ -n "$Xcnetworkid" ] ; then
+                            $append_ops_to Xcontainercommand "--network=$Xcnetworkname"
+                        fi
+                        ;;
+                esac
+                ;;
+        esac
 
-    case "$Shareipc" in
-        host)
-            $append_ops_to Xcontainercommand "--ipc=host"
-            ;;
-        no)
-            case "$Xserver" in
-                --weston*|--xpra*-xwayland)
-                    $append_ops_to Xcontainercommand "--ipc=host"
-                    ;;
-                *) # if possible, share IPC with X client container to allow MIT-SHM
-                    case "$Xcontainerbackend" in
-                        docker)
-                            $append_ops_to Xcontainercommand "--ipc=shareable"
-                            ;;
-                    esac
-                    ;;
-            esac
-            ;;
-    esac
+        case "$Shareipc" in
+            host)
+                $append_ops_to Xcontainercommand "--ipc=host"
+                ;;
+            no)
+                case "$Xserver" in
+                    --weston*|--xpra*-xwayland)
+                        $append_ops_to Xcontainercommand "--ipc=host"
+                        ;;
+                    *) # if possible, share IPC with X client container to allow MIT-SHM
+                        case "$Xcontainerbackend" in
+                            docker)
+                                $append_ops_to Xcontainercommand "--ipc=shareable"
+                                ;;
+                        esac
+                        ;;
+                esac
+                ;;
+        esac
 
-    case "$Runtime" in
-        "") ;;
-        kata-runtime) ;; ### FIXME check
-        sysbox-runc)
-            [ "$Sharegpu" = "virgl" ] || grep -q "xwayland" <<< "$Xserver" && {
-                    # virgl and Xwayland need shared device files what is not supported yet by sysbox
-                    case "$BackendKind" in
-                        docker)
-                            $append_ops_to Xcontainercommand "--runtime runc"
-                            ;;
-                        podman)
-                            $append_ops_to Xcontainercommand "--runtime crun"
-                            ;;
-                        *) ;;
-                    esac
-                } || {
-                    $append_ops_to Xcontainercommand "--runtime $Runtime"
+        case "$Runtime" in
+            "") ;;
+            kata-runtime) ;; ### FIXME check
+            sysbox-runc)
+                [ "$Sharegpu" = "virgl" ] || grep -q "xwayland" <<< "$Xserver" && {
+                        # virgl and Xwayland need shared device files what is not supported yet by sysbox
+                        case "$BackendKind" in
+                            docker)
+                                $append_ops_to Xcontainercommand "--runtime runc"
+                                ;;
+                            podman)
+                                $append_ops_to Xcontainercommand "--runtime crun"
+                                ;;
+                            *) ;;
+                        esac
+                    } || {
+                        $append_ops_to Xcontainercommand "--runtime $Runtime"
+                    }
+                ;;
+            *)
+                $append_ops_to Xcontainercommand "--runtime $Runtime"
+                ;;
+        esac
+
+        # add code snippets
+        case "$Xserver" in
+            --hostwayland)
+                Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                Xcontainercommand="$Xcontainercommand $Xc_nopriv"
+                Xcontainercommand="$Xcontainercommand $Xc_user"
+                Xcontainercommand="$Xcontainercommand $Xc_hostwayland"
+                Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                ;;
+            --hostdisplay)
+                Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                Xcontainercommand="$Xcontainercommand $Xc_nopriv"
+                Xcontainercommand="$Xcontainercommand $Xc_user"
+                Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
+                Xcontainercommand="$Xcontainercommand $Xc_containerx"
+                Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
+                Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                ;;
+            --xorg)
+                Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                Xcontainercommand="$Xcontainercommand $Xc_user"
+                Xcontainercommand="$Xcontainercommand $Xc_containerx"
+                Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
+                Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                Xcontainercommand="$Xcontainercommand $Xc_console"
+                ;;
+            --xephyr)
+                Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                Xcontainercommand="$Xcontainercommand $Xc_nopriv"
+                Xcontainercommand="$Xcontainercommand $Xc_user"
+                Xcontainercommand="$Xcontainercommand $Xc_containerx"
+                Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
+                Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
+                Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                ;;
+            --xvfb)
+                Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                Xcontainercommand="$Xcontainercommand $Xc_nopriv"
+                Xcontainercommand="$Xcontainercommand $Xc_user"
+                Xcontainercommand="$Xcontainercommand $Xc_containerx"
+                Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
+                Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                ;;
+            --nxagent)
+                Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                Xcontainercommand="$Xcontainercommand $Xc_nopriv"
+                Xcontainercommand="$Xcontainercommand $Xc_user"
+                Xcontainercommand="$Xcontainercommand $Xc_containerx"
+                Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
+                Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
+                Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                $append_ops_to Xcontainercommand  "--env NX_CLIENT=$Nxagentclientrc"
+                ;;
+            --xpra)
+                Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                Xcontainercommand="$Xcontainercommand $Xc_nopriv"
+                Xcontainercommand="$Xcontainercommand $Xc_user"
+                Xcontainercommand="$Xcontainercommand $Xc_containerx"
+                [ -n "$Hostdisplay" ] && [ -z "$Hostwaylandsocket" ] && {
+                    Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
                 }
-            ;;
-        *)
-            $append_ops_to Xcontainercommand "--runtime $Runtime"
-            ;;
-    esac
+                [ "$Hostwaylandsocket" ] && {
+                    Xcontainercommand="$Xcontainercommand $Xc_hostwayland"
+                }
+                Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
+                Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                ;;
+            --xpra2)
+                Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                Xcontainercommand="$Xcontainercommand $Xc_nopriv"
+                Xcontainercommand="$Xcontainercommand $Xc_user"
+                Xcontainercommand="$Xcontainercommand $Xc_containerx"
+                Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                ;;
+            --xpra-xwayland)
+                Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                Xcontainercommand="$Xcontainercommand $Xc_nopriv"
+                Xcontainercommand="$Xcontainercommand $Xc_user"
+                Xcontainercommand="$Xcontainercommand $Xc_containerx"
+                Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
+                Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
+                Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
+                ;;
+            --weston-xwayland)
+                case "$Newxvt" in
+                    "")
+                        Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                        Xcontainercommand="$Xcontainercommand $Xc_nopriv"
+                        Xcontainercommand="$Xcontainercommand $Xc_user"
+                        Xcontainercommand="$Xcontainercommand $Xc_containerx"
+                        Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
+                        Xcontainercommand="$Xcontainercommand $Xc_hostwayland"
+                        Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
+                        Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
+                        Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                        ;;
+                    *)
+                        Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                        #Xcontainercommand="$Xcontainercommand $Xc_user"   # disabled to allow tty switch
+                        Xcontainercommand="$Xcontainercommand $Xc_containerx"
+                        Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
+                        Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                        Xcontainercommand="$Xcontainercommand $Xc_weston"
+                        Xcontainercommand="$Xcontainercommand $Xc_console"
+                        ;;
+                esac
+                ;;
+            --xpra2-xwayland)
+                Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                Xcontainercommand="$Xcontainercommand $Xc_nopriv"
+                Xcontainercommand="$Xcontainercommand $Xc_user"
+                Xcontainercommand="$Xcontainercommand $Xc_containerx"
+                Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
+                Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
+                Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                ;;
+            --xwayland)
+                Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                Xcontainercommand="$Xcontainercommand $Xc_nopriv"
+                Xcontainercommand="$Xcontainercommand $Xc_user"
+                Xcontainercommand="$Xcontainercommand $Xc_containerx"
+                Xcontainercommand="$Xcontainercommand $Xc_hostwayland"
+                Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                ;;
+            --satellite)
+                Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                Xcontainercommand="$Xcontainercommand $Xc_nopriv"
+                Xcontainercommand="$Xcontainercommand $Xc_user"
+                Xcontainercommand="$Xcontainercommand $Xc_containerx"
+                Xcontainercommand="$Xcontainercommand $Xc_hostwayland"
+                Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
+                Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
+                Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                $append_ops_to Xcontainercommand "--env RUST_BACKTRACE=full"
+                ;;
+            --weston)
+                case "$Newxvt" in
+                    "")
+                        Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                        Xcontainercommand="$Xcontainercommand $Xc_nopriv"
+                        Xcontainercommand="$Xcontainercommand $Xc_user"
+                        Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
+                        Xcontainercommand="$Xcontainercommand $Xc_hostwayland"
+                        Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
+                        Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
+                        Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                        ;;
+                    *)
+                        Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                        Xcontainercommand="$Xcontainercommand $Xc_user"
+                        Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
+                        Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                        Xcontainercommand="$Xcontainercommand $Xc_weston"
+                        Xcontainercommand="$Xcontainercommand $Xc_console"
+                        ;;
+                esac
+                ;;
+            --kwin)
+                case "$Newxvt" in
+                    "")
+                        Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                        Xcontainercommand="$Xcontainercommand $Xc_nopriv"
+                        $append_ops_to Xcontainercommand "--cap-add SYS_RESOURCE"
+                        Xcontainercommand="$Xcontainercommand $Xc_user"
+                        Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
+                        Xcontainercommand="$Xcontainercommand $Xc_hostwayland"
+                        Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
+                        Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
+                        Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                        ;;
+                    *)
+                        Xcontainercommand="$Xcontainercommand $Xc_capdrop"
+                        $append_ops_to Xcontainercommand "--cap-add SYS_RESOURCE"
+                        $append_ops_to Xcontainercommand "--env XDG_SESSION_ID=$XDG_SESSION_ID"
+                        Xcontainercommand="$Xcontainercommand $Xc_user"
+                        Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
+                        Xcontainercommand="$Xcontainercommand $Xc_gpu"
+                        Xcontainercommand="$Xcontainercommand $Xc_console"
+                        ;;
+                esac
+                ;;
+            *)
+                error "create_xcontainercommand(): Unknown X server option $Xserver"
+                return 1
+                ;;
+        esac
 
-  # add code snippets
-  case "$Xserver" in
-    --hostwayland)
-      Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-      Xcontainercommand="$Xcontainercommand $Xc_nopriv"
-      Xcontainercommand="$Xcontainercommand $Xc_user"
-      Xcontainercommand="$Xcontainercommand $Xc_hostwayland"
-      Xcontainercommand="$Xcontainercommand $Xc_gpu"
-    ;;
-    --hostdisplay)
-      Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-      Xcontainercommand="$Xcontainercommand $Xc_nopriv"
-      Xcontainercommand="$Xcontainercommand $Xc_user"
-      Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
-      Xcontainercommand="$Xcontainercommand $Xc_containerx"
-      Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
-      Xcontainercommand="$Xcontainercommand $Xc_gpu"
-    ;;
-    --xorg)
-      Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-      Xcontainercommand="$Xcontainercommand $Xc_user"
-      Xcontainercommand="$Xcontainercommand $Xc_containerx"
-      Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
-      Xcontainercommand="$Xcontainercommand $Xc_gpu"
-      Xcontainercommand="$Xcontainercommand $Xc_console"
-    ;;
-    --xephyr)
-      Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-      Xcontainercommand="$Xcontainercommand $Xc_nopriv"
-      Xcontainercommand="$Xcontainercommand $Xc_user"
-      Xcontainercommand="$Xcontainercommand $Xc_containerx"
-      Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
-      Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
-      Xcontainercommand="$Xcontainercommand $Xc_gpu"
-    ;;
-    --xvfb)
-      Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-      Xcontainercommand="$Xcontainercommand $Xc_nopriv"
-      Xcontainercommand="$Xcontainercommand $Xc_user"
-      Xcontainercommand="$Xcontainercommand $Xc_containerx"
-      Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
-      Xcontainercommand="$Xcontainercommand $Xc_gpu"
-    ;;
-    --nxagent)
-      Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-      Xcontainercommand="$Xcontainercommand $Xc_nopriv"
-      Xcontainercommand="$Xcontainercommand $Xc_user"
-      Xcontainercommand="$Xcontainercommand $Xc_containerx"
-      Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
-      Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
-      Xcontainercommand="$Xcontainercommand $Xc_gpu"
-      $append_ops_to Xcontainercommand  "--env NX_CLIENT=$Nxagentclientrc"
-    ;;
-    --xpra)
-      Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-      Xcontainercommand="$Xcontainercommand $Xc_nopriv"
-      Xcontainercommand="$Xcontainercommand $Xc_user"
-      Xcontainercommand="$Xcontainercommand $Xc_containerx"
-      [ -n "$Hostdisplay" ] && [ -z "$Hostwaylandsocket" ] && {
-        Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
-      }
-      [ "$Hostwaylandsocket" ] && {
-        Xcontainercommand="$Xcontainercommand $Xc_hostwayland"
-      }
-      Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
-      Xcontainercommand="$Xcontainercommand $Xc_gpu"
-    ;;
-    --xpra2)
-      Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-      Xcontainercommand="$Xcontainercommand $Xc_nopriv"
-      Xcontainercommand="$Xcontainercommand $Xc_user"
-      Xcontainercommand="$Xcontainercommand $Xc_containerx"
-      Xcontainercommand="$Xcontainercommand $Xc_gpu"
-    ;;
-    --xpra-xwayland)
-      Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-      Xcontainercommand="$Xcontainercommand $Xc_nopriv"
-      Xcontainercommand="$Xcontainercommand $Xc_user"
-      Xcontainercommand="$Xcontainercommand $Xc_containerx"
-      Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
-      Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
-      Xcontainercommand="$Xcontainercommand $Xc_gpu"
-      Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
-    ;;
-    --weston-xwayland)
-      case "$Newxvt" in
-        "")
-          Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-          Xcontainercommand="$Xcontainercommand $Xc_nopriv"
-          Xcontainercommand="$Xcontainercommand $Xc_user"
-          Xcontainercommand="$Xcontainercommand $Xc_containerx"
-          Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
-          Xcontainercommand="$Xcontainercommand $Xc_hostwayland"
-          Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
-          Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
-          Xcontainercommand="$Xcontainercommand $Xc_gpu"
-        ;;
-        *)
-          Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-          #Xcontainercommand="$Xcontainercommand $Xc_user"   # disabled to allow tty switch
-          Xcontainercommand="$Xcontainercommand $Xc_containerx"
-          Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
-          Xcontainercommand="$Xcontainercommand $Xc_gpu"
-          Xcontainercommand="$Xcontainercommand $Xc_weston"
-          Xcontainercommand="$Xcontainercommand $Xc_console"
-        ;;
-      esac
-    ;;
-    --xpra2-xwayland)
-      Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-      Xcontainercommand="$Xcontainercommand $Xc_nopriv"
-      Xcontainercommand="$Xcontainercommand $Xc_user"
-      Xcontainercommand="$Xcontainercommand $Xc_containerx"
-      Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
-      Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
-      Xcontainercommand="$Xcontainercommand $Xc_gpu"
-    ;;
-    --xwayland)
-      Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-      Xcontainercommand="$Xcontainercommand $Xc_nopriv"
-      Xcontainercommand="$Xcontainercommand $Xc_user"
-      Xcontainercommand="$Xcontainercommand $Xc_containerx"
-      Xcontainercommand="$Xcontainercommand $Xc_hostwayland"
-      Xcontainercommand="$Xcontainercommand $Xc_gpu"
-    ;;
-    --satellite)
-      Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-      Xcontainercommand="$Xcontainercommand $Xc_nopriv"
-      Xcontainercommand="$Xcontainercommand $Xc_user"
-      Xcontainercommand="$Xcontainercommand $Xc_containerx"
-      Xcontainercommand="$Xcontainercommand $Xc_hostwayland"
-      Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
-      Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
-      Xcontainercommand="$Xcontainercommand $Xc_gpu"
-      $append_ops_to Xcontainercommand "--env RUST_BACKTRACE=full"
-    ;;
-    --weston)
-      case "$Newxvt" in
-        "")
-          Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-          Xcontainercommand="$Xcontainercommand $Xc_nopriv"
-          Xcontainercommand="$Xcontainercommand $Xc_user"
-          Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
-          Xcontainercommand="$Xcontainercommand $Xc_hostwayland"
-          Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
-          Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
-          Xcontainercommand="$Xcontainercommand $Xc_gpu"
-        ;;
-        *)
-          Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-          Xcontainercommand="$Xcontainercommand $Xc_user"
-          Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
-          Xcontainercommand="$Xcontainercommand $Xc_gpu"
-          Xcontainercommand="$Xcontainercommand $Xc_weston"
-          Xcontainercommand="$Xcontainercommand $Xc_console"
-        ;;
-      esac
-    ;;
-    --kwin)
-      case "$Newxvt" in
-        "")
-          Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-          Xcontainercommand="$Xcontainercommand $Xc_nopriv"
-          $append_ops_to Xcontainercommand "--cap-add SYS_RESOURCE"
-          Xcontainercommand="$Xcontainercommand $Xc_user"
-          Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
-          Xcontainercommand="$Xcontainercommand $Xc_hostwayland"
-          Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
-          Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
-          Xcontainercommand="$Xcontainercommand $Xc_gpu"
-        ;;
-        *)
-          Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-          $append_ops_to Xcontainercommand "--cap-add SYS_RESOURCE"
-          $append_ops_to Xcontainercommand "--env XDG_SESSION_ID=$XDG_SESSION_ID"
-          Xcontainercommand="$Xcontainercommand $Xc_user"
-          Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
-          Xcontainercommand="$Xcontainercommand $Xc_gpu"
-          Xcontainercommand="$Xcontainercommand $Xc_console"
-        ;;
-      esac
-    ;;
-    *)
-      error "create_xcontainercommand(): Unknown X server option $Xserver"
-      return 1
-    ;;
-  esac
+        # --clipboard
+        case "$Shareclipboard" in
+            no|""|native*) ;;
+            *)
+                Xcontainercommand="$Xcontainercommand $Xc_hostx"
 
-  # --clipboard
-  case "$Shareclipboard" in
-    no|""|native*) ;;
-    *)
-      Xcontainercommand="$Xcontainercommand $Xc_hostx
-  --device /dev/input"
-    ;;
-  esac
+                # Note: \\ was missing in the next line.
+                $append_ops_to Xcontainercommand "--device /dev/input"
+                ;;
+        esac
 
-  Xcontainercommand="$Xcontainercommand \\
-  $Xcontainerimage bash /xcontainerrc"
+        $append_ops_to Xcontainercommand "$Xcontainerimage bash /xcontainerrc"
+    } # Xcontainercommand
 
   # xcontainerrc
   echo "#! /bin/bash
