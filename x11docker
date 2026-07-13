@@ -11234,14 +11234,28 @@ disable_X_access_via_xhost() {
 
 # Function: setup_xcnetwork
 #
-# Usage:  setup_xcnetwork
+# Usage:  setup_xcnetwork          # setup
 #         setup_xcnetwork remove
 #
 # Brief: --xoverip --xc: Start internal network between X container
 #                        and command container
 #
+# Globals:
+#    BackendKind
+#    Xcontainerbackend
+#    Xcrootless
+#    Backendrootless
+#    Xcontainer_option
+#    Hostxoverip
+#    Xoverip
+#    g_Network
+#    Xinitlogfile
+#    Backendbin
+#    Xcnetworkid : write
+#    Xcnetworkname
+#
 setup_xcnetwork() {
-    local cmd="${1:-do_setup}"
+    local cmd="${1:-setup}"
     local Internal
 
     #  !(a && b) = (!a) || (!b)
@@ -11251,24 +11265,38 @@ setup_xcnetwork() {
     if [ "$Xcrootless"  != "$Backendrootless"   ] ; then return 1; fi
     
     case "${cmd}" in
-        do_setup)
-            if [ "$Xcontainer_option" = "yes" ] && [ "$Hostxoverip" = "no" ] ; then
-                if case_match "$Xoverip" 'yes|listentcp|socat' ; then
-                    case "$g_Network" in
-                        none) Internal="--internal" ;;
-                        ""|bridge) Internal="";;
-                        *) return 1 ;; ### FIXME
-                    esac
-                    Xcnetworkid="$(unpriv_backend "$Backendbin network create $Internal $Xcnetworkname")" 2>>$Xinitlogfile || return 1
-                    debugnote "setup_xcnetwork(): Creating $Xcnetworkname $Xcnetworkid"
-                fi
+
+        setup)
+            if [ "$Xcontainer_option" = "yes" ] \
+                   && [ "$Hostxoverip" = "no" ] \
+                   && case_match "$Xoverip" 'yes|listentcp|socat' ;
+            then
+                case "$g_Network" in
+                    none)        Internal="--internal" ;;
+                    ""|bridge)   Internal=""           ;;
+                    *) return 1 ;; ### FIXME
+                esac
+
+                Xcnetworkid="$(
+                             unpriv_backend "$Backendbin network create $Internal $Xcnetworkname"
+                          )" 2>>$Xinitlogfile || return 1
+
+                debugnote "setup_xcnetwork(): Creating $Xcnetworkname $Xcnetworkid"
             fi
             ;;
+
         remove)
-            [ -n "$Xcnetworkid" ] && {
+            if [ -n "$Xcnetworkid" ] ; then
                 debugnote "setup_xcnetwork(): Removing $Xcnetworkname $Xcnetworkid"
-                unpriv_backend "$Backendbin network remove $Xcnetworkid" >>$Xinitlogfile 2>&1 || return 1
-            }
+                #
+                unpriv_backend "$Backendbin network remove $Xcnetworkid" \
+                               >>$Xinitlogfile \
+                               2>&1            \
+                    || return 1
+                #
+                # Q: Should we reset Xcnetworkid here?
+                #
+            fi
             ;;
         *) error "setup_xcnetwork(): Unexpected cmd" ;;
     esac
