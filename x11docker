@@ -10307,8 +10307,7 @@ create_xcontainercommand() {
       Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
       Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
       Xcontainercommand="$Xcontainercommand $Xc_gpu"
-      Xcontainercommand="$Xcontainercommand \\
-  --env NX_CLIENT=$Nxagentclientrc"
+      $append_ops_to Xcontainercommand  "--env NX_CLIENT=$Nxagentclientrc"
     ;;
     --xpra)
       Xcontainercommand="$Xcontainercommand $Xc_capdrop"
@@ -10391,8 +10390,7 @@ create_xcontainercommand() {
       Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
       Xcontainercommand="$Xcontainercommand $Xc_nomitshm"
       Xcontainercommand="$Xcontainercommand $Xc_gpu"
-      Xcontainercommand="$Xcontainercommand \\
-  --env RUST_BACKTRACE=full"
+      $append_ops_to Xcontainercommand "--env RUST_BACKTRACE=full"
     ;;
     --weston)
       case "$Newxvt" in
@@ -10421,8 +10419,7 @@ create_xcontainercommand() {
         "")
           Xcontainercommand="$Xcontainercommand $Xc_capdrop"
           Xcontainercommand="$Xcontainercommand $Xc_nopriv"
-          Xcontainercommand="$Xcontainercommand \\
-  --cap-add SYS_RESOURCE"
+          $append_ops_to Xcontainercommand "--cap-add SYS_RESOURCE"
           Xcontainercommand="$Xcontainercommand $Xc_user"
           Xcontainercommand="$Xcontainercommand $Xc_hostx" && Xc_hostx=""
           Xcontainercommand="$Xcontainercommand $Xc_hostwayland"
@@ -10432,10 +10429,8 @@ create_xcontainercommand() {
         ;;
         *)
           Xcontainercommand="$Xcontainercommand $Xc_capdrop"
-          Xcontainercommand="$Xcontainercommand \\
-  --cap-add SYS_RESOURCE"
-          Xcontainercommand="$Xcontainercommand \\
-  --env XDG_SESSION_ID=$XDG_SESSION_ID"
+          $append_ops_to Xcontainercommand "--cap-add SYS_RESOURCE"
+          $append_ops_to Xcontainercommand "--env XDG_SESSION_ID=$XDG_SESSION_ID"
           Xcontainercommand="$Xcontainercommand $Xc_user"
           Xcontainercommand="$Xcontainercommand $Xc_containerwayland"
           Xcontainercommand="$Xcontainercommand $Xc_gpu"
