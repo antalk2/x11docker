@@ -10604,7 +10604,9 @@ create_xinitrc() {
                  |"
 
     trim_to_bar "|getprimary() {
-                 |  xrandr | grep -q primary || xrandr --output \$(xrandr | grep ' connected' | head -n1 | cut -d' ' -f1) --primary
+                 |  if ! xrandr | grep -q primary ; then
+                 |       xrandr --output \$(xrandr | grep ' connected' | head -n1 | cut -d' ' -f1) --primary
+                 |  fi
                  |  echo \$(xrandr | grep primary | cut -d' ' -f1)
                  |}
                  |"
