@@ -10721,15 +10721,13 @@ create_xinitrc() {
                 (   # local scope
                     local TCP_PORT="$((6000+Newdisplaynumber))"
                     local BIND_VALUE=""
-                    if [ -n "$Xcnetworkid" ] ; then
-                        BIND_VALUE="$Xcontainername"
-                    else
-                        BIND_VALUE="${Xcontainerip:-$Hostip}"
-                        #
+                    if [ -n "$Xcnetworkid" ] ;
+                    then BIND_VALUE="$Xcontainername"
+                    else BIND_VALUE="${Xcontainerip:-$Hostip}"
                     fi
                     #
                     trim_to_bar "|echo \"socat -d TCP-LISTEN:${TCP_PORT},fork,bind=${BIND_VALUE} UNIX-CONNECT:$Newxsocket\"
-                                 |socat -d TCP-LISTEN:${TCP_PORT},fork,bind=${BIND_VALUE} UNIX-CONNECT:$Newxsocket &
+                                 |socat        -d TCP-LISTEN:${TCP_PORT},fork,bind=${BIND_VALUE} UNIX-CONNECT:$Newxsocket &
                                  |storepid \$! socat-tcp
                                  |"
                 )
