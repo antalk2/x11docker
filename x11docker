@@ -10832,7 +10832,7 @@ create_xinitrc() {
                                  |    debugnote_ttm '|xinitrc(): Failed to create cookie with xauth.
                                  |                   : Will try custom cookie baker script.'
                                  |    #
-                                 |    cookiebaker '$Newdisplay' >> \"\$Xclientcookie\"
+                                 |    cookiebaker \"\$Newdisplay\" >> \"\$Xclientcookie\"
                                  |fi
                                  |"
 
@@ -10848,10 +10848,10 @@ create_xinitrc() {
 
             fi # Xauthentication !== no
 
-            trim_to_bar    "|export XAUTHORITY=\$Xclientcookie
+            trim_to_bar    "|export XAUTHORITY=\"\$Xclientcookie\"
                             |if [ '$Xauthentication' = 'no' ] || [ ! -s \"\$Xclientcookie\" ] ; then
                             |    unset XAUTHORITY
-                            |    warning 'Option --xauth=no: X server $Newdisplay runs without cookie authentication.'
+                            |    warning \"Option --xauth=no: X server '\$Newdisplay' runs without cookie authentication.\"
                             |fi
                             |"
 
@@ -10871,7 +10871,7 @@ create_xinitrc() {
                     if [ "$Xhost" = "auto" ] ; then
                         Xhost="+SI:localuser:$Containeruser"
                     fi
-                    trim_to_bar "|warning \"Option --xhost: Running 'xhost $Xhost' on $Newdisplay\"
+                    trim_to_bar "|warning \"Option --xhost: Running 'xhost $Xhost' on \$Newdisplay\"
                                  |xhost $Xhost
                                  |"
                 fi
@@ -10894,10 +10894,10 @@ create_xinitrc() {
                     fi
 
                     [ -s "$Xkbkeymapfile" ] && {
-                        echo   "# set keyboard layout on $Newdisplay"
+                        echo   "# set keyboard layout on \$Newdisplay"
                         echo   "NEWLINE=$'\\n'"
                         echo   "verbose \"Keyboard layout:\${NEWLINE}\$(cat \"\$Xkbkeymapfile\")\""
-                        echo   "xkbcomp \$Xkbkeymapfile $Newdisplay"
+                        echo   "xkbcomp \$Xkbkeymapfile \"\$Newdisplay\""
                     }
                     echo     ""
                 fi
