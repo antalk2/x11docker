@@ -11175,8 +11175,8 @@ create_xinitrc() {
 } # end create_xinitrc
 
 #
-# function disable_X_access_via_xhost() : Remove any access to X server granted by
-#                            `xhost`
+# Function: disable_X_access_via_xhost
+# Brief: Remove any access to X server granted by `xhost`
 #
 # Usage: disable_X_access_via_xhost [Environment]
 #
