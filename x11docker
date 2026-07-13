@@ -11031,11 +11031,12 @@ create_xinitrc() {
                 # causes mouse barriers/crtc-boundaries.
                 #
                 trim_to_bar  "|  xrandr --output \$Output --scale-from \$Screensize --panning \$Screensize+0+0/\$Screensize+0+0 --verbose
-                              |  checkscreensize || {
+                              |
+                              |  if ! checkscreensize ; then
                               |    getscreensize
                               |    note \"Setting desired resolution \$Screensize failed.
                               |  Detected resolution \${CurrentXaxis}x\${CurrentYaxis} instead.\"
-                              |  }
+                              |  fi
                               |"
                 #
             fi
