@@ -10748,10 +10748,11 @@ create_xinitrc() {
                 echo         "  :"
                 case "$Xauthentication" in
                     untrusted)
-            echo     "  error '--xauth=untrusted: Failed to create cookie
-  for untrusted clients.
-  Maybe your X server misses extension SECURITY.'"
-            ;;
+                        trim_to_bar "|  error '--xauth=untrusted: Failed to create cookie
+                                     |  for untrusted clients.
+                                     |  Maybe your X server misses extension SECURITY.'
+                                     |"
+                        ;;
                 esac
                 echo         "}"
                 [ "$Xserver" = "--hostdisplay" ] && {
