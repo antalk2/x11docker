@@ -10992,7 +10992,9 @@ create_xinitrc() {
                      |               |  maximal screen size, you can move virtual screen with mouse at screen edges.
                      |               |  You can force the virtual screen to match your monitor with option --scale=1\"
                      |
-                     |    xrandr --output \$Output --panning \$Screensize+0+0/\$Screensize+0+0/100/100/100/100 --verbose
+                     |    xrandr --output  \$Output                                          \\
+                     |           --panning \$Screensize+0+0/\$Screensize+0+0/100/100/100/100 \\
+                     |           --verbose
                      |  fi
                      |
                      |  if ! checkscreensize ; then
