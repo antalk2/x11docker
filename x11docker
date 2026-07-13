@@ -10817,14 +10817,14 @@ create_xinitrc() {
                                  |fi
                                  |"
                 
-                echo         "if [ -s \"\$Xclientcookie\" ] ; then"
-                echo         "    # Prepare cookie with localhost identification disabled by ffff,"
-                echo         "    # needed if X socket is shared. ffff means 'familiy wild'"
-                echo         "    Cookie=\"\$(xauth -n -i -f \"\$Xclientcookie\" nlist | sed -e 's/^..../ffff/')\""
-                echo         "    truncate -s0 \"\$Xclientcookie\"  "
-                echo         "    echo \"\$Cookie\" | xauth -v -n -i -f \"\$Xclientcookie\" nmerge -"
-                echo         "fi"
-                echo         ""
+                trim_to_bar     "|if [ -s \"\$Xclientcookie\" ] ; then
+                                 |    # Prepare cookie with localhost identification disabled by ffff,
+                                 |    # needed if X socket is shared. ffff means 'familiy wild'
+                                 |    Cookie=\"\$(xauth -n -i -f \"\$Xclientcookie\" nlist | sed -e 's/^..../ffff/')\"
+                                 |    truncate -s0 \"\$Xclientcookie\"
+                                 |    echo \"\$Cookie\" | xauth -v -n -i -f \"\$Xclientcookie\" nmerge -
+                                 |fi
+                                 |"
 
                 echo         "[ -s \"\$Xclientcookie\" ] || {"
                 echo         "  debugnote 'xinitrc(): Failed to create cookie with xauth. Will try custom cookie baker script.'"
