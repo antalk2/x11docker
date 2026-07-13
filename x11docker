@@ -10826,10 +10826,11 @@ create_xinitrc() {
                                  |fi
                                  |"
 
-                echo         "[ -s \"\$Xclientcookie\" ] || {"
+                echo         "if [ ! -s \"\$Xclientcookie\" ] ; then"
                 echo         "  debugnote 'xinitrc(): Failed to create cookie with xauth. Will try custom cookie baker script.'"
                 echo         "  cookiebaker '$Newdisplay' >> \"\$Xclientcookie\" "
-                echo         "}"
+                echo         "fi"
+
                 echo         "ls -l \"\$Xclientcookie\" "
                 echo         "truncate -s0 $Xservercookie"
                 echo         "cat \"\$Xclientcookie\" >> $Xservercookie"
