@@ -11045,8 +11045,9 @@ create_xinitrc() {
             fi # end Scaling
 
             if [ -n "$Rotation" ] ; then
-                echo         "  # --rotate $Rotation"
-                echo         "  verbose 'Rotation $Rotation'"
+                trim_to_bar "|  # --rotate $Rotation
+                             |  verbose 'Rotation $Rotation'
+                             |"
                 case "$Rotation" in
                     0|normal)    Rotation="" ;;
                     90)          Rotation="--rotate right";;
@@ -11057,21 +11058,23 @@ create_xinitrc() {
                     flipped-180) Rotation="--reflect x";;
                     flipped-270) Rotation="--rotate left --reflect x";;
                 esac
-                echo         "  bash -c 'while read Line ; do xrandr --output \$Line $Rotation ; done < <(xrandr | grep \" connected\" | cut -d \" \" -f1)'"
+                trim_to_mark "|  bash -c 'while read Line ; do
+                              :xrandr --output \$Line $Rotation ;
+                              : done < <(xrandr | grep \" connected\" | cut -d \" \" -f1)'"
                 echo         ""
             fi
 
-            echo           "  :"
-            echo           "} || {"
-            echo           "  Xaxis=${Xaxis:-1024}"
-            echo           "  Yaxis=${Yaxis:-768}"
-            echo           "  Screensize=\"\${Xaxis}x\${Yaxis}\""
-            echo           "  note \"Could not detect any connected monitor."
-            echo           "  Running on a server? Is xrandr installed? Will try to set a framebuffer size"
-            echo           "  with \"xrandr --fb \$Screensize\" that may serve as a virtual display.\""
-            echo           "  xrandr --fb \$Screensize"
-            echo           "}"
-            echo           ""
+            trim_to_bar    "|  :
+                            |} || {
+                            |  Xaxis=${Xaxis:-1024}
+                            |  Yaxis=${Yaxis:-768}
+                            |  Screensize=\"\${Xaxis}x\${Yaxis}\"
+                            |  note \"Could not detect any connected monitor.
+                            |  Running on a server? Is xrandr installed? Will try to set a framebuffer size
+                            |  with \"xrandr --fb \$Screensize\" that may serve as a virtual display.\"
+                            |  xrandr --fb \$Screensize
+                            |}
+                            |"
             ;;
 
     esac # end case Xserver (2)
