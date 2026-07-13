@@ -11088,37 +11088,39 @@ create_xinitrc() {
     echo ""
 
   # --wm
-  [ "$Windowmanagermode" = "host" ] && {  # Windowmanagermode_host
-    echo             "# window manager"
-    echo             "$Windowmanagercommand & storepid \$! windowmanager"
-    echo             "# only one desktop"
-    echo             "sleep 1 && wmctrl -n 1 &"
-  }
+  if [ "$Windowmanagermode" = "host" ] ; then  # Windowmanagermode_host
+    trim_to_bar  "|# window manager
+                  |$Windowmanagercommand & storepid \$! windowmanager
+                  |# only one desktop
+                  |sleep 1 && wmctrl -n 1 &
+                  |"
+  fi
 
   # --xeyes
-  [ -n "$Xeyes" ] && {
-    echo             "xeyes +shape $Xeyes &"
-    echo             "storepid \$! xeyes"
-  }
+  if [ -n "$Xeyes" ] ; then
+    trim_to_bar "|xeyes +shape $Xeyes &
+                 |storepid \$! xeyes
+                 |"
+  fi
 
   # --xlogo
-  [ -n "$Xlogo" ] && {
-    echo             "xlogo &"
-    echo             "storepid \$! xlogo"
-  }
+  if [ -n "$Xlogo" ] ; then
+    trim_to_bar "|xlogo &
+                 |storepid \$! xlogo
+                 |"
+  fi
 
   # --xfishtank
-  [ "$Xfishtank" = "yes" ] && echo "xfishtank -nomenu & storepid \$! xfishtank"
+  if [ "$Xfishtank" = "yes" ] ; then
+      echo "xfishtank -nomenu & storepid \$! xfishtank"
+  fi
 
   echo               "echo 'xinitrc: xinitrc is ready'"
   #echo               "storeinfo_add_kv_sh xinitrc=ready"
   echo               ""
 
   # --clipboard
-  case "$Shareclipboard" in
-    no) ;;
-    native* ) ;;
-    yes|h2c|c2h|cmv)
+  if case_match "$Shareclipboard" 'yes|h2c|c2h|cmv' ; then
       case "$Xserver" in
         --xwin|--runx) ;;                           # have their own clipboard management
         --hostdisplay|--hostwayland) ;;             # already same clipboard
@@ -11128,29 +11130,44 @@ create_xinitrc() {
           echo       ""
         ;;
       esac
-    ;;
-  esac
+  fi
 
   # --checkwindow
-  [ "$Checkforopenwindow" ] && {
-    echo             "sleep 5"
-    echo             "while rocknroll; do"
-    echo             "  sleep 2"
+  if [ "$Checkforopenwindow" ] ; then
+    trim_to_bar "|sleep 5
+                 |while rocknroll; do
+                 |  sleep 2
+                 |"
+    #
     case "$Checkforopenwindow" in
-      yes)
-        echo         "  [ \"\$(xwininfo -root -children | grep -v '(has no name)' | awk '{print \$1}' | grep -c ^0x)\" = '0' ] && break"
-      ;;
-      *)
-        echo         "  xwininfo -root -children | grep -q '$Checkforopenwindow' || break"
-      ;;
+        yes)
+            # grep -c, --count
+            # We count the windows that have a name (and a window id, 0x....)
+            #
+            trim_to_bar "|  if [  \"\$( xwininfo -root -children  \\
+                         |              | grep -v '(has no name)' \\
+                         |              | awk '{print \$1}'       \\
+                         |              | grep -c ^0x             )\" = '0'  ] ;
+                         |  then break
+                         |  fi
+                         |"
+            ;;
+        *)
+            # Checkforopenwindow is a regexp for windows?
+            trim_to_bar "|  if ! xwininfo -root -children        \\
+                         |       | grep -q '$Checkforopenwindow' ;
+                         |  then break
+                         |  fi"
+            ;;
     esac
-    echo             "done"
-    echo             "saygoodbye"
-  }
+    trim_to_bar  "|done # while rocknroll
+                  |saygoodbye
+                  |"
+  fi
 
   echo               "# wait for the end"
   case "$Usemkfifo" in
-    yes) echo        "read Var <$Timetosaygoodbyefifo" ;;
+    yes) echo        "read Var <$Timetosaygoodbyefifo"   ;;
     no)  echo        "while rocknroll; do sleep 1; done" ;;
   esac
 
