@@ -11042,7 +11042,7 @@ create_xinitrc() {
                               |  fi
                               |"
                 #
-            fi
+            fi # end Scaling
 
             [ -n "$Rotation" ] && {
                 echo         "  # --rotate $Rotation"
