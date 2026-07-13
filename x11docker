@@ -11351,8 +11351,12 @@ store_newxenv() {
         done
     fi
     
-  [ -n "$XDG_RUNTIME_DIR" ]           && storeinfo_add_kv_sh "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"    && Newxenv="$Newxenv XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
-  Newxenv="$(awk '{$1=$1;print}' <<< " $Newxenv ")" # Remove superfluous whitespaces
+    if [ -n "$XDG_RUNTIME_DIR" ] ; then
+        storeinfo_add_kv_sh "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
+        Newxenv="$Newxenv XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
+    fi
+
+    Newxenv="$(awk '{$1=$1;print}' <<< " $Newxenv ")" # Remove superfluous whitespaces
   storeinfo_add_kv_sh "Xenv=$Newxenv"
 
   # X / Wayland environment variables for container
