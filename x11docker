@@ -10795,13 +10795,14 @@ create_xinitrc() {
                 fi
 
                 [ "$Xserver" = "--hostdisplay" ] && {
-                    echo       "if [ ! -s \"\$Xclientcookie\" ] ; then"
-                    echo       "  if [ -n \"\$Hostcookie\" ] ; then"
-                    echo       "    debugnote 'xinitrc() --hostdisplay: Failed to retrieve cookie from X server."
-                    echo       "  Maybe your X server misses extension SECURITY. Will bake one with host cookie.'"
-                    echo       "    xauth -v -n -i -f \"\$Xclientcookie\" add :$Newdisplaynumber . \$Hostcookie"
-                    echo       "  fi"
-                    echo       "fi"
+                    trim_to_bar "|if [ ! -s \"\$Xclientcookie\" ] ; then
+                                 |  if [ -n \"\$Hostcookie\" ] ; then
+                                 |    debugnote 'xinitrc() --hostdisplay: Failed to retrieve cookie from X server.
+                                 |  Maybe your X server misses extension SECURITY. Will bake one with host cookie.'
+                                 |    xauth -v -n -i -f \"\$Xclientcookie\" add :$Newdisplaynumber . \$Hostcookie
+                                 |  fi
+                                 |fi
+                                 |"
                 }
                 echo         "[ -s \"\$Xclientcookie\" ] || { "
                 echo         "  # still no cookie? try to create one without extension security"
