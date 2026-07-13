@@ -10620,10 +10620,11 @@ create_xinitrc() {
                      |Sharefolder='$Sharefolder'
                      |"
 
-        # FIXME: with_Sharefolder and with_Cachefolder are global functions,
-        #        use prefixed names.
         #
-        with_Sharefolder() {
+        # Usage: create_xinitrc_HELPER_with_Sharefolder path
+        # If path starts with "$Sharefolder/", emit "$Sharefolder/"'${the_rest}'
+        #
+        create_xinitrc_HELPER_with_Sharefolder() {
             local value="${1}"
             if [[ "${value}"  == "$Sharefolder/"* ]] ; then
                 echo "\"\$Sharefolder/\"'${value#$Sharefolder/}'"
@@ -10631,7 +10632,7 @@ create_xinitrc() {
                 echo "'$value'"
             fi
         }
-        with_Cachefolder() {
+        create_xinitrc_HELPER_with_Cachefolder() {
             local value="${1}"
             if [[ "${value}"  == "$Cachefolder/"* ]] ; then
                 echo "\"\$Cachefolder/\"'${value#$Cachefolder/}'"
@@ -10639,10 +10640,13 @@ create_xinitrc() {
                 echo "'$value'"
             fi
         }
-        echo "Messagefile=$(   with_Sharefolder "$Messagefifo"   )"
-        echo "Storeinfofile=$( with_Sharefolder "$Storeinfofile" )"
-        echo "Storepidfile=$(  with_Cachefolder "$Storepidfile"  )"
-        echo "Timetosaygoodbyefile=$( with_Sharefolder "$Timetosaygoodbyefile"   )"
+        local with_Sharefolder="create_xinitrc_HELPER_with_Sharefolder"
+        local with_Cachefolder="create_xinitrc_HELPER_with_Cachefolder"
+        #
+        echo "Messagefile=$(   $with_Sharefolder "$Messagefifo"   )"
+        echo "Storeinfofile=$( $with_Sharefolder "$Storeinfofile" )"
+        echo "Storepidfile=$(  $with_Cachefolder "$Storepidfile"  )"
+        echo "Timetosaygoodbyefile=$( $with_Sharefolder "$Timetosaygoodbyefile"   )"
     else
         trim_to_bar "|Messagefile='$Messagefifo'
                      |Storeinfofile='$Storeinfofile'
