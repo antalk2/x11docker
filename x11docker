@@ -10795,7 +10795,7 @@ create_xinitrc() {
                                  |"
                 fi
 
-                [ "$Xserver" = "--hostdisplay" ] && {
+                if [ "$Xserver" = "--hostdisplay" ] ; then
                     trim_to_bar "|if [ ! -s \"\$Xclientcookie\" ] ; then
                                  |  if [ -n \"\$Hostcookie\" ] ; then
                                  |    debugnote_ttm '|xinitrc() --hostdisplay: Failed to retrieve cookie from X server.
@@ -10806,13 +10806,16 @@ create_xinitrc() {
                                  |  fi
                                  |fi
                                  |"
-                }
-                
-                echo         "if [ ! -s \"\$Xclientcookie\" ] ; then"
-                echo         "  # still no cookie? try to create one without extension security"
-                echo         "  debugnote 'xinitrc(): Failed to retrieve trusted cookie from X server. Will bake one directly with xauth'"
-                echo         "  xauth -v -n -i -f \"\$Xclientcookie\" add :$Newdisplaynumber . $(makecookie)"
-                echo         "fi"
+                fi
+
+                trim_to_bar     "|if [ ! -s \"\$Xclientcookie\" ] ; then
+                                 |    # still no cookie? try to create one without extension security
+                                 |    debugnote_ttm '|xinitrc(): Failed to retrieve trusted cookie from X server.
+                                 |                   : Will bake one directly with xauth'
+                                 |    #
+                                 |    xauth -v -n -i -f \"\$Xclientcookie\" add :$Newdisplaynumber . $(makecookie)
+                                 |fi
+                                 |"
                 
                 echo         "[ -s \"\$Xclientcookie\" ] && {"
                 echo         "  # Prepare cookie with localhost identification disabled by ffff, needed if X socket is shared. ffff means 'familiy wild'"
