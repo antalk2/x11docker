@@ -11335,18 +11335,15 @@ store_newxenv() {
         Newxenv="$Newxenv XAUTHORITY=$Xclientcookie"
     fi
 
-    case "$Newwaylandsocket" in
-        "")
+    if [ -z "$Newwaylandsocket" ] ; then
             if [ "$Sharehostwayland" = "yes" ] ; then
                 storeinfo_add_kv_sh "WAYLAND_DISPLAY=$Hostwaylandsocket"
                 Newxenv="$Newxenv WAYLAND_DISPLAY=$Hostwaylandsocket"
             fi
-            ;;
-        *)
+    else
             storeinfo_add_kv_sh "WAYLAND_DISPLAY=$Newwaylandsocket"
             Newxenv="$Newxenv WAYLAND_DISPLAY=$Newwaylandsocket"
-            ;;
-    esac
+    fi
 
     [ "$Setupwayland" = "yes" ] && for Line in $Waylandtoolkitenv ; do                        Newxenv="$Newxenv $Line" ; done
   [ -n "$XDG_RUNTIME_DIR" ]           && storeinfo_add_kv_sh "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"    && Newxenv="$Newxenv XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
