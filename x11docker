@@ -11232,33 +11232,48 @@ disable_X_access_via_xhost() {
     return 0
 }
 
-setup_xcnetwork() {             # --xoverip --xc: start internal network between X container and command container
-  local Internal
-  [ "$BackendKind" = "$Xcontainerbackend" ] && [ "$Xcrootless" = "$Backendrootless" ] || return 1
-  case "${1:-}" in
-    "")
-      [ "$Xcontainer_option" = "yes" ] && [ "$Hostxoverip" = "no" ] && {
-        case "$Xoverip" in
-          yes|listentcp|socat)
-            case "$g_Network" in
-              none) Internal="--internal" ;;
-              ""|bridge) Internal="";;
-              *) return 1 ;; ### FIXME
-            esac
-            Xcnetworkid="$(unpriv_backend "$Backendbin network create $Internal $Xcnetworkname")" 2>>$Xinitlogfile || return 1
-            debugnote "setup_xcnetwork(): Creating $Xcnetworkname $Xcnetworkid"
-          ;;
-        esac
-      }
-    ;;
-    remove)
-      [ -n "$Xcnetworkid" ] && {
-        debugnote "setup_xcnetwork(): Removing $Xcnetworkname $Xcnetworkid"
-        unpriv_backend "$Backendbin network remove $Xcnetworkid" >>$Xinitlogfile 2>&1 || return 1
-      }
-    ;;
-  esac
-  return 0
+# Function: setup_xcnetwork
+#
+# Usage:  setup_xcnetwork
+#         setup_xcnetwork remove
+#
+# Brief: --xoverip --xc: Start internal network between X container
+#                        and command container
+#
+setup_xcnetwork() {
+    local cmd="${1:-do_setup}"
+    local Internal
+
+    #  !(a && b) = (!a) || (!b)
+    # [ "$BackendKind" = "$Xcontainerbackend" ] && [ "$Xcrootless" = "$Backendrootless" ] || return 1
+
+    if [ "$BackendKind" != "$Xcontainerbackend" ] ; then return 1; fi
+    if [ "$Xcrootless"  != "$Backendrootless"   ] ; then return 1; fi
+    
+    case "${cmd}" in
+        do_setup)
+            if [ "$Xcontainer_option" = "yes" ] && [ "$Hostxoverip" = "no" ] ; then
+                case "$Xoverip" in
+                    yes|listentcp|socat)
+                        case "$g_Network" in
+                            none) Internal="--internal" ;;
+                            ""|bridge) Internal="";;
+                            *) return 1 ;; ### FIXME
+                        esac
+                        Xcnetworkid="$(unpriv_backend "$Backendbin network create $Internal $Xcnetworkname")" 2>>$Xinitlogfile || return 1
+                        debugnote "setup_xcnetwork(): Creating $Xcnetworkname $Xcnetworkid"
+                        ;;
+                esac
+            fi
+            ;;
+        remove)
+            [ -n "$Xcnetworkid" ] && {
+                debugnote "setup_xcnetwork(): Removing $Xcnetworkname $Xcnetworkid"
+                unpriv_backend "$Backendbin network remove $Xcnetworkid" >>$Xinitlogfile 2>&1 || return 1
+            }
+            ;;
+    esac
+    return 0
 }
 
 store_newxenv() {               # store display variables
