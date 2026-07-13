@@ -11408,9 +11408,9 @@ store_newxenv() {
 
 
 #
-# function xtool() :
+# Function: xtool
 #
-# Run X tool command in X container if available, otherwise on host
+# Brief: Run X tool command in X container if available, otherwise on host
 #
 # Examples:
 #   xtool --check "wmctrl"
@@ -11463,7 +11463,7 @@ store_newxenv() {
 #
 xtool() {
     local Tool Toolinfo Usexcontainer
-    local Check=
+    local Check=""
 
     # Nocheck is unused
     # local Nocheck=
@@ -11613,6 +11613,12 @@ xtool() {
             ;;
     esac
 
+    #
+    # In case we did not set Usexcontainer above to yes or no,
+    # its default depends on the --check flag.
+    #
+    # This can only happen if Xcontainer_option is not in yes|no
+    #
     if [ "$Check" = "no" ] ; then
         Usexcontainer="${Usexcontainer:-yes}"
     else
@@ -11625,8 +11631,7 @@ xtool() {
     #
     # Check tool availability on host
     #
-    case "$Usexcontainer" in
-        no)
+    if [ "$Usexcontainer" = no ] ; then
             if ! have_command  "$Tool"  ; then
                 $Message  "$(trim_to_bar \
                     "|xtool(): Command '$Tool' not found on host. Please install $Tool.
@@ -11635,8 +11640,7 @@ xtool() {
                      )"
                 return 1
             fi
-            ;;
-    esac
+    fi
 
     if [ "$Check" = "yes" ] ; then
         # Only cheking
