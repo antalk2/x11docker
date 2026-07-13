@@ -10604,9 +10604,11 @@ create_xinitrc() {
                  |"
 
     trim_to_bar "|getprimary() {
+                 |  # If there is no primary, select the first connected as primary
                  |  if ! xrandr | grep -q primary ; then
                  |       xrandr --output \$(xrandr | grep ' connected' | head -n1 | cut -d' ' -f1) --primary
                  |  fi
+                 |  # Report the primary
                  |  echo \$(xrandr | grep primary | cut -d' ' -f1)
                  |}
                  |"
