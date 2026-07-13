@@ -10877,10 +10877,7 @@ create_xinitrc() {
                 echo       ""
             fi
 
-            case "$Xserver" in
-                --hostdisplay|--nxagent) ;;
-                --hostwayland|--weston|--kwin|--tty) ;;
-                *)
+            if ! case_match "$Xserver" '--hostdisplay|--nxagent | --hostwayland|--weston|--kwin|--tty' ; then
                     echo       "# Keyboard layout"
                     [ -n "$Hostdisplay" ] && {
                         xtool --check setxkbmap && {
@@ -10902,8 +10899,7 @@ create_xinitrc() {
                         }
                         echo     ""
                     }
-                    ;;
-            esac
+            fi
             ;;
     esac
     echo "# end case Xserver (1)"
