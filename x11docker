@@ -11356,32 +11356,52 @@ store_newxenv() {
         Newxenv="$Newxenv XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
     fi
 
-    Newxenv="$(awk '{$1=$1;print}' <<< " $Newxenv ")" # Remove superfluous whitespaces
-  storeinfo_add_kv_sh "Xenv=$Newxenv"
+    # Remove superfluous whitespaces from Newxenv:
+    Newxenv="$( awk '{$1=$1;print}' <<< " $Newxenv " )"
 
-  # X / Wayland environment variables for container
-  case "$Xserver" in
-    --xpra*|--xephyr|--weston-xwayland|--hostdisplay|--xorg|--xvfb|--xwayland|--satellite|--kwin-xwayland|--nxagent|--xwin|--runx)
-      store_runoption_env "DISPLAY=$Newdisplay"
-      [ "$Xauthentication" != "no" ] && store_runoption_env "XAUTHORITY=$(convertpath share "$Xclientcookie")"
-    ;;
-  esac
-  case "$Xserver" in
-    --weston|--kwin|--tty)
-      store_runoption_env "WAYLAND_DISPLAY=$Newwaylandsocket"
-    ;;
-    --hostwayland)
-      store_runoption_env "WAYLAND_DISPLAY=$Hostwaylandsocket"
-    ;;
-  esac
-  [ "$Setupwayland" = "yes" ] && {
-    for Line in $Waylandtoolkitenv; do
-      store_runoption_env "$Line"
-    done
-  }
+    storeinfo_add_kv_sh "Xenv=$Newxenv"
+
+    #
+    # X / Wayland environment variables for container
+    #
+    case "$Xserver" in
+        --xpra*               | \
+            --xephyr          | \
+            --weston-xwayland | \
+            --hostdisplay     | \
+            --xorg            | \
+            --xvfb            | \
+            --xwayland        | \
+            --satellite       | \
+            --kwin-xwayland   | \
+            --nxagent         | \
+            --xwin            | \
+            --runx            )
+            #
+            store_runoption_env "DISPLAY=$Newdisplay"
+            if [ "$Xauthentication" != "no" ] ; then
+                store_runoption_env "XAUTHORITY=$(convertpath share "$Xclientcookie")"
+            fi
+            ;;
+    esac
+
+    case "$Xserver" in
+        --weston|--kwin|--tty)
+            store_runoption_env "WAYLAND_DISPLAY=$Newwaylandsocket"
+            ;;
+        --hostwayland)
+            store_runoption_env "WAYLAND_DISPLAY=$Hostwaylandsocket"
+            ;;
+    esac
+
+    if [ "$Setupwayland" = "yes" ] ; then
+        for Line in $Waylandtoolkitenv; do
+            store_runoption_env "$Line"
+        done
+    fi
   
-  return 0
-}
+    return 0
+} # store_newxenv
 
 
 #
