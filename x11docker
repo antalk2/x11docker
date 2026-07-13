@@ -10459,64 +10459,72 @@ create_xcontainercommand() {
         $append_ops_to Xcontainercommand "$Xcontainerimage bash /xcontainerrc"
     } # Xcontainercommand
 
-  # xcontainerrc
-  echo "#! /bin/bash
-# script running in X server container (option --xc)
+    # Xcontainerrc
+    {
+        trim_to_bar \
+            "|#! /bin/bash
+             |# script running in X server container (option --xc)
+             |
+             |exec >> $Xinitlogfile 2>&1
+             |
+             |$Messagefifofuncs
+             |Messagefile=$Messagefifo
+             |Storeinfofile=$Storeinfofile
+             |Timetosaygoodbyefile=$Timetosaygoodbyefile
+             |
+             |LD_PRELOAD= cp /XlibNoSHM.so $Sharefolder/XlibNoSHM.so
+             |LD_PRELOAD= cp lib/x86_64-linux-gnu/libdl.so.2 $Sharefolder/libdl.so.2
+             |
+             |$(declare -f rocknroll)
+             |Timetosaygoodbyefile=$Timetosaygoodbyefile
+             |
+             |mkdir -p -m 1777 /tmp/.X11-unix
+             |[ -S /X${Hostdisplaynumber} ] && ln -v -s /X$Hostdisplaynumber /tmp/.X11-unix/X$Hostdisplaynumber
+             |#[ -S /${Hostwaylandsocket} ]  && ln -v -s /$Hostwaylandsocket \$XDG_RUNTIME_DIR/$Hostwaylandsocket
+             |ls -la /tmp/.X11-unix
+             |
+             |# --init
+             |cp /usr/bin/catatonit $Sharefolder/catatonit
+             |" >> "$Xcontainerrc"
+        #
 
-exec >> $Xinitlogfile 2>&1
+        trim_to_bar \
+            '|
+             |# set host cookie to ffff, just in case xauth failed on host in check_hostxenv()
+             |[ -n "$XAUTHORITY" ] && {
+             |  Cookie="$(xauth -n -i -f "${XAUTHORITY:-}" nlist "$DISPLAY" 2>/dev/null | sed -e "s/^..../ffff/")"
+             |  echo "$Cookie" | xauth -n -i -f "$HOME/Xauthority.host" nmerge -
+             |  truncate -s0 "${XAUTHORITY:-}"
+             |  cat "$HOME/Xauthority.host" >> "${XAUTHORITY:-}"
+             |}
+             |' >> "$Xcontainerrc"
 
-$Messagefifofuncs
-Messagefile=$Messagefifo
-Storeinfofile=$Storeinfofile
-Timetosaygoodbyefile=$Timetosaygoodbyefile
+        if [ "$Sharegpu" != "no" ] ; then
+            trim_to_bar \
+                "|
+                 |# --gpu=virgl
+                 |virgl_test_server &
+                 |" >> "$Xcontainerrc"
+        fi
 
-LD_PRELOAD= cp /XlibNoSHM.so $Sharefolder/XlibNoSHM.so
-LD_PRELOAD= cp lib/x86_64-linux-gnu/libdl.so.2 $Sharefolder/libdl.so.2
-
-$(declare -f rocknroll)
-Timetosaygoodbyefile=$Timetosaygoodbyefile
-
-mkdir -p -m 1777 /tmp/.X11-unix
-[ -S /X${Hostdisplaynumber} ] && ln -v -s /X$Hostdisplaynumber /tmp/.X11-unix/X$Hostdisplaynumber
-#[ -S /${Hostwaylandsocket} ]  && ln -v -s /$Hostwaylandsocket \$XDG_RUNTIME_DIR/$Hostwaylandsocket
-ls -la /tmp/.X11-unix
-
-# --init
-cp /usr/bin/catatonit $Sharefolder/catatonit
-" >> "$Xcontainerrc"
-
-echo '
-# set host cookie to ffff, just in case xauth failed on host in check_hostxenv()
-[ -n "$XAUTHORITY" ] && {
-  Cookie="$(xauth -n -i -f "${XAUTHORITY:-}" nlist "$DISPLAY" 2>/dev/null | sed -e "s/^..../ffff/")"
-  echo "$Cookie" | xauth -n -i -f "$HOME/Xauthority.host" nmerge -
-  truncate -s0 "${XAUTHORITY:-}"
-  cat "$HOME/Xauthority.host" >> "${XAUTHORITY:-}"
-}
-' >> "$Xcontainerrc"
-
-  [ "$Sharegpu" != "no" ] && echo "
-# --gpu=virgl
-virgl_test_server &
-" >> "$Xcontainerrc"
-
-  echo "
-echo 'X server container is ready'
-
-# wait for the end
-case $Usemkfifo in
-  yes) read -n1 goodbye <$Timetosaygoodbyefifo ;;
-  no)  while rocknroll; do sleep 1; done ;;
-esac
-
-# avoid freeze on console that happens if container stops before Xorg or weston is down
-killall Xorg weston
-sleep 1
-
-exit 0
-" >> "$Xcontainerrc"
-
-  return 0
+        trim_to_bar \
+            "|
+             |echo 'X server container is ready'
+             |
+             |# wait for the end
+             |case $Usemkfifo in
+             |  yes) read -n1 goodbye <$Timetosaygoodbyefifo ;;
+             |  no)  while rocknroll; do sleep 1; done ;;
+             |esac
+             |
+             |# avoid freeze on console that happens if container stops before Xorg or weston is down
+             |killall Xorg weston
+             |sleep 1
+             |
+             |exit 0
+             |" >> "$Xcontainerrc"
+    } # Xcontainerrc
+    return 0
 } # create_xcontainercommand
 
 #
