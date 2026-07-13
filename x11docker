@@ -10918,12 +10918,14 @@ create_xinitrc() {
         --xpra|--xpra2|--xvfb|--weston-xwayland|--xwayland)
 
             trim_to_bar    "|# create set of different screen resolutions
-                            |[ -e \"$Modelinefile\" ] && while read Line; do
-                            |  Line=\"\$(echo \"\$Line\" | sed 's/Modeline//g')\"
-                            |  Line=\"\$(echo \"\$Line\" | sed 's/\"//g')\"
-                            |  xrandr --newmode \$Line 2>/dev/null
-                            |  xrandr --addmode \"\$Output\" \$(echo \$Line | cut -d' ' -f1) 2>/dev/null
-                            |done < \"$Modelinefile\"
+                            |if [ -e \"$Modelinefile\" ] ; then
+                            |    while read Line; do
+                            |        Line=\"\$(echo \"\$Line\" | sed 's/Modeline//g')\"
+                            |        Line=\"\$(echo \"\$Line\" | sed 's/\"//g')\"
+                            |        xrandr --newmode \$Line 2>/dev/null
+                            |        xrandr --addmode \"\$Output\" \$(echo \$Line | cut -d' ' -f1) 2>/dev/null
+                            |    done < \"$Modelinefile\"
+                            |fi
                             |"
 
             [ -n "$Modeline" ] && {
