@@ -15319,13 +15319,16 @@ start_container() {             # docker run
       debugnote "start_container(): PID1=$Pid1pid"
 
       # Imagearchitecture in start_container
-      [ -z "$Pid1pid" ] && error "start_container(): Did not receive PID of PID1 in container.
-  Maybe the container immediately stopped for unknown reasons.
-  Just in case, check if host and image architecture are compatible:
-  Host architecture: $Hostarchitecture, image architecture: $Imagearchitecture.
-
-  Content of container log:
-$(rmcr < "$Containerlogfile" | uniq )"
+      if [ -z "$Pid1pid" ] ; then
+          error "$(trim_to_bar \
+                 "|start_container(): Did not receive PID of PID1 in container.
+                  |  Maybe the container immediately stopped for unknown reasons.
+                  |  Just in case, check if host and image architecture are compatible:
+                  |  Host architecture: $Hostarchitecture, image architecture: $Imagearchitecture.
+                  |
+                  |  Content of container log:"
+                  )${NEWLINE}$(rmcr < "$Containerlogfile" | uniq )"
+      fi
 
       # store stdout and stderr
       [ "$Containersetup" = "no" ] && {
