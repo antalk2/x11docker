@@ -11918,8 +11918,8 @@ check_backend() {
             if [ "$Customdockeroptions" ] ; then
                 error_ttm \
                     "|Option --backend=$g_BackendKind does not take CUSTOM_RUN_OPTIONS.
-                 |  If your command args contain ' -- ', run like
-                 |  x11docker --backend=$g_BackendKind [OPTIONS] -- -- COMMAND -- ARGS"
+                     |  If your command args contain ' -- ', run like
+                     |  x11docker --backend=$g_BackendKind [OPTIONS] -- -- COMMAND -- ARGS"
                 #
             fi
             g_Imagename=""
