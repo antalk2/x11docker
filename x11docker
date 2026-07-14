@@ -11683,7 +11683,7 @@ xtool() {
 #   g_Imagename :rw
 #   g_Rootfs    :w
 #   Imagebasename :w
-#   Containercommand= :rw
+#   g_Containercommand= :rw
 #   Codename         :rw
 #
 #   g_Network :w
@@ -11895,7 +11895,7 @@ check_backend() {
         check_runtime # uses $Backendinfo
     fi
 
-    # g_Imagename, g_Rootfs, Imagebasename, Codename, Containercommand
+    # g_Imagename, g_Rootfs, Imagebasename, Codename, g_Containercommand
     {
         if  case_match "$BackendKind"  'docker|podman|nerdctl|proot' ; then
 
@@ -11908,13 +11908,13 @@ check_backend() {
             fi
             #
             Imagebasename="$(echo "$g_Imagename" | tr / - | cut -d: -f1)"
-            Codename="${Codename:-"$g_Imagename $Containercommand"}"
+            Codename="${Codename:-"$g_Imagename $g_Containercommand"}"
             verbose_ttm "|Image name: $g_Imagename
-                         |  Container command: $Containercommand"
+                         |  Container command: $g_Containercommand"
             #
         elif case_match "$BackendKind" 'host' ; then  # BackendKind_host
 
-            Containercommand="$g_Imagename $Containercommand"
+            g_Containercommand="$g_Imagename $g_Containercommand"
             if [ "$Customdockeroptions" ] ; then
                 error_ttm \
                     "|Option --backend=$BackendKind does not take CUSTOM_RUN_OPTIONS.
@@ -11923,7 +11923,7 @@ check_backend() {
                 #
             fi
             g_Imagename=""
-            Imagebasename="$(basename "$Containercommand" | cut -d' ' -f1)"
+            Imagebasename="$(basename "$g_Containercommand" | cut -d' ' -f1)"
             Codename="${Codename:-"$Imagebasename"}"
         fi
 
@@ -12083,21 +12083,21 @@ check_backend() {
         fi
         #
 
-        if [ -z "$Containercommand" ] && [ -e "$g_Rootfs/start" ] ; then
-            Containercommand="/bin/sh /start"
+        if [ -z "$g_Containercommand" ] && [ -e "$g_Rootfs/start" ] ; then
+            g_Containercommand="/bin/sh /start"
         fi
 
-        if [ -z "$Containercommand" ] ; then
+        if [ -z "$g_Containercommand" ] ; then
             #
-            # Fallback for Containercommand
+            # Fallback for g_Containercommand
             #
-            if   [ "$Containerusershell" != "auto" ] ; then Containercommand="$Containerusershell"
-            elif [ -e "$g_Rootfs/bin/bash" ]         ; then Containercommand="/bin/bash"
-            else                                            Containercommand="/bin/sh"
+            if   [ "$Containerusershell" != "auto" ] ; then g_Containercommand="$Containerusershell"
+            elif [ -e "$g_Rootfs/bin/bash" ]         ; then g_Containercommand="/bin/bash"
+            else                                            g_Containercommand="/bin/sh"
             fi
             #
             note_ttm "|Option --backend=$BackendKind: No command specified.
-                      |Fallback: using command '$Containercommand' and enabling option --interactive."
+                      |Fallback: using command '$g_Containercommand' and enabling option --interactive."
             #
             check_fallback
             g_Interactive="yes"
@@ -12145,8 +12145,8 @@ check_image() {
     # Check CMD
     l_Imagecommand="$(parse_inspect "$l_Imageinspect" "Config" "Cmd")"
     debugnote "Image CMD: $l_Imagecommand"
-    if [ -z "$Containercommand" ] ; then
-        Containercommand="$l_Imagecommand"
+    if [ -z "$g_Containercommand" ] ; then
+        g_Containercommand="$l_Imagecommand"
         if grep -q "$(convertpath share "$Containerrc")" <<< "$l_Imagecommand" ; then
             error_ttm "|Recursion error: Found CMD $l_Imagecommand in image.
                        |  Did you use 'docker commit' with an x11docker container?
@@ -12191,7 +12191,7 @@ check_image() {
         s6-overlay)
           [ "$Containerentrypoint" = '/init' ] && {
             Containerentrypoint=""
-            [ "$Containercommand" ] || Containercommand="sh -c 'while :; do sleep 10; done'"
+            [ "$g_Containercommand" ] || g_Containercommand="sh -c 'while :; do sleep 10; done'"
           }
         ;;
         none)
@@ -12219,7 +12219,7 @@ check_image() {
     Workdir="$Imageworkdir"
   }
 
-  [ -z "$Containercommand$Containerentrypoint" ] && error 'No container command specified and no CMD or ENTRYPOINT found in image.'
+  [ -z "$g_Containercommand$Containerentrypoint" ] && error 'No container command specified and no CMD or ENTRYPOINT found in image.'
 
   return 0
 } # check_image
@@ -13327,12 +13327,12 @@ esac
       case "$BackendKind" in
         docker|podman|nerdctl)
           case "$Initsystem" in
-            tini) Backendcommand="$Backendcommand ${g_Rootfs:-$g_Imagename} $Initcommand $Containercommand" ;;
-            *) Backendcommand="$Backendcommand ${g_Rootfs:-$g_Imagename} $Containercommand" ;;
+            tini) Backendcommand="$Backendcommand ${g_Rootfs:-$g_Imagename} $Initcommand $g_Containercommand" ;;
+            *) Backendcommand="$Backendcommand ${g_Rootfs:-$g_Imagename} $g_Containercommand" ;;
           esac
         ;;
         proot)
-          Backendcommand="$Backendcommand $Containercommand"
+          Backendcommand="$Backendcommand $g_Containercommand"
         ;;
         # host) ;; # BackendKind_host
       esac
@@ -14401,10 +14401,10 @@ $Line
 
     # The echoed string containing the debugnote command should not contain a newline character
     # to avoid problems with the generated cmdrc.
-    echo "debugnote \"cmdrc: Running container command: $Containerentrypoint $Containercommand\""
+    echo "debugnote \"cmdrc: Running container command: $Containerentrypoint $g_Containercommand\""
     case "$Forwardstdin" in
-      yes) echo "$Containerentrypoint $Containercommand <$(convertpath share "$Cmdstdinfifo")" ;;
-      no)  echo "$Containerentrypoint $Containercommand" ;;
+      yes) echo "$Containerentrypoint $g_Containercommand <$(convertpath share "$Cmdstdinfifo")" ;;
+      no)  echo "$Containerentrypoint $g_Containercommand" ;;
     esac
 
     echo "
@@ -16497,7 +16497,7 @@ parse_options() {
          --license|--licence) license ;       exit 0 ;;              # Show MIT license and exit
          --version)           echo $Version ; exit 0 ;;              # Output version number and exit
          --xonly)             BackendKind="host"                     # Only create X server # BackendKind_host
-                              Containercommand="sleep infinity"
+                              g_Containercommand="sleep infinity"
                               Showdisplayenvironment="${Showdisplayenvironment:-yes}" ;;
          --preset)                                                   # Predefined option sets
                               parse_preset "${2:-}" || error "Option --preset: File not found: ${2:-}
@@ -16757,7 +16757,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
         while [ $# -gt 0 ] ; do
           [ -n "${1:-}" ] && [ -z "$g_Imagename" ] && [ "$(echo "${1:-}" | cut -c1)"  = "-" ]  && Customdockeroptions="$Customdockeroptions ${1:-}"
           [ -n "${1:-}" ] && [ -z "$g_Imagename" ] && [ "$(echo "${1:-}" | cut -c1)" != "-" ]  && g_Imagename="${1:-}" && shift
-          [ -n "${1:-}" ] && [ -n "$g_Imagename" ] && Containercommand="$Containercommand '${1:-}'"
+          [ -n "${1:-}" ] && [ -n "$g_Imagename" ] && g_Containercommand="$g_Containercommand '${1:-}'"
           shift
         done
       ;;
@@ -16879,7 +16879,7 @@ check_options_arguments() {     # check for [likely] valid arguments
         # Only create X server / --xonly  # BackendKind_host
         Codename="xonly"
         BackendKind="${BackendKind:-host}" # BackendKind_host
-        Containercommand="sleep infinity"
+        g_Containercommand="sleep infinity"
         Showdisplayenvironment="${Showdisplayenvironment:-yes}"
       ;;
     esac
@@ -19453,22 +19453,22 @@ declare_variables() {           # declare global variables
   #  # Chrootmountlist : Not mentioned anywhere else
   #  Chrootmountlist=""
 
-  # Containercommand : Container command [+args]
+  # g_Containercommand : Container command [+args]
   #   - In check_backend() :
-  #       Containercommand="/bin/sh /start"
-  #       Containercommand="/bin/bash"
-  #       Containercommand="/bin/sh"
-  #       Containercommand="$Containerusershell"
-  #       Containercommand="$l_Imagecommand"
-  #       Containercommand="sh -c 'while :; do sleep 10; done'"
-  #       Containercommand="sleep infinity"
+  #       g_Containercommand="/bin/sh /start"
+  #       g_Containercommand="/bin/bash"
+  #       g_Containercommand="/bin/sh"
+  #       g_Containercommand="$Containerusershell"
+  #       g_Containercommand="$l_Imagecommand"
+  #       g_Containercommand="sh -c 'while :; do sleep 10; done'"
+  #       g_Containercommand="sleep infinity"
   #
   #   - Used as part of Backendcommand
   #
-  #     tini) Backendcommand="$Backendcommand ${g_Rootfs:-$g_Imagename} $Initcommand $Containercommand" ;;
-  #     *)    Backendcommand="$Backendcommand ${g_Rootfs:-$g_Imagename}              $Containercommand" ;;
+  #     tini) Backendcommand="$Backendcommand ${g_Rootfs:-$g_Imagename} $Initcommand $g_Containercommand" ;;
+  #     *)    Backendcommand="$Backendcommand ${g_Rootfs:-$g_Imagename}              $g_Containercommand" ;;
   #
-  Containercommand=""
+  g_Containercommand=""
 
   # Containerentrypoint :
   #     Containerentrypoint="$Imageentrypoint"
