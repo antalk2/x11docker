@@ -12127,8 +12127,8 @@ check_image() {
     }
 
   # Check architecture
-  Imagearchitecture=$(parse_inspect "$l_Imageinspect" "Architecture")
-  debugnote "Image architecture: $Imagearchitecture"
+  g_Imagearchitecture=$(parse_inspect "$l_Imageinspect" "Architecture")
+  debugnote "Image architecture: $g_Imagearchitecture"
 
   # Check CMD
   Imagecommand="$(parse_inspect "$l_Imageinspect" "Config" "Cmd")"
@@ -15318,13 +15318,13 @@ start_container() {             # docker run
       [ "$Pid1pid" = "0" ] && Pid1pid=""
       debugnote "start_container(): PID1=$Pid1pid"
 
-      # Imagearchitecture in start_container
+      # g_Imagearchitecture in start_container
       if [ -z "$Pid1pid" ] ; then
           error "$(trim_to_bar \
                  "|start_container(): Did not receive PID of PID1 in container.
                   |  Maybe the container immediately stopped for unknown reasons.
                   |  Just in case, check if host and image architecture are compatible:
-                  |  Host architecture: $Hostarchitecture, image architecture: $Imagearchitecture.
+                  |  Host architecture: $Hostarchitecture, image architecture: $g_Imagearchitecture.
                   |
                   |  Content of container log:"
                   )${NEWLINE}$(rmcr < "$Containerlogfile" | uniq )"
@@ -19331,10 +19331,10 @@ declare_variables() {           # declare global variables
   # Image information
   # =============================================
 
-  # Imagearchitecture :
-  #    Imagearchitecture=$(parse_inspect "$l_Imageinspect" "Architecture")
+  # g_Imagearchitecture :
+  #    g_Imagearchitecture=$(parse_inspect "$l_Imageinspect" "Architecture")
   #
-  Imagearchitecture=""
+  g_Imagearchitecture=""
 
   # Imagecommand :
   #    Imagecommand="$(parse_inspect "$l_Imageinspect" "Config" "Cmd")"
