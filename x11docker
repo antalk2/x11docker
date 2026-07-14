@@ -12436,8 +12436,8 @@ check_cgroup() {
             case "$Cgroupversion" in
                 v1) 
                     if [ "$Startuser" != "root" ] ; then
-                        note "Option --init=$g_Initsystem: Did not find /sys/fs/cgroup/$Needcgroup
-  Startup of container is likely to fail."
+                        note_ttm "|Option --init=$g_Initsystem: Did not find /sys/fs/cgroup/$Needcgroup
+                                  |  Startup of container is likely to fail."
                     fi
                     ;;
                 v2)
