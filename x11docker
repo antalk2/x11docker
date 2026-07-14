@@ -17154,8 +17154,19 @@ check_options_interferences() { # check multiple option interferences, change se
 
     # Check whether host X server has MIT-SHM enabled.
     if [ -z "$Winsubsystem" ] ; then
-        xtool --nocheck "env LD_PRELOAD= xdpyinfo 2>>$Xinitlogfile | grep -q MIT-SHM" && Hostmitshm="yes" || Hostmitshm="no"
-        xtool --check --quiet xdpyinfo || Hostmitshm="yes" # if unknown, assume yes
+        #
+        # Q: If we test the host X server, why are running xdpyinfo
+        #    using xtool, which prefers to run it in the X container?
+        #
+        #
+        if xtool --nocheck "env LD_PRELOAD= xdpyinfo 2>>$Xinitlogfile | grep -q MIT-SHM" ;
+        then Hostmitshm="yes"
+        else Hostmitshm="no"
+        fi
+        #
+        if ! xtool --check --quiet xdpyinfo ; then
+            Hostmitshm="yes" # if unknown, assume yes
+        fi
     fi
 
     # --clipboard
