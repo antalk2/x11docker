@@ -12123,6 +12123,7 @@ check_backend() {
 #    g_Imagearchitecture= :w
 #    g_Containercommand= :w
 #    g_Containerusername= :w
+#    g_Workdir= :w
 #
 # Files:
 #    2>> $Containerlogfile
