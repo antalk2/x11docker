@@ -11837,6 +11837,9 @@ check_backend() {
         fi
     fi
 
+    #
+    # check_runtime
+    #
     if case_match "$BackendKind"  'docker|podman|nerdctl' ; then
         #
         # Check whether docker daemon is running, get backend info
@@ -11856,7 +11859,7 @@ check_backend() {
                  |  $Backendinfo"
             #
         fi
-        check_runtime
+        check_runtime # uses $Backendinfo
     fi
 
     # check image name
