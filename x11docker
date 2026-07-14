@@ -12417,11 +12417,9 @@ check_cgroup() {
                 ;;
         esac
 
-        case "$g_Initsystem" in
-            sysvinit|openrc|runit)
-                Sharecgroup="yes"
-                ;;
-        esac
+        if case_match "$g_Initsystem"  'sysvinit|openrc|runit' ; then
+            Sharecgroup="yes"
+        fi
     fi
 
   [ "$Sharecgroup" = "yes" ] && warning "Option --init=$g_Initsystem: Sharing /sys/fs/cgroup from host."
