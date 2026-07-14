@@ -11682,8 +11682,8 @@ xtool() {
 #   g_Imagename :rw
 #   g_Rootfs    :w
 #   Imagebasename :w
-#   Containercommand :r
-#   Codename : rw
+#   Containercommand :rw
+#   Codename         :rw
 #
 check_backend() {
     local Checkrootfs=""
@@ -11887,18 +11887,21 @@ check_backend() {
     elif case_match "$BackendKind" 'host' ; then  # BackendKind_host
 
         Containercommand="$g_Imagename $Containercommand"
-            [ "$Customdockeroptions" ] && error_ttm \
-                                              "|Option --backend=$BackendKind does not take CUSTOM_RUN_OPTIONS.
-                                               |  If your command args contain ' -- ', run like
-                                               |  x11docker --backend=$BackendKind [OPTIONS] -- -- COMMAND -- ARGS"
+        if [ "$Customdockeroptions" ] ; then
+            error_ttm \
+                "|Option --backend=$BackendKind does not take CUSTOM_RUN_OPTIONS.
+                 |  If your command args contain ' -- ', run like
+                 |  x11docker --backend=$BackendKind [OPTIONS] -- -- COMMAND -- ARGS"
             #
-            g_Imagename=""
-            Imagebasename="$(basename "$Containercommand" | cut -d' ' -f1)"
-            Codename="${Codename:-"$Imagebasename"}"
+        fi
+        g_Imagename=""
+        Imagebasename="$(basename "$Containercommand" | cut -d' ' -f1)"
+        Codename="${Codename:-"$Imagebasename"}"
     fi
 
     Codename="$(unspecialstring "$Codename" | cut -c1-40)"
     Codename="${Codename:-noname}"
+    #
     Imagebasename="$(unspecialstring "$Imagebasename")"  # must be - for backwards compatibility of --home
     Imagebasename="${Imagebasename:-noname}"
 
