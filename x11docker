@@ -12429,6 +12429,8 @@ check_cgroup() {
     if findmnt "/sys/fs/cgroup/$Needcgroup" >/dev/null 2>&1 ; then
         # Exists, done.
         return 0
+    else
+        : # go on below
     fi
 
     case "$g_Initsystem" in
@@ -12446,8 +12448,9 @@ check_cgroup() {
             esac
             ;;
         *)
-            note "Option --init=$g_Initsystem: Did not find /sys/fs/cgroup/$Needcgroup
-  A possible elogind service in container is likely to fail."
+            # not systemd
+            note_ttm "|Option --init=$g_Initsystem: Did not find /sys/fs/cgroup/$Needcgroup
+                      |  A possible elogind service in container is likely to fail."
             ;;
     esac
   
