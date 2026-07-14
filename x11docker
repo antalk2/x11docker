@@ -11732,12 +11732,12 @@ check_backend() {
                     #
                     note_ttm \
                         "|docker in version 'Docker Desktop' found.
-                             |  Docker Desktop runs in a virtual machine and makes host integration
-                             |  rather difficult. Support is experimental yet, feedback is appreciated.
-                             |  For docker errors like 'bind source path does not exist: FILE' you can try
-                             |  to allow file sharing in Docker Desktop GUI for file FILE.
-                             |  Rather use native 'Docker Engine' running on your host linux kernel.
-                             |  Docker Engine would allow all x11docker features and performes much better."
+                         |  Docker Desktop runs in a virtual machine and makes host integration
+                         |  rather difficult. Support is experimental yet, feedback is appreciated.
+                         |  For docker errors like 'bind source path does not exist: FILE' you can try
+                         |  to allow file sharing in Docker Desktop GUI for file FILE.
+                         |  Rather use native 'Docker Engine' running on your host linux kernel.
+                         |  Docker Engine would allow all x11docker features and performes much better."
                     #
                     Dockervm="desktop"
                 }
@@ -12130,6 +12130,7 @@ check_image() {
 
     local l_Imageinspect=""
     local l_Imagecommand=""
+    local l_Imageuser=""
 
     # Check if image $g_Imagename is available locally
     l_Imageinspect="$(unpriv_backend "$g_Backendbin inspect $g_Imagename" 2>> $Containerlogfile)" || {
@@ -12157,20 +12158,23 @@ check_image() {
         fi
     fi
 
-  # Check USER
-  Imageuser="$(parse_inspect "$l_Imageinspect" "Config" "User")"
-  debugnote "Image USER: $Imageuser"
-  case "$Createcontaineruser" in
-    yes)
-      [ "$Imageuser" ] && note "Found 'USER $Imageuser' in image.
-  If you want to run with user $Imageuser instead of host user $Containeruser,
-  than run with option --user=RETAIN."
-    ;;
-    no)
-      Containeruser="${Imageuser:-root}"
-    ;;
-  esac
-  storeinfo_add_kv_sh "containeruser=$Containeruser"
+    # Check USER
+    l_Imageuser="$(parse_inspect "$l_Imageinspect" "Config" "User")"
+    debugnote "Image USER: $l_Imageuser"
+    case "$Createcontaineruser" in
+        yes)
+            if [ "$l_Imageuser" ] ; then
+                note_ttm \
+                    "|Found 'USER $l_Imageuser' in image.
+                     |  If you want to run with user $l_Imageuser instead of host user $Containeruser,
+                     |  than run with option --user=RETAIN."
+            fi
+            ;;
+        no)
+            Containeruser="${l_Imageuser:-root}"
+            ;;
+    esac
+    storeinfo_add_kv_sh "containeruser=$Containeruser"
 
   # Check ENTRYPOINT
   Imageentrypoint="$(parse_inspect "$l_Imageinspect" "Config" "Entrypoint")"
@@ -19373,10 +19377,10 @@ declare_variables() {           # declare global variables
   #
   Imageworkdir=""
 
-  # Imageuser :
-  #    Imageuser="$(parse_inspect "$l_Imageinspect" "Config" "User")"
+  # l_Imageuser :
+  #    l_Imageuser="$(parse_inspect "$l_Imageinspect" "Config" "User")"
   #
-  Imageuser=""
+  # l_Imageuser=""
 
   # =============================================
   # Container setup
