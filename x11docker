@@ -12386,12 +12386,18 @@ check_smallinit() {
     return 0
 } # end check_smallinit
 
-check_cgroup() {                # check [and create] cgroup mountpoint for systemd or elogind
+# Function: check_cgroup
+# Brief: Check [and create] cgroup mountpoint for systemd or elogind
+#
+check_cgroup() {
   local Remounted Needcgroup
 
-  [ "$g_Initsystem" = "systemd" ] && Needcgroup="systemd" || Needcgroup="elogind"
+  if [ "$g_Initsystem" = "systemd" ] ;
+  then Needcgroup="systemd"
+  else Needcgroup="elogind"
+  fi
 
-  [ "$g_BackendKind" = "docker" ] && {
+  if [ "$g_BackendKind" = "docker" ] ; then
     case "$Cgroupversion" in
       v1) 
         Sharecgroup="yes"
@@ -12418,7 +12424,7 @@ check_cgroup() {                # check [and create] cgroup mountpoint for syste
         Sharecgroup="yes"
       ;;
     esac
-  }
+  fi
 
   [ "$Sharecgroup" = "yes" ] && warning "Option --init=$g_Initsystem: Sharing /sys/fs/cgroup from host."
 
