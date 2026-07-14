@@ -12390,39 +12390,39 @@ check_smallinit() {
 # Brief: Check [and create] cgroup mountpoint for systemd or elogind
 #
 check_cgroup() {
-  local Remounted Needcgroup
+    local Remounted Needcgroup
 
-  if [ "$g_Initsystem" = "systemd" ] ;
-  then Needcgroup="systemd"
-  else Needcgroup="elogind"
-  fi
+    if [ "$g_Initsystem" = "systemd" ] ;
+    then Needcgroup="systemd"
+    else Needcgroup="elogind"
+    fi
 
-  if [ "$g_BackendKind" = "docker" ] ; then
+    if [ "$g_BackendKind" = "docker" ] ; then
 
-      case "$Cgroupversion" in
-          v1) 
-              Sharecgroup="yes"
-              ;;
-          v2)
-              if [ "$g_Initsystem" =  'systemd' ] \
-              && [ "$Runtime"  != 'sysbox-runc' ] ;
-              then
-                  g_Remountcgroup="yes"
-                  warning_ttm \
-                      "|Option --init=systemd: To support systemd in docker container
-                       |  with cgroupv2 on host, x11docker shortly runs a privileged container
-                       |  of '$g_Imagename' with 'nsenter' to remount the container's /sys/fs/cgroup.
-                       |  Evil images might be set up to abuse these privileges."
-              fi
-              ;;
-      esac
+        case "$Cgroupversion" in
+            v1) 
+                Sharecgroup="yes"
+                ;;
+            v2)
+                if [ "$g_Initsystem" =  'systemd' ] \
+                && [ "$Runtime"  != 'sysbox-runc' ] ;
+                then
+                    g_Remountcgroup="yes"
+                    warning_ttm \
+                        "|Option --init=systemd: To support systemd in docker container
+                         |  with cgroupv2 on host, x11docker shortly runs a privileged container
+                         |  of '$g_Imagename' with 'nsenter' to remount the container's /sys/fs/cgroup.
+                         |  Evil images might be set up to abuse these privileges."
+                fi
+                ;;
+        esac
 
-      case "$g_Initsystem" in
-          sysvinit|openrc|runit)
-              Sharecgroup="yes"
-              ;;
-      esac
-  fi
+        case "$g_Initsystem" in
+            sysvinit|openrc|runit)
+                Sharecgroup="yes"
+                ;;
+        esac
+    fi
 
   [ "$Sharecgroup" = "yes" ] && warning "Option --init=$g_Initsystem: Sharing /sys/fs/cgroup from host."
 
