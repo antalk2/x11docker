@@ -11812,20 +11812,17 @@ check_backend() {
             export DOCKER_HOST
         fi
     else
-        case "$BackendKind" in
-            docker)
-                if [ "$(id -un)" != "root" ] && ! word_is_in 'docker' "$(id -G -n)" ; then
-                    error_ttm  "|Option --rootless=no: Please run x11docker as root
-                                    |  to allow rootful $BackendKind."
-                fi
-                ;;
-            podman|nerdctl)
-                if [ "$(id -un)" != "root" ] ; then
-                    error_ttm "|Option --rootless=no: Please run x11docker as root
-                                   |  to allow rootful $BackendKind."
-                fi
-                ;;
-        esac
+        if   case_match "$BackendKind" 'docker' ; then
+            if [ "$(id -un)" != "root" ] && ! word_is_in 'docker' "$(id -G -n)" ; then
+                error_ttm  "|Option --rootless=no: Please run x11docker as root
+                            |  to allow rootful $BackendKind."
+            fi
+        elif case_match "$BackendKind" 'podman|nerdctl' ; then
+            if [ "$(id -un)" != "root" ] ; then
+                error_ttm "|Option --rootless=no: Please run x11docker as root
+                           |  to allow rootful $BackendKind."
+            fi
+        fi
     fi
 
 
