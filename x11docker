@@ -17127,16 +17127,16 @@ check_options_interferences() { # check multiple option interferences, change se
     # --xauth
     if [ "$Xauthentication" != "no" ] ; then
         if   case_match "$Xserver" '--tty|--weston|--kwin|--hostwayland' ; then
-                Xauthentication="no"
-        elif case_match "$Xserver" '--hostdisplay' ; then
-                xtool --check "xauth" || {
-                    note_ttm "|Option --hostdisplay --xauth=$Xauthentication:
+            Xauthentication="no"
+        elif case_match "$Xserver" '--hostdisplay'                       ; then
+            xtool --check "xauth" || {
+                note_ttm "|Option --hostdisplay --xauth=$Xauthentication:
                           |  Command xauth not found. Accessing host display might fail.
                           |  Fallback: Setting --xauth=no.
                           |  $Wikipackagesimage"
-                    #
-                    Xauthentication="no"
-                }
+                #
+                Xauthentication="no"
+            }
         fi
     fi
 
