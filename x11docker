@@ -17147,12 +17147,14 @@ check_options_interferences() { # check multiple option interferences, change se
     fi
 
     # --xtest
-    [ -z "$Xtest" ] && case "$Xserver" in
+    if [ -z "$Xtest" ] ; then
+        case "$Xserver" in
         --xpra*|--xvfb) 
             note "Option $Xserver: Enabling option --xtest to allow xpra access."
             Xtest="yes"
             ;;
-    esac
+        esac
+    fi
 
     # Check whether host X server has MIT-SHM enabled.
     [ "$Winsubsystem" ] && Hostmitshm="no" || {
