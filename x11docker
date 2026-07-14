@@ -7625,7 +7625,7 @@ check_xdepends() {
             case "$Dockervm" in
                 moby|desktop)
                     $xdepends_message_ttm "|${X_option_to_check} is not supported
-                                          : with MobyVM / docker-for-win or Docker Desktop."
+                                           : with MobyVM / docker-for-win or Docker Desktop."
                     Return=1
                     ;;
             esac
