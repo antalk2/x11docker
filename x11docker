@@ -12110,21 +12110,28 @@ check_backend() {
 } # check_backend
 
 
-check_image() {                 # get some image information
 
-  # Check if image $g_Imagename is available locally
-  Imageinspect="$(unpriv_backend "$Backendbin inspect $g_Imagename" 2>> $Containerlogfile)" || {
-    error "Image $g_Imagename not found locally.
-  Please pull or build image first. (Backend $BackendKind, rootless $Backendrootless)"
-    return 1
-  }
+# Function: check_image
+# Brief: Get some image information
+#
+check_image() {
+
+    local l_Imageinspect=""
+
+    # Check if image $g_Imagename is available locally
+    l_Imageinspect="$(unpriv_backend "$Backendbin inspect $g_Imagename" 2>> $Containerlogfile)" || {
+        error_ttm "|Image $g_Imagename not found locally.
+                   |  Please pull or build image first. (Backend $BackendKind, rootless $Backendrootless)"
+        #
+        return 1
+    }
 
   # Check architecture
-  Imagearchitecture=$(parse_inspect "$Imageinspect" "Architecture")
+  Imagearchitecture=$(parse_inspect "$l_Imageinspect" "Architecture")
   debugnote "Image architecture: $Imagearchitecture"
 
   # Check CMD
-  Imagecommand="$(parse_inspect "$Imageinspect" "Config" "Cmd")"
+  Imagecommand="$(parse_inspect "$l_Imageinspect" "Config" "Cmd")"
   debugnote "Image CMD: $Imagecommand"
   [ -z "$Containercommand" ] && {
     Containercommand="$Imagecommand"
@@ -12135,7 +12142,7 @@ check_image() {                 # get some image information
   }
 
   # Check USER
-  Imageuser="$(parse_inspect "$Imageinspect" "Config" "User")"
+  Imageuser="$(parse_inspect "$l_Imageinspect" "Config" "User")"
   debugnote "Image USER: $Imageuser"
   case "$Createcontaineruser" in
     yes)
@@ -12150,7 +12157,7 @@ check_image() {                 # get some image information
   storeinfo_add_kv_sh "containeruser=$Containeruser"
 
   # Check ENTRYPOINT
-  Imageentrypoint="$(parse_inspect "$Imageinspect" "Config" "Entrypoint")"
+  Imageentrypoint="$(parse_inspect "$l_Imageinspect" "Config" "Entrypoint")"
   debugnote "Image ENTRYPOINT: $Imageentrypoint"
   case "$g_Noentrypoint" in
     yes) Containerentrypoint="" ;;
@@ -12184,11 +12191,11 @@ check_image() {                 # get some image information
   esac
 
   # Check WORKDIR
-  Imageworkdir="$(parse_inspect "$Imageinspect" "Config" "Workdir")"
+  Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "Workdir")"
   # It seems Config.Workdir is Config.WorkingDir in more recent
   # versions?
   [ -z "$Imageworkdir" ] && {
-    Imageworkdir="$(parse_inspect "$Imageinspect" "Config" "WorkingDir")"
+    Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "WorkingDir")"
   }
   debugnote "Image WORKDIR: $Imageworkdir"
   [ -z "$Workdir" ] && [ -n "$Imageworkdir" ] && {
@@ -19321,33 +19328,33 @@ declare_variables() {           # declare global variables
   # =============================================
 
   # Imagearchitecture :
-  #    Imagearchitecture=$(parse_inspect "$Imageinspect" "Architecture")
+  #    Imagearchitecture=$(parse_inspect "$l_Imageinspect" "Architecture")
   #
   Imagearchitecture=""
 
   # Imagecommand :
-  #    Imagecommand="$(parse_inspect "$Imageinspect" "Config" "Cmd")"
+  #    Imagecommand="$(parse_inspect "$l_Imageinspect" "Config" "Cmd")"
   #
   Imagecommand=""
 
   # Imageentrypoint :
-  #   Imageentrypoint="$(parse_inspect "$Imageinspect" "Config" "Entrypoint")"
+  #   Imageentrypoint="$(parse_inspect "$l_Imageinspect" "Config" "Entrypoint")"
   #
   Imageentrypoint=""
 
-  # Imageinspect : Output of --inspect
-  #    Imageinspect="$(unpriv_backend "$Backendbin inspect $g_Imagename" 2>> $Containerlogfile)"
+  # l_Imageinspect : Output of --inspect
+  #    l_Imageinspect="$(unpriv_backend "$Backendbin inspect $g_Imagename" 2>> $Containerlogfile)"
   #
-  Imageinspect=""
+  # l_Imageinspect=""
 
   # Imageworkdir :
-  #    Imageworkdir="$(parse_inspect "$Imageinspect" "Config" "Workdir")"
-  #    Imageworkdir="$(parse_inspect "$Imageinspect" "Config" "WorkingDir")"
+  #    Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "Workdir")"
+  #    Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "WorkingDir")"
   #
   Imageworkdir=""
 
   # Imageuser :
-  #    Imageuser="$(parse_inspect "$Imageinspect" "Config" "User")"
+  #    Imageuser="$(parse_inspect "$l_Imageinspect" "Config" "User")"
   #
   Imageuser=""
 
