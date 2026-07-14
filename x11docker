@@ -12216,23 +12216,23 @@ check_image() {
             ;;
     esac
 
-  # Check WORKDIR
-  l_Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "Workdir")"
-  # It seems Config.Workdir is Config.WorkingDir in more recent
-  # versions?
-  [ -z "$l_Imageworkdir" ] && {
-    l_Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "WorkingDir")"
-  }
-  debugnote "Image WORKDIR: $l_Imageworkdir"
-  [ -z "$Workdir" ] && [ -n "$l_Imageworkdir" ] && {
-    note "Found 'WORKDIR $l_Imageworkdir' in image.
+    # Check WORKDIR
+    l_Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "Workdir")"
+    # It seems Config.Workdir is Config.WorkingDir in more recent
+    # versions?
+    if [ -z "$l_Imageworkdir" ] ; then
+        l_Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "WorkingDir")"
+    fi
+    debugnote "Image WORKDIR: $l_Imageworkdir"
+    [ -z "$Workdir" ] && [ -n "$l_Imageworkdir" ] && {
+        note "Found 'WORKDIR $l_Imageworkdir' in image.
   You can change it with option --workdir=DIR."
-    Workdir="$l_Imageworkdir"
-  }
+        Workdir="$l_Imageworkdir"
+    }
 
-  [ -z "$g_Containercommand$g_Containerentrypoint" ] && error 'No container command specified and no CMD or ENTRYPOINT found in image.'
+    [ -z "$g_Containercommand$g_Containerentrypoint" ] && error 'No container command specified and no CMD or ENTRYPOINT found in image.'
 
-  return 0
+    return 0
 } # check_image
 
 # Function: check_runtime
