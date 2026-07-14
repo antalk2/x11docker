@@ -12243,10 +12243,12 @@ check_image() {
 
 # Function: check_runtime
 #
+# Used-by: check_backend
+#
 # Globals:
 #
 #    g_BackendKind
-#    Backendinfo
+#    Backendinfo :r
 #    Runtime= :rw
 #
 # CommandlineOption: --runtime
