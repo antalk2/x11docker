@@ -11751,13 +11751,16 @@ check_backend() {
             case "$Installermode" in
                 "") 
                     if [ -z "$Backendbin" ] ; then
+                        # If not in Installermode, missing Backendbin is an error
                         error "Option --backend=$BackendKind: No binary found for $BackendKind."
                     fi
                     ;;
                 *)
                     if [ -z "$Backendbin" ] ; then
+                        # In Installermode,  missing Backendbin is just a note.
                         note "Option --backend=$BackendKind: No binary found for $BackendKind."
                     fi
+                    # And in Installermode, we skip the rest of check_backend()
                     return 1
                     ;;
             esac
