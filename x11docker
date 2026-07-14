@@ -15154,7 +15154,7 @@ start_container() {             # docker run
         Containerinspect="$(unpriv_backend "$Backendbin inspect $g_Containername" 2>> $Containerlogfile | rmcr)" ||:
         [ -n "$Containerinspect" ] && [ "$Containerinspect" != "[]" ] && Pid1pid="$(parse_inspect "$Containerinspect" "State" "Pid")"
         
-        if    case_match "$Dockervm" 'no' ; then
+        if   case_match "$Dockervm" 'no'           ; then
             # Look at /proc/$Pid1pid
             if checkpid "$Pid1pid"; then  break ; fi
         elif case_match "$Dockervm" 'moby|desktop' ; then
