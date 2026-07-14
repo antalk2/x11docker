@@ -12176,39 +12176,39 @@ check_image() {
     esac
     storeinfo_add_kv_sh "containeruser=$Containeruser"
 
-  # Check ENTRYPOINT
-  Imageentrypoint="$(parse_inspect "$l_Imageinspect" "Config" "Entrypoint")"
-  debugnote "Image ENTRYPOINT: $Imageentrypoint"
-  case "$g_Noentrypoint" in
-    yes) Containerentrypoint="" ;;
-    no)
-      Containerentrypoint="$Imageentrypoint"
-      case "$Initsystem" in
-        systemd|sysvinit|runit|openrc|tini)
-          grep -qE 'tini|init|systemd' <<< "$Containerentrypoint" && {
-            note "There seems to be an init system in ENTRYPOINT of image:
+    # Check ENTRYPOINT
+    Imageentrypoint="$(parse_inspect "$l_Imageinspect" "Config" "Entrypoint")"
+    debugnote "Image ENTRYPOINT: $Imageentrypoint"
+    case "$g_Noentrypoint" in
+        yes) Containerentrypoint="" ;;
+        no)
+            Containerentrypoint="$Imageentrypoint"
+            case "$Initsystem" in
+                systemd|sysvinit|runit|openrc|tini)
+                    grep -qE 'tini|init|systemd' <<< "$Containerentrypoint" && {
+                        note "There seems to be an init system in ENTRYPOINT of image:
     $Containerentrypoint
   Will disable it as x11docker already runs an init with option --$Initsystem.
   To allow this ENTRYPOINT, run x11docker with option --init=none."
-            Containerentrypoint=""
-          }
-        ;;
-        s6-overlay)
-          [ "$Containerentrypoint" = '/init' ] && {
-            Containerentrypoint=""
-            [ "$g_Containercommand" ] || g_Containercommand="sh -c 'while :; do sleep 10; done'"
-          }
-        ;;
-        none)
-          grep -qE 'tini|init|systemd' <<< "$Containerentrypoint" && {
-            note "There seems to be an init system in ENTRYPOINT of image:
+                        Containerentrypoint=""
+                    }
+                    ;;
+                s6-overlay)
+                    [ "$Containerentrypoint" = '/init' ] && {
+                        Containerentrypoint=""
+                        [ "$g_Containercommand" ] || g_Containercommand="sh -c 'while :; do sleep 10; done'"
+                    }
+                    ;;
+                none)
+                    grep -qE 'tini|init|systemd' <<< "$Containerentrypoint" && {
+                        note "There seems to be an init system in ENTRYPOINT of image:
   $Containerentrypoint
   Returning correct exit code of container command will likely fail."
-          }
-        ;;
-      esac
-    ;;
-  esac
+                    }
+                    ;;
+            esac
+            ;;
+    esac
 
   # Check WORKDIR
   Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "Workdir")"
