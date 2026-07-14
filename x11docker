@@ -1761,15 +1761,12 @@ containerisrunning() {
         return 1
     fi
     #
-    case "$Dockervm" in
-        no)
-            checkpid      "$(storeinfo_dump_sh pid1pid)"
-            ;;
-        moby|desktop)
+    if [ "$Dockervm" = no ]; then
+        checkpid      "$(storeinfo_dump_sh pid1pid)"
+    elif case_match "$Dockervm" 'moby|desktop' ; then
             unpriv_backend "$Backendbin inspect '$(storeinfo_dump_sh containerid)'" \
                            >/dev/null 2>&1
-            ;;
-    esac
+    fi
 }
 
 #
