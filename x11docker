@@ -12120,7 +12120,8 @@ check_backend() {
 #    Containerlogfile
 #    BackendKind
 #    Backendrootless
-#    g_Imagearchitecture :w
+#    g_Imagearchitecture= :w
+#    g_Containercommand= :w
 #
 # Files:
 #    2>> $Containerlogfile
