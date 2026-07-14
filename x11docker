@@ -11483,6 +11483,7 @@ xtool() {
     esac
 
     the_command="${1:-}"
+    
     #
     # extract tool from "env a=b tool args"
     #
@@ -19835,7 +19836,7 @@ unpriv_xcbackend() {
 }
 
 #
-# function main()
+# Function: main
 #
 main() {
     if [ "$(uname -s)" = "Darwin" ] ; then
