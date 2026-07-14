@@ -17154,12 +17154,6 @@ check_options_interferences() { # check multiple option interferences, change se
 
     # Check whether host X server has MIT-SHM enabled.
     if [ -z "$Winsubsystem" ] ; then
-        #
-        # Hostmitshm="no" # Was this intended to be an assignment or a
-        #                 # condition? As an assignment, it is useless,
-        #                 # the next cmd overrides.
-        #                 # As a condition, ... it was not that.
-        #
         xtool --nocheck "env LD_PRELOAD= xdpyinfo 2>>$Xinitlogfile | grep -q MIT-SHM" && Hostmitshm="yes" || Hostmitshm="no"
         xtool --check --quiet xdpyinfo || Hostmitshm="yes" # if unknown, assume yes
     fi
