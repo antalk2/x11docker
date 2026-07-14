@@ -11681,8 +11681,8 @@ xtool() {
 check_backend() {
     local Checkrootfs=""
 
-    case "$Dockervm" in
-        no|desktop)
+    if case_match "$Dockervm" 'no|desktop'
+       ## no|desktop)
             #
             case "$BackendKind" in
                 docker|podman|nerdctl)
@@ -11710,10 +11710,10 @@ check_backend() {
                     }
                     ;;
             esac
-            ;;
-
-        moby) # [ "$Dockervm" = moby ] implies "MS Windows" (?)
-            if ! case_match  "$BackendKind" 'docker | host' ; then
+           ## ;;
+       elif case_match "$Dockervm" 'moby' ; then
+        # [ "$Dockervm" = moby ] implies "MS Windows" (?)
+        if ! case_match  "$BackendKind" 'docker | host' ; then
                 error_ttm \
                     "|Option --backend=$BackendKind is not supported on MS Windows yet.
                      |  If you need this, ask for support at https://github.com/mviereck/x11docker"
@@ -11729,8 +11729,9 @@ check_backend() {
                   )"
                 export PATH
             fi
-            ;;
-    esac
+            #;;
+            # esac
+    fi
 
     case "$BackendKind" in
         docker|podman|nerdctl|proot)
