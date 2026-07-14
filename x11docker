@@ -3499,22 +3499,19 @@ convertpath() {                 # convert unix and windows paths
                     fi
                     ;;
                 mount)
-                    case "$Dockervm" in
-                        no|desktop)
+                    if case_match "$Dockervm" 'no|desktop' ; then
                             printf "%s"                                    \
                                    "type=bind"                             \
                                    ",source='$Path'"                       \
                                    ",target='${containerpath_arg:-$Path}'" \
                                    "$Readwritemode_mount"
-                            ;;
-                        moby)
+                    elif [ "$Dockervm" = moby  ] ; then
                             printf "%s"                                    \
                                    "type=bind"                             \
                                    ",source='$Winsubpath$Path'"            \
                                    ",target='${containerpath_arg:-$Path}'" \
                                    "$Readwritemode_mount"
-                            ;;
-                    esac
+                    fi
                     ;;
                 container)    echo "${containerpath_arg:-$Path}" ;;
             esac
