@@ -1745,7 +1745,7 @@ saygoodbye() {
 # Brief:  Check if PID is active (process with this PID exists)
 #
 # return: 0 if PID is active
-#         1 ir not.
+#         1 if not.
 #
 checkpid() {
     [ -e "/proc/${1:-NONSENSE}" ]
