@@ -11674,6 +11674,7 @@ xtool() {
 # Used-by: main()
 #
 # Globals:
+#
 #   Dockervm :rw
 #   BackendKind :r
 #   Backendbin :w
@@ -11684,6 +11685,33 @@ xtool() {
 #   Imagebasename :w
 #   Containercommand :rw
 #   Codename         :rw
+#
+#   g_Network :w
+#   Shareipc  :w
+#   Createcontaineruser :w
+#   Containersetup :w
+#   Capdropall :w
+#   Allownewprivileges :w
+#   Runtime :w
+#   Sharecgroup :w
+#   g_Limitresources :w
+#   Switchcontaineruserflag :w
+#   Sudouser :re
+#   Sharefoldercontainer :w
+#   Sharefolder :r
+#
+#   Sharealsa :w
+#   Capdropall :w
+#   Langwunsch :w
+#   g_Noentrypoint :w
+#   Containersetup :w
+#   Sharecupsmode :w
+#   Pulseaudiomode :w"
+#   Runasroot :w
+#   Runtime :w
+#   SharevolumesArray :w
+#   Sharewebcam :w
+#
 #
 check_backend() {
     local Checkrootfs=""
@@ -11868,52 +11896,57 @@ check_backend() {
         check_runtime # uses $Backendinfo
     fi
 
-    # check image name
-    if  case_match "$BackendKind"  'docker|podman|nerdctl|proot' ; then
+    # g_Imagename, g_Rootfs, Imagebasename, Codename, Containercommand
+    {
+        if  case_match "$BackendKind"  'docker|podman|nerdctl|proot' ; then
 
-        if [ "${g_Imagename:0:1}" = "/" ] ; then
-            g_Rootfs="$g_Imagename"
-            g_Imagename="$(basename "$g_Rootfs")"
-        fi
-        if [ "$g_Podmanrootfs" = "yes" ] ; then
-            Checkrootfs="yes"
-        fi
-        #
-        Imagebasename="$(echo "$g_Imagename" | tr / - | cut -d: -f1)"
-        Codename="${Codename:-"$g_Imagename $Containercommand"}"
-        verbose_ttm "|Image name: $g_Imagename
+            if [ "${g_Imagename:0:1}" = "/" ] ; then
+                g_Rootfs="$g_Imagename"
+                g_Imagename="$(basename "$g_Rootfs")"
+            fi
+            if [ "$g_Podmanrootfs" = "yes" ] ; then
+                Checkrootfs="yes"
+            fi
+            #
+            Imagebasename="$(echo "$g_Imagename" | tr / - | cut -d: -f1)"
+            Codename="${Codename:-"$g_Imagename $Containercommand"}"
+            verbose_ttm "|Image name: $g_Imagename
                      |  Container command: $Containercommand"
-        #
-    elif case_match "$BackendKind" 'host' ; then  # BackendKind_host
+            #
+        elif case_match "$BackendKind" 'host' ; then  # BackendKind_host
 
-        Containercommand="$g_Imagename $Containercommand"
-        if [ "$Customdockeroptions" ] ; then
-            error_ttm \
-                "|Option --backend=$BackendKind does not take CUSTOM_RUN_OPTIONS.
+            Containercommand="$g_Imagename $Containercommand"
+            if [ "$Customdockeroptions" ] ; then
+                error_ttm \
+                    "|Option --backend=$BackendKind does not take CUSTOM_RUN_OPTIONS.
                  |  If your command args contain ' -- ', run like
                  |  x11docker --backend=$BackendKind [OPTIONS] -- -- COMMAND -- ARGS"
-            #
+                #
+            fi
+            g_Imagename=""
+            Imagebasename="$(basename "$Containercommand" | cut -d' ' -f1)"
+            Codename="${Codename:-"$Imagebasename"}"
         fi
-        g_Imagename=""
-        Imagebasename="$(basename "$Containercommand" | cut -d' ' -f1)"
-        Codename="${Codename:-"$Imagebasename"}"
-    fi
 
-    Codename="$(unspecialstring "$Codename" | cut -c1-40)"
-    Codename="${Codename:-noname}"
-    #
-    Imagebasename="$(unspecialstring "$Imagebasename")"  # must be - for backwards compatibility of --home
-    Imagebasename="${Imagebasename:-noname}"
+        Codename="$(unspecialstring "$Codename" | cut -c1-40)"
+        Codename="${Codename:-noname}"
+        #
+        Imagebasename="$(unspecialstring "$Imagebasename")"  # must be - for backwards compatibility of --home
+        Imagebasename="${Imagebasename:-noname}"
+    }
 
     case "$BackendKind" in
-        docker) ;;
+        docker)
+            : # NOP
+            ;;
         podman)
             # /proc/sys/kernel/unprivileged_userns_clone might exist on debian only.
             # https://github.com/mviereck/x11docker/issues/255#issuecomment-758014962
-            [ "$(cat /proc/sys/kernel/unprivileged_userns_clone 2>/dev/null)" = "0" ] \
-                && error_ttm "|Option --backend=podman: Linux kernel disallows
-                              |  unprivileged user namespace setup. Please run as root:
-                              |    sysctl -w kernel.unprivileged_userns_clone=1"
+            if [ "$(cat /proc/sys/kernel/unprivileged_userns_clone 2>/dev/null)" = "0" ] ; then
+                error_ttm "|Option --backend=podman: Linux kernel disallows
+                           |  unprivileged user namespace setup. Please run as root:
+                           |    sysctl -w kernel.unprivileged_userns_clone=1"
+            fi
             #
             store_runoption_cap "CHOWN"
             ;;
@@ -11922,10 +11955,11 @@ check_backend() {
                       |  In production rather use docker or podman for now."
             #
             Switchcontaineruserflag="yes"
-            [ "$Capdropall" = "yes" ] \
-                && note_ttm "|Option --backend=nerdctl: If you encounter issues,
-                             |  please try with option --cap-default to remove some container restrictions."
-            #
+            if [ "$Capdropall" = "yes" ] ; then
+                note_ttm "|Option --backend=nerdctl: If you encounter issues,
+                          |  please try with option --cap-default to remove some container restrictions."
+                #
+            fi
             ;;
         proot)
             warning_ttm "|Option --backend=$BackendKind: Your host system is NOT PROTECTED.
@@ -11935,6 +11969,7 @@ check_backend() {
             #
             check_optionset                                \
                 "--backend=$BackendKind"                   \
+                                                           \
                 "$(trim_to_mark                            \
                  "|--cap-default   --hostipc
                   : --ipc --limit  --network
@@ -11944,9 +11979,10 @@ check_backend() {
                   : --user"
                   )"  || :
             #
-            check_optionset "--backend=$BackendKind" "--user" \
-                || error_ttm "|Option --backend=$BackendKind: Option --user is not allowed.
-                              |  Please try option --hostuser instead."
+            if ! check_optionset "--backend=$BackendKind" "--user" ; then
+                error_ttm "|Option --backend=$BackendKind: Option --user is not allowed.
+                           |  Please try option --hostuser instead."
+            fi
             #
             Checkrootfs="yes"
             #
@@ -11965,14 +12001,16 @@ check_backend() {
             # needed
             Switchcontaineruserflag="yes"
 
-            [ "$Sudouser" ] \
-                && note_ttm \
-                       "|Option --backend=$BackendKind --sudouser: sudo fails in $BackendKind.
-                        |  Workaround: starting with user root.
-                        |  You can switch to user $Containeruser with 'su $Containeruser'.
-                        |  Note that root in $BackendKind is a fake and does not have real root privileges."
-            #
+            if [ "$Sudouser" ] ; then
+                note_ttm \
+                    "|Option --backend=$BackendKind --sudouser: sudo fails in $BackendKind.
+                     |  Workaround: starting with user root.
+                     |  You can switch to user $Containeruser with 'su $Containeruser'.
+                     |  Note that root in $BackendKind is a fake and does not have real root privileges."
+                #
+            fi
             ;;
+
         host)  # BackendKind_host
             warning "|Option --backend=host provides no isolation at all.
                      |  It only provides an X server for a host application."
@@ -11992,9 +12030,10 @@ check_backend() {
                                               )" || :
             #
             #
-            check_optionset "--backend=$BackendKind" "--user" \
-                || error "|Option --backend=$BackendKind: Option --user is not allowed.
-                          |  Please try option --hostuser instead."
+            if ! check_optionset "--backend=$BackendKind" "--user" ; then
+                error "|Option --backend=$BackendKind: Option --user is not allowed.
+                       |  Please try option --hostuser instead."
+            fi
             #
             # Set defaults. Some might look misleading just to avoid
             #               later messages, but not affecting the setup.
@@ -12019,25 +12058,32 @@ check_backend() {
             ;;
     esac
 
-    [ "$Checkrootfs" = "yes" ] && {
+    if [ "$Checkrootfs" = "yes" ] ; then
         case "$BackendKind" in
-            proot) ;;
+            proot)
+                : # NOP
+            ;;
             podman)
                 note "Option --backend=podman with --rootfs is experimental yet."
-                [ "$Containersetup" = "yes" ] && Switchcontaineruserflag="yes"
+                if [ "$Containersetup" = "yes" ] ; then
+                    Switchcontaineruserflag="yes"
+                fi
                 ;;
             *)  # BackendKind_host
                 error "Option --rootfs is supported by backends proot and podman only."
                 ;;
         esac
 
-        [ -z "$g_Rootfs" ] && [ -d "$Hosthomebasefolder/ROOTFS/$Imagebasename" ] \
-            && g_Rootfs="$Hosthomebasefolder/ROOTFS/$Imagebasename"
+        if [ -z "$g_Rootfs" ] ; then
+            if [ -d "$Hosthomebasefolder/ROOTFS/$Imagebasename" ] ; then
+                g_Rootfs="$Hosthomebasefolder/ROOTFS/$Imagebasename"
+            else
+                error_ttm "|Option --backend=$BackendKind: Did not find a rootfs for $g_Imagename
+                           |  in $Hosthomebasefolder/ROOTFS/$Imagebasename"
+            fi
+        fi
         #
-        [ -z "$g_Rootfs" ] \
-            && error_ttm "|Option --backend=$BackendKind: Did not find a rootfs for $g_Imagename
-                          |  in $Hosthomebasefolder/ROOTFS/$Imagebasename"
-        
+
         [ -z "$Containercommand" ] && [ -e "$g_Rootfs/start" ] \
             && Containercommand="/bin/sh /start"
 
@@ -12055,7 +12101,7 @@ check_backend() {
             check_fallback
             g_Interactive="yes"
         }
-    }
+    fi # Checkrootfs
 
     debugnote "Backend: $BackendKind, Backendbin: $Backendbin, Rootless: $Backendrootless"
     return 0
