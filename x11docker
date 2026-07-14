@@ -11715,7 +11715,7 @@ check_backend() {
         if ! case_match  "$BackendKind" 'docker | host' ; then
             error_ttm \
                 "|Option --backend=$BackendKind is not supported on MS Windows yet.
-                     |  If you need this, ask for support at https://github.com/mviereck/x11docker"
+                 |  If you need this, ask for support at https://github.com/mviereck/x11docker"
             return 1
         fi
         #
