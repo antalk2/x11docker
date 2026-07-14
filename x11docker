@@ -11679,7 +11679,7 @@ xtool() {
 #   g_BackendKind :r
 #   g_Backendbin= :w
 #   Installermode :r
-#   Backendinfo= :w
+#   g_Backendinfo= :w
 #   g_Imagename= :rw
 #   g_Rootfs=    :w
 #   Imagebasename= :w
@@ -11877,10 +11877,10 @@ check_backend() {
         #
         # Check whether docker daemon is running, get backend info
         #
-        Backendinfo="$(unpriv_backend "env LC_ALL=C $g_Backendbin info --format='{{json .}}'" 2>&1)"
+        g_Backendinfo="$(unpriv_backend "env LC_ALL=C $g_Backendbin info --format='{{json .}}'" 2>&1)"
         if [ "$?" != "0" ]                                \
-        || grep -q "permission denied" <<< "$Backendinfo" \
-        || [ -z "$Backendinfo" ]                          ;
+        || grep -q "permission denied" <<< "$g_Backendinfo" \
+        || [ -z "$g_Backendinfo" ]                          ;
         then
             error_ttm \
                 "|Option --backend=$g_BackendKind: Error executing $g_BackendKind.
@@ -11889,10 +11889,10 @@ check_backend() {
                  |  Try to start docker daemon with 'systemctl start docker'.
                  |  Try to run x11docker as root.
                  |  Output of '$g_Backendbin info':
-                 |  $Backendinfo"
+                 |  $g_Backendinfo"
             #
         fi
-        check_runtime # uses $Backendinfo
+        check_runtime # uses $g_Backendinfo
     fi
 
     # g_Imagename, g_Rootfs, Imagebasename, Codename, g_Containercommand
@@ -12248,7 +12248,7 @@ check_image() {
 # Globals:
 #
 #    g_BackendKind
-#    Backendinfo :r
+#    g_Backendinfo :r
 #    Runtime= :rw
 #
 # CommandlineOption: --runtime
@@ -12258,13 +12258,13 @@ check_runtime() {
     local local_Defaultruntime
     case "$g_BackendKind" in
         docker)
-            # Backendinfo / "DefaultRuntime"
-            local_Defaultruntime="$(parse_inspect "$Backendinfo" "DefaultRuntime" | tr -d '"')"
+            # g_Backendinfo / "DefaultRuntime"
+            local_Defaultruntime="$(parse_inspect "$g_Backendinfo" "DefaultRuntime" | tr -d '"')"
             ;;
         podman)
-            # Backendinfo / "host" / "ociRuntime" / "name"
+            # g_Backendinfo / "host" / "ociRuntime" / "name"
             # literal host
-            local_Defaultruntime="$(parse_inspect "$Backendinfo" "host"  "ociRuntime" "name" | tr -d '"')"
+            local_Defaultruntime="$(parse_inspect "$g_Backendinfo" "host"  "ociRuntime" "name" | tr -d '"')"
             ;;
         nerdctl)
             local_Defaultruntime=""
@@ -19454,10 +19454,20 @@ declare_variables() {           # declare global variables
   # g_Backendbin : path to binary of backend
   g_Backendbin=""
 
-  # Backendinfo : output of 'docker info'
-  #   Backendinfo="$(unpriv_backend "env LC_ALL=C $g_Backendbin info --format='{{json .}}'" 2>&1)"
+  # g_Backendinfo : output of 'docker info'
+  #   g_Backendinfo="$(unpriv_backend "env LC_ALL=C $g_Backendbin info --format='{{json .}}'" 2>&1)"
   #
-  Backendinfo=""
+  # Used-by: check_backend():rw, check_runtime():ro.
+  #
+  #          Since check_backend sets it up and then calls
+  #          check_runtime, we could make it local in check_backend(),
+  #          and either pass it to check_runtime as an argument or
+  #          inherit from its caller (dynamic scope).
+  #
+  #          Explicit passing migt be costly (Is it? Might pass as a pointer),
+  #          
+  #
+  g_Backendinfo=""
 
   # Capabilities : Capabilities to add. Default: none, exceptions for
   #                --init, --sudouser
