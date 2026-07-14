@@ -17099,19 +17099,18 @@ check_options_interferences() { # check multiple option interferences, change se
     fi # case_match Dockervm desktop
 
     # --runtime
-    case "$Runtime" in
-        kata-runtime)
+    if case_match "$Runtime" 'kata-runtime' ; then
             [ "$g_Network" = "host" ] && { # g_Network_host
-                note "Option --network=host: Sharing host network stack does not work
-  with --runtime=kata-runtime. Fallback: Allowing default kata --network."
+                note_ttm "|Option --network=host: Sharing host network stack does not work
+                          |  with --runtime=kata-runtime. Fallback: Allowing default kata --network."
+                #
                 check_fallback
                 g_Network=""
             }
-            check_optionset "--runtime=kata-runtime" "--alsa --webcam" ||:
+            check_optionset "--runtime=kata-runtime" "--alsa --webcam" || :
             Sharewebcam="no"
             Sharealsa="no"
-            ;;
-    esac
+    fi
 
     # --xauth
     [ "$Xauthentication" != "no" ] && case "$Xserver" in
