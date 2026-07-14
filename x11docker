@@ -12075,7 +12075,7 @@ check_backend() {
         esac
 
         if [ -z "$g_Rootfs" ] ; then
-            if [ -d "$Hosthomebasefolder/ROOTFS/$Imagebasename" ] ; then
+            if      [ -d "$Hosthomebasefolder/ROOTFS/$Imagebasename" ] ; then
                 g_Rootfs="$Hosthomebasefolder/ROOTFS/$Imagebasename"
             else
                 error_ttm "|Option --backend=$BackendKind: Did not find a rootfs for $g_Imagename
