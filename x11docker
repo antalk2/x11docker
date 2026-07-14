@@ -12337,7 +12337,7 @@ check_runtime() {
     esac
 
     return 0
-} # check_runtime
+} # end check_runtime
 
 check_smallinit() {             # find container init binary on host
   [ "$Xcontainer_option" = "yes" ] && grep -q "catatonit" <<< "$Xcontainertools" && Initbinaryfile="$Sharefolder/catatonit" && return 0
