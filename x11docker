@@ -11798,36 +11798,36 @@ check_backend() {
     }
 
     if case_match "$Backendrootless" 'yes' ; then
-            case "$BackendKind" in
-                docker)
-                    DOCKER_HOST="${DOCKER_HOST:-/run/user/$Hostuseruid/docker.sock}"
-                    DOCKER_HOST="${DOCKER_HOST#unix://}"
-                    if [ ! -e "${DOCKER_HOST:-}" ] ; then
-                        error_ttm \
-                            "|Option --rootless --backend=docker: docker user socket not found.
+        case "$BackendKind" in
+            docker)
+                DOCKER_HOST="${DOCKER_HOST:-/run/user/$Hostuseruid/docker.sock}"
+                DOCKER_HOST="${DOCKER_HOST#unix://}"
+                if [ ! -e "${DOCKER_HOST:-}" ] ; then
+                    error_ttm \
+                        "|Option --rootless --backend=docker: docker user socket not found.
                              |  Docker user daemon not running? Try to start it with:
                              |    systemctl --user start docker"
-                        #
-                    fi
-                    DOCKER_HOST="unix://$DOCKER_HOST"
-                    export DOCKER_HOST
-                    ;;
-            esac
+                    #
+                fi
+                DOCKER_HOST="unix://$DOCKER_HOST"
+                export DOCKER_HOST
+                ;;
+        esac
     else
-            case "$BackendKind" in
-                docker)
-                    if [ "$(id -un)" != "root" ] && ! word_is_in 'docker' "$(id -G -n)" ; then
-                        error_ttm  "|Option --rootless=no: Please run x11docker as root
+        case "$BackendKind" in
+            docker)
+                if [ "$(id -un)" != "root" ] && ! word_is_in 'docker' "$(id -G -n)" ; then
+                    error_ttm  "|Option --rootless=no: Please run x11docker as root
                                     |  to allow rootful $BackendKind."
-                    fi
-                    ;;
-                podman|nerdctl)
-                    if [ "$(id -un)" != "root" ] ; then
-                        error_ttm "|Option --rootless=no: Please run x11docker as root
+                fi
+                ;;
+            podman|nerdctl)
+                if [ "$(id -un)" != "root" ] ; then
+                    error_ttm "|Option --rootless=no: Please run x11docker as root
                                    |  to allow rootful $BackendKind."
-                    fi
-                    ;;
-            esac
+                fi
+                ;;
+        esac
     fi
 
 
