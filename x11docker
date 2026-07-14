@@ -12398,32 +12398,32 @@ check_cgroup() {
   fi
 
   if [ "$g_BackendKind" = "docker" ] ; then
-    case "$Cgroupversion" in
-      v1) 
-        Sharecgroup="yes"
-      ;;
-      v2)
-        case "$g_Initsystem" in
-          systemd)
-            case "$Runtime" in
-              sysbox-runc) ;;
-              *)
-                g_Remountcgroup="yes"
-                warning "Option --init=systemd: To support systemd in docker container
+      case "$Cgroupversion" in
+          v1) 
+              Sharecgroup="yes"
+              ;;
+          v2)
+              case "$g_Initsystem" in
+                  systemd)
+                      case "$Runtime" in
+                          sysbox-runc) ;;
+                          *)
+                              g_Remountcgroup="yes"
+                              warning "Option --init=systemd: To support systemd in docker container
   with cgroupv2 on host, x11docker shortly runs a privileged container
   of '$g_Imagename' with 'nsenter' to remount the container's /sys/fs/cgroup.
   Evil images might be set up to abuse these privileges."
+                              ;;
+                      esac
+                      ;;
+              esac
               ;;
-            esac
-          ;;
-        esac
-      ;;
-    esac
-    case "$g_Initsystem" in
-      sysvinit|openrc|runit)
-        Sharecgroup="yes"
-      ;;
-    esac
+      esac
+      case "$g_Initsystem" in
+          sysvinit|openrc|runit)
+              Sharecgroup="yes"
+              ;;
+      esac
   fi
 
   [ "$Sharecgroup" = "yes" ] && warning "Option --init=$g_Initsystem: Sharing /sys/fs/cgroup from host."
