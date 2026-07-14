@@ -11719,17 +11719,17 @@ check_backend() {
                      |  If you need this, ask for support at https://github.com/mviereck/x11docker"
                 return 1
             fi
-          #
-          Backendbin="docker.exe"
-          have_command  "$Backendbin"  || {
-              PATH="$(trim_to_mark \
+            #
+            Backendbin="docker.exe"
+            have_command  "$Backendbin"  || {
+                PATH="$(trim_to_mark \
                  "|${PATH:-}
                   ::$(convertpath subsystem "C:/Program Files/docker")
                   ::$(convertpath subsystem "C:/Program Files/Docker/Docker/resources/bin")"
                   )"
-              export PATH
-          }
-          ;;
+                export PATH
+            }
+            ;;
     esac
 
     case "$BackendKind" in
