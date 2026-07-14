@@ -12232,7 +12232,9 @@ check_image() {
         g_Workdir="$l_Imageworkdir"
     fi
 
-    if [ -z "$g_Containercommand$g_Containerentrypoint" ] ; then
+    if [ -z "$g_Containercommand"    ] \
+    && [ -z "$g_Containerentrypoint" ] ;
+    then
         error 'No container command specified and no CMD or ENTRYPOINT found in image.'
     fi
 
