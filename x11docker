@@ -17044,6 +17044,7 @@ check_options_arguments() {     # check for [likely] valid arguments
 check_options_interferences() { # check multiple option interferences, change settings if needed
     local Message
 
+
     if case_match "$Dockervm" 'desktop' ; then
 
         # --pipewire, --pulseaudio, --alsa
