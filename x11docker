@@ -17044,8 +17044,7 @@ check_options_arguments() {     # check for [likely] valid arguments
 check_options_interferences() { # check multiple option interferences, change settings if needed
   local Message
 
-  case "$Dockervm" in
-      desktop)
+  if case_match "$Dockervm" 'desktop' ; then
           # --pipewire, --pulseaudio, --alsa
           [ "$Pulseaudiomode" = "auto" ] && Pulseaudiomode="tcp"
           { [ "$Sharepipewire" = "yes" ] || [ "$Sharealsa" = "yes" ] || [ "$Pulseaudiomode" = "socket" ] || [ "$Pulseaudiomode" = "host" ] ; } && { # Pulseaudiomode_host
@@ -17077,8 +17076,7 @@ check_options_interferences() { # check multiple option interferences, change se
                   Sharegpu="no"
                   ;;
           esac
-          ;;
-  esac
+  fi
 
   # --runtime
   case "$Runtime" in
