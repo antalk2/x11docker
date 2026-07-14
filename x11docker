@@ -17147,11 +17147,9 @@ check_options_interferences() { # check multiple option interferences, change se
     fi
 
     # --xtest
-    if [ -z "$Xtest" ] ; then
-        if case_match "$Xserver" '--xpra*|--xvfb' ; then
-            note "Option $Xserver: Enabling option --xtest to allow xpra access."
-            Xtest="yes"
-        fi
+    if [ -z "$Xtest" ] && case_match "$Xserver" '--xpra*|--xvfb' ; then
+        note "Option $Xserver: Enabling option --xtest to allow xpra access."
+        Xtest="yes"
     fi
 
     # Check whether host X server has MIT-SHM enabled.
