@@ -12340,7 +12340,7 @@ check_runtime() {
 } # end check_runtime
 
 # Function: check_smallinit
-# Brief: Find container init binary on host, set Initbinaryfile
+# Brief: Find container init binary on host, set g_Initbinaryfile
 #
 # 
 #
@@ -12348,7 +12348,7 @@ check_runtime() {
 #    Xcontainer_option
 #    Xcontainertools
 #    Sharefolder
-#    Initbinaryfile=
+#    g_Initbinaryfile=
 #    Localsharedir
 #    g_Initsystem
 #
@@ -12359,25 +12359,25 @@ check_smallinit() {
     if [ "$Xcontainer_option" = "yes" ]           \
     && grep -q "catatonit" <<< "$Xcontainertools" ;
     then
-        Initbinaryfile="$Sharefolder/catatonit"
+        g_Initbinaryfile="$Sharefolder/catatonit"
         return 0
     fi
     #
     # Find the first that is executable
-    if [ ! -x "$Initbinaryfile" ] ; then  Initbinaryfile="$( command -v catatonit || : )"           ; fi
-    if [ ! -x "$Initbinaryfile" ] ; then  Initbinaryfile="/usr/libexec/catatonit/catatonit"         ; fi
-    if [ ! -x "$Initbinaryfile" ] ; then  Initbinaryfile="$(command -v docker-init || : )"          ; fi
-    if [ ! -x "$Initbinaryfile" ] ; then  Initbinaryfile="/usr/local/share/x11docker/tini-static"   ; fi
-    if [ ! -x "$Initbinaryfile" ] ; then  Initbinaryfile="/usr/bin/tini-static"                     ; fi
-    if [ ! -x "$Initbinaryfile" ] ; then  Initbinaryfile="$Localsharedir/tini-static"               ; fi
-    if [ ! -x "$Initbinaryfile" ] ; then  Initbinaryfile="/snap/docker/current/bin/docker-init"     ; fi
-    if [ ! -x "$Initbinaryfile" ] ; then  Initbinaryfile="/snap/docker/current/usr/bin/docker-init" ; fi
+    if [ ! -x "$g_Initbinaryfile" ] ; then  g_Initbinaryfile="$( command -v catatonit || : )"           ; fi
+    if [ ! -x "$g_Initbinaryfile" ] ; then  g_Initbinaryfile="/usr/libexec/catatonit/catatonit"         ; fi
+    if [ ! -x "$g_Initbinaryfile" ] ; then  g_Initbinaryfile="$(command -v docker-init || : )"          ; fi
+    if [ ! -x "$g_Initbinaryfile" ] ; then  g_Initbinaryfile="/usr/local/share/x11docker/tini-static"   ; fi
+    if [ ! -x "$g_Initbinaryfile" ] ; then  g_Initbinaryfile="/usr/bin/tini-static"                     ; fi
+    if [ ! -x "$g_Initbinaryfile" ] ; then  g_Initbinaryfile="$Localsharedir/tini-static"               ; fi
+    if [ ! -x "$g_Initbinaryfile" ] ; then  g_Initbinaryfile="/snap/docker/current/bin/docker-init"     ; fi
+    if [ ! -x "$g_Initbinaryfile" ] ; then  g_Initbinaryfile="/snap/docker/current/usr/bin/docker-init" ; fi
     #
-    Initbinaryfile="$( myrealpath "$Initbinaryfile" 2>/dev/null || : )"
+    g_Initbinaryfile="$( myrealpath "$g_Initbinaryfile" 2>/dev/null || : )"
     #
-    if [ ! -x "$Initbinaryfile" ] ; then  Initbinaryfile="" ; fi
+    if [ ! -x "$g_Initbinaryfile" ] ; then  g_Initbinaryfile="" ; fi
 
-    if [ -z "$Initbinaryfile" ] ; then
+    if [ -z "$g_Initbinaryfile" ] ; then
         note_ttm "|Option --init=$g_Initsystem: Did not find a tini container init system.
                   |  Please install catatonit or tini-static.
                   |  $Wikipackagesimage"
@@ -12915,11 +12915,11 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
       case "$g_BackendKind" in
         docker|podman|nerdctl)
           Backendcommand="$Backendcommand \\
-  --mount $(convertpath mount "$Initbinaryfile:ro" "$Initcontainerpath")"
+  --mount $(convertpath mount "$g_Initbinaryfile:ro" "$Initcontainerpath")"
         ;;
         proot)
           Backendcommand="$Backendcommand \\
-  --bind=$Initbinaryfile:$Initcontainerpath"
+  --bind=$g_Initbinaryfile:$Initcontainerpath"
           ;;
         host) ;; # BackendKind_host
       esac
@@ -13528,8 +13528,8 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
         case "$Runtime" in
           kata-runtime)
             # avoid sharing same file that might be shared with runc already.
-            cp -u "$Initbinaryfile" "$Localsharedir/init-kata"
-            Initbinaryfile="$Localsharedir/init-kata"
+            cp -u "$g_Initbinaryfile" "$Localsharedir/init-kata"
+            g_Initbinaryfile="$Localsharedir/init-kata"
           ;;
         esac
       } || {
@@ -13541,8 +13541,8 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
   Please install catatonit to provide a container init system.
   $Wikipackagesimage"
       }
-      verbose "--init: Found init binary: ${Initbinaryfile:-(none)}"
-      [ "$Initbinaryfile" ] && storeinfo_add_kv_sh "tini=$Initbinaryfile"
+      verbose "--init: Found init binary: ${g_Initbinaryfile:-(none)}"
+      [ "$g_Initbinaryfile" ] && storeinfo_add_kv_sh "tini=$g_Initbinaryfile"
     ;;
     systemd)
       Stopsignal="SIGRTMIN+3"
@@ -13601,7 +13601,7 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
   case "$g_BackendKind" in
     host) # BackendKind_host
       [ "$g_Initsystem" = "tini" ] && {
-        g_Containerentrypoint="$Initbinaryfile --"
+        g_Containerentrypoint="$g_Initbinaryfile --"
         store_runoption_env "TINI_SUBREAPER=1"
       }
     ;;
@@ -19531,7 +19531,7 @@ declare_variables() {           # declare global variables
 
   # g_Containerentrypoint :
   #     g_Containerentrypoint="$l_Imageentrypoint"
-  #     g_Containerentrypoint="$Initbinaryfile --"
+  #     g_Containerentrypoint="$g_Initbinaryfile --"
   #
   #   Used:
   #     grep -qE 'tini|init|systemd' <<< "$g_Containerentrypoint"
@@ -19734,11 +19734,11 @@ declare_variables() {           # declare global variables
   # Sharehostdbus : --hostdbus: Connect to DBus user daemon on host
   Sharehostdbus="no"
   
-  # Initbinaryfile : --init=tini (default): Binary of tini; either
+  # g_Initbinaryfile : --init=tini (default): Binary of tini; either
   #                   /usr/bin/docker-exec or provided by user in
   #                   [...]/share/x11docker
   #
-  Initbinaryfile=""
+  g_Initbinaryfile=""
   
   # Initcontainerpath : --init=tini: Path of tini (or catatonit) in
   #                     container
