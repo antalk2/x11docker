@@ -12426,7 +12426,10 @@ check_cgroup() {
         warning "Option --init=$g_Initsystem: Sharing /sys/fs/cgroup from host."
     fi
 
-  findmnt "/sys/fs/cgroup/$Needcgroup" >/dev/null 2>&1 && return 0
+    if findmnt "/sys/fs/cgroup/$Needcgroup" >/dev/null 2>&1 ; then
+        # Exists, done.
+        return 0
+    fi
 
   case "$g_Initsystem" in
     systemd)
