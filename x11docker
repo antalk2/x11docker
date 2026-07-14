@@ -12132,6 +12132,7 @@ check_image() {
     local l_Imageinspect=""
     local l_Imagecommand=""
     local l_Imageuser=""
+    local l_Imageentrypoint=""
 
     # Check if image $g_Imagename is available locally
     l_Imageinspect="$(unpriv_backend "$g_Backendbin inspect $g_Imagename" 2>> $Containerlogfile)" || {
@@ -12178,12 +12179,12 @@ check_image() {
     storeinfo_add_kv_sh "containeruser=$g_Containerusername"
 
     # Check ENTRYPOINT
-    Imageentrypoint="$(parse_inspect "$l_Imageinspect" "Config" "Entrypoint")"
-    debugnote "Image ENTRYPOINT: $Imageentrypoint"
+    l_Imageentrypoint="$(parse_inspect "$l_Imageinspect" "Config" "Entrypoint")"
+    debugnote "Image ENTRYPOINT: $l_Imageentrypoint"
     case "$g_Noentrypoint" in
         yes) Containerentrypoint="" ;;
         no)
-            Containerentrypoint="$Imageentrypoint"
+            Containerentrypoint="$l_Imageentrypoint"
             case "$Initsystem" in
                 systemd|sysvinit|runit|openrc|tini)
                     grep -qE 'tini|init|systemd' <<< "$Containerentrypoint" && {
@@ -19362,10 +19363,10 @@ declare_variables() {           # declare global variables
   #
   # l_Imagecommand=""
 
-  # Imageentrypoint :
-  #   Imageentrypoint="$(parse_inspect "$l_Imageinspect" "Config" "Entrypoint")"
+  # l_Imageentrypoint :
+  #   l_Imageentrypoint="$(parse_inspect "$l_Imageinspect" "Config" "Entrypoint")"
   #
-  Imageentrypoint=""
+  # l_Imageentrypoint=""
 
   # l_Imageinspect : Output of --inspect
   #    l_Imageinspect="$(unpriv_backend "$g_Backendbin inspect $g_Imagename" 2>> $Containerlogfile)"
@@ -19477,7 +19478,7 @@ declare_variables() {           # declare global variables
   g_Containercommand=""
 
   # Containerentrypoint :
-  #     Containerentrypoint="$Imageentrypoint"
+  #     Containerentrypoint="$l_Imageentrypoint"
   #     Containerentrypoint="$Initbinaryfile --"
   #
   #   Used:
