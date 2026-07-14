@@ -12204,9 +12204,9 @@ check_image() {
                     ;;
                 none)
                     grep -qE 'tini|init|systemd' <<< "$g_Containerentrypoint" && {
-                        note "There seems to be an init system in ENTRYPOINT of image:
-  $g_Containerentrypoint
-  Returning correct exit code of container command will likely fail."
+                        note_ttm "|There seems to be an init system in ENTRYPOINT of image:
+                                  |  $g_Containerentrypoint
+                                  |  Returning correct exit code of container command will likely fail."
                     }
                     ;;
             esac
