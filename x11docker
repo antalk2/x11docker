@@ -3486,20 +3486,17 @@ convertpath() {                 # convert unix and windows paths
                 subsystem)    echo "$Path" ;;
                 volume)
                     # global Dockervm
-                    case "$Dockervm" in
-                        no|desktop)
+                    if case_match "$Dockervm" 'no|desktop' ; then
                             printf "%s"                             \
                                    "'$Path'"                        \
                                    ":'${containerpath_arg:-$Path}'" \
                                    "$Readwritemode"
-                            ;;
-                        moby)
+                    elif [ "$Dockervm" = moby  ] ; then
                             printf "%s"                             \
                                    "'$Winsubpath$Path'"             \
                                    ":'${containerpath_arg:-$Path}'" \
                                    "$Readwritemode"
-                            ;;
-                    esac
+                    fi
                     ;;
                 mount)
                     case "$Dockervm" in
