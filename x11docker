@@ -1647,15 +1647,18 @@ finish() {
 
     # backup of logfile in $Cachebasefolder
     if [ -e "$Logfile" ] ; then
+        #
+        # Q: Why sleep?
         if [ "$Verbose" ] ; then sleep 1 ; fi
+        #
+        # Do the backup
         unpriv "cp '$Logfile' '$Logfilebackup'"
-        case "$Winsubsystem" in
-            WSL1|WSL2)
+        #
+        if case_match "$Winsubsystem" 'WSL1|WSL2' ; then
                 if [ "$Dockervm" = "moby" ] ; then
                     unpriv "cp -T '$Logfilebackup' '$Hostuserhome/.cache/x11docker/x11docker.log'"
                 fi
-                ;;
-        esac
+        fi
         #unpriv "rmcr '$Logfilebackup'"
     fi
 
