@@ -12259,13 +12259,14 @@ check_containerhomebasedir() {  # options --homebasedir, --home
     if   case_match "$BackendKind" 'proot' ; then
         # Q: Override, even if already set?
         Hosthomebasefolder="$Localsharedir"
-    elif case_match "$BackendKind" 'docker|podman|nerdctl' ; then
-        if [ -z "$Hosthomebasefolder" ] ; then
-            if   case_match "$Dockervm" 'no|desktop' ; then
-                Hosthomebasefolder="$Containeruserhosthome/.local/share/x11docker"
-            elif case_match "$Dockervm" 'moby'       ; then
-                Hosthomebasefolder="$(convertpath subsystem "$(wincmd 'echo %userprofile%') ")/x11docker/home"
-            fi
+        #
+    elif case_match "$BackendKind" 'docker|podman|nerdctl' \
+         &&  [ -z "$Hosthomebasefolder" ]                  ;
+    then
+        if   case_match "$Dockervm" 'no|desktop' ; then
+            Hosthomebasefolder="$Containeruserhosthome/.local/share/x11docker"
+        elif case_match "$Dockervm" 'moby'       ; then
+            Hosthomebasefolder="$(convertpath subsystem "$(wincmd 'echo %userprofile%') ")/x11docker/home"
         fi
     fi
 }
