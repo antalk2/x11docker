@@ -12185,12 +12185,12 @@ check_image() {
         yes) g_Containerentrypoint="" ;;
         no)
             g_Containerentrypoint="$l_Imageentrypoint"
-            case "$Initsystem" in
+            case "$g_Initsystem" in
                 systemd|sysvinit|runit|openrc|tini)
                     grep -qE 'tini|init|systemd' <<< "$g_Containerentrypoint" && {
                         note_ttm "|There seems to be an init system in ENTRYPOINT of image:
                                   |    $g_Containerentrypoint
-                                  |  Will disable it as x11docker already runs an init with option --$Initsystem.
+                                  |  Will disable it as x11docker already runs an init with option --$g_Initsystem.
                                   |  To allow this ENTRYPOINT, run x11docker with option --init=none."
                         #
                         g_Containerentrypoint=""
@@ -12334,7 +12334,7 @@ check_smallinit() {             # find container init binary on host
   Initbinaryfile="$(myrealpath "$Initbinaryfile" 2>/dev/null ||:)"
   [ -x "$Initbinaryfile" ]                                      || Initbinaryfile=""
   [ -z "$Initbinaryfile" ] && {
-    note "Option --init=$Initsystem: Did not find a tini container init system.
+    note "Option --init=$g_Initsystem: Did not find a tini container init system.
   Please install catatonit or tini-static.
   $Wikipackagesimage"
     return 1
@@ -12344,7 +12344,7 @@ check_smallinit() {             # find container init binary on host
 check_cgroup() {                # check [and create] cgroup mountpoint for systemd or elogind
   local Remounted Needcgroup
 
-  [ "$Initsystem" = "systemd" ] && Needcgroup="systemd" || Needcgroup="elogind"
+  [ "$g_Initsystem" = "systemd" ] && Needcgroup="systemd" || Needcgroup="elogind"
 
   [ "$BackendKind" = "docker" ] && {
     case "$Cgroupversion" in
@@ -12352,7 +12352,7 @@ check_cgroup() {                # check [and create] cgroup mountpoint for syste
         Sharecgroup="yes"
       ;;
       v2)
-        case "$Initsystem" in
+        case "$g_Initsystem" in
           systemd)
             case "$Runtime" in
               sysbox-runc) ;;
@@ -12368,22 +12368,22 @@ check_cgroup() {                # check [and create] cgroup mountpoint for syste
         esac
       ;;
     esac
-    case "$Initsystem" in
+    case "$g_Initsystem" in
       sysvinit|openrc|runit)
         Sharecgroup="yes"
       ;;
     esac
   }
 
-  [ "$Sharecgroup" = "yes" ] && warning "Option --init=$Initsystem: Sharing /sys/fs/cgroup from host."
+  [ "$Sharecgroup" = "yes" ] && warning "Option --init=$g_Initsystem: Sharing /sys/fs/cgroup from host."
 
   findmnt "/sys/fs/cgroup/$Needcgroup" >/dev/null 2>&1 && return 0
 
-  case "$Initsystem" in
+  case "$g_Initsystem" in
     systemd)
       case "$Cgroupversion" in
         v1) 
-          [ "$Startuser" != "root" ] && note "Option --init=$Initsystem: Did not find /sys/fs/cgroup/$Needcgroup
+          [ "$Startuser" != "root" ] && note "Option --init=$g_Initsystem: Did not find /sys/fs/cgroup/$Needcgroup
   Startup of container is likely to fail."
         ;;
         v2)
@@ -12392,7 +12392,7 @@ check_cgroup() {                # check [and create] cgroup mountpoint for syste
       esac
     ;;
     *)
-      note "Option --init=$Initsystem: Did not find /sys/fs/cgroup/$Needcgroup
+      note "Option --init=$g_Initsystem: Did not find /sys/fs/cgroup/$Needcgroup
   A possible elogind service in container is likely to fail."
     ;;
   esac
@@ -12400,7 +12400,7 @@ check_cgroup() {                # check [and create] cgroup mountpoint for syste
   [ -z "$Needcgroup" ] && return 0
 
   [ "$Startuser" != "root" ] && {
-    note "Option --init=$Initsystem: To create and mount a cgroup
+    note "Option --init=$g_Initsystem: To create and mount a cgroup
   for $Needcgroup, please run x11docker as root.
   Or create cgroup mountpoint on host yourself with:
     mount -o remount,rw cgroup /sys/fs/cgroup
@@ -12410,7 +12410,7 @@ check_cgroup() {                # check [and create] cgroup mountpoint for syste
   }
 
   [ "$Sharecgroup" = "yes" ] && [ "$Startuser" = "root" ] && {
-    note "Option --init=$Initsystem: Creating cgroup mountpoint on host for '$Needcgroup'."
+    note "Option --init=$g_Initsystem: Creating cgroup mountpoint on host for '$Needcgroup'."
     findmnt /sys/fs/cgroup -O ro >/dev/null && {
       mount -o remount,rw cgroup /sys/fs/cgroup >> "$Containerlogfile" 2>&1
       Remounted=yes
@@ -12721,7 +12721,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
   }
 
   # --user
-  case "$Initsystem" in
+  case "$g_Initsystem" in
     none|tini|dockerinit)
       case "$Switchcontaineruserflag" in
         no)
@@ -12856,7 +12856,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
   esac
 
   # --init
-  case "$Initsystem" in
+  case "$g_Initsystem" in
     dockerinit)
       case "$BackendKind" in
         docker|podman|nerdctl)
@@ -12883,7 +12883,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
       Backendcommand="$Backendcommand \\
   --tmpfs /var/lib/journal"
   esac
-  case "$Initsystem" in
+  case "$g_Initsystem" in
     systemd|sysvinit|openrc|runit)
       case "$BackendKind" in
         podman)
@@ -13334,7 +13334,7 @@ esac
     no)
       case "$BackendKind" in
         docker|podman|nerdctl)
-          case "$Initsystem" in
+          case "$g_Initsystem" in
             tini) Backendcommand="$Backendcommand ${g_Rootfs:-$g_Imagename} $Initcommand $g_Containercommand" ;;
             *) Backendcommand="$Backendcommand ${g_Rootfs:-$g_Imagename} $g_Containercommand" ;;
           esac
@@ -13371,11 +13371,11 @@ setup_capabilities() {          # check linux capabilities needed by container
     store_runoption_cap "CHOWN FOWNER" ### FIXME: CHOWN needed indeed here?
     Switchcontaineruserflag="yes"
   }
-  #case "$Initsystem" in
+  #case "$g_Initsystem" in
   #  systemd) Dbusrunsession="no" ;;
   #esac
 
-  case "$Initsystem" in
+  case "$g_Initsystem" in
     none|tini|dockerinit) ;;
     systemd)
       Switchcontaineruserflag="yes"
@@ -13452,19 +13452,19 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
   local Message=
 
   # --init in Dockervm. /usr/bin/docker-init is not available in MSYS2/Cygwin/WSL1
-  if case_match "$Dockervm" 'moby|desktop' && [ "$Initsystem" = "tini" ] ; then
-      Initsystem="dockerinit"
+  if case_match "$Dockervm" 'moby|desktop' && [ "$g_Initsystem" = "tini" ] ; then
+      g_Initsystem="dockerinit"
   fi
 
   case "$BackendKind" in
     proot|host) # BackendKind_host
-      case "$Initsystem" in
+      case "$g_Initsystem" in
         tini|none) ;;
         *)
           note "Option --init: Only --init[=tini] or --init=none are
   supported with option --backend=$BackendKind. Fallback: Setting option --init=tini"
           check_fallback
-          Initsystem="tini"
+          g_Initsystem="tini"
         ;;
       esac
     ;;
@@ -13476,7 +13476,7 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
     ;;
   esac
 
-  case "$Initsystem" in
+  case "$g_Initsystem" in
     none|dockerinit) ;;
     tini)
       check_smallinit && {
@@ -13488,10 +13488,10 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
           ;;
         esac
       } || {
-        Initsystem="none"
+        g_Initsystem="none"
       }
-      [ "$Initsystem" = "none" ] && {  ### FIXME --backend=host,proot
-        note "--init=$Initsystem: Did not find container init system
+      [ "$g_Initsystem" = "none" ] && {  ### FIXME --backend=host,proot
+        note "--init=$g_Initsystem: Did not find container init system
   'tini' or 'catatonit'. It should be provided by docker or podman package.
   Please install catatonit to provide a container init system.
   $Wikipackagesimage"
@@ -13516,7 +13516,7 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
     ;;
   esac
 
-  case "$Initsystem" in
+  case "$g_Initsystem" in
     systemd)
       warning "Option --init=systemd slightly degrades container isolation.
   It adds some capabilities x11docker would drop otherwise.
@@ -13525,14 +13525,14 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
   Some processes in container will run as root."
     ;;
     runit|openrc|sysvinit)
-      warning "Option --init=$Initsystem slightly degrades container isolation.
+      warning "Option --init=$g_Initsystem slightly degrades container isolation.
   It adds some user switching capabilities x11docker would drop otherwise.
   However, they are still within default docker capabilities.
   Not within default docker capabilities it adds capability SYS_BOOT.
   Some processes in container will run as root."
     ;;
     s6-overlay)
-      warning "Option --init=$Initsystem slightly degrades container isolation.
+      warning "Option --init=$g_Initsystem slightly degrades container isolation.
   It adds some user switching capabilities x11docker would drop otherwise.
   However, they are still within default docker capabilities.
   Some processes in container will run as root."
@@ -13546,7 +13546,7 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
   --dbus=system might need further capabilities or --cap-default to work
   as expected. If in doubt, one of --init=systemd|openrc|runit|sysvinit
   might be a better choice."
-        note "Option --dbus=system with init system '$Initsystem'
+        note "Option --dbus=system with init system '$g_Initsystem'
   can have a quite long timeout delay until startup.
   Use one of --init=systemd|openrc|runit|sysvinit in that case."
       }
@@ -13555,14 +13555,14 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
 
   case "$BackendKind" in
     host) # BackendKind_host
-      [ "$Initsystem" = "tini" ] && {
+      [ "$g_Initsystem" = "tini" ] && {
         g_Containerentrypoint="$Initbinaryfile --"
         store_runoption_env "TINI_SUBREAPER=1"
       }
     ;;
   esac
   
-  case "$Initsystem" in
+  case "$g_Initsystem" in
     systemd|sysvinit|openrc|runit)
       check_cgroup ||:
     ;;
@@ -13832,18 +13832,18 @@ create_containerrootrc() {
     #
     echo
     echo '# Maybe create /etc/profile.d/90-x11docker-containerrc.sh'
-    case "$Initsystem" in
+    case "$g_Initsystem" in
         systemd|openrc|sysvinit|runit)
-            echo "# Initsystem '$Initsystem' is in {systemd|openrc|sysvinit|runit}"
+            echo "# g_Initsystem '$g_Initsystem' is in {systemd|openrc|sysvinit|runit}"
             echo "CREATE_etc_profile_d_90_x11docker_containerrc_sh=yes"
             ;;
         *)
-            echo "# Initsystem '$Initsystem' is not in {systemd|openrc|sysvinit|runit}"
+            echo "# g_Initsystem '$g_Initsystem' is not in {systemd|openrc|sysvinit|runit}"
             echo "CREATE_etc_profile_d_90_x11docker_containerrc_sh=no"
             ;;
     esac
     
-    case "$Initsystem" in
+    case "$g_Initsystem" in
       systemd|openrc|sysvinit|runit|*)
           trim_to_bar \
               "|
@@ -13969,8 +13969,8 @@ create_containerrootrc() {
     printf "\n# Dbussystem: rootrc_prepare_dbus()\n"
     [ "$Dbussystem" = "yes" ]          && rootrc_prepare_dbus
 
-    printf "\n# Initsystem: rootrc_prepare_init_{openrc|runit|systemd|sysvinit}()\n"
-    case "$Initsystem" in
+    printf "\n# g_Initsystem: rootrc_prepare_init_{openrc|runit|systemd|sysvinit}()\n"
+    case "$g_Initsystem" in
         openrc)   rootrc_prepare_init_openrc   ;;
         runit)    rootrc_prepare_init_runit    ;;
         systemd)  rootrc_prepare_init_systemd  ;;
@@ -13987,7 +13987,7 @@ create_containerrootrc() {
          |"
     echo
 
-    printf "\n# if Dbussystem and Initsystem in {tini|none|dockerinit} then start dbus-daemon\n"
+    printf "\n# if Dbussystem and g_Initsystem in {tini|none|dockerinit} then start dbus-daemon\n"
     if [ "$Dbussystem" = "yes" ] ; then
         trim_to_bar \
             "|
@@ -13996,7 +13996,7 @@ create_containerrootrc() {
              |"
         echo
 
-        case "$Initsystem" in
+        case "$g_Initsystem" in
             tini|none|dockerinit)
                 trim_to_bar "|
                              |dbus-daemon --system --fork
@@ -14055,9 +14055,9 @@ create_containerrootrc() {
     #
     if [ "$Switchcontaineruserflag" = "yes" ] ; then
         #
-        echo "debugnote 'containerrootrc(): --init=$Initsystem'"
+        echo "debugnote 'containerrootrc(): --init=$g_Initsystem'"
         #
-        case "$Initsystem" in
+        case "$g_Initsystem" in
             #
             none|dockerinit)
                 case "$BackendKind" in
@@ -14197,7 +14197,7 @@ verbose \"containerrc: Container system:
       # host) ;; # BackendKind_host
     esac
 
-    [ "$Initsystem" = 'systemd' ] && echo "systemctl --user start dbus"  ### FIXME
+    [ "$g_Initsystem" = 'systemd' ] && echo "systemctl --user start dbus"  ### FIXME
 
     echo "
 # USER and HOME
@@ -14483,7 +14483,7 @@ echo \"#! /bin/sh
 . /usr/local/bin/x11docker-message
 debugnote 'Running x11docker-agetty'
 "
-  case "$Initsystem" in
+  case "$g_Initsystem" in
     systemd|openrc|sysvinit|runit)
       echo "
 [ -e /sbin/agetty ] && exec agetty --autologin \$g_Containerusername console
@@ -14511,7 +14511,7 @@ echo \"#! /bin/sh
 debugnote 'Running x11docker-watch'
 read Dummy <$(convertpath share "$Timetosaygoodbyefifo")
 echo timetosaygoodbye >>$(convertpath share "$Timetosaygoodbyefifo")
-debugnote 'x11docker-watch: $Initsystem shutdown now'
+debugnote 'x11docker-watch: $g_Initsystem shutdown now'
 shutdown 0
 systemctl poweroff
 openrc-shutdown --poweroff 0
@@ -14677,7 +14677,7 @@ for Service in /usr/share/dbus-1/system-services/* /usr/share/dbus-1/services/*;
   }
   case \"\$Name\" in
 "
-  [ "$Initsystem" != "systemd" ] && {
+  [ "$g_Initsystem" != "systemd" ] && {
     echo "
     org.freedesktop.systemd1|org.freedesktop.hostname1|org.freedesktop.locale1)
       debugnote \"DBus: Removing \$Name: \$Service\"
@@ -15393,7 +15393,7 @@ start_container() {             # docker run
   $Remountcommand"
         echo "cgroup mount with nsenter:" >> "$Containerlogfile"
         unpriv_backend "$Remountcommand" >> "$Containerlogfile" 2>&1 || {
-          note "Option --init=$Initsystem: Failed to remount /sys/fs/cgroup
+          note "Option --init=$g_Initsystem: Failed to remount /sys/fs/cgroup
   in container. Startup of systemd might fail.
   nsenter command:
     $Remountcommand
@@ -16623,7 +16623,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
      #### Init system and DBus
          --dbus)              Dbusrunsession="${2:-yes}" ; shift ;;  # DBus in container, Default: user session, =system: with system daemon
          --hostdbus)          Sharehostdbus="yes" ;;                 # Connect to host DBus
-         --init)              Initsystem="${2:-tini}" ; shift ;;     # init in container
+         --init)              g_Initsystem="${2:-tini}" ; shift ;;     # init in container
          --sharecgroup)       Sharecgroup="yes" ;;                   # Share /sys/fs/cgroup. Default for --init=systemd, possible use with --init=openrc or elogind.
 
      #### Container configuration
@@ -16733,7 +16733,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
   Please use option --runx instead." ;;
          --no-xhost)          Cleanxhost="yes" ;             note "Option --no-xhost is deprecated.
   Please use --clean-xhost instead." ;;
-         --systemd)           Initsystem="systemd" ;         note "Option --systemd is deprecated. Please use: --init=systemd" ;;
+         --systemd)           g_Initsystem="systemd" ;         note "Option --systemd is deprecated. Please use: --init=systemd" ;;
          --homedir)           Sharehome="yes" ; Persistanthomevolume="${2:-}" ; shift ; note "Option --homedir is deprecated.
   Please use --home=DIR instead."  ;;
          --sharedir)          store_runoption_volume "${2:-}" ; shift ; note "Option --sharedir is deprecated.
@@ -16977,15 +16977,15 @@ check_options_arguments() {     # check for [likely] valid arguments
   }
 
   # --init
-  case "$Initsystem" in
+  case "$g_Initsystem" in
     tini|systemd|sysvinit|openrc|runit|dockerinit|s6-overlay) ;;
-    no|none) Initsystem="none" ;;
+    no|none) g_Initsystem="none" ;;
     *)
-      note "Option --init: Unknown init system $Initsystem
+      note "Option --init: Unknown init system $g_Initsystem
   Possible: tini systemd sysvinit openrc runit s6-overlay none
   Fallback: Using --init=tini instead."
       check_fallback
-      Initsystem="tini"
+      g_Initsystem="tini"
     ;;
   esac
 
@@ -17747,13 +17747,13 @@ check_options_interferences() { # check multiple option interferences, change se
 
       [ "$Langwunsch" ] && store_runoption_env "LANG=$Langwunsch"
 
-      case "$Initsystem" in
+      case "$g_Initsystem" in
         none|tini|dockerinit) ;;
         *) 
-          note "Option --no-setup: Option --init=$Initsystem is not supported.
+          note "Option --no-setup: Option --init=$g_Initsystem is not supported.
   Fallback: Setting --init=tini"
           check_fallback
-          Initsystem="tini"
+          g_Initsystem="tini"
         ;;
       esac
 
@@ -17902,12 +17902,12 @@ check_options_interferences() { # check multiple option interferences, change se
   Option --preset can help to reduce typing for each command."
         ;;
       esac
-      [ "$Initsystem" = "systemd" ] && {
+      [ "$g_Initsystem" = "systemd" ] && {
         note "Option --init=systemd is not supported with MobyVM.
   You can try another init option instead, e.g. --init=openrc.
   Fallback: Disabling option --init=systemd"
         check_fallback
-        Initsystem="tini"
+        g_Initsystem="tini"
       }
       [ "$Sharecgroup" = "yes" ] && {
         note "Option --sharecgroup is not supported with MobyVM.
@@ -17930,7 +17930,7 @@ check_options_interferences() { # check multiple option interferences, change se
   [ "$Setupwayland" = "yes" ] && Dbusrunsession="yes"
 
   # --init
-  case "$Initsystem" in
+  case "$g_Initsystem" in
     systemd|sysvinit|openrc|runit) Dbussystem="yes" ;;
   esac
 
@@ -18194,9 +18194,9 @@ check_options_messages() {      # some messages depending on options, but not ch
 
   # --interactive
   [ "$g_Interactive" = "yes" ] && {
-    case "$Initsystem" in
+    case "$g_Initsystem" in
       openrc|runit|sysvinit)  note "Option --interactive: Interactive mode with option
-  --init=$Initsystem is not well integrated yet.
+  --init=$g_Initsystem is not well integrated yet.
   Shells do not have job control and CTRL-C can behave different than expected." ;;
       systemd) note "Option --interactive might fail with old systemd versions." ;;
     esac
@@ -19615,7 +19615,7 @@ declare_variables() {           # declare global variables
   # Stopsignal : Signal to send on 'docker stop'
   #
   #   - Passed to docker|podman|nerdctl as "--stop-signal $Stopsignal"
-  #   - Depends on Initsystem
+  #   - Depends on g_Initsystem
   #
   #   - Probably the signal to be sent by docker to the "init" program
   #     running in the container.
@@ -19671,8 +19671,8 @@ declare_variables() {           # declare global variables
   #
   Dbussystem="no"
   
-  # Initsystem : --init: Init system in container
-  Initsystem="tini"
+  # g_Initsystem : --init: Init system in container
+  g_Initsystem="tini"
   
   # Sharecgroup : --sharecgroup,
   #               --init=systemd: share /sys/fs/cgroup.
