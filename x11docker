@@ -12409,10 +12409,11 @@ check_cgroup() {
                           sysbox-runc) ;;
                           *)
                               g_Remountcgroup="yes"
-                              warning "Option --init=systemd: To support systemd in docker container
-  with cgroupv2 on host, x11docker shortly runs a privileged container
-  of '$g_Imagename' with 'nsenter' to remount the container's /sys/fs/cgroup.
-  Evil images might be set up to abuse these privileges."
+                              warning_ttm \
+                                  "|Option --init=systemd: To support systemd in docker container
+                                   |  with cgroupv2 on host, x11docker shortly runs a privileged container
+                                   |  of '$g_Imagename' with 'nsenter' to remount the container's /sys/fs/cgroup.
+                                   |  Evil images might be set up to abuse these privileges."
                               ;;
                       esac
                       ;;
