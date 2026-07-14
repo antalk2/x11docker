@@ -8,7 +8,7 @@
 #
 # Description: Joins the strings s1 ... sn with separator SEP
 #
-# Example: join_with ":" "${groupname}" "${gid}" "$Containeruser"
+# Example: join_with ":" "${groupname}" "${gid}" "$g_Containerusername"
 # Example: variable="$(join_with " \\${NEWLINE}" "${variable}"  "--option1" "--option2" )"
 # Example: variable+="$(join_with " \\${NEWLINE}" ""  "--option1" "--option2" )"
 #

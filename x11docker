@@ -555,7 +555,7 @@ have_command() {
 #
 # Description: Joins the strings s1 ... sn with separator SEP
 #
-# Example: join_with ":" "${groupname}" "${gid}" "$Containeruser"
+# Example: join_with ":" "${groupname}" "${gid}" "$g_Containerusername"
 # Example: variable="$(join_with " \\${NEWLINE}" "${variable}"  "--option1" "--option2" )"
 # Example: variable+="$(join_with " \\${NEWLINE}" ""  "--option1" "--option2" )"
 #
@@ -2543,7 +2543,7 @@ makecookie() {
 #    `mygetent group render`
 #    `mygetent group weston-launch`
 #
-#    `mygetent passwd "$Containeruser"`
+#    `mygetent passwd "$g_Containerusername"`
 #
 # Description:
 #   Print the line corresponding to "$2" from "/etc/$1", or print nothing
@@ -3410,7 +3410,7 @@ convertpath() {                 # convert unix and windows paths
         #                                             # global Containeruserhome
         if [        "$Containerpath"         = "$Containeruserhosthome" ] \
                && [ "$Persistanthomevolume" != "$Containeruserhosthome" ] ; then
-            Containerpath="/home.host/$Containeruser"  # global Containeruser
+            Containerpath="/home.host/$g_Containerusername"  # global g_Containerusername
         fi
     fi
     #
@@ -4064,13 +4064,13 @@ waitforlogentry_sh() {
 #     probably covers the case in (ex2).
 #     Hostuser can be set by --hostuser
 #
-#     Concerning (ex1):   "$Containeruser" defaults to Hostuser,
+#     Concerning (ex1):   "$g_Containerusername" defaults to Hostuser,
 #      this is covered by unpriv.
 #
-#     For a non-default (Containeruser, --user): we are asking if a
+#     For a non-default (g_Containerusername, --user): we are asking if a
 #     user inside the container can write a directory (probably outside).
 #     Probably depends on: (1) the user running docker, (2) mapping, is it readonly?
-#     (3) relation of  Containeruser inside and ...
+#     (3) relation of  g_Containerusername inside and ...
 #
 #     For a reliable answer it might be more practical to ask it from
 #     within the container.
@@ -6235,7 +6235,7 @@ setup_sound_pulseaudio() {
         #
         # Adjust, only if "auto"
         #
-        if    [ "$Containeruser" != "$Hostuser" ] \
+        if    [ "$g_Containerusername" != "$Hostuser" ] \
            || [ "$Runtime" = "kata-runtime" ]     \
            || [ "$Runtime" = "sysbox-runc" ]      \
            || [ "$Snapsupport" = "yes" ]          \
@@ -7622,10 +7622,10 @@ check_xdepends() {
     #
     case "${X_option_to_check}" in
         --weston|--kwin)
-            if [ "$Containeruser" != "$Hostuser" ] ; then
+            if [ "$g_Containerusername" != "$Hostuser" ] ; then
                 $xdepends_message_ttm \
                           "|${X_option_to_check} does not run with a container user
-                           |  different from host user $Hostuser (option --user=$Containeruser)."
+                           |  different from host user $Hostuser (option --user=$g_Containerusername)."
                 Return=1
             fi
             ;;
@@ -9075,7 +9075,7 @@ create_xcommand() {
     #
     if   case_match "$Runtime" 'kata-runtime | sysbox-runc'                               ; then Usemitshm="no"
     elif [ "$Xoverip" != "no"              ]                                              ; then Usemitshm="no"
-    elif [ "$Containeruser" != "$Hostuser" ]                                              ; then Usemitshm="no"
+    elif [ "$g_Containerusername" != "$Hostuser" ]                                              ; then Usemitshm="no"
 
     elif [ "$Xcontainer_option" = "yes"    ] && [ -n "$Newxvt" ]                          ; then Usemitshm="no"
 
@@ -9885,11 +9885,11 @@ create_xcontainercommand() {
     {
         echo "root:x:0:0:root:/root:/bin/bash"
         printf "%s:%s:%s:%s:%s:%s:%s\n"            \
-               "$Containeruser"                    \
+               "$g_Containerusername"                    \
                "x"                                 \
                "${Containeruseruid:-$Hostuseruid}" \
                "${Containerusergid:-$Hostusergid}" \
-               "$Containeruser,,,"                 \
+               "$g_Containerusername,,,"                 \
                "/tmp"                              \
                "/bin/bash"
     } >> "$Cachefolder/etcpasswd.xcontainer"
@@ -9897,10 +9897,10 @@ create_xcontainercommand() {
 
     mkfile "$Cachefolder/etcgroup.xcontainer"
     {
-        echo "video:x:$(mygetent group video   | cut -d: -f3):$Containeruser"
-        echo "input:x:$(mygetent group input   | cut -d: -f3):$Containeruser"
-        echo "render:x:$(mygetent group render | cut -d: -f3):$Containeruser"
-        echo "weston-launch:x:104:$Containeruser" # Magic_104
+        echo "video:x:$(mygetent group video   | cut -d: -f3):$g_Containerusername"
+        echo "input:x:$(mygetent group input   | cut -d: -f3):$g_Containerusername"
+        echo "render:x:$(mygetent group render | cut -d: -f3):$g_Containerusername"
+        echo "weston-launch:x:104:$g_Containerusername" # Magic_104
         #                     ^^^ FIXME: Why 104? Could it clash with "mygetent group video"?
     }  >> "$Cachefolder/etcgroup.xcontainer"
   
@@ -10871,7 +10871,7 @@ create_xinitrc() {
                 #
                 if [ -n "$Xhost" ] ; then
                     if [ "$Xhost" = "auto" ] ; then
-                        Xhost="+SI:localuser:$Containeruser"
+                        Xhost="+SI:localuser:$g_Containerusername"
                     fi
                     trim_to_bar "|warning \"Option --xhost: Running 'xhost $Xhost' on \$Newdisplay\"
                                  |xhost $Xhost
@@ -12004,7 +12004,7 @@ check_backend() {
                 note_ttm \
                     "|Option --backend=$BackendKind --sudouser: sudo fails in $BackendKind.
                      |  Workaround: starting with user root.
-                     |  You can switch to user $Containeruser with 'su $Containeruser'.
+                     |  You can switch to user $g_Containerusername with 'su $g_Containerusername'.
                      |  Note that root in $BackendKind is a fake and does not have real root privileges."
                 #
             fi
@@ -12122,6 +12122,7 @@ check_backend() {
 #    Backendrootless
 #    g_Imagearchitecture= :w
 #    g_Containercommand= :w
+#    g_Containerusername= :w
 #
 # Files:
 #    2>> $Containerlogfile
@@ -12166,15 +12167,15 @@ check_image() {
             if [ "$l_Imageuser" ] ; then
                 note_ttm \
                     "|Found 'USER $l_Imageuser' in image.
-                     |  If you want to run with user $l_Imageuser instead of host user $Containeruser,
+                     |  If you want to run with user $l_Imageuser instead of host user $g_Containerusername,
                      |  than run with option --user=RETAIN."
             fi
             ;;
         no)
-            Containeruser="${l_Imageuser:-root}"
+            g_Containerusername="${l_Imageuser:-root}"
             ;;
     esac
-    storeinfo_add_kv_sh "containeruser=$Containeruser"
+    storeinfo_add_kv_sh "containeruser=$g_Containerusername"
 
     # Check ENTRYPOINT
     Imageentrypoint="$(parse_inspect "$l_Imageinspect" "Config" "Entrypoint")"
@@ -12484,7 +12485,7 @@ check_containerhome() {         # option --home: check HOME of container user.
           Sharehome="no"
         ;;
         yes)
-          grep -q "unknown" <<< "$Containeruser" && {
+          grep -q "unknown" <<< "$g_Containerusername" && {
             note "Option --home: Sharing a host folder is allowed only
   for container users that also exist on host.
   You can use a docker volume with --home=VOLUME instead.
@@ -12500,7 +12501,7 @@ check_containerhome() {         # option --home: check HOME of container user.
   case "$Sharehome" in
     host)
       Containeruserhomebasefolder="/home"
-      [ "$Containeruser" = "root" ] && Containeruserhomebasefolder="/"
+      [ "$g_Containerusername" = "root" ] && Containeruserhomebasefolder="/"
       # A change can break existing configs, e.g. playonlinux
 #      Containeruserhomebasefolder="/home.x11docker"
       [ "$Persistanthomevolume" = "$Containeruserhosthome" ] && {
@@ -12512,7 +12513,7 @@ check_containerhome() {         # option --home: check HOME of container user.
     no)
 #      Containeruserhomebasefolder="/home.tmp"
       Containeruserhomebasefolder="/home"
-      [ "$Containeruser" = "root" ] && Containeruserhomebasefolder="/"
+      [ "$g_Containerusername" = "root" ] && Containeruserhomebasefolder="/"
     ;;
     volume)
       Containeruserhomebasefolder="/home.volume/$Persistanthomevolume"
@@ -12521,7 +12522,7 @@ check_containerhome() {         # option --home: check HOME of container user.
   or specify a docker volume without any '/'."
     ;;
   esac
-  [ "$Createcontaineruser" = "yes" ] && Containeruserhome="${Containeruserhome:-$Containeruserhomebasefolder/$Containeruser}"
+  [ "$Createcontaineruser" = "yes" ] && Containeruserhome="${Containeruserhome:-$Containeruserhomebasefolder/$g_Containerusername}"
   [ "$Sharehome" != "no" ] && store_runoption_env "HOME=$Containeruserhome"
 
 #  case "$Createcontaineruser" in
@@ -12532,20 +12533,20 @@ check_containerhome() {         # option --home: check HOME of container user.
     host)
       # if no home folder on host is specified (--home=DIR), create a standard one in ~/.local/share/x11docker
       [ -d "$Persistanthomevolume" ] || {
-        #[ "$Startuser" = "root" ] && su "$Containeruser" -c "mkdir -p '$Persistanthomevolume'"
-        [ "$Containeruser" = "$Hostuser" ] && mkfolder "$Persistanthomevolume" && {
+        #[ "$Startuser" = "root" ] && su "$g_Containerusername" -c "mkdir -p '$Persistanthomevolume'"
+        [ "$g_Containerusername" = "$Hostuser" ] && mkfolder "$Persistanthomevolume" && {
           # create symbolic link to ~/x11docker
           echo "$Persistanthomevolume" | grep -q .local/share/x11docker && [ ! -e "$Hostuserhome/x11docker" ] && unpriv "ln -s '$Hosthomebasefolder' '$Hostuserhome/x11docker'" ||:
         }
       }
       [ -d "$Persistanthomevolume" ] || error "Option --home: Could not create persistent home folder for
-  user '$Containeruser' on host. Can e.g. happen with option --user.
+  user '$g_Containerusername' on host. Can e.g. happen with option --user.
   Four possibilities to solve issue:
-  1.) Run x11docker one time as user '$Containeruser'.
+  1.) Run x11docker one time as user '$g_Containerusername'.
   2.) Run x11docker one time as user 'root'.
   3.) Use option --home=DIR with DIR pointing to a writeable folder.
   4.) Use option --home=VOLUME to use a docker volume."
-      writeaccess "$Containeruseruid" "$Persistanthomevolume" || warning "User '$Containeruser' might have no write access to
+      writeaccess "$Containeruseruid" "$Persistanthomevolume" || warning "User '$g_Containerusername' might have no write access to
   $Persistanthomevolume."
       verbose "Sharing directory $Persistanthomevolume
   with container as its home directory $Containeruserhome"
@@ -12560,37 +12561,37 @@ check_containerhome() {         # option --home: check HOME of container user.
 
 check_containeruser() {         # check container user (also option --user)
   ## check container user
-  [ "$Containeruser" = "RETAIN" ] && {
+  [ "$g_Containerusername" = "RETAIN" ] && {
     Createcontaineruser="no"
-    Containeruser=""
+    g_Containerusername=""
     return 0
   }
 
-  [ -z "$Containeruser" ] && Containeruser="$Hostuser"               # default: containeruser = hostuser. can be changed with --user
-  [ -n "$Containeruser" ] && echo "$Containeruser" | grep -q ':' && {  # option --user can specify a group/gid after :
-    Containerusergid="$(echo "$Containeruser" | cut -d: -f2)"
-    Containeruser="$(echo "$Containeruser" | cut -d: -f1)"
+  [ -z "$g_Containerusername" ] && g_Containerusername="$Hostuser"               # default: containeruser = hostuser. can be changed with --user
+  [ -n "$g_Containerusername" ] && echo "$g_Containerusername" | grep -q ':' && {  # option --user can specify a group/gid after :
+    Containerusergid="$(echo "$g_Containerusername" | cut -d: -f2)"
+    g_Containerusername="$(echo "$g_Containerusername" | cut -d: -f1)"
   }
-  [ "$Containeruser" = "root" ] && Containeruser="0"
-  [ -n "$(mygetent passwd "$Containeruser")" ] && {                      # user exists on host
-    Containeruser=$(mygetent passwd "$Containeruser" | cut -d: -f1)      # can be name or uid -> now name
-    Containeruseruid=$(mygetent passwd "$Containeruser" | cut -d: -f3)
-    [ -z "$Containerusergid" ] && Containerusergid="$(mygetent passwd "$Containeruser" | cut -d: -f4)"
-    [ "$Containeruser" = "$Hostuser" ] && Containeruserhosthome="$Hostuserhome"
-    [ -z "$Containeruserhosthome" ]    && Containeruserhosthome="$(mygetent passwd "$Containeruser" | cut -d: -f6)"
+  [ "$g_Containerusername" = "root" ] && g_Containerusername="0"
+  [ -n "$(mygetent passwd "$g_Containerusername")" ] && {                      # user exists on host
+    g_Containerusername=$(mygetent passwd "$g_Containerusername" | cut -d: -f1)      # can be name or uid -> now name
+    Containeruseruid=$(mygetent passwd "$g_Containerusername" | cut -d: -f3)
+    [ -z "$Containerusergid" ] && Containerusergid="$(mygetent passwd "$g_Containerusername" | cut -d: -f4)"
+    [ "$g_Containerusername" = "$Hostuser" ] && Containeruserhosthome="$Hostuserhome"
+    [ -z "$Containeruserhosthome" ]    && Containeruserhosthome="$(mygetent passwd "$g_Containerusername" | cut -d: -f6)"
     :
   } || {                                                   # user does not exist on host
-    [[ "$Containeruser" =~ ^[0-9]+$ ]] || error "Option --user: Unknown host user or invalid user number '$Containeruser'.
+    [[ "$g_Containerusername" =~ ^[0-9]+$ ]] || error "Option --user: Unknown host user or invalid user number '$g_Containerusername'.
   Non-host users can be specified with an UID only, not with a name."
-    Containeruseruid="$Containeruser"
-    Containeruser="unknown$Containeruseruid"
+    Containeruseruid="$g_Containerusername"
+    g_Containerusername="unknown$Containeruseruid"
     [ -z "$Containerusergid" ] && Containerusergid=100
     Containeruserhosthome=""
   }
 
-  Containerusergroup="$(mygetent group "$Containerusergid" | cut -d: -f1 || echo group_"$Containeruser")"
+  Containerusergroup="$(mygetent group "$Containerusergid" | cut -d: -f1 || echo group_"$g_Containerusername")"
   [ "$Containeruseruid" = "0" ] && {
-    Containeruser="root"
+    g_Containerusername="root"
     Containerusergid="0"
     Containerusergroup="root"
     Containeruserhosthome="/root"
@@ -12612,9 +12613,9 @@ check_containeruser() {         # check container user (also option --user)
   }
   [ -z "$Containeruserpassword" ] && Containeruserpassword='$6$Mj$WtcqpZ7JFegW4.0Br1WM0NJcNSxVxUQXgVLxGEV5uD3ib3jWGvIM3FNg2Gcj8e//mI06yhgfZ79WoNHGVtaYw1' # password: x11docker
 
-  storeinfo_add_kv_sh containeruser="$Containeruser"
-  store_runoption_env "USER=$Containeruser"
-  debugnote "container user: $Containeruser $Containeruseruid:$Containerusergid $Containeruserhosthome"
+  storeinfo_add_kv_sh containeruser="$g_Containerusername"
+  store_runoption_env "USER=$g_Containerusername"
+  debugnote "container user: $g_Containerusername $Containeruseruid:$Containerusergid $Containeruserhosthome"
   Containerusergroups="$Containerusergroups $Containerusergroup"
 
   case "$BackendKind" in
@@ -13044,7 +13045,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
   --mount $(convertpath mount "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber:ro" "/tmp/.X11-unix/X$Newdisplaynumber")"
               ;;
             esac
-            [ "$Shareipc" = "no" ] && [ "$Containeruser" = "$Hostuser" ] && [ "$Xcontainerbackend" = "$BackendKind" ] && {
+            [ "$Shareipc" = "no" ] && [ "$g_Containerusername" = "$Hostuser" ] && [ "$Xcontainerbackend" = "$BackendKind" ] && {
               case "$Runtime" in
                 kata-runtime|sysbox-runc) ;;
                 *)
@@ -13420,14 +13421,14 @@ setup_capabilities() {          # check linux capabilities needed by container
   However, this is still within a default docker setup."
 
   # Issues with hidepid=2 seen on NixOS (issue #83)
-  { [ "$Switchcontaineruserflag" = "yes" ] || [ "$Containeruser" != "$Hostuser" ] ; } && {
+  { [ "$Switchcontaineruserflag" = "yes" ] || [ "$g_Containerusername" != "$Hostuser" ] ; } && {
     [ "$Hostcanwatchroot" = "no" ] && {
       [ "$Hosthidepid" = "yes" ]            && Message="/proc is mounted with hidepid=2." || Message="Cannot watch processes of other users for unknown reasons."
       Message="$Message
   x11docker cannot watch processes of root
   or other users different from $Hostuser."
-      [ "$Hostuser" != "$Containeruser" ]   && Message="$Message
-  Container user $Containeruser is different from host user $Hostuser."
+      [ "$Hostuser" != "$g_Containerusername" ]   && Message="$Message
+  Container user $g_Containerusername is different from host user $Hostuser."
       [ "$Switchcontaineruserflag" = "yes" ]    && Message="$Message
   Container PID 1 will run as root."
       Message="$Message
@@ -13793,7 +13794,7 @@ create_containerrootrc() {
          |Storeinfofile='$(convertpath share "$Storeinfofile")'
          |Timetosaygoodbyefile=$(convertpath share "$Timetosaygoodbyefile")
          |
-         |Containeruser=\"\$(storeinfo_dump_sh containeruser)\"
+         |g_Containerusername=\"\$(storeinfo_dump_sh containeruser)\"
          |Containeruserhome='$Containeruserhome'
          |
          |debugnote 'Running containerrootrc: Setup as root in container'
@@ -13943,15 +13944,15 @@ create_containerrootrc() {
   
     trim_to_bar \
         "|
-         |debugnote \"containerrootrc: Container user: \$(id \$Containeruser)
-         |\$(cat /etc/passwd | grep '^\$Containeruser:')\"
+         |debugnote \"containerrootrc: Container user: \$(id \$g_Containerusername)
+         |\$(cat /etc/passwd | grep '^\$g_Containerusername:')\"
          |
          |# Create HOME
-         |Containeruserhome=\"\$(cat /etc/passwd | grep \"\$Containeruser:\" | cut -d: -f6)\"
-         |Containeruserhome=\"\${Containeruserhome:-/tmp/\$Containeruser}\"
+         |Containeruserhome=\"\$(cat /etc/passwd | grep \"\$g_Containerusername:\" | cut -d: -f6)\"
+         |Containeruserhome=\"\${Containeruserhome:-/tmp/\$g_Containerusername}\"
          |[ -e \"\$Containeruserhome\" ] || {
          |  mkdir -v -p -m 777 \"\$Containeruserhome\"
-         |  chown -v \"\$Containeruser\":\"\$Containerusergroup\" \"\$Containeruserhome\" \\
+         |  chown -v \"\$g_Containerusername\":\"\$Containerusergroup\" \"\$Containeruserhome\" \\
          |  && chmod -v   755  \"\$Containeruserhome\"  # can fail depending on capabilities
          |}
          |ls -la \"\$Containeruserhome\"
@@ -14198,8 +14199,8 @@ verbose \"containerrc: Container system:
 
     echo "
 # USER and HOME
-Containeruser='$(storeinfo_dump_sh containeruser)'
-export USER=\"\$Containeruser\"
+g_Containerusername='$(storeinfo_dump_sh containeruser)'
+export USER=\"\$g_Containerusername\"
 "
 
     case "$Createcontaineruser" in
@@ -14209,8 +14210,8 @@ export USER=\"\$Containeruser\"
       no)
         case "$Sharehome" in
           no)
-            echo "Containeruserhome=\"\$(cat /etc/passwd | grep \"\$Containeruser:.:\" | cut -d: -f6)\""
-            echo "Containeruserhome=\"\${Containeruserhome:-/tmp/\$Containeruser}\""
+            echo "Containeruserhome=\"\$(cat /etc/passwd | grep \"\$g_Containerusername:.:\" | cut -d: -f6)\""
+            echo "Containeruserhome=\"\${Containeruserhome:-/tmp/\$g_Containerusername}\""
             echo "mkdir -p \"\$Containeruserhome\""
           ;;
           volume)
@@ -14225,7 +14226,7 @@ export USER=\"\$Containeruser\"
 
 # XDG_RUNTIME_DIR
 
-Containeruseruid=\$(id -u \$Containeruser)
+Containeruseruid=\$(id -u \$g_Containerusername)
 export XDG_RUNTIME_DIR=/tmp/XDG_RUNTIME_DIR
 [ -e /run/user/\$Containeruseruid ] && {
   ln -s /run/user/\$Containeruseruid \$XDG_RUNTIME_DIR
@@ -14243,8 +14244,8 @@ export XDG_RUNTIME_DIR=/tmp/XDG_RUNTIME_DIR
           [ "$Line" != "$Path" ] && {   # different for paths in HOME without --home
             case "$Line" in
               "$Containeruserhosthome") # --share=$HOME
-                echo "ln -s '$Path' -T '$Containeruserhome/home.host.$Containeruser'"
-                Ungrep="$Ungrep|home.host.$Containeruser"
+                echo "ln -s '$Path' -T '$Containeruserhome/home.host.$g_Containerusername'"
+                Ungrep="$Ungrep|home.host.$g_Containerusername"
               ;;
               *)
                 echo "mkdir -p $(dirname "$Line")"
@@ -14464,7 +14465,7 @@ chmod +x $(convertpath share "$Containerrc")
 "
   case "$BackendKind" in
     proot)                        echo "echo 'exec /bin/sh - $(convertpath share "$Containerrc")'                          >>/usr/local/bin/x11docker-su" ;;
-    docker|podman|nerdctl) echo "echo \"exec su - -s /bin/sh  \$Containeruser $(convertpath share "$Containerrc")\" >>/usr/local/bin/x11docker-su" ;;
+    docker|podman|nerdctl) echo "echo \"exec su - -s /bin/sh  \$g_Containerusername $(convertpath share "$Containerrc")\" >>/usr/local/bin/x11docker-su" ;;
     # host) ;; # BackendKind_host
   esac
 
@@ -14483,12 +14484,12 @@ debugnote 'Running x11docker-agetty'
   case "$Initsystem" in
     systemd|openrc|sysvinit|runit)
       echo "
-[ -e /sbin/agetty ] && exec agetty --autologin \$Containeruser console
+[ -e /sbin/agetty ] && exec agetty --autologin \$g_Containerusername console
 " 
     ;;
     *)
       echo "
-[ -e /sbin/agetty ] && exec agetty --autologin \$Containeruser -l /usr/local/bin/x11docker-su console
+[ -e /sbin/agetty ] && exec agetty --autologin \$g_Containerusername -l /usr/local/bin/x11docker-su console
 "
     ;;
   esac
@@ -15113,7 +15114,7 @@ rootrc_setup_user() {
 
   echo "
 # /etc/passwd
-Containeruserentry=\"\$Containeruser:x:$Containeruseruid:$Containerusergid:\$Containeruser,,,:\$Containeruserhome:\$Containerusershell\"
+Containeruserentry=\"\$g_Containerusername:x:$Containeruseruid:$Containerusergid:\$g_Containerusername,,,:\$Containeruserhome:\$Containerusershell\"
 debugnote \"containerrootrc: \$Containeruserentry\"
 
 # Disable possible /etc/shadow passwords for other users
@@ -15126,7 +15127,7 @@ echo \"root:-:0:0:root:/root:\$Containerusershell\" >> /etc/passwd
 
 # Create password entry for container user in /etc/shadow
 rm -f -v /etc/shadow || warning 'Cannot change /etc/shadow. That may be a security risk.'
-echo \"\$Containeruser:\"'$Containeruserpassword'\":17293:0:99999:7:::\" > /etc/shadow
+echo \"\$g_Containerusername:\"'$Containeruserpassword'\":17293:0:99999:7:::\" > /etc/shadow
 chown root:shadow /etc/shadow
 "
   case "$Sudouser" in
@@ -15148,8 +15149,8 @@ echo 'Defaults	env_reset'                >> /etc/sudoers
 echo 'root ALL=(ALL) ALL'                 >> /etc/sudoers
 "
   case "$Sudouser" in
-    yes)      echo "echo '$Containeruser ALL=(ALL) ALL' >> /etc/sudoers" ;;
-    nopasswd) echo "echo '$Containeruser ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers" ;;
+    yes)      echo "echo '$g_Containerusername ALL=(ALL) ALL' >> /etc/sudoers" ;;
+    nopasswd) echo "echo '$g_Containerusername ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers" ;;
   esac
 
   # try to disable possible custom PAM setups that could allow a switch to root in container ### FIXME maybe not foolproof
@@ -15183,8 +15184,8 @@ esac
   }
 
   echo "# /etc/group /etc/gshadow
-sed -i \"s/\$Containeruser//g ; s/:,/:/g ; s/,\$//g\" /etc/group   # remove existing entries for user in /etc/group
-sed -i \"s/\$Containeruser//g ; s/:,/:/g ; s/,\$//g\" /etc/gshadow # remove existing entries for user in /etc/gshadow
+sed -i \"s/\$g_Containerusername//g ; s/:,/:/g ; s/,\$//g\" /etc/group   # remove existing entries for user in /etc/group
+sed -i \"s/\$g_Containerusername//g ; s/:,/:/g ; s/,\$//g\" /etc/gshadow # remove existing entries for user in /etc/gshadow
 "
   for Line in $Containerusergroups ; do
     echo "
@@ -15197,14 +15198,14 @@ Groupid=\"$(cat /etc/group   2>/dev/null | grep "^$Line" | cut -d: -f3)\"
   Entry=\"\$(grep \$Groupname /etc/group)\"
   Entry=\"\$(echo \"\$Entry\" | cut -d: -f3-)\"
   [ -z \"\$Entry\" ] && Entry=\"\$Groupid:\"
-  Entry=\"\$Groupname:x:\$Entry,\$Containeruser\"
+  Entry=\"\$Groupname:x:\$Entry,\$g_Containerusername\"
   Entry=\"\$(echo \"\$Entry\" | sed 's/:,/:/g')\"
   sed -i \"/^\$Groupname:/d\" /etc/group
   echo \"\$Entry\" >> /etc/group
   # /etc/gshadow
   Entry=\"\$(grep \$Groupname /etc/gshadow)\"
   Entry=\"\$(echo \"\$Entry\" | cut -d: -f4)\"
-  Entry=\"\$Groupname:!::\$Entry,\$Containeruser\"
+  Entry=\"\$Groupname:!::\$Entry,\$g_Containerusername\"
   Entry=\"\$(echo \"\$Entry\" | sed 's/:,/:/g')\"
   sed -i \"/^\$Groupname:/d\" /etc/gshadow
   echo \"\$Entry\" >> /etc/gshadow
@@ -16615,7 +16616,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
          --password)          Containeruserpassword="${2:-INTERACTIVE}" ; shift ;; # Change encrypted password in ~/.config/x11docker/passwd
          --shell)             Containerusershell="${2:-}" ; shift ;; # Set preferred user shell
          --sudouser)          Sudouser="${2:-yes}" ; shift ;;        # su and sudo for container user with password x11docker
-         --user)              Containeruser="${2:-}"  ; shift ;;     # Set container user other than host user
+         --user)              g_Containerusername="${2:-}"  ; shift ;;     # Set container user other than host user
 
      #### Init system and DBus
          --dbus)              Dbusrunsession="${2:-yes}" ; shift ;;  # DBus in container, Default: user session, =system: with system daemon
@@ -17756,7 +17757,7 @@ check_options_interferences() { # check multiple option interferences, change se
 
       [ -z "$Workdir" ] && [ "$Sharehome" != "no" ] && note "Option --no-setup: You might need to specify
   e.g. '--workdir=/tmp' or '--env HOME=/tmp' to allow proper functionality."
-      [ -n "$Sudouser" ] && [ "$Containeruser" != "root" ] && note "Option --no-setup does not support option --sudouser.
+      [ -n "$Sudouser" ] && [ "$g_Containerusername" != "root" ] && note "Option --no-setup does not support option --sudouser.
   Fallback: Enabling needed container capabilities to allow sudo
   just in case the container user is set up for su and/or sudo.
   Consider to use --user=root."
@@ -18636,10 +18637,10 @@ declare_variables() {           # declare global variables
   Hostuseruid=""
 
   
-  # Containeruser : --user: Container user. Default: same as
+  # g_Containerusername : --user: Container user. Default: same as
   #                 $Hostuser.
   #
-  Containeruser=""
+  g_Containerusername=""
   Containeruseruid=""
   Containerusergid=""
   Containerusergroup=""
@@ -20283,7 +20284,7 @@ main() {
             )"
       local Container_user_will_be="$(
                if [ "$Createcontaineruser" = "yes" ] ; then
-                  echo "$Containeruser"
+                  echo "$g_Containerusername"
                else
                   echo "(retaining USER of image)"
                fi
