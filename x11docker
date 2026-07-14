@@ -12095,8 +12095,9 @@ check_backend() {
             else Containercommand="/bin/sh"
             fi
             #
-            [ "$Containerusershell" != "auto" ]  \
-                && Containercommand="$Containerusershell"
+            if [ "$Containerusershell" != "auto" ] ; then
+                Containercommand="$Containerusershell"
+            fi
             #
             note_ttm "|Option --backend=$BackendKind: No command specified.
                       |Fallback: using command '$Containercommand' and enabling option --interactive."
