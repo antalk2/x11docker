@@ -11774,12 +11774,18 @@ check_backend() {
     if [ -z "$Backendrootless" ] ; then
         case "$BackendKind" in
             docker) 
-                if word_is_in 'docker' "$(id -G -n)"           ; then Backendrootless="no"  ; fi
-                if grep -q "/run/user/" <<< "${DOCKER_HOST:-}" ; then Backendrootless="yes" ; fi
-                if [ "$(id -un)" = "root" ]                    ; then Backendrootless="no"  ; fi
+                if [ "$(id -un)" = "root" ]                      ; then Backendrootless="no"
+                elif grep -q "/run/user/" <<< "${DOCKER_HOST:-}" ; then Backendrootless="yes"
+                elif word_is_in 'docker' "$(id -G -n)"           ; then Backendrootless="no"
+                else
+                    : # nop
+                fi
                 ;;
             podman|nerdctl)
-                [ "$(id -u)" = "0" ] && Backendrootless="no" || Backendrootless="yes" ;;
+                if [ "$(id -u)" = "0" ] ; then   Backendrootless="no"
+                else                             Backendrootless="yes"
+                fi
+                ;;
             proot) ;;
             host) ;;  # BackendKind_host
         esac
