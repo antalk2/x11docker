@@ -11682,7 +11682,6 @@ check_backend() {
     local Checkrootfs=""
 
     if case_match "$Dockervm" 'no|desktop'
-       ## no|desktop)
             #
             case "$BackendKind" in
                 docker|podman|nerdctl)
@@ -11710,7 +11709,7 @@ check_backend() {
                     }
                     ;;
             esac
-           ## ;;
+
        elif case_match "$Dockervm" 'moby' ; then
         # [ "$Dockervm" = moby ] implies "MS Windows" (?)
         if ! case_match  "$BackendKind" 'docker | host' ; then
@@ -11729,8 +11728,6 @@ check_backend() {
                   )"
                 export PATH
             fi
-            #;;
-            # esac
     fi
 
     case "$BackendKind" in
