@@ -18566,19 +18566,15 @@ declare_variables() {           # declare global variables
 
   # Dockervm : MS Windows: Use MobyVM yes/no (No only for WSL2 possible)
   #
-  #            Note: MobiVM is an ahead-of-time compiler for Java
-  #                   bytecode, targeting iOS, macOS and Linux.
-  #                   https://mobivm.github.io/
+  #          MobyVM : Dates back to before WSL2
   #
-  #            But here it probably refers to https://mobyproject.org/
+  #                https://github.com/mviereck/x11docker/issues/145#issuecomment-490696106
   #
-  #               "Moby is an open framework created by Docker to
-  #                assemble specialized container systems without
-  #                reinventing the wheel. It provides a “lego set” of
-  #                dozens of standard components and a framework for
-  #                assembling them into custom platforms."
-  #
-  #                But this is still not (MS Windows)-specific.
+  #                2019-05-09: "On a complete tangent: Microsoft
+  #                announces a new WSL2
+  #                (https://devblogs.microsoft.com/commandline/announcing-wsl-2/)
+  #                that should be able to run Docker natively without
+  #                the current MobyVM workaround."
   #
   #
   Dockervm=""
