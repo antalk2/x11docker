@@ -12117,6 +12117,7 @@ check_backend() {
 check_image() {
 
     local l_Imageinspect=""
+    local l_Imagecommand=""
 
     # Check if image $g_Imagename is available locally
     l_Imageinspect="$(unpriv_backend "$Backendbin inspect $g_Imagename" 2>> $Containerlogfile)" || {
@@ -12126,20 +12127,23 @@ check_image() {
         return 1
     }
 
-  # Check architecture
-  g_Imagearchitecture=$(parse_inspect "$l_Imageinspect" "Architecture")
-  debugnote "Image architecture: $g_Imagearchitecture"
+    # Check architecture
+    g_Imagearchitecture=$(parse_inspect "$l_Imageinspect" "Architecture")
+    debugnote "Image architecture: $g_Imagearchitecture"
 
-  # Check CMD
-  Imagecommand="$(parse_inspect "$l_Imageinspect" "Config" "Cmd")"
-  debugnote "Image CMD: $Imagecommand"
-  [ -z "$Containercommand" ] && {
-    Containercommand="$Imagecommand"
-    grep -q "$(convertpath share "$Containerrc")" <<< "$Imagecommand" && error "Recursion error: Found CMD $Imagecommand in image.
-  Did you use 'docker commit' with an x11docker container?
-  Please build new images with a Dockerfile instead of using docker commit,
-  or provide a different container command in x11docker command."
-  }
+    # Check CMD
+    l_Imagecommand="$(parse_inspect "$l_Imageinspect" "Config" "Cmd")"
+    debugnote "Image CMD: $l_Imagecommand"
+    if [ -z "$Containercommand" ] ; then
+        Containercommand="$l_Imagecommand"
+        if grep -q "$(convertpath share "$Containerrc")" <<< "$l_Imagecommand" ; then
+            error_ttm "|Recursion error: Found CMD $l_Imagecommand in image.
+                       |  Did you use 'docker commit' with an x11docker container?
+                       |  Please build new images with a Dockerfile instead of using docker commit,
+                       |  or provide a different container command in x11docker command."
+            #
+        fi
+    fi
 
   # Check USER
   Imageuser="$(parse_inspect "$l_Imageinspect" "Config" "User")"
@@ -19336,10 +19340,10 @@ declare_variables() {           # declare global variables
   #
   g_Imagearchitecture=""
 
-  # Imagecommand :
-  #    Imagecommand="$(parse_inspect "$l_Imageinspect" "Config" "Cmd")"
+  # l_Imagecommand :
+  #    l_Imagecommand="$(parse_inspect "$l_Imageinspect" "Config" "Cmd")"
   #
-  Imagecommand=""
+  # l_Imagecommand=""
 
   # Imageentrypoint :
   #   Imageentrypoint="$(parse_inspect "$l_Imageinspect" "Config" "Entrypoint")"
@@ -19444,7 +19448,7 @@ declare_variables() {           # declare global variables
   #       Containercommand="/bin/bash"
   #       Containercommand="/bin/sh"
   #       Containercommand="$Containerusershell"
-  #       Containercommand="$Imagecommand"
+  #       Containercommand="$l_Imagecommand"
   #       Containercommand="sh -c 'while :; do sleep 10; done'"
   #       Containercommand="sleep infinity"
   #
