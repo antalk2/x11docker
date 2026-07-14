@@ -366,7 +366,7 @@ case_match() {
 
 
 # Filter: trim_to_bar_filter
-# Used-by: trim_to_bar
+# Used-by: trim_to_bar()
 #
 # Example: trim_to_bar_filter <<< "multiline_string"
 #
@@ -2155,7 +2155,7 @@ find_in_first_print_second() {
 #
 # Note: ppid seems to be 0 if there is no parent.
 #
-# Used-by: check_parent_sshd
+# Used-by: check_parent_sshd()
 #
 get_ppid() {
     local pid_to_check="${1:-}"
@@ -11674,9 +11674,19 @@ xtool() {
 #### backend command setup
 
 # Function: check_backend
-# Brief: Check if docker, podman, nerdctl or ... is available.
+# Usage: check_backend
+#
+# Brief: Check ...
 #
 # CommandlineOption:  --backend, --rootless
+#
+# Used-by: main()
+#
+# Globals:
+#   Dockervm :rw
+#   BackendKind :r
+#   Backendbin :w
+#   Installermode :r
 #
 check_backend() {
     local Checkrootfs=""
