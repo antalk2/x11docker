@@ -12265,8 +12265,10 @@ check_containerhomebasedir() {  # options --homebasedir, --home
     then
         if   case_match "$Dockervm" 'no|desktop' ; then
             Hosthomebasefolder="$Containeruserhosthome/.local/share/x11docker"
+            #
         elif case_match "$Dockervm" 'moby'       ; then
             Hosthomebasefolder="$(convertpath subsystem "$(wincmd 'echo %userprofile%') ")/x11docker/home"
+            #
         fi
     fi
 }
