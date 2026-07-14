@@ -12133,6 +12133,7 @@ check_image() {
     local l_Imagecommand=""
     local l_Imageuser=""
     local l_Imageentrypoint=""
+    local l_Imageworkdir=""
 
     # Check if image $g_Imagename is available locally
     l_Imageinspect="$(unpriv_backend "$g_Backendbin inspect $g_Imagename" 2>> $Containerlogfile)" || {
@@ -12216,17 +12217,17 @@ check_image() {
     esac
 
   # Check WORKDIR
-  Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "Workdir")"
+  l_Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "Workdir")"
   # It seems Config.Workdir is Config.WorkingDir in more recent
   # versions?
-  [ -z "$Imageworkdir" ] && {
-    Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "WorkingDir")"
+  [ -z "$l_Imageworkdir" ] && {
+    l_Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "WorkingDir")"
   }
-  debugnote "Image WORKDIR: $Imageworkdir"
-  [ -z "$Workdir" ] && [ -n "$Imageworkdir" ] && {
-    note "Found 'WORKDIR $Imageworkdir' in image.
+  debugnote "Image WORKDIR: $l_Imageworkdir"
+  [ -z "$Workdir" ] && [ -n "$l_Imageworkdir" ] && {
+    note "Found 'WORKDIR $l_Imageworkdir' in image.
   You can change it with option --workdir=DIR."
-    Workdir="$Imageworkdir"
+    Workdir="$l_Imageworkdir"
   }
 
   [ -z "$g_Containercommand$g_Containerentrypoint" ] && error 'No container command specified and no CMD or ENTRYPOINT found in image.'
@@ -19376,11 +19377,11 @@ declare_variables() {           # declare global variables
   #
   # l_Imageinspect=""
 
-  # Imageworkdir :
-  #    Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "Workdir")"
-  #    Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "WorkingDir")"
+  # l_Imageworkdir :
+  #    l_Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "Workdir")"
+  #    l_Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "WorkingDir")"
   #
-  Imageworkdir=""
+  # l_Imageworkdir=""
 
   # l_Imageuser :
   #    l_Imageuser="$(parse_inspect "$l_Imageinspect" "Config" "User")"
