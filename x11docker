@@ -12422,7 +12422,9 @@ check_cgroup() {
         fi
     fi
 
-  [ "$Sharecgroup" = "yes" ] && warning "Option --init=$g_Initsystem: Sharing /sys/fs/cgroup from host."
+    if [ "$Sharecgroup" = "yes" ] ; then
+        warning "Option --init=$g_Initsystem: Sharing /sys/fs/cgroup from host."
+    fi
 
   findmnt "/sys/fs/cgroup/$Needcgroup" >/dev/null 2>&1 && return 0
 
