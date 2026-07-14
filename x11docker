@@ -11797,6 +11797,9 @@ check_backend() {
         fi
     }
 
+    #
+    # For rootless docker, set DOCKER_HOST
+    #
     if case_match "$Backendrootless" 'yes' ; then
         if case_match "$BackendKind"  'docker' ; then
             #
@@ -11813,6 +11816,8 @@ check_backend() {
             fi
             DOCKER_HOST="unix://$DOCKER_HOST"
             export DOCKER_HOST
+        else
+            : # NOP
         fi
     elif  case_match "$Backendrootless" 'no' ; then
         if   case_match "$BackendKind" 'docker' ; then
@@ -11832,25 +11837,27 @@ check_backend() {
         fi
     fi
 
-
-    case "$BackendKind" in
-        docker|podman|nerdctl)
-            # Check whether docker daemon is running, get backend info
-            Backendinfo="$(unpriv_backend "env LC_ALL=C $Backendbin info --format='{{json .}}'" 2>&1)"
-            [ "$?" != "0" ] \
-            || grep -q "permission denied" <<< "$Backendinfo" \
-            || [ -z "$Backendinfo" ] \
-                && error_ttm \
-                       "|Option --backend=$BackendKind: Error executing $BackendKind.
-                        |  If using docker: Is docker daemon running at all?
-                        |  Maybe you need root privileges to run docker?
-                        |  Try to start docker daemon with 'systemctl start docker'.
-                        |  Try to run x11docker as root.
-                        |  Output of '$Backendbin info':
-                        |  $Backendinfo"
-            check_runtime
-            ;;
-    esac
+    if case_match "$BackendKind"  'docker|podman|nerdctl' ; then
+        #
+        # Check whether docker daemon is running, get backend info
+        #
+        Backendinfo="$(unpriv_backend "env LC_ALL=C $Backendbin info --format='{{json .}}'" 2>&1)"
+        if [ "$?" != "0" ]                                \
+        || grep -q "permission denied" <<< "$Backendinfo" \
+        || [ -z "$Backendinfo" ]                          ;
+        then
+            error_ttm \
+                "|Option --backend=$BackendKind: Error executing $BackendKind.
+                 |  If using docker: Is docker daemon running at all?
+                 |  Maybe you need root privileges to run docker?
+                 |  Try to start docker daemon with 'systemctl start docker'.
+                 |  Try to run x11docker as root.
+                 |  Output of '$Backendbin info':
+                 |  $Backendinfo"
+            #
+        fi
+        check_runtime
+    fi
 
     # check image name
     case "$BackendKind" in
