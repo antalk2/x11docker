@@ -17045,38 +17045,39 @@ check_options_interferences() { # check multiple option interferences, change se
   local Message
 
   case "$Dockervm" in
-    desktop)
-      # --pipewire, --pulseaudio, --alsa
-      [ "$Pulseaudiomode" = "auto" ] && Pulseaudiomode="tcp"
-      { [ "$Sharepipewire" = "yes" ] || [ "$Sharealsa" = "yes" ] || [ "$Pulseaudiomode" = "socket" ] || [ "$Pulseaudiomode" = "host" ] ; } && { # Pulseaudiomode_host
-        note "Options --pipewire and --alsa do not work
-  with Docker Desktop VM. Pulseaudio works only in tcp mode.
-  Fallback: Setting --pulseaudio=tcp"
-        check_fallback
-        Pulseaudiomode="tcp"
-        Sharealsa="no"
-        Sharepipewire="no"
-      }
-      # --printer
-      [ "$Sharecupsmode" = "auto" ] && Sharecupsmode="tcp"
-      [ "$Sharecupsmode" = "socket" ] && {
-        note "Option --printer=socket does not work
-  with Docker Desktop VM. It works only in tcp mode.
-  Fallback: Setting --printer=tcp"
-        check_fallback
-        Sharecupsmode="tcp"
-      }
-      case "$Sharegpu" in
-        no|iglx) ;;
-        *)
-          note "Option --gpu=$Sharegpu does not work
-  with Docker Desktop VM. Only --gpu=iglx would work with --xorg.
-  Fallback: Disabling option --gpu"
-          check_fallback
-          Sharegpu="no"
-        ;;
-      esac
-    ;;
+      desktop)
+          # --pipewire, --pulseaudio, --alsa
+          [ "$Pulseaudiomode" = "auto" ] && Pulseaudiomode="tcp"
+          { [ "$Sharepipewire" = "yes" ] || [ "$Sharealsa" = "yes" ] || [ "$Pulseaudiomode" = "socket" ] || [ "$Pulseaudiomode" = "host" ] ; } && { # Pulseaudiomode_host
+              note_ttm "|Options --pipewire and --alsa do not work
+                        |  with Docker Desktop VM. Pulseaudio works only in tcp mode.
+                        |  Fallback: Setting --pulseaudio=tcp"
+              #
+              check_fallback
+              Pulseaudiomode="tcp"
+              Sharealsa="no"
+              Sharepipewire="no"
+          }
+          # --printer
+          [ "$Sharecupsmode" = "auto" ] && Sharecupsmode="tcp"
+          [ "$Sharecupsmode" = "socket" ] && {
+              note_ttm "|Option --printer=socket does not work
+                        |  with Docker Desktop VM. It works only in tcp mode.
+                        |  Fallback: Setting --printer=tcp"
+              check_fallback
+              Sharecupsmode="tcp"
+          }
+          case "$Sharegpu" in
+              no|iglx) ;;
+              *)
+                  note_ttm "|Option --gpu=$Sharegpu does not work
+                            |  with Docker Desktop VM. Only --gpu=iglx would work with --xorg.
+                            |  Fallback: Disabling option --gpu"
+                  check_fallback
+                  Sharegpu="no"
+                  ;;
+          esac
+          ;;
   esac
 
   # --runtime
