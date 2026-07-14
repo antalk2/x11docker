@@ -11772,10 +11772,8 @@ check_backend() {
 
     case "$BackendKind" in
         docker|podman|nerdctl)
-            if [ -n "$Jqbin" ]; then
-                debugnote "check_backend(): will parse json using $Jqbin"
-            elif [ -n "$Pythonbin" ]; then
-                debugnote "check_backend(): will parse json using $Pythonbin"
+            if   [ -n "$Jqbin"     ];  then debugnote "check_backend(): will parse json using $Jqbin"
+            elif [ -n "$Pythonbin" ];  then debugnote "check_backend(): will parse json using $Pythonbin"
             else
                 error_ttm  "|x11docker needs 'jq' or 'python' to parse output of '$BackendKind inspect'.
                             |  Please install 'jq' or 'python' version 2.x or 3.x."
