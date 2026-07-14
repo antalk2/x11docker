@@ -15153,10 +15153,15 @@ start_container() {             # docker run
         debugnote "start_container(): $Count. check for PID 1"
         Containerinspect="$(unpriv_backend "$Backendbin inspect $g_Containername" 2>> $Containerlogfile | rmcr)" ||:
         [ -n "$Containerinspect" ] && [ "$Containerinspect" != "[]" ] && Pid1pid="$(parse_inspect "$Containerinspect" "State" "Pid")"
-        case "$Dockervm" in
-          no)           checkpid "$Pid1pid" && break ;;
-          moby|desktop) [ "$Pid1pid" ] && [ "$Pid1pid" != "0" ] && break
-        esac
+        
+        if    case_match "$Dockervm" 'no' ; then
+            # Look at /proc/$Pid1pid
+            if checkpid "$Pid1pid"; then  break ; fi
+        elif case_match "$Dockervm" 'moby|desktop' ; then
+            # non-empty, non-zero
+            if [ -n "$Pid1pid" ] && [ "$Pid1pid" != "0" ] ; then  break ; fi
+        fi
+        
         rocknroll || break
         mysleep 0.1
       done
