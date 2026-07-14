@@ -12256,20 +12256,21 @@ check_containerhomebasedir() {  # options --homebasedir, --home
     ##
     ## option '--homebasedir': Specify base folder here to store container home folders for --home
     ##
-  case "$BackendKind" in
-    proot)
-      Hosthomebasefolder="$Localsharedir"
-    ;;
-    docker|podman|nerdctl)
-        if [ -z "$Hosthomebasefolder" ] ; then
-            if   case_match "$Dockervm" 'no|desktop' ; then
-                Hosthomebasefolder="$Containeruserhosthome/.local/share/x11docker"
-            elif case_match "$Dockervm" 'moby'       ; then
-                Hosthomebasefolder="$(convertpath subsystem "$(wincmd 'echo %userprofile%') ")/x11docker/home"
+    case "$BackendKind" in
+        proot)
+            # Q: Override, even if already set?
+            Hosthomebasefolder="$Localsharedir"
+            ;;
+        docker|podman|nerdctl)
+            if [ -z "$Hosthomebasefolder" ] ; then
+                if   case_match "$Dockervm" 'no|desktop' ; then
+                    Hosthomebasefolder="$Containeruserhosthome/.local/share/x11docker"
+                elif case_match "$Dockervm" 'moby'       ; then
+                    Hosthomebasefolder="$(convertpath subsystem "$(wincmd 'echo %userprofile%') ")/x11docker/home"
+                fi
             fi
-        fi
-    ;;
-  esac
+            ;;
+    esac
 }
 
 check_containerhome() {         # option --home: check HOME of container user.
