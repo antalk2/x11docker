@@ -11766,30 +11766,36 @@ check_backend() {
             ;;
     esac
 
-    # rootful or rootless
-    if [ "$Backendrootless" = "no" ] ; then
-        export DOCKER_HOST=""
-    fi
-    
-    if [ -z "$Backendrootless" ] ; then
-        case "$BackendKind" in
-            docker) 
-                if [ "$(id -un)" = "root" ]                      ; then Backendrootless="no"
-                elif grep -q "/run/user/" <<< "${DOCKER_HOST:-}" ; then Backendrootless="yes"
-                elif word_is_in 'docker' "$(id -G -n)"           ; then Backendrootless="no"
-                else
-                    : # nop
-                fi
-                ;;
-            podman|nerdctl)
-                if [ "$(id -u)" = "0" ] ; then   Backendrootless="no"
-                else                             Backendrootless="yes"
-                fi
-                ;;
-            proot) ;;
-            host)  ;;  # BackendKind_host
-        esac
-    fi
+    # Backendrootless : rootful or rootless
+    {
+        if [ "$Backendrootless" = "no" ] ; then
+            export DOCKER_HOST=""
+        fi
+        #
+        if [ -z "$Backendrootless" ] ; then
+            case "$BackendKind" in
+                docker)
+                    if [ "$(id -un)" = "root" ]                      ; then Backendrootless="no"
+                    elif grep -q "/run/user/" <<< "${DOCKER_HOST:-}" ; then Backendrootless="yes"
+                    elif word_is_in 'docker' "$(id -G -n)"           ; then Backendrootless="no"
+                    else
+                        : # nop
+                    fi
+                    ;;
+                podman|nerdctl)
+                    if [ "$(id -u)" = "0" ] ; then   Backendrootless="no"
+                    else                             Backendrootless="yes"
+                    fi
+                    ;;
+                proot)
+                    # leave Backendrootless empty
+                    ;;
+                host)   # BackendKind_host
+                    # leave Backendrootless empty
+                    ;;
+            esac
+        fi
+    }
 
     case "$Backendrootless" in
         yes)
