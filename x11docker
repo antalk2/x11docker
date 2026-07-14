@@ -12182,29 +12182,29 @@ check_image() {
     l_Imageentrypoint="$(parse_inspect "$l_Imageinspect" "Config" "Entrypoint")"
     debugnote "Image ENTRYPOINT: $l_Imageentrypoint"
     case "$g_Noentrypoint" in
-        yes) Containerentrypoint="" ;;
+        yes) g_Containerentrypoint="" ;;
         no)
-            Containerentrypoint="$l_Imageentrypoint"
+            g_Containerentrypoint="$l_Imageentrypoint"
             case "$Initsystem" in
                 systemd|sysvinit|runit|openrc|tini)
-                    grep -qE 'tini|init|systemd' <<< "$Containerentrypoint" && {
+                    grep -qE 'tini|init|systemd' <<< "$g_Containerentrypoint" && {
                         note "There seems to be an init system in ENTRYPOINT of image:
-    $Containerentrypoint
+    $g_Containerentrypoint
   Will disable it as x11docker already runs an init with option --$Initsystem.
   To allow this ENTRYPOINT, run x11docker with option --init=none."
-                        Containerentrypoint=""
+                        g_Containerentrypoint=""
                     }
                     ;;
                 s6-overlay)
-                    [ "$Containerentrypoint" = '/init' ] && {
-                        Containerentrypoint=""
+                    [ "$g_Containerentrypoint" = '/init' ] && {
+                        g_Containerentrypoint=""
                         [ "$g_Containercommand" ] || g_Containercommand="sh -c 'while :; do sleep 10; done'"
                     }
                     ;;
                 none)
-                    grep -qE 'tini|init|systemd' <<< "$Containerentrypoint" && {
+                    grep -qE 'tini|init|systemd' <<< "$g_Containerentrypoint" && {
                         note "There seems to be an init system in ENTRYPOINT of image:
-  $Containerentrypoint
+  $g_Containerentrypoint
   Returning correct exit code of container command will likely fail."
                     }
                     ;;
@@ -12226,7 +12226,7 @@ check_image() {
     Workdir="$Imageworkdir"
   }
 
-  [ -z "$g_Containercommand$Containerentrypoint" ] && error 'No container command specified and no CMD or ENTRYPOINT found in image.'
+  [ -z "$g_Containercommand$g_Containerentrypoint" ] && error 'No container command specified and no CMD or ENTRYPOINT found in image.'
 
   return 0
 } # check_image
@@ -13555,7 +13555,7 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
   case "$BackendKind" in
     host) # BackendKind_host
       [ "$Initsystem" = "tini" ] && {
-        Containerentrypoint="$Initbinaryfile --"
+        g_Containerentrypoint="$Initbinaryfile --"
         store_runoption_env "TINI_SUBREAPER=1"
       }
     ;;
@@ -14408,10 +14408,10 @@ $Line
 
     # The echoed string containing the debugnote command should not contain a newline character
     # to avoid problems with the generated cmdrc.
-    echo "debugnote \"cmdrc: Running container command: $Containerentrypoint $g_Containercommand\""
+    echo "debugnote \"cmdrc: Running container command: $g_Containerentrypoint $g_Containercommand\""
     case "$Forwardstdin" in
-      yes) echo "$Containerentrypoint $g_Containercommand <$(convertpath share "$Cmdstdinfifo")" ;;
-      no)  echo "$Containerentrypoint $g_Containercommand" ;;
+      yes) echo "$g_Containerentrypoint $g_Containercommand <$(convertpath share "$Cmdstdinfifo")" ;;
+      no)  echo "$g_Containerentrypoint $g_Containercommand" ;;
     esac
 
     echo "
@@ -19477,15 +19477,15 @@ declare_variables() {           # declare global variables
   #
   g_Containercommand=""
 
-  # Containerentrypoint :
-  #     Containerentrypoint="$l_Imageentrypoint"
-  #     Containerentrypoint="$Initbinaryfile --"
+  # g_Containerentrypoint :
+  #     g_Containerentrypoint="$l_Imageentrypoint"
+  #     g_Containerentrypoint="$Initbinaryfile --"
   #
   #   Used:
-  #     grep -qE 'tini|init|systemd' <<< "$Containerentrypoint"
-  #     [ "$Containerentrypoint" = '/init' ]
+  #     grep -qE 'tini|init|systemd' <<< "$g_Containerentrypoint"
+  #     [ "$g_Containerentrypoint" = '/init' ]
   #     
-  Containerentrypoint=""
+  g_Containerentrypoint=""
 
   # ContainerenvironmentArray : --env: Environment variables
   #
