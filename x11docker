@@ -11681,53 +11681,53 @@ xtool() {
 check_backend() {
     local Checkrootfs=""
 
-    if case_match "$Dockervm" 'no|desktop'
-            #
-            case "$BackendKind" in
-                docker|podman|nerdctl)
-                    Backendbin="$(command -v "$BackendKind")"
-                    ;;
-            esac
-            #
-            case "$BackendKind" in
-                docker)
-                    docker info | grep -q "desktop-linux"  && {
-                        #
-                        # Docker Desktop initial support commit: 2026-01-04
-                        # https://github.com/mviereck/x11docker/commit/7fae327b63df1fee99328c3c214702b92537d1eb
-                        #
-                        note_ttm \
-                            "|docker in version 'Docker Desktop' found.
+    if case_match "$Dockervm" 'no|desktop' ; then
+        #
+        case "$BackendKind" in
+            docker|podman|nerdctl)
+                Backendbin="$(command -v "$BackendKind")"
+                ;;
+        esac
+        #
+        case "$BackendKind" in
+            docker)
+                docker info | grep -q "desktop-linux"  && {
+                    #
+                    # Docker Desktop initial support commit: 2026-01-04
+                    # https://github.com/mviereck/x11docker/commit/7fae327b63df1fee99328c3c214702b92537d1eb
+                    #
+                    note_ttm \
+                        "|docker in version 'Docker Desktop' found.
                              |  Docker Desktop runs in a virtual machine and makes host integration
                              |  rather difficult. Support is experimental yet, feedback is appreciated.
                              |  For docker errors like 'bind source path does not exist: FILE' you can try
                              |  to allow file sharing in Docker Desktop GUI for file FILE.
                              |  Rather use native 'Docker Engine' running on your host linux kernel.
                              |  Docker Engine would allow all x11docker features and performes much better."
-                        #
-                        Dockervm="desktop"
-                    }
-                    ;;
-            esac
+                    #
+                    Dockervm="desktop"
+                }
+                ;;
+        esac
 
-       elif case_match "$Dockervm" 'moby' ; then
+    elif case_match "$Dockervm" 'moby' ; then
         # [ "$Dockervm" = moby ] implies "MS Windows" (?)
         if ! case_match  "$BackendKind" 'docker | host' ; then
-                error_ttm \
-                    "|Option --backend=$BackendKind is not supported on MS Windows yet.
+            error_ttm \
+                "|Option --backend=$BackendKind is not supported on MS Windows yet.
                      |  If you need this, ask for support at https://github.com/mviereck/x11docker"
-                return 1
-            fi
-            #
-            Backendbin="docker.exe"
-            if ! have_command  "$Backendbin"  ; then
-                PATH="$(trim_to_mark \
+            return 1
+        fi
+        #
+        Backendbin="docker.exe"
+        if ! have_command  "$Backendbin"  ; then
+            PATH="$(trim_to_mark \
                  "|${PATH:-}
                   ::$(convertpath subsystem "C:/Program Files/docker")
                   ::$(convertpath subsystem "C:/Program Files/Docker/Docker/resources/bin")"
                   )"
-                export PATH
-            fi
+            export PATH
+        fi
     fi
 
     case "$BackendKind" in
