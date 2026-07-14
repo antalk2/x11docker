@@ -11746,10 +11746,14 @@ check_backend() {
         docker|podman|nerdctl|proot)
             case "$Installermode" in
                 "") 
-                    [ -z "$Backendbin" ] && error "Option --backend=$BackendKind: No binary found for $BackendKind."
+                    if [ -z "$Backendbin" ] ; then
+                        error "Option --backend=$BackendKind: No binary found for $BackendKind."
+                    fi
                     ;;
                 *)
-                    [ -z "$Backendbin" ] && note "Option --backend=$BackendKind: No binary found for $BackendKind."
+                    if [ -z "$Backendbin" ] ; then
+                        note "Option --backend=$BackendKind: No binary found for $BackendKind."
+                    fi
                     return 1
                     ;;
             esac
