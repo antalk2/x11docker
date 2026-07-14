@@ -11673,7 +11673,10 @@ xtool() {
 
 #### backend command setup
 
-# function check_backend() :  options --backend, --rootless
+# Function: check_backend
+# Brief: Check if docker, podman, nerdctl or ... is available.
+#
+# CommandlineOption:  --backend, --rootless
 #
 check_backend() {
     local Checkrootfs=""
@@ -11690,6 +11693,10 @@ check_backend() {
             case "$BackendKind" in
                 docker)
                     docker info | grep -q "desktop-linux"  && {
+                        #
+                        # Docker Desktop initial support commit: 2026-01-04
+                        # https://github.com/mviereck/x11docker/commit/7fae327b63df1fee99328c3c214702b92537d1eb
+                        #
                         note_ttm \
                             "|docker in version 'Docker Desktop' found.
                              |  Docker Desktop runs in a virtual machine and makes host integration
@@ -11705,17 +11712,21 @@ check_backend() {
             esac
             ;;
 
-      moby)
-          case "$BackendKind" in
-            docker|host)  # BackendKind_host
-            ;;
-            *) 
+        moby)
+            if ! case_match  "$BackendKind" 'docker|host' ; then
+                #case "$BackendKind" in
+              #docker|host)  # BackendKind_host
+              #    # NOP
+             # ;;
+             # *) 
                 error_ttm \
                     "|Option --backend=$BackendKind is not supported on MS Windows yet.
-                         |  If you need this, ask for support at https://github.com/mviereck/x11docker"
+                     |  If you need this, ask for support at https://github.com/mviereck/x11docker"
                 return 1
-                ;;
-          esac
+             #   ;;
+                #esac
+                fi
+          #
           Backendbin="docker.exe"
           have_command  "$Backendbin"  || {
               PATH="$(trim_to_mark \
@@ -12012,7 +12023,9 @@ check_backend() {
 
     debugnote "Backend: $BackendKind, Backendbin: $Backendbin, Rootless: $Backendrootless"
     return 0
-}
+} # check_backend
+
+
 check_image() {                 # get some image information
 
   # Check if image $g_Imagename is available locally
