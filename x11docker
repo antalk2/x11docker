@@ -11787,7 +11787,7 @@ check_backend() {
                 fi
                 ;;
             proot) ;;
-            host) ;;  # BackendKind_host
+            host)  ;;  # BackendKind_host
         esac
     fi
 
