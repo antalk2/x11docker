@@ -17100,14 +17100,16 @@ check_options_interferences() { # check multiple option interferences, change se
 
     # --runtime
     if case_match "$Runtime" 'kata-runtime' ; then
-        [ "$g_Network" = "host" ] && { # g_Network_host
-            note_ttm "|Option --network=host: Sharing host network stack does not work
-                      |    with --runtime=kata-runtime.
-                      | Fallback: Allowing default kata --network."
+        if [ "$g_Network" = "host" ] ; then        # g_Network_host
+            #
+            note_ttm "|With --runtime=kata-runtime,
+                      |    Option --network=host (sharing host network stack)
+                      |    does not work.
+                      |  Fallback: Allowing default kata --network."
             #
             check_fallback
             g_Network=""
-        }
+        fi
         #
         {
             # --runtime=kata-runtime is not compatible with --alsa
