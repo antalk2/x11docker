@@ -12405,14 +12405,14 @@ check_cgroup() {
               ;;
           v2)
               if [ "$g_Initsystem" =  'systemd' ] ; then
-                      if [ "$Runtime" != 'sysbox-runc' ] ; then
-                          g_Remountcgroup="yes"
-                          warning_ttm \
-                              "|Option --init=systemd: To support systemd in docker container
-                               |  with cgroupv2 on host, x11docker shortly runs a privileged container
-                               |  of '$g_Imagename' with 'nsenter' to remount the container's /sys/fs/cgroup.
-                               |  Evil images might be set up to abuse these privileges."
-                      fi
+                  if [ "$Runtime" != 'sysbox-runc' ] ; then
+                      g_Remountcgroup="yes"
+                      warning_ttm \
+                          "|Option --init=systemd: To support systemd in docker container
+                           |  with cgroupv2 on host, x11docker shortly runs a privileged container
+                           |  of '$g_Imagename' with 'nsenter' to remount the container's /sys/fs/cgroup.
+                           |  Evil images might be set up to abuse these privileges."
+                  fi
               fi
               ;;
       esac
