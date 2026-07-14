@@ -11678,6 +11678,12 @@ xtool() {
 #   BackendKind :r
 #   Backendbin :w
 #   Installermode :r
+#   Backendinfo :w
+#   g_Imagename :rw
+#   g_Rootfs    :w
+#   Imagebasename :w
+#   Containercommand :r
+#   Codename : rw
 #
 check_backend() {
     local Checkrootfs=""
@@ -11863,18 +11869,24 @@ check_backend() {
     fi
 
     # check image name
-    if case_match "$BackendKind"  'docker|podman|nerdctl|proot' ; then
-            [ "${g_Imagename:0:1}" = "/" ] && {
-                g_Rootfs="$g_Imagename"
-                g_Imagename="$(basename "$g_Rootfs")"
-            }
-            [ "$g_Podmanrootfs" = "yes" ] && Checkrootfs="yes"
-            Imagebasename="$(echo "$g_Imagename" | tr / - | cut -d: -f1)"
-            Codename="${Codename:-"$g_Imagename $Containercommand"}"
-            verbose_ttm "|Image name: $g_Imagename
-                         |  Container command: $Containercommand"
-    elif  case_match "$BackendKind" 'host' ; then  # BackendKind_host
-            Containercommand="$g_Imagename $Containercommand"
+    if  case_match "$BackendKind"  'docker|podman|nerdctl|proot' ; then
+
+        if [ "${g_Imagename:0:1}" = "/" ] ; then
+            g_Rootfs="$g_Imagename"
+            g_Imagename="$(basename "$g_Rootfs")"
+        fi
+        if [ "$g_Podmanrootfs" = "yes" ] ; then
+            Checkrootfs="yes"
+        fi
+        #
+        Imagebasename="$(echo "$g_Imagename" | tr / - | cut -d: -f1)"
+        Codename="${Codename:-"$g_Imagename $Containercommand"}"
+        verbose_ttm "|Image name: $g_Imagename
+                     |  Container command: $Containercommand"
+        #
+    elif case_match "$BackendKind" 'host' ; then  # BackendKind_host
+
+        Containercommand="$g_Imagename $Containercommand"
             [ "$Customdockeroptions" ] && error_ttm \
                                               "|Option --backend=$BackendKind does not take CUSTOM_RUN_OPTIONS.
                                                |  If your command args contain ' -- ', run like
