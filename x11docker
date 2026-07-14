@@ -12089,9 +12089,11 @@ check_backend() {
         fi
 
         if [ -z "$Containercommand" ] ; then
-            [ -e "$g_Rootfs/bin/bash" ] \
-                && Containercommand="/bin/bash" \
-                || Containercommand="/bin/sh"
+
+            if      [ -e "$g_Rootfs/bin/bash" ] ;
+            then Containercommand="/bin/bash"
+            else Containercommand="/bin/sh"
+            fi
             #
             [ "$Containerusershell" != "auto" ]  \
                 && Containercommand="$Containerusershell"
