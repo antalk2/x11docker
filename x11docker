@@ -12404,8 +12404,7 @@ check_cgroup() {
               Sharecgroup="yes"
               ;;
           v2)
-              case "$g_Initsystem" in
-                  systemd)
+              if [ "$g_Initsystem" =  'systemd' ] ; then
                       if [ "$Runtime" != 'sysbox-runc' ] ; then
                           g_Remountcgroup="yes"
                           warning_ttm \
@@ -12414,8 +12413,7 @@ check_cgroup() {
                                |  of '$g_Imagename' with 'nsenter' to remount the container's /sys/fs/cgroup.
                                |  Evil images might be set up to abuse these privileges."
                       fi
-                      ;;
-              esac
+              fi
               ;;
       esac
 
