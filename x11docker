@@ -17087,8 +17087,9 @@ check_options_interferences() { # check multiple option interferences, change se
             case "$Sharegpu" in
                 no|iglx) ;;
                 *)
-                    note_ttm "|Option --gpu=$Sharegpu does not work
-                              |  with Docker Desktop VM. Only --gpu=iglx would work with --xorg.
+                    note_ttm "|With Docker Desktop VM,
+                              |    Option --gpu=$Sharegpu does not work.
+                              |    Only   --gpu=iglx would work with --xorg.
                               |  Fallback: Disabling option --gpu"
                     check_fallback
                     Sharegpu="no"
