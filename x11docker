@@ -18143,20 +18143,32 @@ check_options_messages() {      # some messages depending on options, but not ch
 }
 
 #
-# function check_optionset( the_option, incompatible_options )
+# Function: check_optionset
+# Usage:  check_optionset the_option incompatible_options
 #
-#   Which incompatible_options appear in g_Optionset1 ?
+# Brief: Emit a @code{note} for each of incompatible_options in g_Optionset1
 #
-# - the_option : The option we are testing for
+# Argument:
 #
-# - incompatible_options : List of options that are not compatible
+#   the_option : The option that is incompatible with each element of
+#                incompatible_options. Inly used in messages.
+#
+#   incompatible_options : List of options that are not compatible
 #                          with the_option. They are separated by
 #                          whitespace.
 #
-#   global g_Optionset1 : The currently selected options. Newline-separated
+# Global:
+#
+#    g_Optionset1 : The currently selected options. Newline-separated
+#
+# Description:
 #
 #    Check if any of the incompatible_options appear in g_Optionset1, the
-#    list of current options. Return false (1) if some appear.
+#    list of current options.
+#    Emit a @code{note} on each that appears.
+#
+# return: 1 if any of the incompatible_options was found in g_Optionset1.
+#         0 if not.
 #
 #
 #
