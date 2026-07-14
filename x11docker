@@ -11683,7 +11683,7 @@ xtool() {
 #   g_Imagename :rw
 #   g_Rootfs    :w
 #   Imagebasename :w
-#   Containercommand :rw
+#   Containercommand= :rw
 #   Codename         :rw
 #
 #   g_Network :w
@@ -12113,6 +12113,17 @@ check_backend() {
 
 # Function: check_image
 # Brief: Get some image information
+#
+# Globals:
+#    Backendbin
+#    g_Imagename
+#    Containerlogfile
+#    BackendKind
+#    Backendrootless
+#    g_Imagearchitecture :w
+#
+# Files:
+#    2>> $Containerlogfile
 #
 check_image() {
 
