@@ -12384,7 +12384,7 @@ check_smallinit() {
         return 1
     fi
     return 0
-}
+} # end check_smallinit
 
 check_cgroup() {                # check [and create] cgroup mountpoint for systemd or elogind
   local Remounted Needcgroup
