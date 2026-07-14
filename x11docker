@@ -17153,10 +17153,14 @@ check_options_interferences() { # check multiple option interferences, change se
     fi
 
     # Check whether host X server has MIT-SHM enabled.
-    [ "$Winsubsystem" ] && Hostmitshm="no" || {
-            xtool --nocheck "env LD_PRELOAD= xdpyinfo 2>>$Xinitlogfile | grep -q MIT-SHM" && Hostmitshm="yes" || Hostmitshm="no"
-            xtool --check --quiet xdpyinfo || Hostmitshm="yes" # if unknown, assume yes
-        }
+    if [ -z "$Winsubsystem" ] ; then
+        #
+        # Hostmitshm="no" # Was this intended to be an assignment or a
+        #                 # condition?
+        #
+        xtool --nocheck "env LD_PRELOAD= xdpyinfo 2>>$Xinitlogfile | grep -q MIT-SHM" && Hostmitshm="yes" || Hostmitshm="no"
+        xtool --check --quiet xdpyinfo || Hostmitshm="yes" # if unknown, assume yes
+    fi
 
     # --clipboard
     case "$Shareclipboard" in
