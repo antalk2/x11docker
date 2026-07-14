@@ -17053,12 +17053,10 @@ check_options_interferences() { # check multiple option interferences, change se
                 Pulseaudiomode="tcp"
             fi
 
-            if    [ "$Sharepipewire"  = "yes"    ] \
-               || [ "$Sharealsa"      = "yes"    ] \
-               || [ "$Pulseaudiomode" = "socket" ] \
-               || [ "$Pulseaudiomode" = "host"   ] ;
+            if    [ "$Sharepipewire"  = "yes"              ] \
+               || [ "$Sharealsa"      = "yes"              ] \
+               || case_match "$Pulseaudiomode" "socket|host" ;
             then
-                # ^^^Pulseaudiomode_host
                 note_ttm "|Options --pipewire and --alsa do not work
                           |  with Docker Desktop VM. Pulseaudio works only in tcp mode.
                           |  Fallback: Setting --pulseaudio=tcp"
