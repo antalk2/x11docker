@@ -1654,8 +1654,7 @@ finish() {
         # Do the backup
         unpriv "cp '$Logfile' '$Logfilebackup'"
         #
-        if  case_match "$Winsubsystem" 'WSL1|WSL2' \
-        && [ "$Dockervm" = "moby" ]                ;
+        if  case_match "$Winsubsystem" 'WSL1|WSL2' && [ "$Dockervm" = "moby" ] ;
         then
             # Q: Backup the backup? Why?
             unpriv "cp -T '$Logfilebackup' '$Hostuserhome/.cache/x11docker/x11docker.log'"
