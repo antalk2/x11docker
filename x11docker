@@ -11713,19 +11713,12 @@ check_backend() {
             ;;
 
         moby)
-            if ! case_match  "$BackendKind" 'docker|host' ; then
-                #case "$BackendKind" in
-              #docker|host)  # BackendKind_host
-              #    # NOP
-             # ;;
-             # *) 
+            if ! case_match  "$BackendKind" 'docker | host' ; then
                 error_ttm \
                     "|Option --backend=$BackendKind is not supported on MS Windows yet.
                      |  If you need this, ask for support at https://github.com/mviereck/x11docker"
                 return 1
-             #   ;;
-                #esac
-                fi
+            fi
           #
           Backendbin="docker.exe"
           have_command  "$Backendbin"  || {
