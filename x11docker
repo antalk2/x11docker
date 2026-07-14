@@ -17058,8 +17058,8 @@ check_options_interferences() { # check multiple option interferences, change se
                || case_match "$Pulseaudiomode" "socket|host" ;
             then
                 note_ttm "|With Docker Desktop VM,
-                          |     Options --pipewire and --alsa do not work.
-                          |     Pulseaudio works only in tcp mode.
+                          |    Options --pipewire and --alsa do not work.
+                          |    Pulseaudio works only in tcp mode.
                           |  Fallback: Setting --pulseaudio=tcp"
                 #
                 check_fallback
@@ -17075,8 +17075,9 @@ check_options_interferences() { # check multiple option interferences, change se
                 Sharecupsmode="tcp"
 
             elif [ "$Sharecupsmode" = "socket" ] ; then
-                note_ttm "|Option --printer=socket does not work
-                          |  with Docker Desktop VM. It works only in tcp mode.
+                note_ttm "|With Docker Desktop VM,
+                          |    Option --printer=socket does not work.
+                          |    Only   --printer=tcp works.
                           |  Fallback: Setting --printer=tcp"
                 #
                 check_fallback
