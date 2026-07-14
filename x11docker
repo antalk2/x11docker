@@ -12207,7 +12207,7 @@ check_image() {
   [ -z "$Containercommand$Containerentrypoint" ] && error 'No container command specified and no CMD or ENTRYPOINT found in image.'
 
   return 0
-}
+} # check_image
 
 # Function: check_runtime
 #
@@ -15318,6 +15318,7 @@ start_container() {             # docker run
       [ "$Pid1pid" = "0" ] && Pid1pid=""
       debugnote "start_container(): PID1=$Pid1pid"
 
+      # Imagearchitecture in start_container
       [ -z "$Pid1pid" ] && error "start_container(): Did not receive PID of PID1 in container.
   Maybe the container immediately stopped for unknown reasons.
   Just in case, check if host and image architecture are compatible:
