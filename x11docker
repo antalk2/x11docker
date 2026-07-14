@@ -12219,10 +12219,12 @@ check_runtime() {
                            |  Sysbox version >=0.5.0"
             fi
             ;;
+
         *)
-            note "Option --runtime: x11docker does not know runtime: '$Runtime'
-  Will try to use it anyway.
-  If that fails, you can try options --snap or --no-setup."
+            note_ttm "|Option --runtime: x11docker does not know runtime: '$Runtime'
+                      |  Will try to use it anyway.
+                      |  If that fails, you can try options --snap or --no-setup."
+            #
             ;;
     esac
 
