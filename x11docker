@@ -17125,7 +17125,8 @@ check_options_interferences() { # check multiple option interferences, change se
     fi
 
     # --xauth
-    [ "$Xauthentication" != "no" ] && case "$Xserver" in
+    if [ "$Xauthentication" != "no" ] ; then
+        case "$Xserver" in
         --tty|--weston|--kwin|--hostwayland) Xauthentication="no" ;;
         --hostdisplay)
             xtool --check "xauth" || {
@@ -17136,7 +17137,8 @@ check_options_interferences() { # check multiple option interferences, change se
                 Xauthentication="no"
             }
             ;;
-    esac
+       esac
+    fi
 
     # --xtest
     [ -z "$Xtest" ] && case "$Xserver" in
