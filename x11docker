@@ -17109,9 +17109,17 @@ check_options_interferences() { # check multiple option interferences, change se
             g_Network=""
         }
         #
-        check_optionset "--runtime=kata-runtime" "--alsa --webcam" || :
-        Sharewebcam="no"
-        Sharealsa="no"
+        {
+            # --runtime=kata-runtime is not compatible with --alsa
+            if ! check_optionset "--runtime=kata-runtime" "--alsa" ; then
+                Sharealsa="no"
+            fi
+
+            # --runtime=kata-runtime is not compatible with --webcam
+            if ! check_optionset "--runtime=kata-runtime" "--webcam" ; then
+                Sharewebcam="no"
+            fi
+        }
     fi
 
     # --xauth
