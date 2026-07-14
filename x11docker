@@ -12224,12 +12224,12 @@ check_image() {
         l_Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "WorkingDir")"
     fi
     debugnote "Image WORKDIR: $l_Imageworkdir"
-    [ -z "$Workdir" ] && [ -n "$l_Imageworkdir" ] && {
+    if [ -z "$Workdir" ] && [ -n "$l_Imageworkdir" ] ; then
         note_ttm "|Found 'WORKDIR $l_Imageworkdir' in image.
                   |  You can change it with option --workdir=DIR."
         #
         Workdir="$l_Imageworkdir"
-    }
+    fi
 
     [ -z "$g_Containercommand$g_Containerentrypoint" ] && error 'No container command specified and no CMD or ENTRYPOINT found in image.'
 
