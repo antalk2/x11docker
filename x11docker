@@ -12262,14 +12262,11 @@ check_containerhomebasedir() {  # options --homebasedir, --home
     ;;
     docker|podman|nerdctl)
         if [ -z "$Hosthomebasefolder" ] ; then
-            case "$Dockervm" in
-                no|desktop)
-                    Hosthomebasefolder="$Containeruserhosthome/.local/share/x11docker"
-                    ;;
-                moby)
-                    Hosthomebasefolder="$(convertpath subsystem "$(wincmd 'echo %userprofile%') ")/x11docker/home"
-                    ;;
-            esac
+            if   case_match "$Dockervm" 'no|desktop' ; then
+                Hosthomebasefolder="$Containeruserhosthome/.local/share/x11docker"
+            elif case_match "$Dockervm" 'moby'       ; then
+                Hosthomebasefolder="$(convertpath subsystem "$(wincmd 'echo %userprofile%') ")/x11docker/home"
+            fi
         fi
     ;;
   esac
