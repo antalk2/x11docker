@@ -6537,15 +6537,13 @@ check_newxenv()  {
 
     # --xoverip
     if [ -z "$Xoverip" ] ; then
-        case "$Dockervm" in
-            moby)
-                Xoverip="listentcp"
-                ;;
-            desktop)
-                note "Option --xoverip is enabled to allow Docker Desktop VM."
-                Xoverip="listentcp"
-                ;;
-        esac
+        
+        if [ "$Dockervm" =  moby ] ; then
+            Xoverip="listentcp"
+        elif [ "$Dockervm" = desktop ] ; then
+            note "Option --xoverip is enabled to allow Docker Desktop VM."
+            Xoverip="listentcp"
+        fi
 
         case "$Runtime" in
             kata-runtime)
