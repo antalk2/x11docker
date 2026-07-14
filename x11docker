@@ -7616,13 +7616,11 @@ check_xdepends() {
                 Return=1
             fi
             #
-            case "$Dockervm" in
-                moby|desktop)
-                    $xdepends_message_ttm "|${X_option_to_check} is not supported
-                                           : with MobyVM / docker-for-win or Docker Desktop."
-                    Return=1
-                    ;;
-            esac
+            if case_match "$Dockervm" 'moby|desktop' ; then
+                $xdepends_message_ttm "|${X_option_to_check} is not supported
+                                       : with MobyVM / docker-for-win or Docker Desktop."
+                Return=1
+            fi
             ;;
     esac # Wayland
 
