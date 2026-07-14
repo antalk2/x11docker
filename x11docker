@@ -1497,7 +1497,7 @@ watchmessagefifo() {
 #    - Terminate processes based on the pid,name pairs read.
 #    - unload pulseaudio module
 #    - call @code{setup_xcnetwork remove}
-#    - If container is still running: @{$Backendbin stop $g_Containername}
+#    - If container is still running: @{$g_Backendbin stop $g_Containername}
 #
 #    - Read Storepidfile backwards, again.
 #    - Call @code{termpid "$Pid" "$Name"} on those sill running.
@@ -1556,7 +1556,7 @@ finish() {
                         mysleep "$(awk "BEGIN { print $Count * 0.1 }")"
                         debugnote "finish(): Waiting for container PID 1: $Pid1pid to terminate."
                     done
-                    checkpid "$Pid1pid" && unpriv_backend "$Backendbin stop $g_Containername"
+                    checkpid "$Pid1pid" && unpriv_backend "$g_Backendbin stop $g_Containername"
                     ;;
                 #
                 Xcontainerpid1)
@@ -1595,7 +1595,7 @@ finish() {
                    "|finish(): Container still running. Executing 'docker stop'.
                     |  Will wait up to 15 seconds for docker to finish."
                 #
-                unpriv_backend "$Backendbin stop $g_Containername" >> "$Containerlogfile" 2>&1
+                unpriv_backend "$g_Backendbin stop $g_Containername" >> "$Containerlogfile" 2>&1
 
                 Zeit="$(date +%s)"
                 while true; do
@@ -1764,7 +1764,7 @@ containerisrunning() {
     if [ "$Dockervm" = no ]; then
         checkpid      "$(storeinfo_dump_sh pid1pid)"
     elif case_match "$Dockervm" 'moby|desktop' ; then
-            unpriv_backend "$Backendbin inspect '$(storeinfo_dump_sh containerid)'" \
+            unpriv_backend "$g_Backendbin inspect '$(storeinfo_dump_sh containerid)'" \
                            >/dev/null 2>&1
     fi
 }
@@ -2030,7 +2030,7 @@ watchpidlist() {
         #
         # Container PID not watchable in MSYS2/Cygwin/WSL1.
         if [ "$local_Containername" ] ; then
-            unpriv_backend "$Backendbin inspect '$local_Containername'" >/dev/null || {
+            unpriv_backend "$g_Backendbin inspect '$local_Containername'" >/dev/null || {
                 debugnote  "watchpidlist(): Container $local_Containername has terminated"
                 saygoodbye "watchpidlist $local_Containername"
             }
@@ -4353,7 +4353,7 @@ buildimage() {
     fi
     #
     note "Building $local_Imagename"
-    if ! unpriv_backend "$Backendbin build -t $local_Imagename $Buildpath" ; then
+    if ! unpriv_backend "$g_Backendbin build -t $local_Imagename $Buildpath" ; then
         error "Option --build: Building image '$local_Imagename' failed."
     fi
     #
@@ -4407,7 +4407,7 @@ cleanup() {
             #
             # Container names from "docker ps -a"
             Orphanedcontainers="$(
-                 unpriv_backend "$Backendbin ps -a"  \
+                 unpriv_backend "$g_Backendbin ps -a"  \
                  | grep x11docker_X                  \
                  | rev_cut -d' ' -f1
             )"
@@ -4422,7 +4422,7 @@ cleanup() {
             # check for double entries name/id, check for already non-existing containers
             for Line in $Orphanedcontainers; do
                 #
-                Containerinspect="$(unpriv_backend "$Backendbin inspect '$Line'" 2>/dev/null)"
+                Containerinspect="$(unpriv_backend "$g_Backendbin inspect '$Line'" 2>/dev/null)"
                 if [ -n "$Containerinspect" ] ; then
                     # Get longHexId
                     Containerid="$(parse_inspect "$Containerinspect" "Id")"
@@ -4464,8 +4464,8 @@ cleanup() {
         fi
 
         if [ -n "$Orphanedcontainers" ] ; then
-            note "Removing containers with: $Backendbin rm -f $Orphanedcontainers"
-            unpriv_backend "$Backendbin rm -f $Orphanedcontainers" 2>&1
+            note "Removing containers with: $g_Backendbin rm -f $Orphanedcontainers"
+            unpriv_backend "$g_Backendbin rm -f $Orphanedcontainers" 2>&1
         fi
 
         if [ -n "$Orphanedfolders" ] ; then
@@ -4481,9 +4481,9 @@ cleanup() {
     # remove internal networks
     case "$BackendKind" in
         docker|podman|nerdctl)
-            for Line in $(unpriv_backend "$Backendbin network ls" | grep x11docker_X); do
+            for Line in $(unpriv_backend "$g_Backendbin network ls" | grep x11docker_X); do
                 note "Removing internal network $Line"
-                unpriv_backend "$Backendbin network rm $(awk '{print $1}' <<< "$Line")"
+                unpriv_backend "$g_Backendbin network rm $(awk '{print $1}' <<< "$Line")"
             done
             ;;
     esac
@@ -4507,7 +4507,7 @@ cleanup() {
 
     case "$BackendKind" in
         docker)
-            if ! unpriv_backend "$Backendbin info" >/dev/null 2>/dev/null ; then
+            if ! unpriv_backend "$g_Backendbin info" >/dev/null 2>/dev/null ; then
                 warning_ttm \
                     "|Could not check for $BackendKind containers.
                      |  Please run 'x11docker --cleanup' as root
@@ -4982,7 +4982,7 @@ installer() {
             --remove|--remove-oldprefix)
                 
                 note "Removing x11docker from your system."
-                if [ "${installer_option}" = "--remove" ] && [ -n "$Backendbin" ] ; then
+                if [ "${installer_option}" = "--remove" ] && [ -n "$g_Backendbin" ] ; then
                     note "Running --cleanup"
                     cleanup
                 fi
@@ -11248,7 +11248,7 @@ disable_X_access_via_xhost() {
 #    Xoverip
 #    g_Network
 #    Xinitlogfile
-#    Backendbin
+#    g_Backendbin
 #    Xcnetworkid : write
 #    Xcnetworkname
 #
@@ -11275,7 +11275,7 @@ setup_xcnetwork() {
                     *) return 1 ;; ### FIXME
                 esac
 
-                Xcnetworkid="$( unpriv_backend "$Backendbin network create $Internal $Xcnetworkname"
+                Xcnetworkid="$( unpriv_backend "$g_Backendbin network create $Internal $Xcnetworkname"
                           )" 2>>$Xinitlogfile || return 1
 
                 debugnote "setup_xcnetwork(): Creating $Xcnetworkname $Xcnetworkid"
@@ -11286,7 +11286,7 @@ setup_xcnetwork() {
             if [ -n "$Xcnetworkid" ] ; then
                 debugnote "setup_xcnetwork(): Removing $Xcnetworkname $Xcnetworkid"
                 #
-                unpriv_backend "$Backendbin network remove $Xcnetworkid" \
+                unpriv_backend "$g_Backendbin network remove $Xcnetworkid" \
                                >>$Xinitlogfile \
                                2>&1            \
                     || return 1
@@ -11677,26 +11677,26 @@ xtool() {
 #
 #   Dockervm :rw
 #   BackendKind :r
-#   Backendbin :w
+#   g_Backendbin= :w
 #   Installermode :r
-#   Backendinfo :w
-#   g_Imagename :rw
-#   g_Rootfs    :w
-#   Imagebasename :w
+#   Backendinfo= :w
+#   g_Imagename= :rw
+#   g_Rootfs=    :w
+#   Imagebasename= :w
 #   g_Containercommand= :rw
-#   Codename         :rw
+#   Codename=         :rw
 #
-#   g_Network :w
-#   Shareipc  :w
-#   Createcontaineruser :w
-#   Containersetup :w
-#   Capdropall :w
-#   Allownewprivileges :w
-#   Runtime :w
-#   Sharecgroup :w
-#   g_Limitresources :w
-#   Switchcontaineruserflag :w
-#   Sudouser :re
+#   g_Network= :w
+#   Shareipc=  :w
+#   Createcontaineruser= :w
+#   Containersetup= :w
+#   Capdropall= :w
+#   Allownewprivileges= :w
+#   Runtime= :w
+#   Sharecgroup= :w
+#   g_Limitresources= :w
+#   Switchcontaineruserflag= :w
+#   Sudouser= :rw
 #   Sharefoldercontainer :w
 #   Sharefolder :r
 #
@@ -11719,7 +11719,7 @@ check_backend() {
         #
         case "$BackendKind" in
             docker|podman|nerdctl)
-                Backendbin="$(command -v "$BackendKind")"
+                g_Backendbin="$(command -v "$BackendKind")"
                 ;;
         esac
         #
@@ -11753,8 +11753,8 @@ check_backend() {
             return 1
         fi
         #
-        Backendbin="docker.exe"
-        if ! have_command  "$Backendbin"  ; then
+        g_Backendbin="docker.exe"
+        if ! have_command  "$g_Backendbin"  ; then
             PATH="$(trim_to_mark \
                  "|${PATH:-}
                   ::$(convertpath subsystem "C:/Program Files/docker")
@@ -11768,14 +11768,14 @@ check_backend() {
         docker|podman|nerdctl|proot)
             case "$Installermode" in
                 "") 
-                    if [ -z "$Backendbin" ] ; then
-                        # If not in Installermode, missing Backendbin is an error
+                    if [ -z "$g_Backendbin" ] ; then
+                        # If not in Installermode, missing g_Backendbin is an error
                         error "Option --backend=$BackendKind: No binary found for $BackendKind."
                     fi
                     ;;
                 *)
-                    if [ -z "$Backendbin" ] ; then
-                        # In Installermode,  missing Backendbin is just a note.
+                    if [ -z "$g_Backendbin" ] ; then
+                        # In Installermode,  missing g_Backendbin is just a note.
                         note "Option --backend=$BackendKind: No binary found for $BackendKind."
                     fi
                     # And in Installermode, we skip the rest of check_backend()
@@ -11784,7 +11784,7 @@ check_backend() {
             esac
             ;;
         host)  # BackendKind_host
-            Backendbin=""
+            g_Backendbin=""
             ;;
     esac
 
@@ -11877,7 +11877,7 @@ check_backend() {
         #
         # Check whether docker daemon is running, get backend info
         #
-        Backendinfo="$(unpriv_backend "env LC_ALL=C $Backendbin info --format='{{json .}}'" 2>&1)"
+        Backendinfo="$(unpriv_backend "env LC_ALL=C $g_Backendbin info --format='{{json .}}'" 2>&1)"
         if [ "$?" != "0" ]                                \
         || grep -q "permission denied" <<< "$Backendinfo" \
         || [ -z "$Backendinfo" ]                          ;
@@ -11888,7 +11888,7 @@ check_backend() {
                  |  Maybe you need root privileges to run docker?
                  |  Try to start docker daemon with 'systemctl start docker'.
                  |  Try to run x11docker as root.
-                 |  Output of '$Backendbin info':
+                 |  Output of '$g_Backendbin info':
                  |  $Backendinfo"
             #
         fi
@@ -12105,7 +12105,7 @@ check_backend() {
 
     fi # Checkrootfs
 
-    debugnote "Backend: $BackendKind, Backendbin: $Backendbin, Rootless: $Backendrootless"
+    debugnote "Backend: $BackendKind, Backendbin: $g_Backendbin, Rootless: $Backendrootless"
     return 0
 } # check_backend
 
@@ -12115,7 +12115,7 @@ check_backend() {
 # Brief: Get some image information
 #
 # Globals:
-#    Backendbin
+#    g_Backendbin
 #    g_Imagename
 #    Containerlogfile
 #    BackendKind
@@ -12132,7 +12132,7 @@ check_image() {
     local l_Imagecommand=""
 
     # Check if image $g_Imagename is available locally
-    l_Imageinspect="$(unpriv_backend "$Backendbin inspect $g_Imagename" 2>> $Containerlogfile)" || {
+    l_Imageinspect="$(unpriv_backend "$g_Backendbin inspect $g_Imagename" 2>> $Containerlogfile)" || {
         error_ttm "|Image $g_Imagename not found locally.
                    |  Please pull or build image first. (Backend $BackendKind, rootless $Backendrootless)"
         #
@@ -12629,8 +12629,8 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
 
   case "$BackendKind" in
     docker|podman|nerdctl)
-      Backendcommand="$Backendbin run"
-      unpriv_backend "$Backendbin run --help" 2>/dev/null | grep -q -- '--pull' && Backendcommand="$Backendcommand \\
+      Backendcommand="$g_Backendbin run"
+      unpriv_backend "$g_Backendbin run --help" 2>/dev/null | grep -q -- '--pull' && Backendcommand="$Backendcommand \\
   --pull never"
     ;;
     proot)
@@ -12885,7 +12885,7 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
         ;;
       esac
       [ "$g_Remountcgroup" = "yes" ] && {
-        unpriv_backend "$Backendbin run --help" | grep -q -- '--cgroupns' && Backendcommand="$Backendcommand \\
+        unpriv_backend "$g_Backendbin run --help" | grep -q -- '--cgroupns' && Backendcommand="$Backendcommand \\
   --cgroupns private"
       }
     ;;
@@ -14183,7 +14183,7 @@ verbose \"containerrc: Container system:
           IFS=$'\n'
           while read -r Line; do
             echo "export $(escapestring "$Line")"
-          done < <(unpriv_backend "$Backendbin run --rm --entrypoint env $g_Imagename env" 2>> "$Containerlogfile" | rmcr | grep -v 'HOSTNAME=' ||: )
+          done < <(unpriv_backend "$g_Backendbin run --rm --entrypoint env $g_Imagename env" 2>> "$Containerlogfile" | rmcr | grep -v 'HOSTNAME=' ||: )
           IFS=$' \t\n'
         }
       ;;
@@ -15304,7 +15304,7 @@ start_container() {             # docker run
       # Wait for container to be ready
       debugnote "start_container(): Running repeated checks if container is ready."
       for ((Count=1 ; Count<=100 ; Count++)); do
-        unpriv_backend "$Backendbin exec $g_Containername sh -c ':'" 2>&1 | rmcr >> $Containerlogfile && {
+        unpriv_backend "$g_Backendbin exec $g_Containername sh -c ':'" 2>&1 | rmcr >> $Containerlogfile && {
           debugnote 'start_container(): Container is up and running.'
           break
         } || {
@@ -15317,7 +15317,7 @@ start_container() {             # docker run
       # Wait for pid 1 in container
       for ((Count=1 ; Count<=100 ; Count++)); do
         debugnote "start_container(): $Count. check for PID 1"
-        Containerinspect="$(unpriv_backend "$Backendbin inspect $g_Containername" 2>> $Containerlogfile | rmcr)" ||:
+        Containerinspect="$(unpriv_backend "$g_Backendbin inspect $g_Containername" 2>> $Containerlogfile | rmcr)" ||:
         [ -n "$Containerinspect" ] && [ "$Containerinspect" != "[]" ] && Pid1pid="$(parse_inspect "$Containerinspect" "State" "Pid")"
         
         if   case_match "$Dockervm" 'no'           ; then
@@ -15349,7 +15349,7 @@ start_container() {             # docker run
       # store stdout and stderr
       [ "$Containersetup" = "no" ] && {
         # Store container output separated for stdout and stderr
-        unpriv_backend "$Backendbin logs -f $g_Containername" 1>> "$Cmdstdoutlogfile" 2>> "$Cmdstderrlogfile" & ### FIXME rootless, unpriv
+        unpriv_backend "$g_Backendbin logs -f $g_Containername" 1>> "$Cmdstdoutlogfile" 2>> "$Cmdstderrlogfile" & ### FIXME rootless, unpriv
         storepid $! dockerlogs
       }
 
@@ -15371,7 +15371,7 @@ start_container() {             # docker run
       # --init=systemd cgroupv2
       [ "$g_Remountcgroup" = "yes" ] && {
         # Compare https://github.com/mviereck/x11docker/issues/349
-        Remountcommand="$Backendbin run --rm --user root"
+        Remountcommand="$g_Backendbin run --rm --user root"
         Remountcommand="$Remountcommand --cap-add SYS_ADMIN --cap-add=SYS_PTRACE --security-opt apparmor=unconfined"
         Remountcommand="$Remountcommand --pid=container:$Containerid"
         Remountcommand="$Remountcommand --entrypoint /usr/bin/env"
@@ -15420,7 +15420,7 @@ $(tail "$Containerlogfile")"
       docker|podman|nerdctl)
         # copy to /tmp because host HOME might be nosuid or noexec
         # run container root setup. containerrc will wait until setup script is ready.
-        unpriv_backend "$Backendbin exec -u root $g_Containername sh -c 'cp $(convertpath share "$Containerrootrc") /tmp/containerrootrc ; chmod 644 /tmp/containerrootrc ; exec /bin/sh /tmp/containerrootrc'" 2>&1 | rmcr >> $Containerlogfile
+        unpriv_backend "$g_Backendbin exec -u root $g_Containername sh -c 'cp $(convertpath share "$Containerrootrc") /tmp/containerrootrc ; chmod 644 /tmp/containerrootrc ; exec /bin/sh /tmp/containerrootrc'" 2>&1 | rmcr >> $Containerlogfile
       ;;
     esac
   }
@@ -15992,7 +15992,7 @@ check_hostxenv() {              # check environment variables for host X display
 }
 check_snap() {                  # check if docker is installed in snap. Causes restrictions.
   # Check if docker is installed with snap/snappy (notable Ubuntu Server)
-  myrealpath "$(command -v "${Backendbin:-docker_not_found}")" | grep -q snap && Runsinsnap="yes" || Runsinsnap="no"
+  myrealpath "$(command -v "${g_Backendbin:-docker_not_found}")" | grep -q snap && Runsinsnap="yes" || Runsinsnap="no"
 
   [ "$Runsinsnap" = "yes" ] && [ -z "$Snapsupport" ] && {
     note "It seems docker runs in snap.
@@ -19147,7 +19147,7 @@ declare_variables() {           # declare global variables
 
   # Xcnetworkid :
   #   In setup_xcnetwork() :
-  #      Xcnetworkid="$(unpriv_backend "$Backendbin network create $Internal $Xcnetworkname")"
+  #      Xcnetworkid="$(unpriv_backend "$g_Backendbin network create $Internal $Xcnetworkname")"
   #
   Xcnetworkid=""
 
@@ -19363,7 +19363,7 @@ declare_variables() {           # declare global variables
   Imageentrypoint=""
 
   # l_Imageinspect : Output of --inspect
-  #    l_Imageinspect="$(unpriv_backend "$Backendbin inspect $g_Imagename" 2>> $Containerlogfile)"
+  #    l_Imageinspect="$(unpriv_backend "$g_Backendbin inspect $g_Imagename" 2>> $Containerlogfile)"
   #
   # l_Imageinspect=""
 
@@ -19433,11 +19433,11 @@ declare_variables() {           # declare global variables
   #
   BackendKind=""
 
-  # Backendbin : path to binary of backend
-  Backendbin=""
+  # g_Backendbin : path to binary of backend
+  g_Backendbin=""
 
   # Backendinfo : output of 'docker info'
-  #   Backendinfo="$(unpriv_backend "env LC_ALL=C $Backendbin info --format='{{json .}}'" 2>&1)"
+  #   Backendinfo="$(unpriv_backend "env LC_ALL=C $g_Backendbin info --format='{{json .}}'" 2>&1)"
   #
   Backendinfo=""
 
@@ -19979,7 +19979,7 @@ unpriv() {
 unpriv_backend() {
     local Command
     Command="$(oneline "${1:-}")"
-    if [ -z "$Backendbin" ] ; then
+    if [ -z "$g_Backendbin" ] ; then
         warning "Binary path for backend $BackendKind not set."
         return 1
     fi
@@ -20271,7 +20271,7 @@ main() {
 
   (
       # Values for the debugnote below
-      local Backendbin_version="$(${Backendbin:-:} --version 2>&1)"
+      local Backendbin_version="$(${g_Backendbin:-:} --version 2>&1)"
       local Host_system_to_report="$(
                 grep '^PRETTY_NAME' /etc/os-release 2>/dev/null  \
                 | cut -d= -f2                                    \

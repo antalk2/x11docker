@@ -5,7 +5,7 @@
 #
 #
 #       Xcnetworkid="$(
-#                 unpriv_backend "$Backendbin network create $Internal $Xcnetworkname"
+#                 unpriv_backend "$g_Backendbin network create $Internal $Xcnetworkname"
 #        )" 2>>$Xinitlogfile || return 1
 #
 
