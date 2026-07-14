@@ -12142,38 +12142,91 @@ check_image() {                 # get some image information
   return 0
 }
 
-check_runtime() {               # option --runtime
-  local local_Defaultruntime
+# Function: check_runtime
+#
+# Globals:
+#
+#    BackendKind
+#    Backendinfo
+#    Runtime :rw
+#
+# CommandlineOption: --runtime
+#
+check_runtime() {
 
-  case "$BackendKind" in
-    docker)  local_Defaultruntime="$(parse_inspect "$Backendinfo" "DefaultRuntime" | tr -d '"')" ;;
-    podman)
-        # literal host
-        local_Defaultruntime="$(parse_inspect "$Backendinfo" "host"  "ociRuntime" "name" | tr -d '"')"
+    local local_Defaultruntime
+    case "$BackendKind" in
+        docker)
+            # Backendinfo / "DefaultRuntime"
+            local_Defaultruntime="$(parse_inspect "$Backendinfo" "DefaultRuntime" | tr -d '"')"
+            ;;
+        podman)
+            # Backendinfo / "host" / "ociRuntime" / "name"
+            # literal host
+            local_Defaultruntime="$(parse_inspect "$Backendinfo" "host"  "ociRuntime" "name" | tr -d '"')"
+            ;;
+        nerdctl)
+            local_Defaultruntime=""
+            ;;
+    esac
+
+    debugnote "Default runtime: $local_Defaultruntime"
+    if [ -z "$Runtime" ] ; then
+        Runtime="$local_Defaultruntime"
+    fi
+
+    case "$Runtime" in
+        ""|runc|crun|oci|nvidia|kata-runtime)
+            : # NOP
         ;;
-    nerdctl) local_Defaultruntime="" ;;
-  esac
-  debugnote "Default runtime: $local_Defaultruntime"
-  [ -z "$Runtime" ]        && Runtime="$local_Defaultruntime"
-
-  case "$Runtime" in
-    ""|runc|crun|oci|nvidia|kata-runtime) ;;
-    sysbox-runc)
-      store_runoption_env "SYSBOX_HONOR_CAPS=TRUE"
-      check_optionset "--runtime=sysbox-runc" "--alsa --webcam" ||:
-      version_less_than "$(uname -r)" "5.12" && error "Option --runtime=sysbox-runc needs at least
-  Linux kernel version >=5.12"
-      version_less_than "$(sysbox-runc -v | grep version | tr -d ' \t'| cut -d: -f2)" "0.5" && error "Option --runtime=sysbox-runc needs at least
-  Sysbox version >=0.5.0"
-    ;;
-    *)
-      note "Option --runtime: x11docker does not know runtime: '$Runtime'
+        sysbox-runc)
+            #
+            # https://github.com/nestybox/sysbox
+            #
+            #
+            # While Sysbox's default behavior for assigning
+            # capabilities is beneficial in most cases, it has the
+            # drawback that it does not allow fine-grained control of
+            # the capabilities used by the Sysbox container init
+            # process (e.g., Docker's --cap-add and --cap-drop don't
+            # have any effect). In some situations, having such
+            # control is beneficial.
+            #
+            # To overcome this, starting with Sysbox v0.5.0 it's
+            # possible to configure Sysbox to honor the capabilities
+            # passed to it by the higher level container manager
+            # (e.g., Docker or Kubernetes) via the container's OCI
+            # spec.
+            #
+            # The configuration can be done on a per-container basis,
+            # or globally for all containers.
+            #
+            # To do this on a per-container basis, pass the
+            # SYSBOX_HONOR_CAPS=TRUE environment variable to the
+            # container, as follows: [...]
+            #
+            #
+            store_runoption_env "SYSBOX_HONOR_CAPS=TRUE"
+            check_optionset "--runtime=sysbox-runc" "--alsa --webcam" || :
+            #
+            if version_less_than "$(uname -r)" "5.12" ; then
+                error_ttm "|Option --runtime=sysbox-runc needs at least
+                           |  Linux kernel version >=5.12"
+            fi
+            #
+            if version_less_than "$(sysbox-runc -v | grep version | tr -d ' \t'| cut -d: -f2)" "0.5" ; then
+                error_ttm "|Option --runtime=sysbox-runc needs at least
+                           |  Sysbox version >=0.5.0"
+            fi
+            ;;
+        *)
+            note "Option --runtime: x11docker does not know runtime: '$Runtime'
   Will try to use it anyway.
   If that fails, you can try options --snap or --no-setup."
-    ;;
-  esac
+            ;;
+    esac
 
-  return 0
+    return 0
 }
 
 check_smallinit() {             # find container init binary on host
