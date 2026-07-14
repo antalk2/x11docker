@@ -13273,9 +13273,9 @@ setup_initsystem() {            # option init: set up capabilities, check or cre
   local Message=
 
   # --init in Dockervm. /usr/bin/docker-init is not available in MSYS2/Cygwin/WSL1
-  case "$Dockervm" in
-    moby|desktop) [ "$Initsystem" = "tini" ] && Initsystem="dockerinit" ;;
-  esac
+  if case_match "$Dockervm" 'moby|desktop' && [ "$Initsystem" = "tini" ] ; then
+      Initsystem="dockerinit"
+  fi
 
   case "$BackendKind" in
     proot|host) # BackendKind_host
