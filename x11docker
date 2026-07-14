@@ -11711,7 +11711,7 @@ check_backend() {
         esac
 
     elif case_match "$Dockervm" 'moby' ; then
-        # [ "$Dockervm" = moby ] implies "MS Windows" (?)
+        # [ "$Dockervm" = moby ] implies "MS Windows" and (WSL1|WSL2)
         if ! case_match  "$BackendKind" 'docker | host' ; then
             error_ttm \
                 "|Option --backend=$BackendKind is not supported on MS Windows yet.
