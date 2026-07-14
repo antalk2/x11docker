@@ -11721,14 +11721,14 @@ check_backend() {
             fi
             #
             Backendbin="docker.exe"
-            have_command  "$Backendbin"  || {
+            if ! have_command  "$Backendbin"  ; then
                 PATH="$(trim_to_mark \
                  "|${PATH:-}
                   ::$(convertpath subsystem "C:/Program Files/docker")
                   ::$(convertpath subsystem "C:/Program Files/Docker/Docker/resources/bin")"
                   )"
                 export PATH
-            }
+            fi
             ;;
     esac
 
