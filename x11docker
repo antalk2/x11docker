@@ -17126,11 +17126,9 @@ check_options_interferences() { # check multiple option interferences, change se
 
     # --xauth
     if [ "$Xauthentication" != "no" ] ; then
-        case "$Xserver" in
-            --tty|--weston|--kwin|--hostwayland)
+        if   case_match "$Xserver" '--tty|--weston|--kwin|--hostwayland' ; then
                 Xauthentication="no"
-                ;;
-            --hostdisplay)
+        elif case_match "$Xserver" '--hostdisplay' ; then
                 xtool --check "xauth" || {
                     note_ttm "|Option --hostdisplay --xauth=$Xauthentication:
                           |  Command xauth not found. Accessing host display might fail.
@@ -17139,8 +17137,7 @@ check_options_interferences() { # check multiple option interferences, change se
                     #
                     Xauthentication="no"
                 }
-                ;;
-        esac
+        fi
     fi
 
     # --xtest
