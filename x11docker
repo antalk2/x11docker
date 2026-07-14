@@ -12188,10 +12188,11 @@ check_image() {
             case "$Initsystem" in
                 systemd|sysvinit|runit|openrc|tini)
                     grep -qE 'tini|init|systemd' <<< "$g_Containerentrypoint" && {
-                        note "There seems to be an init system in ENTRYPOINT of image:
-    $g_Containerentrypoint
-  Will disable it as x11docker already runs an init with option --$Initsystem.
-  To allow this ENTRYPOINT, run x11docker with option --init=none."
+                        note_ttm "|There seems to be an init system in ENTRYPOINT of image:
+                                  |    $g_Containerentrypoint
+                                  |  Will disable it as x11docker already runs an init with option --$Initsystem.
+                                  |  To allow this ENTRYPOINT, run x11docker with option --init=none."
+                        #
                         g_Containerentrypoint=""
                     }
                     ;;
