@@ -12224,11 +12224,11 @@ check_image() {
         l_Imageworkdir="$(parse_inspect "$l_Imageinspect" "Config" "WorkingDir")"
     fi
     debugnote "Image WORKDIR: $l_Imageworkdir"
-    if [ -z "$Workdir" ] && [ -n "$l_Imageworkdir" ] ; then
+    if [ -z "$g_Workdir" ] && [ -n "$l_Imageworkdir" ] ; then
         note_ttm "|Found 'WORKDIR $l_Imageworkdir' in image.
                   |  You can change it with option --workdir=DIR."
         #
-        Workdir="$l_Imageworkdir"
+        g_Workdir="$l_Imageworkdir"
     fi
 
     [ -z "$g_Containercommand$g_Containerentrypoint" ] && error 'No container command specified and no CMD or ENTRYPOINT found in image.'
@@ -13229,25 +13229,25 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
       case "$BackendKind" in
         docker|podman|nerdctl)
           Backendcommand="$Backendcommand \\
-  --workdir '${Workdir:-/tmp}'"
+  --workdir '${g_Workdir:-/tmp}'"
         ;;
         proot)
           Backendcommand="$Backendcommand \\
-  --cwd=${Workdir:-/tmp}"
+  --cwd=${g_Workdir:-/tmp}"
         ;;
         # host) ;; # BackendKind_host
       esac
     ;;
     no)
-      [ "$Workdir" ] && {
+      [ "$g_Workdir" ] && {
         case "$BackendKind" in
           docker|podman|nerdctl)
             Backendcommand="$Backendcommand \\
-  --workdir '$Workdir'"
+  --workdir '$g_Workdir'"
           ;;
           proot)
             Backendcommand="$Backendcommand \\
-  --cwd=${Workdir}"
+  --cwd=${g_Workdir}"
           ;;
           # host) ;; # BackendKind_host
         esac
@@ -14343,7 +14343,7 @@ storeinfo_test_sh locale && export LANG=\"\$(storeinfo_dump_sh locale)\"
 
     echo "
 [ -d \"\$HOME\" ] && cd \"\$HOME\"
-[ -n '$Workdir' ] && [ -d '$Workdir' ] && cd '$Workdir'    # WORKDIR in image or option --workdir
+[ -n '$g_Workdir' ] && [ -d '$g_Workdir' ] && cd '$g_Workdir'    # WORKDIR in image or option --workdir
 
 unset -f rmcr
 env >> $(convertpath share "$Containerenvironmentfile")
@@ -16651,7 +16651,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
                               [ "$Runtime" = "sysbox" ] && Runtime="sysbox-runc" ;;
          --snap)              Snapsupport="yes" ;;                   # snap fallback mode
          --stdin)             Forwardstdin="yes" ;;                  # Forward stdin to container command
-         --workdir)           Workdir="${2:-}" ; shift ;;            # Set working directory
+         --workdir)           g_Workdir="${2:-}" ; shift ;;            # Set working directory
 
      #### host folders and docker volumes
       -m)                     Sharehome="host" ;; # Sharehome_host
@@ -17761,7 +17761,7 @@ check_options_interferences() { # check multiple option interferences, change se
         ;;
       esac
 
-      [ -z "$Workdir" ] && [ "$Sharehome" != "no" ] && note "Option --no-setup: You might need to specify
+      [ -z "$g_Workdir" ] && [ "$Sharehome" != "no" ] && note "Option --no-setup: You might need to specify
   e.g. '--workdir=/tmp' or '--env HOME=/tmp' to allow proper functionality."
       [ -n "$Sudouser" ] && [ "$g_Containerusername" != "root" ] && note "Option --no-setup does not support option --sudouser.
   Fallback: Enabling needed container capabilities to allow sudo
@@ -19654,9 +19654,9 @@ declare_variables() {           # declare global variables
   #
   Systemdjournallogfile="systemd.journal.log"
 
-  # Workdir : --workdir: Set working directory in container
+  # g_Workdir : --workdir: Set working directory in container
   #
-  Workdir=""
+  g_Workdir=""
 
   # =============================================
   # Init and DBus
