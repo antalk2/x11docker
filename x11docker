@@ -11863,8 +11863,7 @@ check_backend() {
     fi
 
     # check image name
-    case "$BackendKind" in
-        docker|podman|nerdctl|proot)
+    if case_match "$BackendKind"  'docker|podman|nerdctl|proot' ; then
             [ "${g_Imagename:0:1}" = "/" ] && {
                 g_Rootfs="$g_Imagename"
                 g_Imagename="$(basename "$g_Rootfs")"
@@ -11874,8 +11873,7 @@ check_backend() {
             Codename="${Codename:-"$g_Imagename $Containercommand"}"
             verbose_ttm "|Image name: $g_Imagename
                          |  Container command: $Containercommand"
-            ;;
-        host)  # BackendKind_host
+    elif  case_match "$BackendKind" 'host' ; then  # BackendKind_host
             Containercommand="$g_Imagename $Containercommand"
             [ "$Customdockeroptions" ] && error_ttm \
                                               "|Option --backend=$BackendKind does not take CUSTOM_RUN_OPTIONS.
@@ -11885,8 +11883,7 @@ check_backend() {
             g_Imagename=""
             Imagebasename="$(basename "$Containercommand" | cut -d' ' -f1)"
             Codename="${Codename:-"$Imagebasename"}"
-            ;;
-    esac
+    fi
 
     Codename="$(unspecialstring "$Codename" | cut -c1-40)"
     Codename="${Codename:-noname}"
