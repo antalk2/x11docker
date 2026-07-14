@@ -11704,7 +11704,6 @@ xtool() {
 #   Capdropall :w
 #   Langwunsch :w
 #   g_Noentrypoint :w
-#   Containersetup :w
 #   Sharecupsmode :w
 #   Pulseaudiomode :w"
 #   Runasroot :w
@@ -11911,7 +11910,7 @@ check_backend() {
             Imagebasename="$(echo "$g_Imagename" | tr / - | cut -d: -f1)"
             Codename="${Codename:-"$g_Imagename $Containercommand"}"
             verbose_ttm "|Image name: $g_Imagename
-                     |  Container command: $Containercommand"
+                         |  Container command: $Containercommand"
             #
         elif case_match "$BackendKind" 'host' ; then  # BackendKind_host
 
@@ -12089,14 +12088,12 @@ check_backend() {
         fi
 
         if [ -z "$Containercommand" ] ; then
-
-            if      [ -e "$g_Rootfs/bin/bash" ] ;
-            then Containercommand="/bin/bash"
-            else Containercommand="/bin/sh"
-            fi
             #
-            if [ "$Containerusershell" != "auto" ] ; then
-                Containercommand="$Containerusershell"
+            # Fallback for Containercommand
+            #
+            if   [ "$Containerusershell" != "auto" ] ; then Containercommand="$Containerusershell"
+            elif [ -e "$g_Rootfs/bin/bash" ]         ; then Containercommand="/bin/bash"
+            else                                            Containercommand="/bin/sh"
             fi
             #
             note_ttm "|Option --backend=$BackendKind: No command specified.
@@ -12105,6 +12102,7 @@ check_backend() {
             check_fallback
             g_Interactive="yes"
         fi
+
     fi # Checkrootfs
 
     debugnote "Backend: $BackendKind, Backendbin: $Backendbin, Rootless: $Backendrootless"
