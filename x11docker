@@ -17265,8 +17265,9 @@ check_options_arguments() {
     case "$Pulseaudiomode" in
         socket|tcp|auto|host|"") ;;
         *)
-            note "Option --pulseaudio: Unknown argument '$Pulseaudiomode'.
-  Fallback: Setting --pulseaudio=auto."
+            note_ttm "|Option --pulseaudio: Unknown argument '$Pulseaudiomode'.
+                      |  Fallback: Setting --pulseaudio=auto."
+            #
             check_fallback
             Pulseaudiomode="auto"
             ;;
