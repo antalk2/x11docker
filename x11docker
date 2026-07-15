@@ -14216,21 +14216,31 @@ create_containerrc() {          # This script runs as unprivileged user in conta
              |# Runs as unprivileged user in container.
              |
              |[ '$g_Interactive' = 'no' ] && exec >> $(convertpath share "$Containerlogfile") 2>&1
-             |
-             |$(declare -f mysleep)
-             |$(declare -f pspid_sh)
-             |$(declare -f rocknroll)
-             |$(declare -f saygoodbye)
-             |$(declare -f storeinfo_dump_sh)
-             |$(declare -f storeinfo_test_sh)
-             |$(declare -f storepid)
-             |
-             |$(declare -f trim_to_bar_filter)
-             |$(declare -f trim_to_bar)
-             |$(declare -f trim_to_mark)
-             |$(declare -f ws_colon_is_continuation_filter)
-             |$(declare -f waitforlogentry_sh)
-             |$Messagefifofuncs
+             |"
+        #
+        echo
+        declare -f mysleep
+        declare -f pspid_sh
+        declare -f rocknroll
+        declare -f saygoodbye
+        declare -f storeinfo_dump_sh
+        declare -f storeinfo_test_sh
+        declare -f storepid
+        echo
+        declare -f trim_to_bar_filter
+        declare -f trim_to_bar
+        declare -f trim_to_mark
+        declare -f ws_colon_is_continuation_filter
+        echo
+        # declare -f error_ttm
+        declare -f debugnote_ttm
+        # declare -f note_ttm
+        echo
+        declare -f waitforlogentry_sh
+        echo
+        #
+        trim_to_bar \
+            "|$Messagefifofuncs
              |
              |Messagefile=$(convertpath share "$Messagefifo")
              |Storeinfofile=$(convertpath share "$Storeinfofile")
