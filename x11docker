@@ -13717,13 +13717,21 @@ store_runoption_dump_env() {
     return 0
 }
 
+# Function: store_runoption_volume
+# Brief: Store volume/device to be shared for docker command
+#
 #  Usage:
 #    store_runoption_volume  "$Gpudevice"
 #    store_runoption_volume "/run/cups"
 #    store_runoption_volume "$Cupsserver"
 #    store_runoption_volume "$(myrealpath "$Path")$Readwritemode"
 #
-store_runoption_volume() {  # store volume/device for docker command
+# Globals:
+#
+#    Sharevolumescount=
+#    SharevolumesArray[$Sharevolumescount]=
+#
+store_runoption_volume() {
     # local Count
     # local Line
     local Path Readwritemode
