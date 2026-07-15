@@ -17288,11 +17288,14 @@ check_options_arguments() {
 
     # --runtime
     case "$Runtime" in
-        runc|crun|sysbox|sysbox-runc) ;;
+        runc|crun|sysbox|sysbox-runc)
+            # NOP
+        ;;
         kata|kata-runtime)
             Runtime="kata-runtime"
-            note "Option --runtime=kata-runtime: 
-  Support of kata-runtime is deprecated."
+            note_ttm "|Option --runtime=kata-runtime:
+                      |  Support of kata-runtime is deprecated."
+            #
             ;;
     esac
 
