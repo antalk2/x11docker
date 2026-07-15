@@ -11932,7 +11932,9 @@ check_backend() {
         Codename="$(unspecialstring "$Codename" | cut -c1-40)"
         Codename="${Codename:-noname}"
         #
-        g_Imagebasename="$(unspecialstring "$g_Imagebasename")"  # must be - for backwards compatibility of --home
+        # The replacement character in unspecialstring must be - for
+        # backwards compatibility of --home
+        g_Imagebasename="$(unspecialstring "$g_Imagebasename")"
         g_Imagebasename="${g_Imagebasename:-noname}"
     }
 
