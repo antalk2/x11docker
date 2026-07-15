@@ -17184,12 +17184,17 @@ check_options_arguments() {
 
     # --init
     case "$g_Initsystem" in
-        tini|systemd|sysvinit|openrc|runit|dockerinit|s6-overlay) ;;
-        no|none) g_Initsystem="none" ;;
+        tini | systemd | sysvinit | openrc | runit | dockerinit | s6-overlay )
+            : # NOP
+            ;;
+        no | none )
+            g_Initsystem="none"
+            ;;
         *)
-            note "Option --init: Unknown init system $g_Initsystem
-  Possible: tini systemd sysvinit openrc runit s6-overlay none
-  Fallback: Using --init=tini instead."
+            note_ttm "|Option --init: Unknown init system $g_Initsystem
+                      |  Possible: tini systemd sysvinit openrc runit s6-overlay none
+                      |  Fallback: Using --init=tini instead."
+            #
             check_fallback
             g_Initsystem="tini"
             ;;
