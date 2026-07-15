@@ -12505,11 +12505,24 @@ check_cgroup() {
     fi
   
     return 0
-}
+} # end check_cgroup
 
-check_containerhomebasedir() {  # options --homebasedir, --home
+# Function: check_containerhomebasedir
+# Brief:
+# CommandlineOption: --homebasedir, --home
+#
+# Globals:
+#
+#     g_BackendKind
+#     Localsharedir
+#     Hosthomebasefolder= :rw
+#     Dockervm
+#     Containeruserhosthome
+#
+check_containerhomebasedir() {
     ##
-    ## option '--homebasedir': Specify base folder here to store container home folders for --home
+    ## option '--homebasedir': Specify base folder here to store
+    ##                         container home folders for --home
     ##
     if   case_match "$g_BackendKind" 'proot' ; then
         # Q: Override, even if already set?
