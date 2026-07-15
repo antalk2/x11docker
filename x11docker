@@ -14261,7 +14261,7 @@ create_containerrc() {          # This script runs as unprivileged user in conta
                 echo 'export PS1="\u@'"$g_BackendKind"'-'"$Imagebasename"':\w\$ "' ### FIXME fails
                 ;;
             docker|podman|nerdctl)
-                [ "$Switchcontaineruserflag" = "yes" ] && {
+                if [ "$Switchcontaineruserflag" = "yes" ] ; then
                     echo '# Environment variables found in image:'
                     IFS=$'\n'
                     while read -r Line; do
@@ -14275,7 +14275,7 @@ create_containerrc() {          # This script runs as unprivileged user in conta
                             )
                     #
                     IFS=$' \t\n' # restore the default
-                }
+                fi
                 ;;
             # host) ;; # BackendKind_host
         esac
