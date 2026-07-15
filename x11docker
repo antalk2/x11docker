@@ -12509,6 +12509,7 @@ check_cgroup() {
 
 # Function: check_containerhomebasedir
 # Brief: Set Hosthomebasefolder
+#
 # CommandlineOption: --homebasedir, --home
 #
 # Globals:
@@ -17020,49 +17021,61 @@ parse_preset() {
   fi
 }
 
-check_options_arguments() {     # check for [likely] valid arguments
-  # not checked here yet:
-  # --home
-  # --cachebasedir
-  # --alsa
-  # --network
-  # --lang
-  # --ipc
-  # --border
-  # --wm
-  # --xhost
-  # --group-add
-  ## --hostuser
-  ## --password
-  ## --user
-  # --env
-  ## --shell
-  ## --workdir
-  # --print*
-  # --preset
-  ## --runasroot
-  ## --runfromhost
-  ## --runasuser
+# Function: check_options_arguments
+# Used-by: main()
+#
+# Brief: check for [likely] valid arguments
+#
+check_options_arguments() {
+    # not checked here yet:
+    # --home
+    # --cachebasedir
+    # --alsa
+    # --network
+    # --lang
+    # --ipc
+    # --border
+    # --wm
+    # --xhost
+    # --group-add
+    ## --hostuser
+    ## --password
+    ## --user
+    # --env
+    ## --shell
+    ## --workdir
+    # --print*
+    # --preset
+    ## --runasroot
+    ## --runfromhost
+    ## --runasuser
 
-  # --fallback
-  case "$Fallback" in
-    yes|no) ;;
-    *) error "Option --fallback: Unknown argument '$Fallback'" ;;
-  esac
+    # --fallback
+    case "$Fallback" in
+        yes|no) ;;
+        *) error "Option --fallback: Unknown argument '$Fallback'" ;;
+    esac
 
-  # CUSTOM_RUN_OPTIONS
-  Customdockeroptions="${Customdockeroptions//"--cap-add "/"--cap-add="}"
-  Customdockeroptions="${Customdockeroptions//"--runtime "/"--runtime="}"
-  Customdockeroptions="${Customdockeroptions//"--ipc "/"--ipc="}"
-  Customdockeroptions="${Customdockeroptions//"--network "/"--network="}"
-  Customdockeroptions="${Customdockeroptions//"--net "/"--network="}"
-  Customdockeroptions="${Customdockeroptions//"--net="/"--network="}"
-  Customdockeroptions="${Customdockeroptions//"--user "/"--user="}"
-  grep -q -- "--runtime=kata-runtime"   <<< "$Customdockeroptions" && Runtime="kata-runtime"
-  grep -q -- "--runtime=nvidia"         <<< "$Customdockeroptions" && Runtime="nvidia"
-  grep -q -- "--runtime=runc"           <<< "$Customdockeroptions" && Runtime="runc"
-  grep -q -- "--runtime=crun"           <<< "$Customdockeroptions" && Runtime="crun"
-  grep -q -- "--runtime=sysbox-runc"    <<< "$Customdockeroptions" && Runtime="sysbox-runc"
+    # CUSTOM_RUN_OPTIONS
+    #
+    #  Replace "--flag${SPACE}"
+    #     with "--flag="
+    #
+    Customdockeroptions="${Customdockeroptions//"--cap-add "/"--cap-add="}"
+    Customdockeroptions="${Customdockeroptions//"--runtime "/"--runtime="}"
+    Customdockeroptions="${Customdockeroptions//"--ipc "/"--ipc="}"
+    Customdockeroptions="${Customdockeroptions//"--network "/"--network="}"
+    Customdockeroptions="${Customdockeroptions//"--net "/"--network="}"
+    Customdockeroptions="${Customdockeroptions//"--net="/"--network="}"
+    Customdockeroptions="${Customdockeroptions//"--user "/"--user="}"
+    #
+    # Now we can grep for "--runtime=${VALUE}"
+    #
+    grep -q -- "--runtime=kata-runtime"   <<< "$Customdockeroptions" && Runtime="kata-runtime"
+    grep -q -- "--runtime=nvidia"         <<< "$Customdockeroptions" && Runtime="nvidia"
+    grep -q -- "--runtime=runc"           <<< "$Customdockeroptions" && Runtime="runc"
+    grep -q -- "--runtime=crun"           <<< "$Customdockeroptions" && Runtime="crun"
+    grep -q -- "--runtime=sysbox-runc"    <<< "$Customdockeroptions" && Runtime="sysbox-runc"
 
   # --backend
   [ -z "$g_Imagename" ] && {
