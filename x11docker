@@ -14297,7 +14297,9 @@ create_containerrc() {          # This script runs as unprivileged user in conta
             no)
                 case "$Sharehome" in
                     no)
-                        trim_to_bar "|Containeruserhome=\"\$( cat /etc/passwd | grep \"\$g_Containerusername:.:\" | cut -d: -f6 )\"
+                        trim_to_bar "|Containeruserhome=\"\$( cat /etc/passwd                     \\
+                                     |                        | grep \"\$g_Containerusername:.:\" \\
+                                     |                        | cut -d: -f6                       )\"
                                      |Containeruserhome=\"\${Containeruserhome:-/tmp/\$g_Containerusername}\"
                                      |mkdir -p \"\$Containeruserhome\"
                                      |"
