@@ -13761,8 +13761,16 @@ store_runoption_volume() {  # store volume/device for docker command
     return 0
 }
 
+
+# Function: store_runoption_dump_volume
+# Brief: List the volumes added by @code{store_runoption_volume}
 #
-#    store_runoption_dump_volume
+# stdout: elements of the array SharevolumesArray, each followed by a newline.
+#
+# Globals:
+#
+#    Sharevolumescount
+#    SharevolumesArray
 #
 store_runoption_dump_volume() {  # store volume/device for docker command
     local Count
