@@ -14401,7 +14401,9 @@ create_containerrc() {          # This script runs as unprivileged user in conta
             trim_to_bar \
                 "|
                  |# Check for dbus user daemon command
-                 |[ -z \"\$DBUS_SESSION_BUS_ADDRESS\" ] && [ -d \"\$XDG_RUNTIME_DIR/bus\" ] && DBUS_SESSION_BUS_ADDRESS=\"unix:path=\$XDG_RUNTIME_DIR/bus;autolaunch:\"
+                 |if [ -z \"\$DBUS_SESSION_BUS_ADDRESS\" ] && [ -d \"\$XDG_RUNTIME_DIR/bus\" ] ; then
+                 |  DBUS_SESSION_BUS_ADDRESS=\"unix:path=\$XDG_RUNTIME_DIR/bus;autolaunch:\" ;
+                 |fi
                  |[ -z \"\$DBUS_SESSION_BUS_ADDRESS\" ] && {
                  |  command -v dbus-run-session >/dev/null && Dbus=dbus-run-session
                  |  command -v dbus-launch      >/dev/null && Dbus=dbus-launch
