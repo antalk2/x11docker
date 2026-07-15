@@ -16241,7 +16241,9 @@ create_cachefiles() {           # create empty cache files owned by unprivileged
       WSL1|WSL2)
         case "$Dockervm" in
           moby)
-            Cachebasefolder="$(convertpath subsystem "$(wincmd "echo %userprofile%")")/x11docker/cache"
+              Cachebasefolder="$( convertpath subsystem "$( wincmd "echo %userprofile%" )"
+                                )/x11docker/cache"
+              #
             mkfolder "$Hostuserhome/.cache/x11docker/symlink"
             [ -e "$Hostuserhome/.cache/x11docker/symlink" ] || ln -s -T "$Cachebasefolder" "$Hostuserhome/.cache/x11docker/symlink"
             mkfile "$Hostuserhome/.cache/x11docker/symlink/symlink.txt"
