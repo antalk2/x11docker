@@ -17203,7 +17203,6 @@ check_options_arguments() {
     # --limit N
     if [ -n "$g_Limitresources" ] ; then
         #
-        #  !(a && b) == !a || !b
         #  awk prints "1" for true, "0" for false
         #
         if [ "1" != "$( awk -v a="$g_Limitresources" "BEGIN {print (a <= 1)}" )" ] \
