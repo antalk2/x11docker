@@ -17318,9 +17318,10 @@ check_options_arguments() {
         fi
 
         if [ "${Line:0:1}" != "/" ] && grep -q "/" <<< "$Line" ; then
-            error "Option --share needs either an absolute path
-  or a volume name without any '/':
-  $Line"
+            error_ttm "|Option --share needs either an absolute path
+                       |  or a volume name without any '/':
+                       |  $Line"
+            #
         fi
 
         [ "${Line:0:1}" = "/" ] && [ ! -e "$Line" ] && error "Option --share: File or folder does not exist:
