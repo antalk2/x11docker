@@ -14266,7 +14266,14 @@ create_containerrc() {          # This script runs as unprivileged user in conta
                     IFS=$'\n'
                     while read -r Line; do
                         echo "export $(escapestring "$Line")"
-                    done < <(unpriv_backend "$g_Backendbin run --rm --entrypoint env $g_Imagename env" 2>> "$Containerlogfile" | rmcr | grep -v 'HOSTNAME=' ||: )
+                    done < <( unpriv_backend                                                 \
+                                  "$g_Backendbin run --rm --entrypoint env $g_Imagename env" \
+                                  2>> "$Containerlogfile"                                    \
+                                  | rmcr                                                     \
+                                  | grep -v 'HOSTNAME='                                      \
+                                  || :
+                            )
+                    #
                     IFS=$' \t\n'
                 }
                 ;;
