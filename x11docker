@@ -17201,7 +17201,7 @@ check_options_arguments() {
     esac
 
     # --limit N
-    [ "$g_Limitresources" ] && {
+    if [ -n "$g_Limitresources" ] ; then
         [ "1" = "$(awk -v a="$g_Limitresources" "BEGIN {print (a <= 1)}")" ] && [ "1" = "$(awk -v a="$g_Limitresources" "BEGIN {print (a > 0)}")" ] || {
             warning_ttm \
                 "|Option --limit: Specified value '$g_Limitresources' is out of range.
@@ -17211,7 +17211,7 @@ check_options_arguments() {
             check_fallback
             g_Limitresources="0.5"
         }
-    }
+    fi
 
     # --name
     [ -n "$g_Containername" ] && {
