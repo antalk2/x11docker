@@ -17078,9 +17078,9 @@ check_options_arguments() {
     grep -q -- "--runtime=sysbox-runc"    <<< "$Customdockeroptions" && Runtime="sysbox-runc"
 
     # --backend
-    [ -z "$g_Imagename" ] && {
-        case "${Cleanup}${Createlauncher}${Installermode}" in
-            "")
+    if [ -z "$g_Imagename" ] ; then
+        case "${Cleanup},${Createlauncher},${Installermode}" in
+            ",,")
                 # Only create X server / --xonly  # BackendKind_host
                 Codename="xonly"
                 g_BackendKind="${g_BackendKind:-host}" # BackendKind_host
@@ -17088,7 +17088,8 @@ check_options_arguments() {
                 Showdisplayenvironment="${Showdisplayenvironment:-yes}"
                 ;;
         esac
-    }
+    fi
+
     g_BackendKind="${g_BackendKind:-docker}"
     case "$g_BackendKind" in
         docker|podman|host) ;; # BackendKind_host
@@ -17413,7 +17414,7 @@ check_options_arguments() {
     esac
 
     return 0
-}
+} # end check_options_arguments
 
 check_options_interferences() { # check multiple option interferences, change settings if needed
     local Message
@@ -18162,7 +18163,7 @@ check_options_interferences() { # check multiple option interferences, change se
     [ "$g_Interactive" = "yes" ] && Showcontaineroutput="no"
 
     return 0
-}
+} # end check_options_interferences
 
 check_options_messages() {      # some messages depending on options, but not changing settings
   # X server specific messages
