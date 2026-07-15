@@ -17205,8 +17205,8 @@ check_options_arguments() {
         #
         #  awk prints "1" for true, "0" for false
         #
-        if [ "1" != "$( awk -v a="$g_Limitresources" "BEGIN {print (a <= 1)}" )" ] \
-        || [ "1" != "$( awk -v a="$g_Limitresources" "BEGIN {print (a  > 0)}" )" ] ;
+        if [ "ok" != "$( awk -v a="$g_Limitresources" "BEGIN {print (a <= 1) ? \"ok\" : \"too_big\"   }" )" ] \
+        || [ "ok" != "$( awk -v a="$g_Limitresources" "BEGIN {print (a  > 0) ? \"ok\" : \"too_small\" }" )" ] ;
         then
             warning_ttm \
                 "|Option --limit: Specified value '$g_Limitresources' is out of range.
