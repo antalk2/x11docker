@@ -17351,9 +17351,10 @@ check_options_arguments() {
     # --size
     if [ "$Screensize" ] ; then
         isint "$(cut -d"x" -f1 <<< "$Screensize")" && isint "$(cut -d"x" -f2 <<< "$Screensize")" && grep -q "x" <<< "$Screensize" || {
-                note "Option --size: Invalid argument: $Screensize
-  Must consist of two integers with an x between them.
-  Fallback: Disabling option --size"
+                note_ttm "|Option --size: Invalid argument: $Screensize
+                          |  Must consist of two integers with an x between them.
+                          |  Fallback: Disabling option --size"
+                #
                 check_fallback
                 Screensize=""
             }
