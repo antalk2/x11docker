@@ -17253,8 +17253,9 @@ check_options_arguments() {
     case "$Sharecupsmode" in
         socket|tcp|auto|"") ;;
         *)
-            note "Option --printer: Unknown argument '$Sharecupsmode'.
-  Fallback: Setting --printer=auto."
+            note_ttm "|Option --printer: Unknown argument '$Sharecupsmode'.
+                      |  Fallback: Setting --printer=auto."
+            #
             check_fallback
             Sharecupsmode="auto"
             ;;
