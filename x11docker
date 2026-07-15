@@ -17317,9 +17317,12 @@ check_options_arguments() {
             Line="$(convertpath subsystem "$Line")"
         fi
 
-        [ "${Line:0:1}" != "/" ] && grep -q "/" <<< "$Line" && error "Option --share needs either an absolute path
+        if [ "${Line:0:1}" != "/" ] && grep -q "/" <<< "$Line" ; then
+            error "Option --share needs either an absolute path
   or a volume name without any '/':
   $Line"
+        fi
+
         [ "${Line:0:1}" = "/" ] && [ ! -e "$Line" ] && error "Option --share: File or folder does not exist:
   $Line"
         [ -z "$Line" ] && error "Option --share needs an argument"
