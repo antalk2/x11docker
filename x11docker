@@ -17203,7 +17203,7 @@ check_options_arguments() {
     # --limit N
     if [ -n "$g_Limitresources" ] ; then
         #
-        #  awk prints "1" for true, "0" for false
+        #  g_Limitresources should be in the interval "(0,1]"
         #
         if [ "ok" != "$( awk -v a="$g_Limitresources" "BEGIN {print (a <= 1) ? \"ok\" : \"too_big\"   }" )" ] \
         || [ "ok" != "$( awk -v a="$g_Limitresources" "BEGIN {print (a  > 0) ? \"ok\" : \"too_small\" }" )" ] ;
