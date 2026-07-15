@@ -13812,7 +13812,8 @@ store_runoption_dump_cap() {
 #### ##################################################
 
 #
-# function create_containerrootrc() : Emit a script on stdout.
+# Function: create_containerrootrc
+# Brief: Emit a script on stdout.
 #
 #  - Output will go to the file "$Containerrootrc" = "$Sharefolder/containerrootrc"
 #  - The emitted script runs as root in container
@@ -14691,79 +14692,97 @@ case \"\$Nvidiaversion\" in
 esac"
   return 0
 }
-rootrc_prepare_dbus() {
-  echo "
-# check /etc/machine-id
-[ -s /etc/machine-id ] || dbus-uuidgen >/etc/machine-id
-# Prepare DBus services
-Unservicelist='
-org.bluez
-org.bluez.obex
-org.freedesktop.hostname1
-org.freedesktop.network1
-org.freedesktop.resolve1
-org.freedesktop.secrets
-org.freedesktop.timedate1
-org.freedesktop.Tracker1
-org.freedesktop.Tracker1.Miner.Extract
-org.freedesktop.UDisks2
-org.freedesktop.UPower
-org.gtk.vfs.UDisks2VolumeMonitor
-org.opensuse.CupsPkHelper.Mechanism
-com.deepin.daemon.Bluetooth
-com.deepin.daemon.Grub2
-com.deepin.daemon.Power
-com.deepin.lastore
-com.deepin.lastore.Smartmirror
-com.deepin.sync.Daemon
-com.deepin.sync.Helper
-com.deepin.userexperience.Daemon
-'
-#      ### FIXME test
-#      Service=/etc/init.d/elogind
-#      echo 'output_log=$(convertpath share $Containerlogfile)' >> \$Service
-#      echo 'error_log=$(convertpath share $Containerlogfile)' >> \$Service
-#      cat \$Service
 
-for Service in /usr/share/dbus-1/system-services/* /usr/share/dbus-1/services/*; do  # find is not available on fedora
-  Name=\"\$(cat \$Service | grep Name= | cut -d= -f2)\"
-  Command=\"\$(cat \"\$Service\" | grep Exec= | cut -d= -f2)\"
-  echo \"\$Unservicelist\" | grep -q -w \"\$Name\" && {
-    debugnote \"DBus: Removing \$Name: \$Service\"
-    rm \"\$Service\"
-  }
-  case \"\$Name\" in
-"
-  [ "$g_Initsystem" != "systemd" ] && {
-    echo "
-    org.freedesktop.systemd1|org.freedesktop.hostname1|org.freedesktop.locale1)
-      debugnote \"DBus: Removing \$Name: \$Service\"
-      rm \"\$Service\"
-    ;;
-"
-  }
-  echo "
-    org.freedesktop.login1)
-      debugnote \"DBus: Found login service \$Name: \$Command\"
-"
-  [ "$Sharecgroup" = "no" ] && [ "$Cgroupversion" = "v1" ] && {
-    echo "
-      debugnote \"DBus: \$Name: Removing \$Service\"
-      rm \"\$Service\"
-      echo \"\$Command\" | grep -q elogind && {
-        note 'Found login service elogind in container
-  and cgroup v1 on host.
-  If you want to use elogind in container, enable option --sharecgroup.'
-      }
-"
-  }
-  echo "
-    ;;
-  esac
-done
-"
+rootrc_prepare_dbus() {
+    trim_to_bar \
+        "|
+         |# check /etc/machine-id
+         |[ -s /etc/machine-id ] || dbus-uuidgen >/etc/machine-id
+         |# Prepare DBus services
+         |Unservicelist='
+         |org.bluez
+         |org.bluez.obex
+         |org.freedesktop.hostname1
+         |org.freedesktop.network1
+         |org.freedesktop.resolve1
+         |org.freedesktop.secrets
+         |org.freedesktop.timedate1
+         |org.freedesktop.Tracker1
+         |org.freedesktop.Tracker1.Miner.Extract
+         |org.freedesktop.UDisks2
+         |org.freedesktop.UPower
+         |org.gtk.vfs.UDisks2VolumeMonitor
+         |org.opensuse.CupsPkHelper.Mechanism
+         |com.deepin.daemon.Bluetooth
+         |com.deepin.daemon.Grub2
+         |com.deepin.daemon.Power
+         |com.deepin.lastore
+         |com.deepin.lastore.Smartmirror
+         |com.deepin.sync.Daemon
+         |com.deepin.sync.Helper
+         |com.deepin.userexperience.Daemon
+         |'
+         |#      ### FIXME test
+         |#      Service=/etc/init.d/elogind
+         |#      echo 'output_log=$(convertpath share $Containerlogfile)' >> \$Service
+         |#      echo 'error_log=$(convertpath share $Containerlogfile)' >> \$Service
+         |#      cat \$Service
+         |
+         |# find is not available on fedora
+         |for Service in /usr/share/dbus-1/system-services/* /usr/share/dbus-1/services/*; do
+         |  Name=\"\$(cat \$Service | grep Name= | cut -d= -f2)\"
+         |  Command=\"\$(cat \"\$Service\" | grep Exec= | cut -d= -f2)\"
+         |  echo \"\$Unservicelist\" | grep -q -w \"\$Name\" && {
+         |    debugnote \"DBus: Removing \$Name: \$Service\"
+         |    rm \"\$Service\"
+         |  }
+         |  case \"\$Name\" in
+         |"
+    #
+
+    if [ "$g_Initsystem" != "systemd" ] ; then
+        trim_to_bar \
+            "|
+             |    org.freedesktop.systemd1|org.freedesktop.hostname1|org.freedesktop.locale1)
+             |      debugnote \"DBus: Removing \$Name: \$Service\"
+             |      rm \"\$Service\"
+             |    ;;
+             |"
+        #
+    fi
+
+    trim_to_bar \
+        "|
+         |    org.freedesktop.login1)
+         |      debugnote \"DBus: Found login service \$Name: \$Command\"
+         |"
+    #
+
+    if [ "$Sharecgroup" = "no" ] && [ "$Cgroupversion" = "v1" ] ; then
+        trim_to_bar \
+            "|
+             |      debugnote \"DBus: \$Name: Removing \$Service\"
+             |      rm \"\$Service\"
+             |      echo \"\$Command\" | grep -q elogind && {
+             |        note 'Found login service elogind in container
+             |  and cgroup v1 on host.
+             |  If you want to use elogind in container, enable option --sharecgroup.'
+             |      }
+             |"
+        #
+    fi
+
+    trim_to_bar \
+        "|
+         |    ;;
+         |  esac
+         |done
+         |"
+    #
   return 0
 }
+
+
 rootrc_prepare_init_openrc() {
     # BackendKind_host BackendKind_in_output
 
