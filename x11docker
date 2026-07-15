@@ -13730,17 +13730,13 @@ store_runoption_volume() {  # store volume/device for docker command
     #
     local ARG1="${1:-}"
     #
-    Path="$(convertpath subsystem "${ARG1}")"
-    Readwritemode="$(echo "${ARG1}" | rev_cut -c1-3 )"
+    Path="$( convertpath subsystem "${ARG1}" )"
+    Readwritemode="$( echo "${ARG1}" | rev_cut -c1-3 )"
     if [ "$Readwritemode" != ":ro" ] ; then  Readwritemode="" ; fi
-    #
-    ## Path="$(convertpath subsystem "${ARG1}")"
-    ## Readwritemode="$(echo "${ARG1}" | rev | cut -c1-3 | rev)"
-    ## [ "$Readwritemode" = ":ro" ] || Readwritemode=""
     #
     case "${Path:0:1}" in
         "/") # path on host
-            Sharevolumescount="$((Sharevolumescount + 1))"
+            Sharevolumescount="$(( Sharevolumescount + 1 ))"
             SharevolumesArray[$Sharevolumescount]="${ARG1}"
             [ -h "$Path" ] && myrealpath "$Path" >/dev/null && {
                     #
