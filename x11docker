@@ -12478,15 +12478,17 @@ check_cgroup() {
         fi
     }
 
-  [ "$Startuser" != "root" ] && {
-    note "Option --init=$g_Initsystem: To create and mount a cgroup
-  for $Needcgroup, please run x11docker as root.
-  Or create cgroup mountpoint on host yourself with:
-    mount -o remount,rw cgroup /sys/fs/cgroup
-    mkdir -p /sys/fs/cgroup/$Needcgroup
-    mount -t cgroup cgroup /sys/fs/cgroup/$Needcgroup -o none,name=$Needcgroup"
-    return 1
-  }
+    if [ "$Startuser" != "root" ] ; then
+        note_ttm \
+            "|Option --init=$g_Initsystem: To create and mount a cgroup
+             |  for $Needcgroup, please run x11docker as root.
+             |  Or create cgroup mountpoint on host yourself with:
+             |    mount -o remount,rw cgroup /sys/fs/cgroup
+             |    mkdir -p /sys/fs/cgroup/$Needcgroup
+             |    mount -t cgroup cgroup /sys/fs/cgroup/$Needcgroup -o none,name=$Needcgroup"
+        #
+        return 1
+    fi
 
   [ "$Sharecgroup" = "yes" ] && [ "$Startuser" = "root" ] && {
     note "Option --init=$g_Initsystem: Creating cgroup mountpoint on host for '$Needcgroup'."
