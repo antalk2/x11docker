@@ -17302,8 +17302,9 @@ check_options_arguments() {
     # --scale
     if [ -n "$Scaling" ] ; then {
         isnum "$Scaling" || {
-            note "Option --scale needs a number. '$Scaling' is not allowed.
-  Fallback: disabling option --scale"
+            note_ttm "|Option --scale needs a number. '$Scaling' is not allowed.
+                      |  Fallback: disabling option --scale"
+            #
             check_fallback
             Scaling=""
         }
