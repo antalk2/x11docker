@@ -17283,15 +17283,16 @@ check_options_arguments() {
     esac
 
     # --rotate
-    [ -n "$Rotation" ] && {
-        stdin_contains_the_word "$Rotation" <<< "0 90 180 270 flipped flipped-90 flipped-180 flipped-270" || {
-            note "Option --rotate: Unsupported value '$Rotation'.
-  Must be one of 0 90 180 270 flipped flipped-90 flipped-180 flipped-270
-  Fallback: disabling option --rotate"
+    if [ -n "$Rotation" ] ; then
+        if ! word_is_in "$Rotation" "0 90 180 270 flipped flipped-90 flipped-180 flipped-270" ; then
+            note_ttm "|Option --rotate: Unsupported value '$Rotation'.
+                      |  Must be one of 0 90 180 270 flipped flipped-90 flipped-180 flipped-270
+                      |  Fallback: disabling option --rotate"
+            #
             check_fallback
             Rotation=""
-        }
-    }
+        fi
+    fi
 
     # --runtime
     case "$Runtime" in
