@@ -14274,7 +14274,7 @@ create_containerrc() {          # This script runs as unprivileged user in conta
                                   || :
                             )
                     #
-                    IFS=$' \t\n'
+                    IFS=$' \t\n' # restore the default
                 }
                 ;;
             # host) ;; # BackendKind_host
