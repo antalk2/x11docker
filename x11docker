@@ -17206,8 +17206,9 @@ check_options_arguments() {
         #  !(a && b) == !a || !b
         #  awk prints "1" for true, "0" for false
         #
-           [ "1" != "$( awk -v a="$g_Limitresources" "BEGIN {print (a <= 1)}" )" ] \
-        || [ "1" != "$( awk -v a="$g_Limitresources" "BEGIN {print (a  > 0)}" )" ] && {
+        if [ "1" != "$( awk -v a="$g_Limitresources" "BEGIN {print (a <= 1)}" )" ] \
+        || [ "1" != "$( awk -v a="$g_Limitresources" "BEGIN {print (a  > 0)}" )" ] ;
+        then
             warning_ttm \
                 "|Option --limit: Specified value '$g_Limitresources' is out of range.
                  |  Allowed is a factor greater than 0 and less than or equal to 1.  0<FACTOR<=1
@@ -17215,7 +17216,7 @@ check_options_arguments() {
             #
             check_fallback
             g_Limitresources="0.5"
-        }
+        fi
     fi
 
     # --name
