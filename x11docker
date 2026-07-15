@@ -17349,7 +17349,7 @@ check_options_arguments() {
     done < <(store_runoption_dump_volume)
 
     # --size
-    [ "$Screensize" ] && {
+    if [ "$Screensize" ] ; then
         isint "$(cut -d"x" -f1 <<< "$Screensize")" && isint "$(cut -d"x" -f2 <<< "$Screensize")" && grep -q "x" <<< "$Screensize" || {
                 note "Option --size: Invalid argument: $Screensize
   Must consist of two integers with an x between them.
@@ -17357,7 +17357,7 @@ check_options_arguments() {
                 check_fallback
                 Screensize=""
             }
-    }
+    fi
 
     # --sudouser
     Sudouser="${Sudouser,,}"
