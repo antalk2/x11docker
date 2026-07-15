@@ -3973,6 +3973,8 @@ waitforlogentry_sh() {
     local logfile_basename
     logfile_basename="$(basename "${logfile}")"
 
+    local NEWLINE="$(printf "\n")"
+
     StartTime="$(date +%s || true)"
     StartTime="${StartTime:-0}"
 
