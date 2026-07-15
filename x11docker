@@ -14202,7 +14202,10 @@ create_containerrootrc() {
 } # create_containerrootrc()
 
 
-create_containerrc() {          # This script runs as unprivileged user in container
+# Function: create_containerrc
+# Brief: This script runs as unprivileged user in container
+#
+create_containerrc() {
     local Ungrep=""
     local Path=""
     local Line=""
