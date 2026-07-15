@@ -17241,13 +17241,13 @@ check_options_arguments() {
     fi
 
     # --output-count
-    [[ "$Outputcount" =~ ^[1-9]$ ]] || {
+    if ! [[ "$Outputcount" =~ ^[1-9]$ ]] ; then
         note_ttm "|Option --output-count: Value must be one of 1 2 3 4 5 6 7 8 9
                   |  Disabling invalid value $Outputcount"
         #
         check_fallback
         Outputcount="1"
-    }
+    fi
 
     # --printer
     case "$Sharecupsmode" in
