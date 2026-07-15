@@ -17259,16 +17259,13 @@ check_options_arguments() {
     fi
 
     # --pulseaudio
-    case "$Pulseaudiomode" in
-        socket|tcp|auto|host|"") ;;
-        *)
+    if ! case_match "$Pulseaudiomode" ' socket|tcp|auto|host|"" ' ; then
             note_ttm "|Option --pulseaudio: Unknown argument '$Pulseaudiomode'.
                       |  Fallback: Setting --pulseaudio=auto."
             #
             check_fallback
             Pulseaudiomode="auto"
-            ;;
-    esac
+    fi
 
     # --rootless
     case "$Backendrootless" in
