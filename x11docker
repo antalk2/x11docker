@@ -17251,20 +17251,20 @@ check_options_arguments() {
 
     # --printer
     if ! case_match "$Sharecupsmode" ' socket | tcp | auto | "" ' ; then
-            note_ttm "|Option --printer: Unknown argument '$Sharecupsmode'.
-                      |  Fallback: Setting --printer=auto."
-            #
-            check_fallback
-            Sharecupsmode="auto"
+        note_ttm "|Option --printer: Unknown argument '$Sharecupsmode'.
+                  |  Fallback: Setting --printer=auto."
+        #
+        check_fallback
+        Sharecupsmode="auto"
     fi
 
     # --pulseaudio
     if ! case_match "$Pulseaudiomode" ' socket|tcp|auto|host|"" ' ; then
-            note_ttm "|Option --pulseaudio: Unknown argument '$Pulseaudiomode'.
-                      |  Fallback: Setting --pulseaudio=auto."
-            #
-            check_fallback
-            Pulseaudiomode="auto"
+        note_ttm "|Option --pulseaudio: Unknown argument '$Pulseaudiomode'.
+                  |  Fallback: Setting --pulseaudio=auto."
+        #
+        check_fallback
+        Pulseaudiomode="auto"
     fi
 
     # --rootless
