@@ -12536,8 +12536,11 @@ check_containerhomebasedir() {
             #
         elif case_match "$Dockervm" 'moby'       ; then
             Hosthomebasefolder="$(convertpath subsystem "$(wincmd 'echo %userprofile%') ")/x11docker/home"
-            #
+        else
+            : # unexpected Dockervm ?
         fi
+    else
+        : # unexpected g_BackendKind ?
     fi
 }
 
