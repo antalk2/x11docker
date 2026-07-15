@@ -17324,8 +17324,11 @@ check_options_arguments() {
             #
         fi
 
-        [ "${Line:0:1}" = "/" ] && [ ! -e "$Line" ] && error "Option --share: File or folder does not exist:
+        if [ "${Line:0:1}" = "/" ] && [ ! -e "$Line" ] ; then
+            error "Option --share: File or folder does not exist:
   $Line"
+        fi
+
         [ -z "$Line" ] && error "Option --share needs an argument"
     done < <(store_runoption_dump_volume)
 
