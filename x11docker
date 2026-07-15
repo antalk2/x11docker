@@ -3973,7 +3973,7 @@ waitforlogentry_sh() {
     local logfile_basename
     logfile_basename="$(basename "${logfile}")"
 
-    local NEWLINE="$(printf "\n")"
+    local NEWLINE2="$(printf "\n")" # Do not depend on global NEWLINE
 
     StartTime="$(date +%s || true)"
     StartTime="${StartTime:-0}"
@@ -4007,7 +4007,7 @@ waitforlogentry_sh() {
                    "|waitforlogentry_sh(): ${application}:
                     : Timeout waiting for entry \"${keyword}\" in ${logfile_basename}
                     |  Last lines of ${logfile_basename}:"
-                    )${NEWLINE}$(tail -n15 "${logfile}")"
+                    )${NEWLINE2}$(tail -n15 "${logfile}")"
         fi
 
         # error if Errorkeys matches to content of logfile
@@ -4020,7 +4020,7 @@ waitforlogentry_sh() {
                         |  <'$Errorkey'>
                         |
                         |  Context in logfile ${logfile_basename}:"
-                        )${NEWLINE}$( grep -C7 "$Errorkey" "${logfile}" )"
+                        )${NEWLINE2}$( grep -C7 "$Errorkey" "${logfile}" )"
                 # ---
             fi
         fi
