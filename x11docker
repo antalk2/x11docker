@@ -17268,13 +17268,11 @@ check_options_arguments() {
     fi
 
     # --rootless
-    case "$Backendrootless" in
-        yes|no|"") ;;
-        *) error_ttm "|Option --rootless: Unknown argument: $Backendrootless
-                      |      Allowed values: yes|no"
-           #
-           ;;
-    esac
+    if ! case_match "$Backendrootless" ' yes|no|"" ' ; then
+        error_ttm "|Option --rootless: Unknown argument: $Backendrootless
+                   |      Allowed values: yes|no"
+        #
+    fi
 
     # --rotate
     if [ -n "$Rotation" ] ; then
