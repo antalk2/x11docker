@@ -12508,7 +12508,7 @@ check_cgroup() {
 } # end check_cgroup
 
 # Function: check_containerhomebasedir
-# Brief:
+# Brief: Set Hosthomebasefolder
 # CommandlineOption: --homebasedir, --home
 #
 # Globals:
