@@ -14201,240 +14201,259 @@ create_containerrootrc() {
 
 
 create_containerrc() {          # This script runs as unprivileged user in container
-  local Ungrep= Path= Line=
+    local Ungrep=""
+    local Path=""
+    local Line=""
 
-  {
-    echo "#! /bin/sh
-# containerrc
-# Created startscript for docker run used as container command.
-# Runs as unprivileged user in container.
-
-[ '$g_Interactive' = 'no' ] && exec >> $(convertpath share "$Containerlogfile") 2>&1
-
-$(declare -f mysleep)
-$(declare -f pspid_sh)
-$(declare -f rocknroll)
-$(declare -f saygoodbye)
-$(declare -f storeinfo_dump_sh)
-$(declare -f storeinfo_test_sh)
-$(declare -f storepid)
-
-$(declare -f trim_to_bar_filter)
-$(declare -f trim_to_bar)
-$(declare -f trim_to_mark)
-$(declare -f ws_colon_is_continuation_filter)
-$(declare -f waitforlogentry_sh)
-$Messagefifofuncs
-
-Messagefile=$(convertpath share "$Messagefifo")
-Storeinfofile=$(convertpath share "$Storeinfofile")
-Storepidfile=$Sharefoldercontainer/store.pids
-Timetosaygoodbyefile=$(convertpath share "$Timetosaygoodbyefile")
-
-waitforlogentry_sh containerrc \$Storeinfofile containerrootrc=ready '' infinity
-debugnote 'Running containerrc: Unprivileged user commands in container'
-
-verbose \"containerrc: Container system:
-\$(cat /etc/os-release 2>&1 ||:)\"
-
-"
-    case "$g_BackendKind" in
-      proot)
-        # set another hostname ### FIXME fails
-        sed "s/$(hostname)/$g_BackendKind-$Imagebasename/g" "/etc/hosts" > "$g_Rootfs/etc/hosts"
-        echo "$g_BackendKind-$Imagebasename"                             > "$g_Rootfs/etc/hostname"
-        # clean environment variables
-        while read -r Line; do
-          Line="$(cut -d= -f1 <<< "$Line")"
-          [ -n "$Line" ] && {
-            echo "unset $Line"
-            echo "export $Line"
-          }
-        done < <(unset -f rmcr ; env)
-        echo "export PATH='/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/sbin:/usr/sbin'"
-        echo 'export PS1="\u@'"$g_BackendKind"'-'"$Imagebasename"':\w\$ "' ### FIXME fails
-      ;;
-      docker|podman|nerdctl)
-        [ "$Switchcontaineruserflag" = "yes" ] && {
-          echo '# Environment variables found in image:'
-          IFS=$'\n'
-          while read -r Line; do
-            echo "export $(escapestring "$Line")"
-          done < <(unpriv_backend "$g_Backendbin run --rm --entrypoint env $g_Imagename env" 2>> "$Containerlogfile" | rmcr | grep -v 'HOSTNAME=' ||: )
-          IFS=$' \t\n'
-        }
-      ;;
-      # host) ;; # BackendKind_host
-    esac
-
-    [ "$g_Initsystem" = 'systemd' ] && echo "systemctl --user start dbus"  ### FIXME
-
-    echo "
-# USER and HOME
-g_Containerusername='$(storeinfo_dump_sh containeruser)'
-export USER=\"\$g_Containerusername\"
-"
-
-    case "$Createcontaineruser" in
-      yes)
-        echo "Containeruserhome='$Containeruserhome'"
-      ;;
-      no)
-        case "$Sharehome" in
-          no)
-            echo "Containeruserhome=\"\$(cat /etc/passwd | grep \"\$g_Containerusername:.:\" | cut -d: -f6)\""
-            echo "Containeruserhome=\"\${Containeruserhome:-/tmp/\$g_Containerusername}\""
-            echo "mkdir -p \"\$Containeruserhome\""
-          ;;
-          volume)
-            echo "Containeruserhome='$Containeruserhome'"
-          ;;
-        esac
-      ;;
-    esac
-
-    echo "
-[ \"\$Containeruserhome\" ] && export HOME=\"\$Containeruserhome\"
-
-# XDG_RUNTIME_DIR
-
-Containeruseruid=\$(id -u \$g_Containerusername)
-export XDG_RUNTIME_DIR=/tmp/XDG_RUNTIME_DIR
-[ -e /run/user/\$Containeruseruid ] && {
-  ln -s /run/user/\$Containeruseruid \$XDG_RUNTIME_DIR
-  export XDG_RUNTIME_DIR=/run/user/\$Containeruseruid
-} || {
-  mkdir -p -m700 \$XDG_RUNTIME_DIR
-}
-"
-
-    # softlinks from shared folders to HOME
-    [ "$Persistanthomevolume" != "$Containeruserhosthome" ] && { # not for --home=$HOME
-      while read -r Line; do
-        Path="$(convertpath container "$Line")"
-        [ "$(cut -c1-5 <<< "$Line")" != "/dev/" ] && {
-          [ "$Line" != "$Path" ] && {   # different for paths in HOME without --home
-            case "$Line" in
-              "$Containeruserhosthome") # --share=$HOME
-                echo "ln -s '$Path' -T '$Containeruserhome/home.host.$g_Containerusername'"
-                Ungrep="$Ungrep|home.host.$g_Containerusername"
-              ;;
-              *)
-                echo "mkdir -p $(dirname "$Line")"
-                echo "ln -s '$Path' -T '$Line'"
-                Ungrep="$Ungrep|$(basename "$Line")"
-              ;;
-            esac
-          }
-        }
-      done < <(store_runoption_dump_volume)
-    }
-
-    echo "
-# Copy files from /etc/skel into empty HOME
-[ -d \"\$HOME\" ] && {
-  [ -d /etc/skel ] && [ -z \"\$(ls -A \"\$Containeruserhome\" 2>/dev/null | grep -v -E \"\.bashrc|\.profile|gnupg${Ungrep}\")\" ] && {
-    debugnote \"containerrc: HOME is empty. Copying from /etc/skel\"
-    cp -n -R /etc/skel/. \$Containeruserhome
-    :
-  } || {
-    debugnote \"containerrc: HOME is not empty. Not copying from /etc/skel\"
-  }
-}
-"
-
-    echo "export DISPLAY='$Newdisplay' XAUTHORITY=$(convertpath share "$Xclientcookie")"
-    case "$Xserver" in
-      --tty)
-        echo "unset DISPLAY WAYLAND_DISPLAY XAUTHORITY" ;;
-      --weston|--kwin|--hostwayland)
-        echo "unset DISPLAY XAUTHORITY" ;;
-      *)
-          echo "unset WAYLAND_DISPLAY"
-          #
-          # provide softlink because ssh does not regard XAUTHORITY #554
-          echo "ln -s $(convertpath share "$Xclientcookie") $Containeruserhome/.Xauthority"
-      ;;
-    esac
-
-    [ "$Setupwayland" = "yes" ] && {
-      [ "$Sharehostwayland" = "yes" ] && {
-        echo "export WAYLAND_DISPLAY='$Hostwaylandsocket'"
-        echo "ln -s /$Hostwaylandsocket \$XDG_RUNTIME_DIR/$Hostwaylandsocket"
-      }
-      [ -n "$Newwaylandsocket" ] && {
-        echo "export WAYLAND_DISPLAY='$Newwaylandsocket'"
-        echo "ln -s /$Newwaylandsocket \$XDG_RUNTIME_DIR/$Newwaylandsocket"
-      }
-    } || {
-      echo "export XDG_SESSION_TYPE=x11"
-    }
-
-    [ "$Dbusrunsession" = "yes" ]  && {
-      echo "
-# Check for dbus user daemon command
-[ -z \"\$DBUS_SESSION_BUS_ADDRESS\" ] && [ -d \"\$XDG_RUNTIME_DIR/bus\" ] && DBUS_SESSION_BUS_ADDRESS=\"unix:path=\$XDG_RUNTIME_DIR/bus;autolaunch:\"
-[ -z \"\$DBUS_SESSION_BUS_ADDRESS\" ] && {
-  command -v dbus-run-session >/dev/null && Dbus=dbus-run-session
-  command -v dbus-launch      >/dev/null && Dbus=dbus-launch
-  [ -z \"\$Dbus\" ] && note \"Option --dbus: Neither dbus-run-session
-  nor dbus-launch found. Cannot run a DBus user session. 
-  Please install package dbus or even dbus-x11 in image.\"
-}
-"
-    }
-
-    echo "
-export TERM=xterm
-
-storeinfo_test_sh locale && export LANG=\"\$(storeinfo_dump_sh locale)\"
-
-[ -e \"$Hostlocaltimefile\" ]                   || export TZ=$Hostutctime
-[ \"\$(date -Ihours)\" != \"$(date -Ihours)\" ] && export TZ=$Hostutctime
-
-[ \"\$DEBIAN_FRONTEND\" = noninteractive ] && unset DEBIAN_FRONTEND && export DEBIAN_FRONTEND
-[ \"\$DEBIAN_FRONTEND\" = newt ]           && unset DEBIAN_FRONTEND && export DEBIAN_FRONTEND
-
-# container environment (--env)
-"
-    case "$Containerusershell" in
-      auto) echo "command -v /bin/bash >/dev/null && export SHELL=/bin/bash || export SHELL=/bin/sh" ;;
-      *)    echo "export $(escapestring "SHELL=$Containerusershell")" ;;
-    esac
-    while read -r Line ; do
-      echo "export $(escapestring "$Line")"
-    done < <(store_runoption_dump_env)
-
-    [ "$Xauthentication" = "no" ] && echo "unset XAUTHORITY && export XAUTHORITY"
-
-    echo "
-[ -d \"\$HOME\" ] && cd \"\$HOME\"
-[ -n '$g_Workdir' ] && [ -d '$g_Workdir' ] && cd '$g_Workdir'    # WORKDIR in image or option --workdir
-
-unset -f rmcr
-env >> $(convertpath share "$Containerenvironmentfile")
-verbose \"Container environment:
-\$(env | sort)\"
-"
-
-    case "$g_Interactive" in
-      no)
-        echo "env LD_PRELOAD= tail -f $(convertpath share "$Cmdstdoutlogfile")     2>/dev/null & Stdoutpid=\$!"
-        echo "env LD_PRELOAD= tail -f $(convertpath share "$Cmdstderrlogfile") >&2 2>/dev/null & Stderrpid=\$!"
+    # Block redirected to "$Containerrc"
+    {
+        trim_to_bar \
+            "|#! /bin/sh
+             |# containerrc
+             |# Created startscript for docker run used as container command.
+             |# Runs as unprivileged user in container.
+             |
+             |[ '$g_Interactive' = 'no' ] && exec >> $(convertpath share "$Containerlogfile") 2>&1
+             |
+             |$(declare -f mysleep)
+             |$(declare -f pspid_sh)
+             |$(declare -f rocknroll)
+             |$(declare -f saygoodbye)
+             |$(declare -f storeinfo_dump_sh)
+             |$(declare -f storeinfo_test_sh)
+             |$(declare -f storepid)
+             |
+             |$(declare -f trim_to_bar_filter)
+             |$(declare -f trim_to_bar)
+             |$(declare -f trim_to_mark)
+             |$(declare -f ws_colon_is_continuation_filter)
+             |$(declare -f waitforlogentry_sh)
+             |$Messagefifofuncs
+             |
+             |Messagefile=$(convertpath share "$Messagefifo")
+             |Storeinfofile=$(convertpath share "$Storeinfofile")
+             |Storepidfile=$Sharefoldercontainer/store.pids
+             |Timetosaygoodbyefile=$(convertpath share "$Timetosaygoodbyefile")
+             |
+             |waitforlogentry_sh containerrc \$Storeinfofile containerrootrc=ready '' infinity
+             |debugnote 'Running containerrc: Unprivileged user commands in container'
+             |
+             |verbose \"containerrc: Container system:
+             |\$(cat /etc/os-release 2>&1 ||:)\"
+             |
+             |"
+        #
+        
         case "$g_BackendKind" in
-          proot)
-            echo 'storepid $Stdoutpid tail_stdout'
-            echo 'storepid $Stderrpid tail_stderr'
-          ;;
+            proot)
+                # set another hostname ### FIXME fails
+                sed "s/$(hostname)/$g_BackendKind-$Imagebasename/g" "/etc/hosts" > "$g_Rootfs/etc/hosts"
+                echo "$g_BackendKind-$Imagebasename"                             > "$g_Rootfs/etc/hostname"
+                # clean environment variables
+                while read -r Line; do
+                    Line="$(cut -d= -f1 <<< "$Line")"
+                    [ -n "$Line" ] && {
+                        echo "unset $Line"
+                        echo "export $Line"
+                    }
+                done < <(unset -f rmcr ; env)
+                echo "export PATH='/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/sbin:/usr/sbin'"
+                echo 'export PS1="\u@'"$g_BackendKind"'-'"$Imagebasename"':\w\$ "' ### FIXME fails
+                ;;
+            docker|podman|nerdctl)
+                [ "$Switchcontaineruserflag" = "yes" ] && {
+                    echo '# Environment variables found in image:'
+                    IFS=$'\n'
+                    while read -r Line; do
+                        echo "export $(escapestring "$Line")"
+                    done < <(unpriv_backend "$g_Backendbin run --rm --entrypoint env $g_Imagename env" 2>> "$Containerlogfile" | rmcr | grep -v 'HOSTNAME=' ||: )
+                    IFS=$' \t\n'
+                }
+                ;;
+            # host) ;; # BackendKind_host
         esac
-        echo "exec \$Dbus sh $(convertpath share "$Cmdrc") >> $(convertpath share "$Cmdstdoutlogfile") 2>>$(convertpath share "$Cmdstderrlogfile")"
-      ;;
-      yes)
-        echo "exec \$Dbus sh $(convertpath share "$Cmdrc") <&0"
-      ;;
-    esac
-  } >> "$Containerrc"
-  return 0
+
+        [ "$g_Initsystem" = 'systemd' ] && echo "systemctl --user start dbus"  ### FIXME
+
+        trim_to_bar \
+            "|
+             |# USER and HOME
+             |g_Containerusername='$(storeinfo_dump_sh containeruser)'
+             |export USER=\"\$g_Containerusername\"
+             |"
+        #
+
+        case "$Createcontaineruser" in
+            yes)
+                echo "Containeruserhome='$Containeruserhome'"
+                ;;
+            no)
+                case "$Sharehome" in
+                    no)
+                        echo "Containeruserhome=\"\$(cat /etc/passwd | grep \"\$g_Containerusername:.:\" | cut -d: -f6)\""
+                        echo "Containeruserhome=\"\${Containeruserhome:-/tmp/\$g_Containerusername}\""
+                        echo "mkdir -p \"\$Containeruserhome\""
+                        ;;
+                    volume)
+                        echo "Containeruserhome='$Containeruserhome'"
+                        ;;
+                esac
+                ;;
+        esac
+
+        trim_to_bar \
+            "|
+             |[ \"\$Containeruserhome\" ] && export HOME=\"\$Containeruserhome\"
+             |
+             |# XDG_RUNTIME_DIR
+             |
+             |Containeruseruid=\$(id -u \$g_Containerusername)
+             |export XDG_RUNTIME_DIR=/tmp/XDG_RUNTIME_DIR
+             |[ -e /run/user/\$Containeruseruid ] && {
+             |  ln -s /run/user/\$Containeruseruid \$XDG_RUNTIME_DIR
+             |  export XDG_RUNTIME_DIR=/run/user/\$Containeruseruid
+             |} || {
+             |  mkdir -p -m700 \$XDG_RUNTIME_DIR
+             |}
+             |"
+        #
+
+        # softlinks from shared folders to HOME
+        [ "$Persistanthomevolume" != "$Containeruserhosthome" ] && { # not for --home=$HOME
+            while read -r Line; do
+                Path="$(convertpath container "$Line")"
+                [ "$(cut -c1-5 <<< "$Line")" != "/dev/" ] && {
+                    [ "$Line" != "$Path" ] && {   # different for paths in HOME without --home
+                        case "$Line" in
+                            "$Containeruserhosthome") # --share=$HOME
+                                echo "ln -s '$Path' -T '$Containeruserhome/home.host.$g_Containerusername'"
+                                Ungrep="$Ungrep|home.host.$g_Containerusername"
+                                ;;
+                            *)
+                                echo "mkdir -p $(dirname "$Line")"
+                                echo "ln -s '$Path' -T '$Line'"
+                                Ungrep="$Ungrep|$(basename "$Line")"
+                                ;;
+                        esac
+                    }
+                }
+            done < <(store_runoption_dump_volume)
+        }
+
+        trim_to_bar \
+            "|
+             |# Copy files from /etc/skel into empty HOME
+             |[ -d \"\$HOME\" ] && {
+             |  [ -d /etc/skel ] && [ -z \"\$(ls -A \"\$Containeruserhome\" 2>/dev/null | grep -v -E \"\.bashrc|\.profile|gnupg${Ungrep}\")\" ] && {
+             |    debugnote \"containerrc: HOME is empty. Copying from /etc/skel\"
+             |    cp -n -R /etc/skel/. \$Containeruserhome
+             |    :
+             |  } || {
+             |    debugnote \"containerrc: HOME is not empty. Not copying from /etc/skel\"
+             |  }
+             |}
+             |"
+        #
+
+        echo "export DISPLAY='$Newdisplay' XAUTHORITY=$(convertpath share "$Xclientcookie")"
+        case "$Xserver" in
+            --tty)
+                echo "unset DISPLAY WAYLAND_DISPLAY XAUTHORITY" ;;
+            --weston|--kwin|--hostwayland)
+                echo "unset DISPLAY XAUTHORITY" ;;
+            *)
+                echo "unset WAYLAND_DISPLAY"
+                #
+                # provide softlink because ssh does not regard XAUTHORITY #554
+                echo "ln -s $(convertpath share "$Xclientcookie") $Containeruserhome/.Xauthority"
+                ;;
+        esac
+
+        [ "$Setupwayland" = "yes" ] && {
+            [ "$Sharehostwayland" = "yes" ] && {
+                echo "export WAYLAND_DISPLAY='$Hostwaylandsocket'"
+                echo "ln -s /$Hostwaylandsocket \$XDG_RUNTIME_DIR/$Hostwaylandsocket"
+            }
+            [ -n "$Newwaylandsocket" ] && {
+                echo "export WAYLAND_DISPLAY='$Newwaylandsocket'"
+                echo "ln -s /$Newwaylandsocket \$XDG_RUNTIME_DIR/$Newwaylandsocket"
+            }
+        } || {
+            echo "export XDG_SESSION_TYPE=x11"
+        }
+
+        [ "$Dbusrunsession" = "yes" ]  && {
+            trim_to_bar \
+                "|
+                 |# Check for dbus user daemon command
+                 |[ -z \"\$DBUS_SESSION_BUS_ADDRESS\" ] && [ -d \"\$XDG_RUNTIME_DIR/bus\" ] && DBUS_SESSION_BUS_ADDRESS=\"unix:path=\$XDG_RUNTIME_DIR/bus;autolaunch:\"
+                 |[ -z \"\$DBUS_SESSION_BUS_ADDRESS\" ] && {
+                 |  command -v dbus-run-session >/dev/null && Dbus=dbus-run-session
+                 |  command -v dbus-launch      >/dev/null && Dbus=dbus-launch
+                 |  [ -z \"\$Dbus\" ] && note \"Option --dbus: Neither dbus-run-session
+                 |  nor dbus-launch found. Cannot run a DBus user session. 
+                 |  Please install package dbus or even dbus-x11 in image.\"
+                 |}
+                 |"
+            #
+        }
+
+        trim_to_bar \
+            "|
+             |export TERM=xterm
+             |
+             |storeinfo_test_sh locale && export LANG=\"\$(storeinfo_dump_sh locale)\"
+             |
+             |[ -e \"$Hostlocaltimefile\" ]                   || export TZ=$Hostutctime
+             |[ \"\$(date -Ihours)\" != \"$(date -Ihours)\" ] && export TZ=$Hostutctime
+             |
+             |[ \"\$DEBIAN_FRONTEND\" = noninteractive ] && unset DEBIAN_FRONTEND && export DEBIAN_FRONTEND
+             |[ \"\$DEBIAN_FRONTEND\" = newt ]           && unset DEBIAN_FRONTEND && export DEBIAN_FRONTEND
+             |
+             |# container environment (--env)
+             |"
+        #
+
+        case "$Containerusershell" in
+            auto) echo "command -v /bin/bash >/dev/null && export SHELL=/bin/bash || export SHELL=/bin/sh" ;;
+            *)    echo "export $(escapestring "SHELL=$Containerusershell")" ;;
+        esac
+        while read -r Line ; do
+            echo "export $(escapestring "$Line")"
+        done < <(store_runoption_dump_env)
+
+        [ "$Xauthentication" = "no" ] && echo "unset XAUTHORITY && export XAUTHORITY"
+
+        trim_to_bar \
+            "|
+             |[ -d \"\$HOME\" ] && cd \"\$HOME\"
+             |[ -n '$g_Workdir' ] && [ -d '$g_Workdir' ] && cd '$g_Workdir'    # WORKDIR in image or option --workdir
+             |
+             |unset -f rmcr
+             |env >> $(convertpath share "$Containerenvironmentfile")
+             |verbose \"Container environment:
+             |\$(env | sort)\"
+             |"
+        #
+
+        case "$g_Interactive" in
+            no)
+                echo "env LD_PRELOAD= tail -f $(convertpath share "$Cmdstdoutlogfile")     2>/dev/null & Stdoutpid=\$!"
+                echo "env LD_PRELOAD= tail -f $(convertpath share "$Cmdstderrlogfile") >&2 2>/dev/null & Stderrpid=\$!"
+                case "$g_BackendKind" in
+                    proot)
+                        echo 'storepid $Stdoutpid tail_stdout'
+                        echo 'storepid $Stderrpid tail_stderr'
+                        ;;
+                esac
+                echo "exec \$Dbus sh $(convertpath share "$Cmdrc") >> $(convertpath share "$Cmdstdoutlogfile") 2>>$(convertpath share "$Cmdstderrlogfile")"
+                ;;
+            yes)
+                echo "exec \$Dbus sh $(convertpath share "$Cmdrc") <&0"
+                ;;
+        esac
+    } >> "$Containerrc"
+    return 0
 }
 
 create_cmdrc() {                # This script runs as unprivileged user in container and starts the final command
@@ -14659,6 +14678,7 @@ debugnote \"Option --lang: Output of locale -a:
 "
   return 0
 }
+
 rootrc_nvidia_installer() {
   # print code to install NVIDIA driver in container
   # $Nvidiainstallerfile must be shared with container as $Nvidiacontainerfile
