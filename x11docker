@@ -17276,8 +17276,10 @@ check_options_arguments() {
     # --rootless
     case "$Backendrootless" in
         yes|no|"") ;;
-        *) error "Option --rootless: Unknown argument: $Backendrootless
-      Allowed values: yes|no" ;;
+        *) error_ttm "|Option --rootless: Unknown argument: $Backendrootless
+                      |      Allowed values: yes|no"
+           #
+           ;;
     esac
 
     # --rotate
