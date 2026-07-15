@@ -17250,16 +17250,13 @@ check_options_arguments() {
     fi
 
     # --printer
-    case "$Sharecupsmode" in
-        socket|tcp|auto|"") ;;
-        *)
+    if ! case_match "$Sharecupsmode" ' socket | tcp | auto | "" ' ; then
             note_ttm "|Option --printer: Unknown argument '$Sharecupsmode'.
                       |  Fallback: Setting --printer=auto."
             #
             check_fallback
             Sharecupsmode="auto"
-            ;;
-    esac
+    fi
 
     # --pulseaudio
     case "$Pulseaudiomode" in
