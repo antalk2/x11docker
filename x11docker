@@ -17312,7 +17312,11 @@ check_options_arguments() {
 
     # --share
     while read Line; do
-        grep -q -E "/|\\|:" <<< "$Line" && Line="$(convertpath subsystem "$Line")"
+
+        if grep -q -E "/|\\|:" <<< "$Line" ; then
+            Line="$(convertpath subsystem "$Line")"
+        fi
+
         [ "${Line:0:1}" != "/" ] && grep -q "/" <<< "$Line" && error "Option --share needs either an absolute path
   or a volume name without any '/':
   $Line"
