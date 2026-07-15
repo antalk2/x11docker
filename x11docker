@@ -12491,17 +12491,17 @@ check_cgroup() {
     fi
 
     if [ "$Sharecgroup" = "yes" ] && [ "$Startuser" = "root" ] ; then
-    note "Option --init=$g_Initsystem: Creating cgroup mountpoint on host for '$Needcgroup'."
-    findmnt /sys/fs/cgroup -O ro >/dev/null && {
-      mount -o remount,rw cgroup /sys/fs/cgroup >> "$Containerlogfile" 2>&1
-      Remounted=yes
-    }
-    mkdir -p /sys/fs/cgroup/$Needcgroup >> "$Containerlogfile" 2>&1
-    mount -t cgroup cgroup /sys/fs/cgroup/$Needcgroup -o none,name=$Needcgroup  >> "$Containerlogfile" 2>&1
-    [ "${Remounted:-}" = "yes" ] && {
-      mount -o remount,ro cgroup /sys/fs/cgroup  >> "$Containerlogfile" 2>&1
-    }
-  fi
+        note "Option --init=$g_Initsystem: Creating cgroup mountpoint on host for '$Needcgroup'."
+        findmnt /sys/fs/cgroup -O ro >/dev/null && {
+            mount -o remount,rw cgroup /sys/fs/cgroup >> "$Containerlogfile" 2>&1
+            Remounted=yes
+        }
+        mkdir -p /sys/fs/cgroup/$Needcgroup >> "$Containerlogfile" 2>&1
+        mount -t cgroup cgroup /sys/fs/cgroup/$Needcgroup -o none,name=$Needcgroup  >> "$Containerlogfile" 2>&1
+        [ "${Remounted:-}" = "yes" ] && {
+            mount -o remount,ro cgroup /sys/fs/cgroup  >> "$Containerlogfile" 2>&1
+        }
+    fi
   
   return 0
 }
