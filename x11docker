@@ -17330,7 +17330,10 @@ check_options_arguments() {
             #
         fi
 
-        [ -z "$Line" ] && error "Option --share needs an argument"
+        if [ -z "$Line" ] ; then
+            error "Option --share needs an argument"
+        fi
+
     done < <(store_runoption_dump_volume)
 
     # --size
