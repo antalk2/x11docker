@@ -17202,6 +17202,9 @@ check_options_arguments() {
 
     # --limit N
     if [ -n "$g_Limitresources" ] ; then
+        #
+        #  ! (a && b) == !a || !b
+        #
         [ "1" = "$(awk -v a="$g_Limitresources" "BEGIN {print (a <= 1)}")" ] && [ "1" = "$(awk -v a="$g_Limitresources" "BEGIN {print (a > 0)}")" ] || {
             warning_ttm \
                 "|Option --limit: Specified value '$g_Limitresources' is out of range.
