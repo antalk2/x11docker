@@ -17139,8 +17139,9 @@ check_options_arguments() {
             Dbussystem="yes"
             ;;
         *)
-            note "Option --dbus: Unknown argument '$Dbusrunsession'.
-  Fallback: Enabling --dbus user session."
+            note_ttm "|Option --dbus: Unknown argument '$Dbusrunsession'.
+                      |  Fallback: Enabling --dbus user session."
+            #
             check_fallback
             Dbusrunsession="yes"
             ;;
@@ -17149,8 +17150,9 @@ check_options_arguments() {
     # --dpi
     [ "$Dpi" ] && {
         isnum "$Dpi" || {
-            note "Option --dpi only accepts numeric values. Not numeric: '$Dpi'
-  Fallback: Disaling option --dpi."
+            note_ttm "|Option --dpi only accepts numeric values. Not numeric: '$Dpi'
+                      |  Fallback: Disaling option --dpi."
+            #
             check_fallback
             Dpi=""
         }
@@ -17163,8 +17165,9 @@ check_options_arguments() {
             note "Option --gpu=virgl: Argument 'virgl'  is deprecated."
             ;;
         *)
-            note "Option --gpu: Unknown argument '$Sharegpu'.
-  Fallback: Disabling option --gpu."
+            note_ttm "|Option --gpu: Unknown argument '$Sharegpu'.
+                      |  Fallback: Disabling option --gpu."
+            #
             check_fallback
             Sharegpu="no"
             ;;
@@ -17173,8 +17176,8 @@ check_options_arguments() {
     # --homebasedir
     [ "$Hosthomebasefolder" ] && {
         Hosthomebasefolder="$(convertpath subsystem "$Hosthomebasefolder")"
-        [ -e "$Hosthomebasefolder" ] || error "Option --homebasedir: Specified path does not exist:
-  $Hosthomebasefolder"
+        [ -e "$Hosthomebasefolder" ] || error_ttm "|Option --homebasedir: Specified path does not exist:
+          |  $Hosthomebasefolder"
     }
 
     # --init
