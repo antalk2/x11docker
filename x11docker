@@ -12535,7 +12535,8 @@ check_containerhomebasedir() {
             Hosthomebasefolder="$Containeruserhosthome/.local/share/x11docker"
             #
         elif case_match "$Dockervm" 'moby'       ; then
-            Hosthomebasefolder="$(convertpath subsystem "$(wincmd 'echo %userprofile%') ")/x11docker/home"
+            Hosthomebasefolder="$( convertpath subsystem "$(wincmd 'echo %userprofile%')
+                                ")/x11docker/home"
         else
             : # unexpected Dockervm ?
         fi
