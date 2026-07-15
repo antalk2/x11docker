@@ -17300,7 +17300,7 @@ check_options_arguments() {
     esac
 
     # --scale
-    if [ -n "$Scaling" ] ; then {
+    if [ -n "$Scaling" ] ; then
         isnum "$Scaling" || {
             note_ttm "|Option --scale needs a number. '$Scaling' is not allowed.
                       |  Fallback: disabling option --scale"
