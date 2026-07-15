@@ -17219,12 +17219,12 @@ check_options_arguments() {
     fi
 
     # --name
-    [ -n "$g_Containername" ] && {
+    if [ -n "$g_Containername" ] ; then
         [ "$g_Containername" = "$(unspecialstring "$g_Containername" ".")" ] || error "Option --name: container name must not contain special chars.
   Compare:
   $g_Containername
   $(unspecialstring "$g_Containername" ".")"
-    }
+    fi
 
     # --newprivileges
     case "$Allownewprivileges"
