@@ -12490,7 +12490,7 @@ check_cgroup() {
         return 1
     fi
 
-  [ "$Sharecgroup" = "yes" ] && [ "$Startuser" = "root" ] && {
+    if [ "$Sharecgroup" = "yes" ] && [ "$Startuser" = "root" ] ; then
     note "Option --init=$g_Initsystem: Creating cgroup mountpoint on host for '$Needcgroup'."
     findmnt /sys/fs/cgroup -O ro >/dev/null && {
       mount -o remount,rw cgroup /sys/fs/cgroup >> "$Containerlogfile" 2>&1
@@ -12501,7 +12501,7 @@ check_cgroup() {
     [ "${Remounted:-}" = "yes" ] && {
       mount -o remount,ro cgroup /sys/fs/cgroup  >> "$Containerlogfile" 2>&1
     }
-  }
+  fi
   
   return 0
 }
