@@ -12389,8 +12389,15 @@ check_smallinit() {
 # Function: check_cgroup
 # Brief: Check [and create] cgroup mountpoint for systemd or elogind
 #
+# Globals:
+#
+#   g_Initsystem
+#   g_BackendKind
+#   Cgroupversion
+#
 check_cgroup() {
-    local Remounted Needcgroup
+    local Remounted
+    local Needcgroup
 
     if [ "$g_Initsystem" = "systemd" ] ;
     then Needcgroup="systemd"
@@ -12426,35 +12433,40 @@ check_cgroup() {
         warning "Option --init=$g_Initsystem: Sharing /sys/fs/cgroup from host."
     fi
 
-    if findmnt "/sys/fs/cgroup/$Needcgroup" >/dev/null 2>&1 ; then
-        # Exists, done.
-        return 0
-    else
-        : # go on below
-    fi
+    {
+        # Needcgroup
+        if findmnt "/sys/fs/cgroup/$Needcgroup" >/dev/null 2>&1 ; then
+            # Exists, done.
+            return 0
+        else
+            : # go on below
+        fi
 
-    case "$g_Initsystem" in
-        systemd)
-            case "$Cgroupversion" in
-                v1) 
-                    if [ "$Startuser" != "root" ] ; then
-                        note_ttm "|Option --init=$g_Initsystem: Did not find /sys/fs/cgroup/$Needcgroup
-                                  |  Startup of container is likely to fail."
-                    fi
-                    ;;
-                v2)
-                    Needcgroup=""
-                    ;;
-            esac
-            ;;
-        *)
-            # not systemd
-            note_ttm "|Option --init=$g_Initsystem: Did not find /sys/fs/cgroup/$Needcgroup
-                      |  A possible elogind service in container is likely to fail."
-            ;;
-    esac
-  
-  [ -z "$Needcgroup" ] && return 0
+        case "$g_Initsystem" in
+            systemd)
+                case "$Cgroupversion" in
+                    v1) 
+                        if [ "$Startuser" != "root" ] ; then
+                            note_ttm "|Option --init=$g_Initsystem: Did not find /sys/fs/cgroup/$Needcgroup
+                                      |  Startup of container is likely to fail."
+                        fi
+                        ;;
+                    v2)
+                        Needcgroup=""
+                        ;;
+                esac
+                ;;
+            *)
+                # not systemd
+                note_ttm "|Option --init=$g_Initsystem: Did not find /sys/fs/cgroup/$Needcgroup
+                          |  A possible elogind service in container is likely to fail."
+                ;;
+        esac
+        
+        if [ -z "$Needcgroup" ] ; then
+            return 0
+        fi
+    }
 
   [ "$Startuser" != "root" ] && {
     note "Option --init=$g_Initsystem: To create and mount a cgroup
