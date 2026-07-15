@@ -12492,18 +12492,19 @@ check_cgroup() {
 
     if [ "$Sharecgroup" = "yes" ] && [ "$Startuser" = "root" ] ; then
         note "Option --init=$g_Initsystem: Creating cgroup mountpoint on host for '$Needcgroup'."
-        findmnt /sys/fs/cgroup -O ro >/dev/null && {
+        if findmnt /sys/fs/cgroup -O ro >/dev/null ; then
             mount -o remount,rw cgroup /sys/fs/cgroup >> "$Containerlogfile" 2>&1
             Remounted=yes
-        }
+        fi
         mkdir -p /sys/fs/cgroup/$Needcgroup >> "$Containerlogfile" 2>&1
         mount -t cgroup cgroup /sys/fs/cgroup/$Needcgroup -o none,name=$Needcgroup  >> "$Containerlogfile" 2>&1
-        [ "${Remounted:-}" = "yes" ] && {
+        #
+        if [ "${Remounted:-}" = "yes" ] ; then
             mount -o remount,ro cgroup /sys/fs/cgroup  >> "$Containerlogfile" 2>&1
-        }
+        fi
     fi
   
-  return 0
+    return 0
 }
 
 check_containerhomebasedir() {  # options --homebasedir, --home
