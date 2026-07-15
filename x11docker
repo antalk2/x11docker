@@ -14355,8 +14355,10 @@ create_containerrc() {          # This script runs as unprivileged user in conta
             "|
              |# Copy files from /etc/skel into empty HOME
              |if [ -d \"\$HOME\" ] ; then
-             |  if    [ -d /etc/skel ] \\
-             |     && [ -z \"\$(ls -A \"\$Containeruserhome\" 2>/dev/null | grep -v -E \"\.bashrc|\.profile|gnupg${Ungrep}\")\" ] ;
+             |  if    [ -d /etc/skel ]                                                  \\
+             |     && [ -z \"\$( ls -A \"\$Containeruserhome\" 2>/dev/null              \\
+             |                   | grep -v -E \"\.bashrc|\.profile|gnupg${Ungrep}\" )\" \\
+             |        ] ;
              |  then
              |    debugnote \"containerrc: HOME is empty. Copying from /etc/skel\"
              |    cp -n -R /etc/skel/. \$Containeruserhome
