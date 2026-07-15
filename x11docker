@@ -12270,12 +12270,18 @@ check_runtime() {
     case "$g_BackendKind" in
         docker)
             # l_Backendinfo / "DefaultRuntime"
-            local_Defaultruntime="$(parse_inspect "$l_Backendinfo" "DefaultRuntime" | tr -d '"')"
+            local_Defaultruntime="$( parse_inspect       \
+                                       "$l_Backendinfo"  \
+                                        "DefaultRuntime" \
+                                     | tr -d '"'         )"
             ;;
         podman)
             # l_Backendinfo / "host" / "ociRuntime" / "name"
             # literal host
-            local_Defaultruntime="$(parse_inspect "$l_Backendinfo" "host"  "ociRuntime" "name" | tr -d '"')"
+            local_Defaultruntime="$( parse_inspect                  \
+                                       "$l_Backendinfo"             \
+                                        "host"  "ociRuntime" "name" \
+                                     | tr -d '"'                    )"
             ;;
         nerdctl)
             local_Defaultruntime=""
