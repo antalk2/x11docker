@@ -17174,11 +17174,13 @@ check_options_arguments() {
     esac
 
     # --homebasedir
-    [ "$Hosthomebasefolder" ] && {
+    if [ -n "$Hosthomebasefolder" ] ; then
         Hosthomebasefolder="$(convertpath subsystem "$Hosthomebasefolder")"
-        [ -e "$Hosthomebasefolder" ] || error_ttm "|Option --homebasedir: Specified path does not exist:
-          |  $Hosthomebasefolder"
-    }
+        if [ ! -e "$Hosthomebasefolder" ] ; then
+            error_ttm "|Option --homebasedir: Specified path does not exist:
+                       |  $Hosthomebasefolder"
+        fi
+    fi
 
     # --init
     case "$g_Initsystem" in
