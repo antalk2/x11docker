@@ -17236,8 +17236,9 @@ check_options_arguments() {
     in
         yes|no|auto) ;;
         *)
-            note "Option --newprivileges: Unknown argument '$Allownewprivileges'.
-  Fallback: Setting --newprivileges=auto"
+            note_ttm "|Option --newprivileges: Unknown argument '$Allownewprivileges'.
+                      |  Fallback: Setting --newprivileges=auto"
+            #
             check_fallback
             Allownewprivileges="auto"
             ;;
