@@ -17220,11 +17220,13 @@ check_options_arguments() {
 
     # --name
     if [ -n "$g_Containername" ] ; then
-        if [ "$g_Containername" != "$(unspecialstring "$g_Containername" ".")" ] ; then
-            error "Option --name: container name must not contain special chars.
-  Compare:
-  $g_Containername
-  $(unspecialstring "$g_Containername" ".")"
+        if [ "$g_Containername" != "$( unspecialstring "$g_Containername" "." )" ] ; then
+            error_ttm \
+                "|Option --name: container name must not contain special chars.
+                 |  Compare:
+                 |  $g_Containername
+                 |  $( unspecialstring "$g_Containername" "." )
+                 |"
             #
         fi
     fi
