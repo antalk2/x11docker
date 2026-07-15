@@ -14463,7 +14463,12 @@ create_containerrc() {          # This script runs as unprivileged user in conta
                         echo 'storepid $Stderrpid tail_stderr'
                         ;;
                 esac
-                echo "exec \$Dbus sh $(convertpath share "$Cmdrc") >> $(convertpath share "$Cmdstdoutlogfile") 2>>$(convertpath share "$Cmdstderrlogfile")"
+                trim_to_bar \
+                    "|exec \$Dbus sh $(convertpath share "$Cmdrc")     \\
+                     |    >> $(convertpath share "$Cmdstdoutlogfile ") \\
+                     |   2>> $(convertpath share "$Cmdstderrlogfile ")
+                     |"
+                #
                 ;;
             yes)
                 echo "exec \$Dbus sh $(convertpath share "$Cmdrc") <&0"
