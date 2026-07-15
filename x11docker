@@ -17232,17 +17232,13 @@ check_options_arguments() {
     fi
 
     # --newprivileges
-    case "$Allownewprivileges"
-    in
-        yes|no|auto) ;;
-        *)
-            note_ttm "|Option --newprivileges: Unknown argument '$Allownewprivileges'.
-                      |  Fallback: Setting --newprivileges=auto"
-            #
-            check_fallback
-            Allownewprivileges="auto"
-            ;;
-    esac
+    if ! case_match "$Allownewprivileges" 'yes|no|auto' ; then
+        note_ttm "|Option --newprivileges: Unknown argument '$Allownewprivileges'.
+                  |  Fallback: Setting --newprivileges=auto"
+        #
+        check_fallback
+        Allownewprivileges="auto"
+    fi
 
     # --output-count
     [[ "$Outputcount" =~ ^[1-9]$ ]] || {
