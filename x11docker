@@ -17259,7 +17259,7 @@ check_options_arguments() {
     fi
 
     # --pulseaudio
-    if ! case_match "$Pulseaudiomode" ' socket|tcp|auto|host|"" ' ; then
+    if ! case_match "$Pulseaudiomode" ' socket|tcp|auto|host| "" ' ; then
         note_ttm "|Option --pulseaudio: Unknown argument '$Pulseaudiomode'.
                   |  Fallback: Setting --pulseaudio=auto."
         #
@@ -17268,7 +17268,7 @@ check_options_arguments() {
     fi
 
     # --rootless
-    if ! case_match "$Backendrootless" ' yes|no|"" ' ; then
+    if ! case_match "$Backendrootless" ' yes|no| "" ' ; then
         error_ttm "|Option --rootless: Unknown argument: $Backendrootless
                    |      Allowed values: yes|no"
         #
