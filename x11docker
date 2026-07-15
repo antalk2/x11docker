@@ -17077,342 +17077,342 @@ check_options_arguments() {
     grep -q -- "--runtime=crun"           <<< "$Customdockeroptions" && Runtime="crun"
     grep -q -- "--runtime=sysbox-runc"    <<< "$Customdockeroptions" && Runtime="sysbox-runc"
 
-  # --backend
-  [ -z "$g_Imagename" ] && {
-    case "${Cleanup}${Createlauncher}${Installermode}" in
-      "")
-        # Only create X server / --xonly  # BackendKind_host
-        Codename="xonly"
-        g_BackendKind="${g_BackendKind:-host}" # BackendKind_host
-        g_Containercommand="sleep infinity"
-        Showdisplayenvironment="${Showdisplayenvironment:-yes}"
-      ;;
-    esac
-  }
-  g_BackendKind="${g_BackendKind:-docker}"
-  case "$g_BackendKind" in
-    docker|podman|host) ;; # BackendKind_host
-    proot|nerdctl) 
-      note "Option --backend=$g_BackendKind is deprecated.
+    # --backend
+    [ -z "$g_Imagename" ] && {
+        case "${Cleanup}${Createlauncher}${Installermode}" in
+            "")
+                # Only create X server / --xonly  # BackendKind_host
+                Codename="xonly"
+                g_BackendKind="${g_BackendKind:-host}" # BackendKind_host
+                g_Containercommand="sleep infinity"
+                Showdisplayenvironment="${Showdisplayenvironment:-yes}"
+                ;;
+        esac
+    }
+    g_BackendKind="${g_BackendKind:-docker}"
+    case "$g_BackendKind" in
+        docker|podman|host) ;; # BackendKind_host
+        proot|nerdctl) 
+            note "Option --backend=$g_BackendKind is deprecated.
   Please use --backend=docker or --backend=podman instead."
-    ;;
-    *) 
-      error "Option --backend: Unknown argument '$g_BackendKind'."
-    ;;
-  esac
+            ;;
+        *) 
+            error "Option --backend: Unknown argument '$g_BackendKind'."
+            ;;
+    esac
 
-  # --clipboard
-  case "$Shareclipboard" in
-    yes|no|cmv|h2c|c2h) ;;
-    superv|altv)
-      note "Option --clipboard=$Shareclipboard is deprecated.
+    # --clipboard
+    case "$Shareclipboard" in
+        yes|no|cmv|h2c|c2h) ;;
+        superv|altv)
+            note "Option --clipboard=$Shareclipboard is deprecated.
   Please use --clipboard=csv instead.
   This uses key combo [CRTL] + [META] + v
   Fallback: Setting --clipboard=cmv"
-      check_fallback
-      Shareclipboard="cmv"
-    ;;
-    oneway)
-      note "Option --clipboard=$Shareclipboard:
+            check_fallback
+            Shareclipboard="cmv"
+            ;;
+        oneway)
+            note "Option --clipboard=$Shareclipboard:
   Argument $Shareclipboard is deprecated.
   Please use --clipboard=c2h instead."
-      Shareclipboard="c2h"
-    ;;
-    *)
-      note "Option --clipboard: Unknown argument '$Shareclipboard'.
+            Shareclipboard="c2h"
+            ;;
+        *)
+            note "Option --clipboard: Unknown argument '$Shareclipboard'.
   Fallback: Disabling option --clipboard."
-      check_fallback
-      Shareclipboard="no"
-    ;;
-  esac
+            check_fallback
+            Shareclipboard="no"
+            ;;
+    esac
 
-  # --dbus [=system]
-  case "$Dbusrunsession" in
-    yes|user|session) Dbusrunsession="yes" ;;
-    no) ;;
-    system)
-      Dbusrunsession="yes"
-      Dbussystem="yes"
-    ;;
-    *)
-      note "Option --dbus: Unknown argument '$Dbusrunsession'.
+    # --dbus [=system]
+    case "$Dbusrunsession" in
+        yes|user|session) Dbusrunsession="yes" ;;
+        no) ;;
+        system)
+            Dbusrunsession="yes"
+            Dbussystem="yes"
+            ;;
+        *)
+            note "Option --dbus: Unknown argument '$Dbusrunsession'.
   Fallback: Enabling --dbus user session."
-      check_fallback
-      Dbusrunsession="yes"
-    ;;
-  esac
-  
-  # --dpi
-  [ "$Dpi" ] && {
-    isnum "$Dpi" || {
-      note "Option --dpi only accepts numeric values. Not numeric: '$Dpi'
+            check_fallback
+            Dbusrunsession="yes"
+            ;;
+    esac
+    
+    # --dpi
+    [ "$Dpi" ] && {
+        isnum "$Dpi" || {
+            note "Option --dpi only accepts numeric values. Not numeric: '$Dpi'
   Fallback: Disaling option --dpi."
-      check_fallback
-      Dpi=""
+            check_fallback
+            Dpi=""
+        }
     }
-  }
 
-  # --gpu
-  case "$Sharegpu" in
-    yes|no|direct|iglx) ;;
-    virgl)
-      note "Option --gpu=virgl: Argument 'virgl'  is deprecated."
-    ;;
-    *)
-      note "Option --gpu: Unknown argument '$Sharegpu'.
+    # --gpu
+    case "$Sharegpu" in
+        yes|no|direct|iglx) ;;
+        virgl)
+            note "Option --gpu=virgl: Argument 'virgl'  is deprecated."
+            ;;
+        *)
+            note "Option --gpu: Unknown argument '$Sharegpu'.
   Fallback: Disabling option --gpu."
-      check_fallback
-      Sharegpu="no"
-    ;;
-  esac
+            check_fallback
+            Sharegpu="no"
+            ;;
+    esac
 
-  # --homebasedir
-  [ "$Hosthomebasefolder" ] && {
-    Hosthomebasefolder="$(convertpath subsystem "$Hosthomebasefolder")"
-    [ -e "$Hosthomebasefolder" ] || error "Option --homebasedir: Specified path does not exist:
+    # --homebasedir
+    [ "$Hosthomebasefolder" ] && {
+        Hosthomebasefolder="$(convertpath subsystem "$Hosthomebasefolder")"
+        [ -e "$Hosthomebasefolder" ] || error "Option --homebasedir: Specified path does not exist:
   $Hosthomebasefolder"
-  }
+    }
 
-  # --init
-  case "$g_Initsystem" in
-    tini|systemd|sysvinit|openrc|runit|dockerinit|s6-overlay) ;;
-    no|none) g_Initsystem="none" ;;
-    *)
-      note "Option --init: Unknown init system $g_Initsystem
+    # --init
+    case "$g_Initsystem" in
+        tini|systemd|sysvinit|openrc|runit|dockerinit|s6-overlay) ;;
+        no|none) g_Initsystem="none" ;;
+        *)
+            note "Option --init: Unknown init system $g_Initsystem
   Possible: tini systemd sysvinit openrc runit s6-overlay none
   Fallback: Using --init=tini instead."
-      check_fallback
-      g_Initsystem="tini"
-    ;;
-  esac
+            check_fallback
+            g_Initsystem="tini"
+            ;;
+    esac
 
-  # --limit N
-  [ "$g_Limitresources" ] && {
-    [ "1" = "$(awk -v a="$g_Limitresources" "BEGIN {print (a <= 1)}")" ] && [ "1" = "$(awk -v a="$g_Limitresources" "BEGIN {print (a > 0)}")" ] || {
-      warning "Option --limit: Specified value '$g_Limitresources' is out of range.
+    # --limit N
+    [ "$g_Limitresources" ] && {
+        [ "1" = "$(awk -v a="$g_Limitresources" "BEGIN {print (a <= 1)}")" ] && [ "1" = "$(awk -v a="$g_Limitresources" "BEGIN {print (a > 0)}")" ] || {
+            warning "Option --limit: Specified value '$g_Limitresources' is out of range.
   Allowed is a factor greater than 0 and less than or equal to 1.  0<FACTOR<=1
   Fallback: Setting limit factor to --limit=0.5"
-      check_fallback
-      g_Limitresources="0.5"
+            check_fallback
+            g_Limitresources="0.5"
+        }
     }
-  }
 
-  # --name
-  [ -n "$g_Containername" ] && {
-    [ "$g_Containername" = "$(unspecialstring "$g_Containername" ".")" ] || error "Option --name: container name must not contain special chars.
+    # --name
+    [ -n "$g_Containername" ] && {
+        [ "$g_Containername" = "$(unspecialstring "$g_Containername" ".")" ] || error "Option --name: container name must not contain special chars.
   Compare:
   $g_Containername
   $(unspecialstring "$g_Containername" ".")"
-  }
+    }
 
-  # --newprivileges
-  case "$Allownewprivileges"
-  in
-    yes|no|auto) ;;
-    *)
-      note "Option --newprivileges: Unknown argument '$Allownewprivileges'.
+    # --newprivileges
+    case "$Allownewprivileges"
+    in
+        yes|no|auto) ;;
+        *)
+            note "Option --newprivileges: Unknown argument '$Allownewprivileges'.
   Fallback: Setting --newprivileges=auto"
-      check_fallback
-      Allownewprivileges="auto"
-    ;;
-  esac
+            check_fallback
+            Allownewprivileges="auto"
+            ;;
+    esac
 
-  # --output-count
-  [[ "$Outputcount" =~ ^[1-9]$ ]] || {
-    note "Option --output-count: Value must be one of 1 2 3 4 5 6 7 8 9
+    # --output-count
+    [[ "$Outputcount" =~ ^[1-9]$ ]] || {
+        note "Option --output-count: Value must be one of 1 2 3 4 5 6 7 8 9
   Disabling invalid value $Outputcount"
-    check_fallback
-    Outputcount="1"
-  }
+        check_fallback
+        Outputcount="1"
+    }
 
-  # --printer
-  case "$Sharecupsmode" in
-    socket|tcp|auto|"") ;;
-    *)
-      note "Option --printer: Unknown argument '$Sharecupsmode'.
+    # --printer
+    case "$Sharecupsmode" in
+        socket|tcp|auto|"") ;;
+        *)
+            note "Option --printer: Unknown argument '$Sharecupsmode'.
   Fallback: Setting --printer=auto."
-      check_fallback
-      Sharecupsmode="auto"
-    ;;
-  esac
+            check_fallback
+            Sharecupsmode="auto"
+            ;;
+    esac
 
-  # --pulseaudio
-  case "$Pulseaudiomode" in
-    socket|tcp|auto|host|"") ;;
-    *)
-      note "Option --pulseaudio: Unknown argument '$Pulseaudiomode'.
+    # --pulseaudio
+    case "$Pulseaudiomode" in
+        socket|tcp|auto|host|"") ;;
+        *)
+            note "Option --pulseaudio: Unknown argument '$Pulseaudiomode'.
   Fallback: Setting --pulseaudio=auto."
-      check_fallback
-      Pulseaudiomode="auto"
-    ;;
-  esac
+            check_fallback
+            Pulseaudiomode="auto"
+            ;;
+    esac
 
-  # --rootless
-  case "$Backendrootless" in
-    yes|no|"") ;;
-    *) error "Option --rootless: Unknown argument: $Backendrootless
+    # --rootless
+    case "$Backendrootless" in
+        yes|no|"") ;;
+        *) error "Option --rootless: Unknown argument: $Backendrootless
       Allowed values: yes|no" ;;
-  esac
+    esac
 
-  # --rotate
-  [ -n "$Rotation" ] && {
-    stdin_contains_the_word "$Rotation" <<< "0 90 180 270 flipped flipped-90 flipped-180 flipped-270" || {
-      note "Option --rotate: Unsupported value '$Rotation'.
+    # --rotate
+    [ -n "$Rotation" ] && {
+        stdin_contains_the_word "$Rotation" <<< "0 90 180 270 flipped flipped-90 flipped-180 flipped-270" || {
+            note "Option --rotate: Unsupported value '$Rotation'.
   Must be one of 0 90 180 270 flipped flipped-90 flipped-180 flipped-270
   Fallback: disabling option --rotate"
-      check_fallback
-      Rotation=""
+            check_fallback
+            Rotation=""
+        }
     }
-  }
 
-  # --runtime
-  case "$Runtime" in
-    runc|crun|sysbox|sysbox-runc) ;;
-    kata|kata-runtime)
-      Runtime="kata-runtime"
-      note "Option --runtime=kata-runtime: 
+    # --runtime
+    case "$Runtime" in
+        runc|crun|sysbox|sysbox-runc) ;;
+        kata|kata-runtime)
+            Runtime="kata-runtime"
+            note "Option --runtime=kata-runtime: 
   Support of kata-runtime is deprecated."
-    ;;
-  esac
+            ;;
+    esac
 
-  # --scale
-  [ -n "$Scaling" ] && {
-    isnum "$Scaling" || {
-      note "Option --scale needs a number. '$Scaling' is not allowed.
+    # --scale
+    [ -n "$Scaling" ] && {
+        isnum "$Scaling" || {
+            note "Option --scale needs a number. '$Scaling' is not allowed.
   Fallback: disabling option --scale"
-      check_fallback
-      Scaling=""
+            check_fallback
+            Scaling=""
+        }
     }
-  }
 
-  # --share
-  while read Line; do
-    grep -q -E "/|\\|:" <<< "$Line" && Line="$(convertpath subsystem "$Line")"
-    [ "${Line:0:1}" != "/" ] && grep -q "/" <<< "$Line" && error "Option --share needs either an absolute path
+    # --share
+    while read Line; do
+        grep -q -E "/|\\|:" <<< "$Line" && Line="$(convertpath subsystem "$Line")"
+        [ "${Line:0:1}" != "/" ] && grep -q "/" <<< "$Line" && error "Option --share needs either an absolute path
   or a volume name without any '/':
   $Line"
-    [ "${Line:0:1}" = "/" ] && [ ! -e "$Line" ] && error "Option --share: File or folder does not exist:
+        [ "${Line:0:1}" = "/" ] && [ ! -e "$Line" ] && error "Option --share: File or folder does not exist:
   $Line"
-    [ -z "$Line" ] && error "Option --share needs an argument"
-  done < <(store_runoption_dump_volume)
+        [ -z "$Line" ] && error "Option --share needs an argument"
+    done < <(store_runoption_dump_volume)
 
-  # --size
-  [ "$Screensize" ] && {
-    isint "$(cut -d"x" -f1 <<< "$Screensize")" && isint "$(cut -d"x" -f2 <<< "$Screensize")" && grep -q "x" <<< "$Screensize" || {
-      note "Option --size: Invalid argument: $Screensize
+    # --size
+    [ "$Screensize" ] && {
+        isint "$(cut -d"x" -f1 <<< "$Screensize")" && isint "$(cut -d"x" -f2 <<< "$Screensize")" && grep -q "x" <<< "$Screensize" || {
+                note "Option --size: Invalid argument: $Screensize
   Must consist of two integers with an x between them.
   Fallback: Disabling option --size"
-      check_fallback
-      Screensize=""
+                check_fallback
+                Screensize=""
+            }
     }
-  }
 
-  # --sudouser
-  Sudouser="${Sudouser,,}"
-  case "$Sudouser" in
-    no|"") Sudouser="" ;;
-    yes|nopasswd) ;;
-    *)
-      note "Option --sudouser: Unknown argument '$Sudouser'.
+    # --sudouser
+    Sudouser="${Sudouser,,}"
+    case "$Sudouser" in
+        no|"") Sudouser="" ;;
+        yes|nopasswd) ;;
+        *)
+            note "Option --sudouser: Unknown argument '$Sudouser'.
   Fallback: Disabling option --sudouser."
-      Sudouser=""
-      check_fallback
-    ;;
-  esac
+            Sudouser=""
+            check_fallback
+            ;;
+    esac
 
-  # --update, --update-master
-  case "$Installerarg" in
-    "") ;;
-    diff) ;;
-    *)
-      error "Option --update/--update-master: Unknown argument '$Installerarg'."
-    ;;
-  esac
+    # --update, --update-master
+    case "$Installerarg" in
+        "") ;;
+        diff) ;;
+        *)
+            error "Option --update/--update-master: Unknown argument '$Installerarg'."
+            ;;
+    esac
 
-  # --vt
-  [ -n "$Newxvt" ] && {
-    [ "$Newxvt" = "auto" ] || isint "$Newxvt" || {
-      note "Option --vt: Argument must be a positive integer: $Newxvt
+    # --vt
+    [ -n "$Newxvt" ] && {
+        [ "$Newxvt" = "auto" ] || isint "$Newxvt" || {
+                note "Option --vt: Argument must be a positive integer: $Newxvt
   Fallback: Disabling option --vt"
-      check_fallback
-      Newxvt=""
+                check_fallback
+                Newxvt=""
+            }
     }
-  }
 
-  # --weston
-  [ -n "$Westonarg" ] && case "$Westonarg" in
-    x)
-      Xserver="--weston-xwayland"
-      Setupwayland="yes"
-    ;;
-    X)
-      Xserver="--weston-xwayland"
-      Setupwayland="yes"
-      Desktopmode="yes"
-    ;;
-    "") ;;
-    *)
-      note "Option $Xserver: Unkown argument '$Westonarg'.
+    # --weston
+    [ -n "$Westonarg" ] && case "$Westonarg" in
+        x)
+            Xserver="--weston-xwayland"
+            Setupwayland="yes"
+            ;;
+        X)
+            Xserver="--weston-xwayland"
+            Setupwayland="yes"
+            Desktopmode="yes"
+            ;;
+        "") ;;
+        *)
+            note "Option $Xserver: Unkown argument '$Westonarg'.
   Fallback: Disabling argument."
-      check_fallback
-      Westonarg=""
-    ;;
-  esac
+            check_fallback
+            Westonarg=""
+            ;;
+    esac
 
-  # --xauth
-  case "$Xauthentication" in
-    yes|no|trusted|untrusted|-ac) ;;
-    *)
-      note "Option --xauth: Unknown argument: $Xauthentication
+    # --xauth
+    case "$Xauthentication" in
+        yes|no|trusted|untrusted|-ac) ;;
+        *)
+            note "Option --xauth: Unknown argument: $Xauthentication
   Fallback: Setting --xauth=yes"
-      check_fallback
-      Xauthentication="yes"
-    ;;
-  esac
+            check_fallback
+            Xauthentication="yes"
+            ;;
+    esac
 
-  # --xoverip
-  case "$Xoverip" in
-    yes|no|listentcp|socat|"") ;;
-    *)
-      note "Option --xoverip: Unknown argument: $Xoverip
+    # --xoverip
+    case "$Xoverip" in
+        yes|no|listentcp|socat|"") ;;
+        *)
+            note "Option --xoverip: Unknown argument: $Xoverip
   Fallback: Disabling option --xoverip"
-      check_fallback
-      Xoverip="no"
-    ;;
-  esac
+            check_fallback
+            Xoverip="no"
+            ;;
+    esac
 
-  # --xtest
-  case "$Xtest" in
-    yes|no|"") ;;
-    *)
-      note "Option --xtest: Unknown argument: $Xtest
+    # --xtest
+    case "$Xtest" in
+        yes|no|"") ;;
+        *)
+            note "Option --xtest: Unknown argument: $Xtest
   Fallback: Disabling option --xtest"
-      check_fallback
-      Xtest=""
-    ;;
-  esac
+            check_fallback
+            Xtest=""
+            ;;
+    esac
 
-  # --westonini
-  [ -n "$Customwestonini" ] && [ ! -f "$Customwestonini" ] && {
-    warning "Custom weston.ini (option --westonini) not found.
+    # --westonini
+    [ -n "$Customwestonini" ] && [ ! -f "$Customwestonini" ] && {
+        warning "Custom weston.ini (option --westonini) not found.
   $Customwestonini"
-    check_fallback
-    Customwestonini=""
-  }
+        check_fallback
+        Customwestonini=""
+    }
 
-  # --xc
-  case "$Xcontainer_option" in
-    yes|no|auto|force) ;;
-    docker|podman|nerdctl) ;;
-    *)
-      note "Option --xc: Unknown argument '$Xcontainer_option'.
+    # --xc
+    case "$Xcontainer_option" in
+        yes|no|auto|force) ;;
+        docker|podman|nerdctl) ;;
+        *)
+            note "Option --xc: Unknown argument '$Xcontainer_option'.
   Fallback: Setting --xc=auto."
-      check_fallback
-      Xcontainer_option="auto"
-    ;;
-  esac
+            check_fallback
+            Xcontainer_option="auto"
+            ;;
+    esac
 
-  return 0
+    return 0
 }
 
 check_options_interferences() { # check multiple option interferences, change settings if needed
@@ -17428,8 +17428,8 @@ check_options_interferences() { # check multiple option interferences, change se
             fi
 
             if    [ "$Sharepipewire"  = "yes"              ] \
-               || [ "$Sharealsa"      = "yes"              ] \
-               || case_match "$Pulseaudiomode" "socket|host" ;
+                      || [ "$Sharealsa"      = "yes"              ] \
+                      || case_match "$Pulseaudiomode" "socket|host" ;
             then
                 note_ttm "|With Docker Desktop VM,
                           |    Options --pipewire and --alsa do not work.
@@ -17592,92 +17592,92 @@ check_options_interferences() { # check multiple option interferences, change se
             esac
             ;;
     esac
-  case "$Shareclipboard" in
-    yes|c2h|h2c|cmv)
-      case "$Xserver" in
-        --tty|--hostwayland)
-          note "Option --clipboard is not supported for $Xserver.
+    case "$Shareclipboard" in
+        yes|c2h|h2c|cmv)
+            case "$Xserver" in
+                --tty|--hostwayland)
+                    note "Option --clipboard is not supported for $Xserver.
   Clipboard should be handled already by host Wayland compositor.
   Fallback: Disabling option --clipboard."
-          check_fallback
-          Shareclipboard="no"
-        ;;
-        *)
-          xtool --check xclip || {
-            note "Option --clipboard with $Xserver needs xclip.
+                    check_fallback
+                    Shareclipboard="no"
+                    ;;
+                *)
+                    xtool --check xclip || {
+                        note "Option --clipboard with $Xserver needs xclip.
   Fallback: Disabling option --clipboard."
-            check_fallback
-            Shareclipboard="no"
-          }
-          case "$Xserver" in
-            --weston|--kwin|--weston-xwayland|--hostwayland)
-              [ "$Setupwayland" = "yes" ] && {
-                xtool --check wl-copy || {
-                  note "Option --clipboard with $Xserver needs wl-copy and wl-paste.
+                        check_fallback
+                        Shareclipboard="no"
+                    }
+                    case "$Xserver" in
+                        --weston|--kwin|--weston-xwayland|--hostwayland)
+                            [ "$Setupwayland" = "yes" ] && {
+                                xtool --check wl-copy || {
+                                    note "Option --clipboard with $Xserver needs wl-copy and wl-paste.
   Fallback: Disabling option --clipboard.
   $Wikipackagesimage"
-                  check_fallback
-                  Shareclipboard="no"
-                }
-              }
+                                    check_fallback
+                                    Shareclipboard="no"
+                                }
+                            }
+                            ;;
+                    esac
+                    ;;
+            esac
             ;;
-          esac
-        ;;
-      esac
-    ;;
-  esac
+    esac
 
-  # X server
-  case "$Xserver" in
-    --xorg) 
-      # check if --xorg can be started by an unprivileged user
-      [ -e "/etc/X11/Xwrapper.config" ] && sed 's/ //g' /etc/X11/Xwrapper.config | grep -xq "allowed_users=anybody" && sed 's/ //g' /etc/X11/Xwrapper.config | grep -xq "needs_root_rights=yes" && {
-        Xlegacywrapper="yes"
-      } || {
-        Xlegacywrapper="no"
-      }
-      # xrandr: --scale --size --rotate
-      xtool --check xrandr || {
-        { [ "$Scaling" ] || [ -n "$Rotation" ] || [ -n "$Screensize" ] ; } && {
-          note "Option --xorg needs 'xrandr' for several options.
+    # X server
+    case "$Xserver" in
+        --xorg) 
+            # check if --xorg can be started by an unprivileged user
+            [ -e "/etc/X11/Xwrapper.config" ] && sed 's/ //g' /etc/X11/Xwrapper.config | grep -xq "allowed_users=anybody" && sed 's/ //g' /etc/X11/Xwrapper.config | grep -xq "needs_root_rights=yes" && {
+                    Xlegacywrapper="yes"
+                } || {
+                    Xlegacywrapper="no"
+                }
+            # xrandr: --scale --size --rotate
+            xtool --check xrandr || {
+                { [ "$Scaling" ] || [ -n "$Rotation" ] || [ -n "$Screensize" ] ; } && {
+                    note "Option --xorg needs 'xrandr' for several options.
   Fallback: Disabling options --size, --scale and --rotate."
-          check_fallback
-          Screensize=""
-          Rotation=""
-          Scaling=""
-        }
-      }
-    ;;
-    --tty)
-      [ "$g_Interactive" = "no" ] && {
-        tput lines >/dev/null 2>&1 && {
-          store_runoption_env "LINES=$(tput lines)"
-          store_runoption_env "COLUMNS=$(tput cols)"
-        }
-      }
-      check_optionset "--tty" "--border --clipboard --composite --desktop --display --dpi
+                    check_fallback
+                    Screensize=""
+                    Rotation=""
+                    Scaling=""
+                }
+            }
+            ;;
+        --tty)
+            [ "$g_Interactive" = "no" ] && {
+                tput lines >/dev/null 2>&1 && {
+                    store_runoption_env "LINES=$(tput lines)"
+                    store_runoption_env "COLUMNS=$(tput cols)"
+                }
+            }
+            check_optionset "--tty" "--border --clipboard --composite --desktop --display --dpi
                                --fullscreen --keymap --output-count --rotate
                                --scale --size --vt --wm --westonini --xauth --xc --xeyes --xlogo --xfishtank
                                --xhost --xonly --xoverip --xtest" ||:
-    ;;
-    --hostdisplay)
-      check_optionset "$Xserver" "--xtest --composite"
-      Xtest=""
-      Xcomposite=""
-      [ "$Runsoverssh" = "yes" ] && { ### FIXME
-        [ "$g_Network" != "host" ]  && error "For SSH connection with option --hostdisplay # g_Network_host
+            ;;
+        --hostdisplay)
+            check_optionset "$Xserver" "--xtest --composite"
+            Xtest=""
+            Xcomposite=""
+            [ "$Runsoverssh" = "yes" ] && { ### FIXME
+                [ "$g_Network" != "host" ]  && error "For SSH connection with option --hostdisplay # g_Network_host
   x11docker would need insecure option --network=host.
   It is recommended to use another X server option
   like --xpra, --xephyr or --nxagent."
-      }
-      # MIT-SHM
-      [ "$Hostmitshm" = "yes" ] && [ "$Shareipc" != "host" ] && [ "$Xoverip" = "no" ] && { # Shareipc_host
-        case "$Xlibnoshmfile" in
-          "")
-            case "$Sharegpu" in
-              yes|direct)
-                [ "$Xauthentication" != "trusted" ] && {
-                  note "Option --hostdisplay --gpu=direct
+            }
+            # MIT-SHM
+            [ "$Hostmitshm" = "yes" ] && [ "$Shareipc" != "host" ] && [ "$Xoverip" = "no" ] && { # Shareipc_host
+                case "$Xlibnoshmfile" in
+                    "")
+                        case "$Sharegpu" in
+                            yes|direct)
+                                [ "$Xauthentication" != "trusted" ] && {
+                                    note "Option --hostdisplay --gpu=direct
   (option --xc) would require insecure option --ipc=host to avoid MIT-SHM
   errors. (If you don't care for MIT-SHM errors, use --xauth=trusted.)
   Possible solutions:
@@ -17687,14 +17687,14 @@ check_options_interferences() { # check multiple option interferences, change se
      (Either Download it from x11docker repo,
      or run with --xc once, it will be stored.)
   Fallback: Disabling option --gpu."
-                  check_fallback
-                  Sharegpu="no"
-                } 
-              ;;
-              no)
-                case "$Xauthentication" in
-                  yes)
-                    note "Option --hostdisplay: To avoid MIT-SHM errors,
+                                    check_fallback
+                                    Sharegpu="no"
+                                } 
+                                ;;
+                            no)
+                                case "$Xauthentication" in
+                                    yes)
+                                        note "Option --hostdisplay: To avoid MIT-SHM errors,
   x11docker sets uncomfortable option --xauth=untrusted to limit X access.
   Some applications might misbehave or crash.
   Possible solutions:
@@ -17704,391 +17704,391 @@ check_options_interferences() { # check multiple option interferences, change se
      or run with --xc once, it will be stored.)
    - If you don't care about MIT-SHM errors, set --xauth=trusted.
    - Use another X server option like --nxagent."
-                    Xauthentication="untrusted"
-                  ;;
-                esac
-              ;;
-            esac
-            case "$Xauthentication" in
-              trusted|yes)
-                note "Option --hostdisplay --xauth=trusted: MIT-SHM errors might occur."
-                store_runoption_env "QT_X11_NO_MITSHM=1"
-                store_runoption_env "_X11_NO_MITSHM=1"
-                store_runoption_env "_MITSHM=0"
-              ;;
-            esac
-          ;;
-          *)
-            case $g_BackendKind in
-              docker|host) # BackendKind_host
-                  if [ -f "$Libdlsofile" ] ; then
-                      # Ignore the directory, assume there is a copy
-                      # in Sharefoldercontainer.
-                      store_runoption_env "$(trim_to_mark \
+                                        Xauthentication="untrusted"
+                                        ;;
+                                esac
+                                ;;
+                        esac
+                        case "$Xauthentication" in
+                            trusted|yes)
+                                note "Option --hostdisplay --xauth=trusted: MIT-SHM errors might occur."
+                                store_runoption_env "QT_X11_NO_MITSHM=1"
+                                store_runoption_env "_X11_NO_MITSHM=1"
+                                store_runoption_env "_MITSHM=0"
+                                ;;
+                        esac
+                        ;;
+                    *)
+                        case $g_BackendKind in
+                            docker|host) # BackendKind_host
+                                if [ -f "$Libdlsofile" ] ; then
+                                    # Ignore the directory, assume there is a copy
+                                    # in Sharefoldercontainer.
+                                    store_runoption_env "$(trim_to_mark \
                        "|LD_PRELOAD
                         :=$Sharefoldercontainer/$(basename "$Libdlsofile")
                         ::$Sharefoldercontainer/XlibNoSHM.so"
                         )"
-                  else
-                      store_runoption_env "LD_PRELOAD=$Sharefoldercontainer/XlibNoSHM.so"
-                  fi
-              ;;
-              podman)
-                note "Option --hostdisplay: Cannot set LD_PRELOAD with
+                                else
+                                    store_runoption_env "LD_PRELOAD=$Sharefoldercontainer/XlibNoSHM.so"
+                                fi
+                                ;;
+                            podman)
+                                note "Option --hostdisplay: Cannot set LD_PRELOAD with
   --backend=podman to avoid MIT-SHM issues. Graphical glitches might occur.
   Rather use another X server option."
-              ;;
-            esac
-          ;;
-        esac
-      }
-    ;;
-  esac
+                                ;;
+                        esac
+                        ;;
+                esac
+            }
+            ;;
+    esac
 
-  # --vt
-  [ -n "$Newxvt" ] && {
-    case "$Xserver" in
-      --weston|--weston-xwayland)
-        [ -n "$Hostdisplay" ] && error "Option $Xserver: Opening a TTY for weston on console
+    # --vt
+    [ -n "$Newxvt" ] && {
+        case "$Xserver" in
+            --weston|--weston-xwayland)
+                [ -n "$Hostdisplay" ] && error "Option $Xserver: Opening a TTY for weston on console
   while still running on X would break TTY switching.
   Please run nested without option --vt or switch to console first."
-      ;;
-    esac
-    case "$Xserver" in
-      --weston)
-        [ "$Xcontainer_option" = "yes" ] && note "Option $Xserver: TTY switching will not work
+                ;;
+        esac
+        case "$Xserver" in
+            --weston)
+                [ "$Xcontainer_option" = "yes" ] && note "Option $Xserver: TTY switching will not work
   with weston on console running in a container (option --xc).
   Alternative: Run with --xc=no using weston from host."
-      ;;
-    esac
-    case "$Xcontainer_option" in
-      yes)
-        case "$Xserver" in
-          --weston*|--xorg)
-            case "$Xcforce" in
-              yes) 
-                  warning_ttm \
-                      "|Option --xc=force passes by this issue:
+                ;;
+        esac
+        case "$Xcontainer_option" in
+            yes)
+                case "$Xserver" in
+                    --weston*|--xorg)
+                        case "$Xcforce" in
+                            yes) 
+                                warning_ttm \
+                                    "|Option --xc=force passes by this issue:
                        |  Options $Xserver --xc: Running weston or Xorg
                        |  with option --xc on console can result in not being able to get back
                        |  to console after terminating or to switch to other ttys.
                        |  This is likely caused by proprietary NVIDIA drivers.
                        |  Consider to use free and open source nouveau driver instead.
                        |  Rather use $Xserver with option '--xc=no'."
-                  ;;
-              *)
-                case "$Nvidiaversion" in
-                  "") ;;
-                  *)
-                      error_ttm \
-                          "|Options $Xserver --xc: Running weston or Xorg
+                                ;;
+                            *)
+                                case "$Nvidiaversion" in
+                                    "") ;;
+                                    *)
+                                        error_ttm \
+                                            "|Options $Xserver --xc: Running weston or Xorg
                            |  with option --xc on console can result in not being able to get back
                            |  to console after terminating or to switch to other ttys.
                            |  This is likely caused by proprietary NVIDIA drivers.
                            |  Consider to use free and open source nouveau driver instead.
                            |  Rather use $Xserver with option '--xc=no'.
                            |  You can force to run with option --xc with option '--xc=force'."
-                      ;;
+                                        ;;
+                                esac
+                                ;;
+                        esac
+                        ;;
                 esac
-              ;;
-            esac
-          ;;
+                ;;
         esac
-      ;;
-    esac
-  }
+    }
 
-  # window manager
-  case "$Xserver" in
-    --weston-xwayland)
-      [ "$Desktopmode" = "no" ] && [ -z "$Windowmanagermode" ] && Xwaylandrootless="yes"
-    ;;
-  esac
-  [ "$Desktopmode" = "no" ] && [ -z "$Windowmanagermode" ] && [ "$Xwaylandrootless" = "no" ] && case "$Xserver" in
-    --xephyr|--weston-xwayland|--kwin-xwayland|--xorg|--xwayland)
-      note "Option $Xserver: x11docker assumes that you need
+    # window manager
+    case "$Xserver" in
+        --weston-xwayland)
+            [ "$Desktopmode" = "no" ] && [ -z "$Windowmanagermode" ] && Xwaylandrootless="yes"
+            ;;
+    esac
+    [ "$Desktopmode" = "no" ] && [ -z "$Windowmanagermode" ] && [ "$Xwaylandrootless" = "no" ] && case "$Xserver" in
+        --xephyr|--weston-xwayland|--kwin-xwayland|--xorg|--xwayland)
+            note "Option $Xserver: x11docker assumes that you need
   a window manager. If you don't want this, run with option --desktop.
   Enabling option --wm to provide a window manager."
-      Windowmanagermode="auto"
-      [ "$Autochooseserver" = "yes" ] && [ "$Runsonconsole" = "no" ] && {
-        case "$Sharegpu" in
-          no)  note "Did not find a nice solution to run a seamless application
+            Windowmanagermode="auto"
+            [ "$Autochooseserver" = "yes" ] && [ "$Runsonconsole" = "no" ] && {
+                case "$Sharegpu" in
+                    no)  note "Did not find a nice solution to run a seamless application
   on your desktop. (Only insecure option --hostdisplay would work).
   It is recommended to install xpra or nxagent
   to allow a seamless mode without the need of a window manager.
   $Wikipackagesimage" ;;
-          yes) note "Did not find a nice solution to run a seamless application with
+                    yes) note "Did not find a nice solution to run a seamless application with
   option --gpu on your desktop. (Only insecure option --hostdisplay would work).
   It is recommended to install xpra, weston, Xwayland and xdotool
   to allow a seamless mode without the need of a window manager.
   $Wikipackagesimage" ;;
-        esac
-      }
-    ;;
-  esac
-  [ -n "$Windowmanagercommand" ] && [ "$Xcontainer_option" = "yes" ] && {
-    note "Option --wm=$Windowmanagercommand: With option --xc
+                esac
+            }
+            ;;
+    esac
+    [ -n "$Windowmanagercommand" ] && [ "$Xcontainer_option" = "yes" ] && {
+        note "Option --wm=$Windowmanagercommand: With option --xc
   only OpenBox is provided as window manager.
   Fallback: Setting --wm=auto"
-    check_fallback
-    Windowmanagermode="auto"
-    Windowmanagercommand=""
-  }
-
-  # --checkwindow
-  [ -n "$Checkforopenwindow" ] && {
-    xtool --check xwininfo || {
-      note "Option --checkwindow needs 'xwininfo'.
-  Fallback: Disabling option --checkwindow."
-      check_fallback
-      Checkforopenwindow=""
+        check_fallback
+        Windowmanagermode="auto"
+        Windowmanagercommand=""
     }
-  }
 
-  # --gpu --xoverip
-  case "$Xoverip" in
-    socat)
-      store_runoption_env "LIBGL_ALWAYS_SOFTWARE=1"
-      case "$Sharegpu" in
-        virgl|no) ;;
-        yes|direct|iglx)
-          note "Option --gpu=$Sharegpu is not possible with --xoverip=socat.
+    # --checkwindow
+    [ -n "$Checkforopenwindow" ] && {
+        xtool --check xwininfo || {
+            note "Option --checkwindow needs 'xwininfo'.
+  Fallback: Disabling option --checkwindow."
+            check_fallback
+            Checkforopenwindow=""
+        }
+    }
+
+    # --gpu --xoverip
+    case "$Xoverip" in
+        socat)
+            store_runoption_env "LIBGL_ALWAYS_SOFTWARE=1"
+            case "$Sharegpu" in
+                virgl|no) ;;
+                yes|direct|iglx)
+                    note "Option --gpu=$Sharegpu is not possible with --xoverip=socat.
   Fallback: Setting option --gpu=no"
-          check_fallback
-          Sharegpu="no"
-        ;;
-      esac
-    ;;
-  esac
+                    check_fallback
+                    Sharegpu="no"
+                    ;;
+            esac
+            ;;
+    esac
 
-  # --gpu
-  case "$Xoverip" in
-    yes|listentcp)
-      case "$Sharegpu" in
-        virgl|iglx) ;;
-        yes)
-          note "Option --gpu with X over IP: Enabling indirect rendering with --gpu=$Sharegpu."
-          Sharegpu="iglx"
-        ;;
-        direct)
-          note "Option --gpu=$Sharegpu with --xoverip is not supported.
+    # --gpu
+    case "$Xoverip" in
+        yes|listentcp)
+            case "$Sharegpu" in
+                virgl|iglx) ;;
+                yes)
+                    note "Option --gpu with X over IP: Enabling indirect rendering with --gpu=$Sharegpu."
+                    Sharegpu="iglx"
+                    ;;
+                direct)
+                    note "Option --gpu=$Sharegpu with --xoverip is not supported.
   Try --gpu=iglx instead.
   Fallback: Disabling option --gpu."
-          check_fallback
-          Sharegpu="no"
-        ;;
-      esac
-    ;;
-  esac
-  case "$Sharegpu" in 
-    yes)
-      case "$Xserver" in
-        --weston|--kwin|--hostwayland)
-          Sharegpu="direct"
-        ;;
-        --xorg|*xwayland|--satellite|--hostdisplay)
-          Sharegpu="direct"
-        ;;
-        --xwin|--runx)
-          Sharegpu="iglx"
-        ;;
-        --tty)
-          Sharegpu="direct"
-        ;;
-        *)
-          note "Option --gpu=direct is not supported by $Xserver.
+                    check_fallback
+                    Sharegpu="no"
+                    ;;
+            esac
+            ;;
+    esac
+    case "$Sharegpu" in 
+        yes)
+            case "$Xserver" in
+                --weston|--kwin|--hostwayland)
+                    Sharegpu="direct"
+                    ;;
+                --xorg|*xwayland|--satellite|--hostdisplay)
+                    Sharegpu="direct"
+                    ;;
+                --xwin|--runx)
+                    Sharegpu="iglx"
+                    ;;
+                --tty)
+                    Sharegpu="direct"
+                    ;;
+                *)
+                    note "Option --gpu=direct is not supported by $Xserver.
   Options supporting direct rendering:
   --xpra-xwayland, --weston-xwayland, --xwayland, --xorg, --hostdisplay
   Fallback: Disabling option --gpu"
-          check_fallback
-          Sharegpu="no"
-        ;;
-      esac
-    ;;
-  esac
-  case "$Sharegpu" in
-    iglx)
-      store_runoption_env "LIBGL_ALWAYS_INDIRECT=1"
-    ;;
-    virgl)
-      case "$Xcontainer_option" in
-        yes)
-          case "$g_BackendKind" in
-            docker|podman|nerdctl) 
-              store_runoption_env "LIBGL_ALWAYS_SOFTWARE=1"   ### FIXME rather belongs to setup_gpu()
-              store_runoption_env "GALLIUM_DRIVER=virpipe"
-              ;;
-            *)  # proot|host # BackendKind_host
-              note "Option --gpu=virgl is supported with
+                    check_fallback
+                    Sharegpu="no"
+                    ;;
+            esac
+            ;;
+    esac
+    case "$Sharegpu" in
+        iglx)
+            store_runoption_env "LIBGL_ALWAYS_INDIRECT=1"
+            ;;
+        virgl)
+            case "$Xcontainer_option" in
+                yes)
+                    case "$g_BackendKind" in
+                        docker|podman|nerdctl) 
+                            store_runoption_env "LIBGL_ALWAYS_SOFTWARE=1"   ### FIXME rather belongs to setup_gpu()
+                            store_runoption_env "GALLIUM_DRIVER=virpipe"
+                            ;;
+                        *)  # proot|host # BackendKind_host
+                            note "Option --gpu=virgl is supported with
   backends docker|podman|nerdctl only.
   Fallback: Disabling option --gpu=virgl."
-              check_fallback
-              Sharegpu="no"
-            ;;
-          esac
-        ;;
-        no)
-          note "Option --gpu=virgl needs image x11docker/xserver (option --xc).
+                            check_fallback
+                            Sharegpu="no"
+                            ;;
+                    esac
+                    ;;
+                no)
+                    note "Option --gpu=virgl needs image x11docker/xserver (option --xc).
   Fallback: Disabling option --gpu=virgl."
-          check_fallback
-          Sharegpu="no"
-        ;;
-      esac
-    ;;
-  esac
+                    check_fallback
+                    Sharegpu="no"
+                    ;;
+            esac
+            ;;
+    esac
 
-  # --no-setup
-  case "$Containersetup" in
-    no)
-      check_optionset "--no-setup" "--dbus --no-entrypoint --runasroot --runasuser" ||:
+    # --no-setup
+    case "$Containersetup" in
+        no)
+            check_optionset "--no-setup" "--dbus --no-entrypoint --runasroot --runasuser" ||:
 
-      [ "$Langwunsch" ] && store_runoption_env "LANG=$Langwunsch"
+            [ "$Langwunsch" ] && store_runoption_env "LANG=$Langwunsch"
 
-      case "$g_Initsystem" in
-        none|tini|dockerinit) ;;
-        *) 
-          note "Option --no-setup: Option --init=$g_Initsystem is not supported.
+            case "$g_Initsystem" in
+                none|tini|dockerinit) ;;
+                *) 
+                    note "Option --no-setup: Option --init=$g_Initsystem is not supported.
   Fallback: Setting --init=tini"
-          check_fallback
-          g_Initsystem="tini"
-        ;;
-      esac
+                    check_fallback
+                    g_Initsystem="tini"
+                    ;;
+            esac
 
-      [ -z "$g_Workdir" ] && [ "$Sharehome" != "no" ] && note "Option --no-setup: You might need to specify
+            [ -z "$g_Workdir" ] && [ "$Sharehome" != "no" ] && note "Option --no-setup: You might need to specify
   e.g. '--workdir=/tmp' or '--env HOME=/tmp' to allow proper functionality."
-      [ -n "$Sudouser" ] && [ "$g_Containerusername" != "root" ] && note "Option --no-setup does not support option --sudouser.
+            [ -n "$Sudouser" ] && [ "$g_Containerusername" != "root" ] && note "Option --no-setup does not support option --sudouser.
   Fallback: Enabling needed container capabilities to allow sudo
   just in case the container user is set up for su and/or sudo.
   Consider to use --user=root."
 
-      ### FIXME check support of further options
-      # --stdin?
-      # --hostdbus
+            ### FIXME check support of further options
+            # --stdin?
+            # --hostdbus
 
-      Dbusrunsession="no"
-      g_Noentrypoint="no"
-      Runasroot=""
-      Runasuser=""
-    ;;
-  esac
-
-  # --cap-default
-  [ "$Capdropall" = "no" ] && {
-    case "$Allownewprivileges" in
-      "yes"|"no") ;;
-      "auto")
-        note "Option --cap-default: Enabling option --newprivileges.
-  You can avoid this with --newprivileges=no"
-        Allownewprivileges="yes"
-      ;;
+            Dbusrunsession="no"
+            g_Noentrypoint="no"
+            Runasroot=""
+            Runasuser=""
+            ;;
     esac
-  }
 
-  # --keymap: XKB keyboard layout
-  [ -n "$Xkblayout" ] && {
-    case "$Xserver" in
-      --kwin|--kwin-xwayland)
-        [ "$Runsonconsole" = "yes" ] || [ "$Newxvt" ] && {
-          check_optionset "$Xserver" "--keymap" || {
-            note "Option --keymap does not work with option $Xserver
+    # --cap-default
+    [ "$Capdropall" = "no" ] && {
+        case "$Allownewprivileges" in
+            "yes"|"no") ;;
+            "auto")
+                note "Option --cap-default: Enabling option --newprivileges.
+  You can avoid this with --newprivileges=no"
+                Allownewprivileges="yes"
+                ;;
+        esac
+    }
+
+    # --keymap: XKB keyboard layout
+    [ -n "$Xkblayout" ] && {
+        case "$Xserver" in
+            --kwin|--kwin-xwayland)
+                [ "$Runsonconsole" = "yes" ] || [ "$Newxvt" ] && {
+                    check_optionset "$Xserver" "--keymap" || {
+                        note "Option --keymap does not work with option $Xserver
   if running from console.
   Fallback: disabling option --keymap."
-            check_fallback
-            Xkblayout=""
-          }
-        }
-      ;;
-    esac
-    [ "$Xkblayout" = "clone" ] && case "$Xserver" in
-      --nxagent) ;;
-      *)
-        note "Option --keymap=clone is supported with --nxagent only.
+                        check_fallback
+                        Xkblayout=""
+                    }
+                }
+                ;;
+        esac
+        [ "$Xkblayout" = "clone" ] && case "$Xserver" in
+            --nxagent) ;;
+            *)
+                note "Option --keymap=clone is supported with --nxagent only.
   Fallback: Disabling option --keymap."
-        check_fallback
-        Xkblayout=""
-      ;;
+                check_fallback
+                Xkblayout=""
+                ;;
+        esac
+    }
+
+    # --rotate
+    [ "$Rotation" = "0" ] && Rotation="normal"
+    case "$Xserver" in
+        --weston*)
+            case "$Rotation" in
+                90)          Rotation="rotate-270" ;;
+                180)         Rotation="rotate-180" ;;
+                270)         Rotation="rotate-90" ;;
+                flipped-90)  Rotation="flipped-rotate-270" ;;
+                flipped-180) Rotation="flipped-rotate-180" ;;
+                flipped-270) Rotation="flipped-rotate-90" ;;
+            esac
+            ;;
     esac
-  }
 
-  # --rotate
-  [ "$Rotation" = "0" ] && Rotation="normal"
-  case "$Xserver" in
-    --weston*)
-      case "$Rotation" in
-        90)          Rotation="rotate-270" ;;
-        180)         Rotation="rotate-180" ;;
-        270)         Rotation="rotate-90" ;;
-        flipped-90)  Rotation="flipped-rotate-270" ;;
-        flipped-180) Rotation="flipped-rotate-180" ;;
-        flipped-270) Rotation="flipped-rotate-90" ;;
-      esac
-    ;;
-  esac
-
-  # --shell
-  case "$Containerusershell" in
-    auto) ;;
-    *)
-      store_runoption_env "SHELL=$Containerusershell"
-      [ "$Containersetup" = "no" ] && note "Option --shell: With option --no-setup
+    # --shell
+    case "$Containerusershell" in
+        auto) ;;
+        *)
+            store_runoption_env "SHELL=$Containerusershell"
+            [ "$Containersetup" = "no" ] && note "Option --shell: With option --no-setup
   x11docker only sets variable SHELL, but does no setup in /etc/passwd.
   Some terminal emulators might not work as expected."
-    ;;
-  esac
+            ;;
+    esac
 
-  # --output-count
-  [ "$Outputcount" != "1" ] && [ "$Runsonconsole" = "yes" ] && {
-    note "Option --output-count works in nested/windowed mode only,
+    # --output-count
+    [ "$Outputcount" != "1" ] && [ "$Runsonconsole" = "yes" ] && {
+        note "Option --output-count works in nested/windowed mode only,
   but not on console. Fallback: disabling option --output-count."
-    check_fallback
-    Outputcount="1"
-  }
+        check_fallback
+        Outputcount="1"
+    }
 
-  # --xeyes
-  [ -n "$Xeyes" ] && {
-    xtool --check xeyes || Xeyes=""
-    case "$Xserver" in
-      --weston|--kwin|--hostwayland|--tty)
-        note "Option --xeyes does not run on $Xserver.
+    # --xeyes
+    [ -n "$Xeyes" ] && {
+        xtool --check xeyes || Xeyes=""
+        case "$Xserver" in
+            --weston|--kwin|--hostwayland|--tty)
+                note "Option --xeyes does not run on $Xserver.
   Fallback: Disabling option --xeyes."
-        check_fallback
-        Xeyes=""
-      ;;
-    esac
-  }
+                check_fallback
+                Xeyes=""
+                ;;
+        esac
+    }
 
-  # --xlogo
-  [ -n "$Xlogo" ] && {
-    xtool --check xlogo || Xlogo=""
-    case "$Xserver" in
-      --weston|--kwin|--hostwayland|--tty)
-        note "Option --xlogo does not run on $Xserver.
+    # --xlogo
+    [ -n "$Xlogo" ] && {
+        xtool --check xlogo || Xlogo=""
+        case "$Xserver" in
+            --weston|--kwin|--hostwayland|--tty)
+                note "Option --xlogo does not run on $Xserver.
   Fallback: Disabling option --xlogo."
-        check_fallback
-        Xlogo=""
-      ;;
-    esac
-  }
+                check_fallback
+                Xlogo=""
+                ;;
+        esac
+    }
 
-  # --xfishtank
-  [ "$Xfishtank" = "yes" ] && {
-    xtool --check xfishtank && case "$Xserver" in
-      --xpra*|--nxagent)
-        [ "$Desktopmode" = "no" ] && Windowmanagermode="${Windowmanagermode:-auto}" && Desktopmode="yes"
-      ;;
-    esac
-  }
+    # --xfishtank
+    [ "$Xfishtank" = "yes" ] && {
+        xtool --check xfishtank && case "$Xserver" in
+            --xpra*|--nxagent)
+                [ "$Desktopmode" = "no" ] && Windowmanagermode="${Windowmanagermode:-auto}" && Desktopmode="yes"
+                ;;
+        esac
+    }
 
-  # MSYS2, Cygwin, WSL
-  case "$Winsubsystem" in
-    WSL2) note "WSL2 support is experimental and barely tested yet.
+    # MSYS2, Cygwin, WSL
+    case "$Winsubsystem" in
+        WSL2) note "WSL2 support is experimental and barely tested yet.
   Feedback and bug reports are appreciated!" ;;
-  esac
-  case "$Dockervm" in
-    moby)
-      case "$Winsubsystem" in
-        WSL1|WSL2)
-          grep -q "/c/" <<< "$Cachebasefolder" && [ -z "$Hosthomebasefolder" ] && note "With MobyVM and WSL x11docker stores its cache files on drive C:
+    esac
+    case "$Dockervm" in
+        moby)
+            case "$Winsubsystem" in
+                WSL1|WSL2)
+                    grep -q "/c/" <<< "$Cachebasefolder" && [ -z "$Hosthomebasefolder" ] && note "With MobyVM and WSL x11docker stores its cache files on drive C:
   to allow cache file sharing.
   Your Docker setup might not allow to share files from drive C:.
   If startup fails with an 'access denied' error,
@@ -18097,72 +18097,73 @@ check_options_interferences() { # check multiple option interferences, change se
   Same issue can occur with option '--home'.
   Use option '--homebasedir D:/some/home/folder' in that case.
   Option --preset can help to reduce typing for each command."
-        ;;
-      esac
-      [ "$g_Initsystem" = "systemd" ] && {
-        note "Option --init=systemd is not supported with MobyVM.
+                    ;;
+            esac
+            [ "$g_Initsystem" = "systemd" ] && {
+                note "Option --init=systemd is not supported with MobyVM.
   You can try another init option instead, e.g. --init=openrc.
   Fallback: Disabling option --init=systemd"
-        check_fallback
-        g_Initsystem="tini"
-      }
-      [ "$Sharecgroup" = "yes" ] && {
-        note "Option --sharecgroup is not supported with MobyVM.
+                check_fallback
+                g_Initsystem="tini"
+            }
+            [ "$Sharecgroup" = "yes" ] && {
+                note "Option --sharecgroup is not supported with MobyVM.
   Fallback: Disabling option --sharecgroup."
-        check_fallback
-        Sharecgroup="no"
-      }
-    ;;
-  esac
-  case "$Winsubsystem" in
-    MSYS2|CYGWIN|WSL1|WSL2)
-      check_optionset "Windows" "--pulseaudio --printer --webcam" ||:
-      Sharecupsmode=""
-      Pulseaudiomode=""
-      Sharewebcam="no"
-    ;;
-  esac
+                check_fallback
+                Sharecgroup="no"
+            }
+            ;;
+    esac
+    case "$Winsubsystem" in
+        MSYS2|CYGWIN|WSL1|WSL2)
+            check_optionset "Windows" "--pulseaudio --printer --webcam" ||:
+            Sharecupsmode=""
+            Pulseaudiomode=""
+            Sharewebcam="no"
+            ;;
+    esac
 
-  # --wayland
-  [ "$Setupwayland" = "yes" ] && Dbusrunsession="yes"
+    # --wayland
+    [ "$Setupwayland" = "yes" ] && Dbusrunsession="yes"
 
-  # --init
-  case "$g_Initsystem" in
-    systemd|sysvinit|openrc|runit) Dbussystem="yes" ;;
-  esac
+    # --init
+    case "$g_Initsystem" in
+        systemd|sysvinit|openrc|runit) Dbussystem="yes" ;;
+    esac
 
-  # --interactive
-  case "$g_Interactive" in
-    yes)
-      [ "$Forwardstdin" = "yes" ] && {
-        note "Option --stdin is not compatible with option --interactive.
+    # --interactive
+    case "$g_Interactive" in
+        yes)
+            [ "$Forwardstdin" = "yes" ] && {
+                note "Option --stdin is not compatible with option --interactive.
   Fallback: Disabling option --stdin."
-        check_fallback
-        Forwardstdin="no"
-      }
-      [ "$Runsinteractive" = "yes" ] && {
-        note "Option -i, --interactive: Does not work in interactive
+                check_fallback
+                Forwardstdin="no"
+            }
+            [ "$Runsinteractive" = "yes" ] && {
+                note "Option -i, --interactive: Does not work in interactive
   bash mode (option --enforce-i).
   Fallback: Disabling option --interactive."
-        check_fallback
-        g_Interactive="no"
-      }
-      case "$Winsubsystem" in
-        MSYS2|CYGWIN|WSL1)
-          Winpty="$(command -v winpty)"
-          Winpty="$(escapestring "$Winpty")"
-          [ -z "$Winpty" ] && error "Option --interactive on MS Windows needs 'winpty'
+                check_fallback
+                g_Interactive="no"
+            }
+            case "$Winsubsystem" in
+                MSYS2|CYGWIN|WSL1)
+                    Winpty="$(command -v winpty)"
+                    Winpty="$(escapestring "$Winpty")"
+                    [ -z "$Winpty" ] && error "Option --interactive on MS Windows needs 'winpty'
   to run x11docker in interactive mode. MSYS2 provides winpty as a package.
   On Cygwin it can be compiled from source. WSL1 isn't supported yet.
   WSL2 might work, but is not tested yet."
-        ;;
-      esac
-    ;;
-  esac
-  [ "$g_Interactive" = "yes" ] && Showcontaineroutput="no"
+                    ;;
+            esac
+            ;;
+    esac
+    [ "$g_Interactive" = "yes" ] && Showcontaineroutput="no"
 
-  return 0
+    return 0
 }
+
 check_options_messages() {      # some messages depending on options, but not changing settings
   # X server specific messages
   case "$Xserver" in
