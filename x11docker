@@ -11683,7 +11683,7 @@ xtool() {
 #   Installermode :r
 #   g_Imagename= :rw
 #   g_Rootfs=    :w
-#   Imagebasename= :w
+#   g_Imagebasename= :w (in check_backend)
 #   g_Containercommand= :rw
 #   Codename=         :rw
 #
@@ -11897,7 +11897,7 @@ check_backend() {
         check_runtime  "${l_Backendinfo}"  # uses $l_Backendinfo
     fi
 
-    # g_Imagename, g_Rootfs, Imagebasename, Codename, g_Containercommand
+    # g_Imagename, g_Rootfs, g_Imagebasename, Codename, g_Containercommand
     {
         if  case_match "$g_BackendKind"  'docker|podman|nerdctl|proot' ; then
 
@@ -11909,7 +11909,7 @@ check_backend() {
                 Checkrootfs="yes"
             fi
             #
-            Imagebasename="$(echo "$g_Imagename" | tr / - | cut -d: -f1)"
+            g_Imagebasename="$(echo "$g_Imagename" | tr / - | cut -d: -f1)"
             Codename="${Codename:-"$g_Imagename $g_Containercommand"}"
             verbose_ttm "|Image name: $g_Imagename
                          |  Container command: $g_Containercommand"
@@ -11925,15 +11925,15 @@ check_backend() {
                 #
             fi
             g_Imagename=""
-            Imagebasename="$(basename "$g_Containercommand" | cut -d' ' -f1)"
-            Codename="${Codename:-"$Imagebasename"}"
+            g_Imagebasename="$(basename "$g_Containercommand" | cut -d' ' -f1)"
+            Codename="${Codename:-"$g_Imagebasename"}"
         fi
 
         Codename="$(unspecialstring "$Codename" | cut -c1-40)"
         Codename="${Codename:-noname}"
         #
-        Imagebasename="$(unspecialstring "$Imagebasename")"  # must be - for backwards compatibility of --home
-        Imagebasename="${Imagebasename:-noname}"
+        g_Imagebasename="$(unspecialstring "$g_Imagebasename")"  # must be - for backwards compatibility of --home
+        g_Imagebasename="${g_Imagebasename:-noname}"
     }
 
     case "$g_BackendKind" in
@@ -12076,11 +12076,11 @@ check_backend() {
         esac
 
         if [ -z "$g_Rootfs" ] ; then
-            if      [ -d "$Hosthomebasefolder/ROOTFS/$Imagebasename" ] ; then
-                g_Rootfs="$Hosthomebasefolder/ROOTFS/$Imagebasename"
+            if      [ -d "$Hosthomebasefolder/ROOTFS/$g_Imagebasename" ] ; then
+                g_Rootfs="$Hosthomebasefolder/ROOTFS/$g_Imagebasename"
             else
                 error_ttm "|Option --backend=$g_BackendKind: Did not find a rootfs for $g_Imagename
-                           |  in $Hosthomebasefolder/ROOTFS/$Imagebasename"
+                           |  in $Hosthomebasefolder/ROOTFS/$g_Imagebasename"
             fi
         fi
         #
@@ -12517,6 +12517,11 @@ check_containerhomebasedir() {  # options --homebasedir, --home
     fi
 }
 
+#
+# Globals:
+#
+#  g_Imagebasename (in check_containerhome) 
+#
 check_containerhome() {         # option --home: check HOME of container user.
   ## option '--home':        Share folder ~/.local/share/x11docker/imagename with created container as its home directory
   ## option '--home=DIR':    Share custom host folder as home
@@ -12539,7 +12544,7 @@ check_containerhome() {         # option --home: check HOME of container user.
 
   case "$Sharehome" in
     yes|host) # Sharehome_host
-      [ -z "$Persistanthomevolume" ] && Persistanthomevolume="$Hosthomebasefolder/$Imagebasename"
+      [ -z "$Persistanthomevolume" ] && Persistanthomevolume="$Hosthomebasefolder/$g_Imagebasename"
       Persistanthomevolume="${Persistanthomevolume//"~"/"$Hostuserhome"}"
       [ "${Persistanthomevolume:0:1}" = "/" ] && Sharehome="host" || Sharehome="volume" # Sharehome_host
     ;;
@@ -14205,6 +14210,10 @@ create_containerrootrc() {
 # Function: create_containerrc
 # Brief: This script runs as unprivileged user in container
 #
+# Globals:
+#
+#   g_Imagebasename (in create_containerrc)
+#
 create_containerrc() {
     local Ungrep=""
     local Path=""
@@ -14262,8 +14271,8 @@ create_containerrc() {
         case "$g_BackendKind" in
             proot)
                 # set another hostname ### FIXME fails
-                sed "s/$(hostname)/$g_BackendKind-$Imagebasename/g" "/etc/hosts" > "$g_Rootfs/etc/hosts"
-                echo "$g_BackendKind-$Imagebasename"                             > "$g_Rootfs/etc/hostname"
+                sed "s/$(hostname)/$g_BackendKind-$g_Imagebasename/g" "/etc/hosts" > "$g_Rootfs/etc/hosts"
+                echo "$g_BackendKind-$g_Imagebasename"                             > "$g_Rootfs/etc/hostname"
                 # clean environment variables
                 while read -r Line; do
                     Line="$(cut -d= -f1 <<< "$Line")"
@@ -14273,7 +14282,7 @@ create_containerrc() {
                     }
                 done < <(unset -f rmcr ; env)
                 echo "export PATH='/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/sbin:/usr/sbin'"
-                echo 'export PS1="\u@'"$g_BackendKind"'-'"$Imagebasename"':\w\$ "' ### FIXME fails
+                echo 'export PS1="\u@'"$g_BackendKind"'-'"$g_Imagebasename"':\w\$ "' ### FIXME fails
                 ;;
             docker|podman|nerdctl)
                 if [ "$Switchcontaineruserflag" = "yes" ] ; then
@@ -19876,10 +19885,10 @@ declare_variables() {           # declare global variables
   #
   Fallback="yes"
   
-  # Imagebasename : Image name without tags and / replaced with -.
-  #                 For use of --home folders.
+  # g_Imagebasename : Image name without tags and / replaced with -.
+  #                   For use of --home folders.
   #
-  Imagebasename=""
+  g_Imagebasename=""
   
   # Mytest : --experimental: use experimental code
   Mytest=""
