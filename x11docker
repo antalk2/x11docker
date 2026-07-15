@@ -17094,8 +17094,8 @@ check_options_arguments() {
     case "$g_BackendKind" in
         docker|podman|host) ;; # BackendKind_host
         proot|nerdctl) 
-            note "Option --backend=$g_BackendKind is deprecated.
-  Please use --backend=docker or --backend=podman instead."
+            note_ttm "|Option --backend=$g_BackendKind is deprecated.
+                      |  Please use --backend=docker or --backend=podman instead."
             ;;
         *) 
             error "Option --backend: Unknown argument '$g_BackendKind'."
@@ -17106,22 +17106,25 @@ check_options_arguments() {
     case "$Shareclipboard" in
         yes|no|cmv|h2c|c2h) ;;
         superv|altv)
-            note "Option --clipboard=$Shareclipboard is deprecated.
-  Please use --clipboard=csv instead.
-  This uses key combo [CRTL] + [META] + v
-  Fallback: Setting --clipboard=cmv"
+            note_ttm "|Option --clipboard=$Shareclipboard is deprecated.
+                      |  Please use --clipboard=csv instead.
+                      |  This uses key combo [CRTL] + [META] + v
+                      |  Fallback: Setting --clipboard=cmv"
+            #
             check_fallback
             Shareclipboard="cmv"
             ;;
         oneway)
-            note "Option --clipboard=$Shareclipboard:
-  Argument $Shareclipboard is deprecated.
-  Please use --clipboard=c2h instead."
+            note_ttm "|Option --clipboard=$Shareclipboard:
+                      |  Argument $Shareclipboard is deprecated.
+                      |  Please use --clipboard=c2h instead."
+            #
             Shareclipboard="c2h"
             ;;
         *)
-            note "Option --clipboard: Unknown argument '$Shareclipboard'.
-  Fallback: Disabling option --clipboard."
+            note_ttm "|Option --clipboard: Unknown argument '$Shareclipboard'.
+                      |  Fallback: Disabling option --clipboard."
+            #
             check_fallback
             Shareclipboard="no"
             ;;
