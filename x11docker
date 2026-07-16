@@ -17192,15 +17192,15 @@ check_options_arguments() {
     esac
     
     # --dpi
-    [ "$Dpi" ] && {
-        isnum "$Dpi" || {
+    if [ -n "$Dpi" ] ; then
+        if ! isnum "$Dpi" ; then
             note_ttm "|Option --dpi only accepts numeric values. Not numeric: '$Dpi'
                       |  Fallback: Disabling option --dpi."
             #
             check_fallback
             Dpi=""
-        }
-    }
+        fi
+    fi
 
     # --gpu
     case "$Sharegpu" in
