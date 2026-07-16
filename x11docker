@@ -17309,7 +17309,7 @@ check_options_arguments() {
     fi
     POST_CONDITION Dpi '[ -z "${Dpi}" ] || isnum "${Dpi}" '
 
-    # --gpu
+    # Sharegpu : --gpu
     case "$Sharegpu" in
         yes|no|direct|iglx) ;;
         virgl)
@@ -17323,6 +17323,7 @@ check_options_arguments() {
             Sharegpu="no"
             ;;
     esac
+    POST_CONDITION Sharegpu 'word_is_in "${Sharegpu}"  "yes no direct iglx virgl"'
 
     # --homebasedir
     if [ -n "$Hosthomebasefolder" ] ; then
