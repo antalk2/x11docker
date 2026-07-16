@@ -5,11 +5,6 @@
 all:
 
 
-test: lib/bashunit
-	lib/bashunit tests-bashunit/ --fail-on-risky # -vvv
-
-test-verbose: lib/bashunit
-	lib/bashunit tests-bashunit/  -vvv
 
 run1:
 	./x11docker
@@ -23,12 +18,27 @@ TAGS:
 	./etags-bash.sh x11docker
 
 
-lib/bashunit:
-	if test -e install.sh ; then rm install.sh ; fi
-	wget https://bashunit.com/install.sh
-	bash install.sh
-	-rm install.sh
-
 
 shellcheck:
 	shellcheck --shell=bash x11docker
+
+
+
+test: ./lib/bashunit
+	./lib/bashunit tests-bashunit --fail-on-risky  # -vvv
+
+test-filtered: ./lib/bashunit
+	./lib/bashunit tests-bashunit --fail-on-risky --filter ERE  # -vvv
+
+
+test-verbose: ./lib/bashunit
+	./lib/bashunit tests-bashunit  -vvv
+
+
+
+./lib/bashunit:
+	cd lib && if test -e install.sh ; then rm install.sh ; fi
+	cd lib && wget https://bashunit.com/install.sh
+	cd lib && bash install.sh .
+	cd lib && rm install.sh
+
