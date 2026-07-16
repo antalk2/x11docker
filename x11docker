@@ -10941,19 +10941,20 @@ create_xinitrc() {
 
         --xorg) # --xorg: --scale, --size, --rotate
 
-            trim_to_bar "|# determine screen size
-                         |if [ -z \"\$(xrandr | grep connected | grep -v disconnected)\" ] ; then
-                         |  Xaxis=${Xaxis:-1024}
-                         |  Yaxis=${Yaxis:-768}
-                         |  Screensize=\"\${Xaxis}x\${Yaxis}\"
-                         |  note_ttm \"|Could not detect any connected monitor.
-                         |             |  Running on a server? Is xrandr installed? Will try to set a framebuffer size
-                         |             |  with \"xrandr --fb \$Screensize\" that may serve as a virtual display.\"
-                         |  xrandr --fb \$Screensize
-                         |
-                         |else # Monitors detected
-                         |
-                         |"
+            trim_to_bar \
+                "|# determine screen size
+                 |if [ -z \"\$(xrandr | grep connected | grep -v disconnected)\" ] ; then
+                 |  Xaxis=${Xaxis:-1024}
+                 |  Yaxis=${Yaxis:-768}
+                 |  Screensize=\"\${Xaxis}x\${Yaxis}\"
+                 |  note_ttm \"|Could not detect any connected monitor.
+                 |             |  Running on a server? Is xrandr installed? Will try to set a framebuffer size
+                 |             |  with \"xrandr --fb \$Screensize\" that may serve as a virtual display.\"
+                 |  xrandr --fb \$Screensize
+                 |
+                 |else # Monitors detected
+                 |
+                 |"
             #
             if [ -z "$Screensize" ] ; then
                 trim_to_bar "|  getscreensize
