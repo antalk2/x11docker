@@ -24,35 +24,6 @@ set_up() {
 
     if true || ! fn_exists num_compare ; then
         # ------------------------------------------------------------
-        # Function: num_compare  a op b
-        # Status: unused
-        #
-        # Brief: compare two floating point numbers
-        #
-        # Example: if num_compare 0.01 "<" 0.12 ; then ... ; fi
-        #
-        # Argument:
-        #   a : isnum
-        #  op : One of: < > <= >= == !=
-        #   b : isnum
-        #
-        # return: 0 if a op b is true
-        #         1 if a op b is false
-        # error: if a or b is not isnum
-        #        if op in not in {  < > <= >= == != }
-        #
-        num_compare() {
-            local a="${1:-}"
-            local op="${2:-}"
-            local b="${3:-}"
-            if ! isnum "$a" ; then error "num_compare(): a is not isnum" ; fi
-            if ! isnum "$b" ; then error "num_compare(): b is not isnum" ; fi
-            if ! word_is_in "${op}" '< > <= >= == !=' ; then
-                error "num_compare(): op is not in { < > <= >= == != }"
-            fi
-            awk -v a="${a}" -v b="${b}"  \
-                "BEGIN { exit ( (0 + a) $op (0 + b) ) ? 0 : 1 }"
-        }
         # ------------------------------------------------------------
         :
     fi

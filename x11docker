@@ -2539,6 +2539,37 @@ isnum() {
 }
 # ------------------------------------------------------------
 
+# ------------------------------------------------------------
+# Function: num_compare  a op b
+# Status: unused
+#
+# Brief: compare two floating point numbers
+#
+# Example: if num_compare 0.01 "<" 0.12 ; then ... ; fi
+#
+# Argument:
+#   a : isnum
+#  op : One of: < > <= >= == !=
+#   b : isnum
+#
+# return: 0 if a op b is true
+#         1 if a op b is false
+# error: if a or b is not isnum
+#        if op in not in {  < > <= >= == != }
+#
+num_compare() {
+    local a="${1:-}"
+    local op="${2:-}"
+    local b="${3:-}"
+    if ! isnum "$a" ; then error "num_compare(): a is not isnum" ; fi
+    if ! isnum "$b" ; then error "num_compare(): b is not isnum" ; fi
+    if ! word_is_in "${op}" '< > <= >= == !=' ; then
+        error "num_compare(): op is not in { < > <= >= == != }"
+    fi
+    awk -v a="${a}" -v b="${b}"  \
+        "BEGIN { exit ( (0 + a) $op (0 + b) ) ? 0 : 1 }"
+}
+# ------------------------------------------------------------
 
 
 # ------------------------------------------------------------
@@ -17228,131 +17259,145 @@ check_options_arguments() {
     POST_CONDITION g_BackendKind  'word_is_in "$g_BackendKind" "docker podman host proot nerdctl"'
 
     # Shareclipboard : --clipboard
-    case "$Shareclipboard" in
-        yes|no|cmv|h2c|c2h) ;;
-        superv|altv)
-            note_ttm "|Option --clipboard=$Shareclipboard is deprecated.
-                      |  Please use --clipboard=cmv instead.
-                      |  This uses key combo [CRTL] + [META] + v
-                      |  Fallback: Setting --clipboard=cmv"
-            #
-            check_fallback
-            Shareclipboard="cmv"
-            ;;
-        oneway)
-            note_ttm "|Option --clipboard=$Shareclipboard:
-                      |  Argument $Shareclipboard is deprecated.
-                      |  Please use --clipboard=c2h instead."
-            #
-            Shareclipboard="c2h"
-            ;;
-        *)
-            note_ttm "|Option --clipboard: Unknown argument '$Shareclipboard'.
-                      |  Fallback: Disabling option --clipboard."
-            #
-            check_fallback
-            Shareclipboard="no"
-            ;;
-    esac
+    {
+        case "$Shareclipboard" in
+            yes|no|cmv|h2c|c2h) ;;
+            superv|altv)
+                note_ttm "|Option --clipboard=$Shareclipboard is deprecated.
+                          |  Please use --clipboard=cmv instead.
+                          |  This uses key combo [CRTL] + [META] + v
+                          |  Fallback: Setting --clipboard=cmv"
+                #
+                check_fallback
+                Shareclipboard="cmv"
+                ;;
+            oneway)
+                note_ttm "|Option --clipboard=$Shareclipboard:
+                          |  Argument $Shareclipboard is deprecated.
+                          |  Please use --clipboard=c2h instead."
+                #
+                Shareclipboard="c2h"
+                ;;
+            *)
+                note_ttm "|Option --clipboard: Unknown argument '$Shareclipboard'.
+                          |  Fallback: Disabling option --clipboard."
+                #
+                check_fallback
+                Shareclipboard="no"
+                ;;
+        esac
+    }
     POST_CONDITION Shareclipboard 'word_is_in "${Shareclipboard}" "yes no cmv h2c c2h"'
 
     # Dbusrunsession Dbussystem : --dbus [=system]
-    case "$Dbusrunsession" in
-        yes|user|session) Dbusrunsession="yes" ;;
-        no) ;;
-        system)
-            Dbusrunsession="yes"
-            Dbussystem="yes"
-            ;;
-        *)
-            note_ttm "|Option --dbus: Unknown argument '$Dbusrunsession'.
-                      |  Fallback: Enabling --dbus user session."
-            #
-            check_fallback
-            Dbusrunsession="yes"
-            ;;
-    esac
+    {
+        case "$Dbusrunsession" in
+            yes|user|session) Dbusrunsession="yes" ;;
+            no) ;;
+            system)
+                Dbusrunsession="yes"
+                Dbussystem="yes"
+                ;;
+            *)
+                note_ttm "|Option --dbus: Unknown argument '$Dbusrunsession'.
+                          |  Fallback: Enabling --dbus user session."
+                #
+                check_fallback
+                Dbusrunsession="yes"
+                ;;
+        esac
+    }
     POST_CONDITION Dbusrunsession 'word_is_in "${Dbusrunsession}"  "yes no"'
     POST_CONDITION Dbussystem     'word_is_in "${Dbussystem}"      "yes no"'
     
-    # --dpi
-    if [ -n "$Dpi" ] ; then
-        if ! isnum "$Dpi" ; then
-            note_ttm "|Option --dpi only accepts numeric values. Not numeric: '$Dpi'
-                      |  Fallback: Disabling option --dpi."
-            #
-            check_fallback
-            Dpi=""
+    # Dpi : --dpi
+    {
+        if [ -n "$Dpi" ] ; then
+            if ! isnum "$Dpi" ; then
+                note_ttm "|Option --dpi only accepts numeric values. Not numeric: '$Dpi'
+                          |  Fallback: Disabling option --dpi."
+                #
+                check_fallback
+                Dpi=""
+            fi
         fi
-    fi
+    }
     POST_CONDITION Dpi '[ -z "${Dpi}" ] || isnum "${Dpi}" '
 
     # Sharegpu : --gpu
-    case "$Sharegpu" in
-        yes|no|direct|iglx) ;;
-        virgl)
-            note "Option --gpu=virgl: Argument 'virgl'  is deprecated."
-            ;;
-        *)
-            note_ttm "|Option --gpu: Unknown argument '$Sharegpu'.
-                      |  Fallback: Disabling option --gpu."
-            #
-            check_fallback
-            Sharegpu="no"
-            ;;
-    esac
+    {
+        case "$Sharegpu" in
+            yes|no|direct|iglx) ;;
+            virgl)
+                note "Option --gpu=virgl: Argument 'virgl'  is deprecated."
+                ;;
+            *)
+                note_ttm "|Option --gpu: Unknown argument '$Sharegpu'.
+                          |  Fallback: Disabling option --gpu."
+                #
+                check_fallback
+                Sharegpu="no"
+                ;;
+        esac
+    }
     POST_CONDITION Sharegpu 'word_is_in "${Sharegpu}"  "yes no direct iglx virgl"'
 
     # Hosthomebasefolder : --homebasedir
-    if [ -n "$Hosthomebasefolder" ] ; then
-        Hosthomebasefolder="$(convertpath subsystem "$Hosthomebasefolder")"
-        if [ ! -e "$Hosthomebasefolder" ] ; then
-            error_ttm "|Option --homebasedir: Specified path does not exist:
-                       |  $Hosthomebasefolder"
+    {
+        if [ -n "$Hosthomebasefolder" ] ; then
+            Hosthomebasefolder="$(convertpath subsystem "$Hosthomebasefolder")"
+            if [ ! -e "$Hosthomebasefolder" ] ; then
+                error_ttm "|Option --homebasedir: Specified path does not exist:
+                           |  $Hosthomebasefolder"
+            fi
         fi
-    fi
+    }
     POST_CONDITION Hosthomebasefolder '[ -z "${Hosthomebasefolder}" ] || [ -e  "${Hosthomebasefolder}" ] '
 
     # g_Initsystem : --init
-    case "$g_Initsystem" in
-        tini | systemd | sysvinit | openrc | runit | dockerinit | s6-overlay )
-            : # NOP
-            ;;
-        no | none )
-            g_Initsystem="none"
-            ;;
-        *)
-            # FIXME: dockerinit is accepted above, but not mentioned here. Why?
-            note_ttm "|Option --init: Unknown init system $g_Initsystem
-                      |  Possible: tini systemd sysvinit openrc runit s6-overlay none
-                      |  Fallback: Using --init=tini instead."
-            #
-            check_fallback
-            g_Initsystem="tini"
-            ;;
-    esac
+    {
+        case "$g_Initsystem" in
+            tini | systemd | sysvinit | openrc | runit | dockerinit | s6-overlay )
+                : # NOP
+                ;;
+            no | none )
+                g_Initsystem="none"
+                ;;
+            *)
+                # FIXME: dockerinit is accepted above, but not mentioned here. Why?
+                note_ttm "|Option --init: Unknown init system $g_Initsystem
+                          |  Possible: tini systemd sysvinit openrc runit s6-overlay none
+                          |  Fallback: Using --init=tini instead."
+                #
+                check_fallback
+                g_Initsystem="tini"
+                ;;
+        esac
+    }
     POST_CONDITION g_Initsystem 'word_is_in "${g_Initsystem}" \
             "tini systemd sysvinit openrc runit dockerinit s6-overlay none"'
 
     # g_Limitresources : --limit N
-    if [ -n "$g_Limitresources" ] ; then
-        #
-        #  g_Limitresources should be in the interval "(0,1]"
-        #
-        if [ "ok" != "$( awk -v a="$g_Limitresources" 'BEGIN {print (a <= 1) ? "ok" : "too_big"   }' )" ] \
-        || [ "ok" != "$( awk -v a="$g_Limitresources" 'BEGIN {print (a  > 0) ? "ok" : "too_small" }' )" ] ;
-        then
-            warning_ttm \
-                "|Option --limit: Specified value '$g_Limitresources' is out of range.
-                 |  Allowed is a factor greater than 0 and less than or equal to 1.  0<FACTOR<=1
-                 |  Fallback: Setting limit factor to --limit=0.5"
+    {
+        if [ -n "$g_Limitresources" ] ; then
             #
-            check_fallback
-            g_Limitresources="0.5"
+            #  g_Limitresources should be in the interval "(0,1]"
+            #
+            if  num_compare  "$g_Limitresources" ">"  1 \
+            ||  num_compare  "$g_Limitresources" "<=" 0 ;
+            then
+                warning_ttm \
+                    "|Option --limit: Specified value '$g_Limitresources' is out of range.
+                     |  Allowed is a factor greater than 0 and less than or equal to 1.  0<FACTOR<=1
+                     |  Fallback: Setting limit factor to --limit=0.5"
+                #
+                check_fallback
+                g_Limitresources="0.5"
+            fi
         fi
-    fi
+    }
     POST_CONDITION g_Limitresources \
-                   '[ -z "${g_Limitresources}" ] || is_num_in_interval  "${g_Limitresources}" "(0,1]" '
+           '[ -z "${g_Limitresources}" ] || is_num_in_interval  "${g_Limitresources}" "(0,1]" '
 
     # g_Containername : --name
     if [ -n "$g_Containername" ] ; then
@@ -17508,17 +17553,20 @@ check_options_arguments() {
     #       an absolute path of a file or dir that exists.
     #
 
-    # --size
-    if [ "$Screensize" ] ; then
-        if ! [[  "$Screensize" =~ ^[0-9]+x[0-9]+$ ]] ; then # Screensize_parse
-            note_ttm "|Option --size: Invalid argument: $Screensize
-                      |  Must consist of two integers with an x between them.
-                      |  Fallback: Disabling option --size"
-            #
-            check_fallback
-            Screensize=""
+    # Screensize : --size
+    {
+        if [ -n "$Screensize" ] ; then
+            if ! [[ "$Screensize" =~ ^[0-9]+x[0-9]+$ ]] ; then # Screensize_parse
+                note_ttm "|Option --size: Invalid argument: $Screensize
+                          |  Must consist of two integers with an x between them.
+                          |  Fallback: Disabling option --size"
+                #
+                check_fallback
+                Screensize=""
+            fi
         fi
-    fi
+    }
+    POST_CONDITION Screensize '[ -z "$Screensize" ] || [[ "$Screensize" =~ ^[0-9]+x[0-9]+$ ]] '
 
     # Sudouser : --sudouser
     {
