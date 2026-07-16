@@ -2533,7 +2533,7 @@ num_compare() {
 
 # Function: is_num_in_interval
 # Usage: is_num_in_interval value interval
-# Brief: for is_num_in_interval "${g_Limitresources}" "(0,1]"
+# Brief: For is_num_in_interval "${g_Limitresources}" "(0,1]"
 #
 # Argument:
 #    value    : string. Error if not isnum.
