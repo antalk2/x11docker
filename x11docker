@@ -17929,6 +17929,7 @@ check_options_interferences() {
             --xpra*|--nxagent)
                 if [ "$Setupwayland" = "no" ] ; then
                     Shareclipboard="native-$Shareclipboard"
+                    # Shareclipboard="native-yes"
                 fi
                 ;;
         esac
