@@ -17371,7 +17371,10 @@ check_options_arguments() {
     fi
 
     # --sudouser
-    Sudouser="${Sudouser,,}"
+
+    # FIXME: Could not figure out the purpose, or even the effect of the next line.
+    # Sudouser="${Sudouser,,}"
+    #
     case "$Sudouser" in
         no|"") Sudouser="" ;;
         yes|nopasswd) ;;
