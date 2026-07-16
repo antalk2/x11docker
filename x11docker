@@ -12369,10 +12369,19 @@ check_runtime() {
     fi
 
     case "$Runtime" in
-        ""|runc|crun|oci|nvidia|kata-runtime)
+        "")
+            : # NOP
+            ;;
+        runc|crun|oci|nvidia|kata-runtime)
             : # NOP
         ;;
         sysbox-runc)
+            if ! have_command sysbox-runc ; then
+                debugnote_ttm "|check_runtime(): The command 'sysbox-runc' not found.
+                               |May require installation.
+                               |See: https://github.com/nestybox/sysbox
+                               |"
+            fi
             #
             # https://github.com/nestybox/sysbox
             #
@@ -12420,6 +12429,15 @@ check_runtime() {
             #
             ;;
     esac
+
+    if [ ! -z "$Runtime" ] ; then
+        if ! have_command "$Runtime" ; then
+            error_ttm "|check_runtime(): --runtime=\"$Runtime\"
+                       |  The command '$Runtime' not found.
+                       |  Probably needed.
+                       |"
+        fi
+    fi
 
     return 0
 } # end check_runtime
