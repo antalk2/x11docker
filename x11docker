@@ -1927,7 +1927,11 @@ storepid() {      # store pid $1 and name $2 of process in file $Storepidfile.
         test) grep -q -w "${2:-}" "$Storepidfile"                 ;;
         *)
             echo "${1:-NOPID}" "${2:-NONAME}" >> "$Storepidfile"
-            debugnote "storepid(): Stored pid '${1:-}' of '${2:-}': $(pspid_sh "${1:-}" || true)"
+            local user_pid_command=""
+            if [ ! -z "${1:-}" ] ; then
+                user_pid_command="$(pspid_sh "${1:-}" || true)"
+            fi
+            debugnote "storepid(): Stored pid '${1:-}' of '${2:-}': ${user_pid_command}"
             ;;
     esac
 }
