@@ -17885,9 +17885,7 @@ check_options_interferences() {
     fi
 
     # Shareclipboard : --clipboard
-    case "$Shareclipboard" in
-        no) ;;
-        *)
+    if ! case_match "$Shareclipboard" 'no' ; then
             if [ -z "$Hostdisplay$Hostwaylandsocket" ] ; then
                 note_ttm "|Option --clipboard: Did not find a host X display
                           |  or Wayland server to share the clipboard with.
@@ -17897,8 +17895,7 @@ check_options_interferences() {
                 check_fallback
                 Shareclipboard="no"
             fi
-            ;;
-    esac
+    fi
     case "$Shareclipboard" in
         cmv)
             if ! xtool --check xbindkeys ; then
