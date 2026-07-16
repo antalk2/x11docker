@@ -17400,48 +17400,56 @@ check_options_arguments() {
            '[ -z "${g_Limitresources}" ] || is_num_in_interval  "${g_Limitresources}" "(0,1]" '
 
     # g_Containername : --name
-    if [ -n "$g_Containername" ] ; then
-        if [ "$g_Containername" != "$( unspecialstring "$g_Containername" "." )" ] ; then
-            error_ttm \
-                "|Option --name: container name must not contain special chars.
-                 |  Compare:
-                 |  $g_Containername
-                 |  $( unspecialstring "$g_Containername" "." )
-                 |"
-            #
+    {
+        if [ -n "$g_Containername" ] ; then
+            if [ "$g_Containername" != "$( unspecialstring "$g_Containername" "." )" ] ; then
+                error_ttm \
+                    "|Option --name: container name must not contain special chars.
+                     |  Compare:
+                     |  $g_Containername
+                     |  $( unspecialstring "$g_Containername" "." )
+                     |"
+                #
+            fi
         fi
-    fi
+    }
     POST_CONDITION g_Containername \
                    '[ -z "${g_Containername}" ] || [[ "${g_Containername}" =~ ^([a-zA-Z0-9_.]+)$  ]] '
 
     # Allownewprivileges : --newprivileges
-    if ! case_match "$Allownewprivileges" 'yes|no|auto' ; then
-        note_ttm "|Option --newprivileges: Unknown argument '$Allownewprivileges'.
-                  |  Fallback: Setting --newprivileges=auto"
-        #
-        check_fallback
-        Allownewprivileges="auto"
-    fi
+    {
+        if ! case_match "$Allownewprivileges" 'yes|no|auto' ; then
+            note_ttm "|Option --newprivileges: Unknown argument '$Allownewprivileges'.
+                      |  Fallback: Setting --newprivileges=auto"
+            #
+            check_fallback
+            Allownewprivileges="auto"
+        fi
+    }
     POST_CONDITION Allownewprivileges 'word_is_in "${Allownewprivileges}"  "yes no auto" '
 
     # Outputcount : --output-count
-    if ! [[ "$Outputcount" =~ ^[1-9]$ ]] ; then
-        note_ttm "|Option --output-count: Value must be one of 1 2 3 4 5 6 7 8 9
-                  |  Disabling invalid value $Outputcount"
-        #
-        check_fallback
-        Outputcount="1"
-    fi
+    {
+        if ! [[ "$Outputcount" =~ ^[1-9]$ ]] ; then
+            note_ttm "|Option --output-count: Value must be one of 1 2 3 4 5 6 7 8 9
+                      |  Disabling invalid value $Outputcount"
+            #
+            check_fallback
+            Outputcount="1"
+        fi
+    }
     POST_CONDITION Outputcount 'word_is_in "${Outputcount}" "1 2 3 4 5 6 7 8 9" '
 
     # Sharecupsmode : --printer
-    if ! case_match "$Sharecupsmode" ' socket | tcp | auto | "" ' ; then
-        note_ttm "|Option --printer: Unknown argument '$Sharecupsmode'.
+    {
+        if ! case_match "$Sharecupsmode" ' socket | tcp | auto | "" ' ; then
+            note_ttm "|Option --printer: Unknown argument '$Sharecupsmode'.
                   |  Fallback: Setting --printer=auto."
-        #
-        check_fallback
-        Sharecupsmode="auto"
-    fi
+            #
+            check_fallback
+            Sharecupsmode="auto"
+        fi
+    }
     POST_CONDITION Sharecupsmode \
                    '[ -z "${Sharecupsmode}" ] || word_is_in "${Sharecupsmode}"  "socket | tcp | auto" '
 
@@ -17456,27 +17464,31 @@ check_options_arguments() {
     POST_CONDITION Pulseaudiomode \
                    '[ -z "${Pulseaudiomode}" ] || word_is_in "${Pulseaudiomode}" "socket tcp auto host" '
 
-    # --rootless
-    if ! case_match "$Backendrootless" ' yes|no| "" ' ; then
-        error_ttm "|Option --rootless: Unknown argument: $Backendrootless
-                   |      Allowed values: yes|no"
-        #
-    fi
+    # Backendrootless : --rootless
+    {
+        if ! case_match "$Backendrootless" ' yes|no| "" ' ; then
+            error_ttm "|Option --rootless: Unknown argument: $Backendrootless
+                       |      Allowed values: yes|no"
+            #
+        fi
+    }
     POST_CONDITION Backendrootless '[ -z "${Backendrootless}" ] || word_is_in "${Backendrootless}" "yes no" '
 
-    # --rotate
-    if [ -n "$Rotation" ] ; then
-        if ! word_is_in "$Rotation" "0 90 180 270 flipped flipped-90 flipped-180 flipped-270" ; then
-            note_ttm "|Option --rotate: Unsupported value '$Rotation'.
-                      |  Must be one of 0 90 180 270 flipped flipped-90 flipped-180 flipped-270
-                      |  Fallback: disabling option --rotate"
-            #
-            check_fallback
-            Rotation=""
+    # Rotation : --rotate
+    {
+        if [ -n "$Rotation" ] ; then
+            if ! word_is_in "$Rotation" "0 90 180 270 flipped flipped-90 flipped-180 flipped-270" ; then
+                note_ttm "|Option --rotate: Unsupported value '$Rotation'.
+                          |  Must be one of 0 90 180 270 flipped flipped-90 flipped-180 flipped-270
+                          |  Fallback: disabling option --rotate"
+                #
+                check_fallback
+                Rotation=""
+            fi
         fi
-    fi
+    }
     POST_CONDITION Rotation \
-          '[ -z "$Rotation" ] || word_is_in "$Rotation" "0 90 180 270 flipped flipped-90 flipped-180 flipped-270"'
+       '[ -z "$Rotation" ] || word_is_in "$Rotation" "0 90 180 270 flipped flipped-90 flipped-180 flipped-270"'
 
     # Runtime : --runtime
     {
@@ -17491,56 +17503,60 @@ check_options_arguments() {
                 #
                 ;;
         esac
-        #
-        # POST_CONDITION Runtime 'word_is_in "$Runtime" "runc crun sysbox sysbox-runc nvidia kata-runtime"'
-        # Runtime_can_be_empty and Runtime_can_be_anything in create_xcontainercommand()
-        #
-        # https://docs.docker.com/engine/daemon/alternative-runtimes/
-        # You can use any runtime that implements the containerd shim API.
-        # https://github.com/containerd/containerd/blob/main/docs/runtime-v2.md
-        #
     }
+    #
+    # POST_CONDITION Runtime 'word_is_in "$Runtime" "runc crun sysbox sysbox-runc nvidia kata-runtime"'
+    #
+    # In create_xcontainercommand(), Runtime_can_be_empty and Runtime_can_be_anything 
+    #
+    # https://docs.docker.com/engine/daemon/alternative-runtimes/
+    #     You can use any runtime that implements the containerd shim API.
+    #      https://github.com/containerd/containerd/blob/main/docs/runtime-v2.md
+    #
 
-    # --scale
-    if [ -n "$Scaling" ] ; then
-        if ! isnum "$Scaling" ; then
-            note_ttm "|Option --scale needs a number. '$Scaling' is not allowed.
-                      |  Fallback: disabling option --scale"
-            #
-            check_fallback
-            Scaling=""
+    # Scaling : --scale
+    {
+        if [ -n "$Scaling" ] ; then
+            if ! isnum "$Scaling" ; then
+                note_ttm "|Option --scale needs a number. '$Scaling' is not allowed.
+                          |  Fallback: disabling option --scale"
+                #
+                check_fallback
+                Scaling=""
+            fi
         fi
-    fi
+    }
     POST_CONDITION Scaling '[ -z "${Scaling}" ] || isnum "${Scaling}"'
 
     # SharevolumesArray : --share
-    while read Line; do
+    {
+        while read Line; do
 
-        # If Line contains slash, backslash, or colon, then
-        # convertpath
-        if grep -q -E "/|\\|:" <<< "$Line" ; then
-            Line="$(convertpath subsystem "$Line")"
-        fi
+            # If Line contains slash, backslash, or colon, then
+            # convertpath
+            if grep -q -E "/|\\|:" <<< "$Line" ; then
+                Line="$(convertpath subsystem "$Line")"
+            fi
 
-        if [ "${Line:0:1}" != "/" ] && grep -q "/" <<< "$Line" ; then
-            error_ttm "|Option --share needs either an absolute path
+            if [ "${Line:0:1}" != "/" ] && grep -q "/" <<< "$Line" ; then
+                error_ttm "|Option --share needs either an absolute path
                        |  or a volume name without any '/':
                        |  $Line"
-            #
-        fi
+                #
+            fi
 
-        if [ "${Line:0:1}" = "/" ] && [ ! -e "$Line" ] ; then
-            error_ttm "|Option --share: File or folder does not exist:
+            if [ "${Line:0:1}" = "/" ] && [ ! -e "$Line" ] ; then
+                error_ttm "|Option --share: File or folder does not exist:
                        |  $Line"
-            #
-        fi
+                #
+            fi
 
-        if [ -z "$Line" ] ; then
-            error "Option --share needs an argument"
-        fi
+            if [ -z "$Line" ] ; then
+                error "Option --share needs an argument"
+            fi
 
-    done < <(store_runoption_dump_volume)
-
+        done < <(store_runoption_dump_volume)
+    }
     # POST_CONDITION SharevolumesArray
     #
     # Each entry in SharevolumesArray (printed by
