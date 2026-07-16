@@ -17195,7 +17195,7 @@ check_options_arguments() {
     [ "$Dpi" ] && {
         isnum "$Dpi" || {
             note_ttm "|Option --dpi only accepts numeric values. Not numeric: '$Dpi'
-                      |  Fallback: Disaling option --dpi."
+                      |  Fallback: Disabling option --dpi."
             #
             check_fallback
             Dpi=""
