@@ -17313,7 +17313,7 @@ check_options_arguments() {
     POST_CONDITION g_Limitresources \
                    '[ -z "${g_Limitresources}" ] || is_num_in_interval  "${g_Limitresources}" "(0,1]" '
 
-    # --name
+    # g_Containername : --name
     if [ -n "$g_Containername" ] ; then
         if [ "$g_Containername" != "$( unspecialstring "$g_Containername" "." )" ] ; then
             error_ttm \
@@ -17325,8 +17325,10 @@ check_options_arguments() {
             #
         fi
     fi
+    POST_CONDITION g_Containername \
+                   '[ -z "${g_Containername}" ] || LC_ALL=C [[ "${g_Containername}" =~ ^([a-zA-Z0-9_.]+)$  ]] '
 
-    # --newprivileges
+    # Allownewprivileges : --newprivileges
     if ! case_match "$Allownewprivileges" 'yes|no|auto' ; then
         note_ttm "|Option --newprivileges: Unknown argument '$Allownewprivileges'.
                   |  Fallback: Setting --newprivileges=auto"
@@ -17334,8 +17336,9 @@ check_options_arguments() {
         check_fallback
         Allownewprivileges="auto"
     fi
+    POST_CONDITION Allownewprivileges 'word_is_in "${Allownewprivileges}"  "yes no auto" '
 
-    # --output-count
+    # Outputcount : --output-count
     if ! [[ "$Outputcount" =~ ^[1-9]$ ]] ; then
         note_ttm "|Option --output-count: Value must be one of 1 2 3 4 5 6 7 8 9
                   |  Disabling invalid value $Outputcount"
@@ -17343,8 +17346,9 @@ check_options_arguments() {
         check_fallback
         Outputcount="1"
     fi
+    POST_CONDITION Outputcount 'word_is_in "${Outputcount}" "1 2 3 4 5 6 7 8 9" '
 
-    # --printer
+    # Sharecupsmode : --printer
     if ! case_match "$Sharecupsmode" ' socket | tcp | auto | "" ' ; then
         note_ttm "|Option --printer: Unknown argument '$Sharecupsmode'.
                   |  Fallback: Setting --printer=auto."
@@ -17352,8 +17356,10 @@ check_options_arguments() {
         check_fallback
         Sharecupsmode="auto"
     fi
+    POST_CONDITION Sharecupsmode \
+                   '[ -z "${Sharecupsmode}" ] || word_is_in "${Sharecupsmode}"  "socket | tcp | auto" '
 
-    # --pulseaudio
+    # Pulseaudiomode : --pulseaudio
     if ! case_match "$Pulseaudiomode" ' socket|tcp|auto|host| "" ' ; then
         note_ttm "|Option --pulseaudio: Unknown argument '$Pulseaudiomode'.
                   |  Fallback: Setting --pulseaudio=auto."
@@ -17361,6 +17367,8 @@ check_options_arguments() {
         check_fallback
         Pulseaudiomode="auto"
     fi
+    POST_CONDITION Pulseaudiomode \
+                   '[ -z "${Pulseaudiomode}" ] || word_is_in "${Pulseaudiomode}" "socket tcp auto host" '
 
     # --rootless
     if ! case_match "$Backendrootless" ' yes|no| "" ' ; then
@@ -17368,6 +17376,7 @@ check_options_arguments() {
                    |      Allowed values: yes|no"
         #
     fi
+    POST_CONDITION Backendrootless '[-z "${Backendrootless}" ] || word_is_in "${Backendrootless}" "yes no" '
 
     # --rotate
     if [ -n "$Rotation" ] ; then
