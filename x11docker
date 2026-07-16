@@ -2481,6 +2481,16 @@ isint() {
     [[ "${1:-EMPTY}" =~ ^[0-9]+$ ]]
 }
 
+#
+# Group: isnum
+# Description: work with floating point numbers.
+#
+# Functions:
+#     isnum()
+#     num_compare()          Unused, moved out.
+#     is_num_in_interval()
+#
+
 # ------------------------------------------------------------
 # Function isnum
 # Brief: Check if $1 is a decimal number, possibly in exponential form
@@ -2508,35 +2518,9 @@ isnum() {
 }
 # ------------------------------------------------------------
 
-# ------------------------------------------------------------
-# Function: num_compare  a op b
-# Brief: compare two floating point numbers using awk
-#
-# Argument:
-#   a : isnum
-#  op : One of: < > <= >= == !=
-#   b : isnum
-#
-# return: 0 if a op b is true
-#         1 if a op b is false
-# error: if a or b is not isnum
-#        if op in not in {  < > <= >= == != }
-#
-num_compare() {
-    local a="${1:-}"
-    local op="${2:-}"
-    local b="${3:-}"
-    if ! isnum "$a" ; then error "num_compare(): a is not isnum" ; fi
-    if ! isnum "$b" ; then error "num_compare(): b is not isnum" ; fi
-    if ! word_is_in "${op}" '< > <= >= == !=' ; then
-        error "num_compare(): op is not in { < > <= >= == != }"
-    fi
-    awk -v a="${a}" -v b="${b}"  \
-        "BEGIN { exit ( (0 + a) $op (0 + b) ) ? 0 : 1 }"
-}
-# ------------------------------------------------------------
 
 
+# ------------------------------------------------------------
 # Function: is_num_in_interval
 # Usage: is_num_in_interval value interval
 # Brief: For is_num_in_interval "${g_Limitresources}" "(0,1]"
@@ -2549,8 +2533,8 @@ num_compare() {
 # return: 1 if value is not in the interval
 #         0 if value is in the interval
 #
-# error:    if interval is not of the expected form
-#           if value is not isnum
+# error:    if value is not isnum
+#           if interval is not of the expected form
 #
 is_num_in_interval() {
     local value="${1}"
@@ -2600,6 +2584,9 @@ is_num_in_interval() {
         -v value="${value}" \
         "BEGIN { if ( (a $op1 value) && (value $op2 b) ) { exit 0 } else { exit 1} }"
 }
+# ------------------------------------------------------------
+
+# EndGroup: isnum
 
 # Group: makecookie
 #
