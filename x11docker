@@ -1095,6 +1095,7 @@ usage() {
       |Verbosity options:
       | -D, --debug           Debug mode: Show some less verbose debug output
       |                       and enable rigorous error control.
+      |     --stacktrace      Show stacktrace on error.
       |     --printcheck      Show dependency check messages.
       | -q, --quiet           Suppress x11docker terminal messages.
       | -v, --verbose         Be verbose. Output of x11docker.log on stderr.
@@ -1287,7 +1288,9 @@ error() {
   # shellcheck disable=SC2104
   break >/dev/null 2>&1 # just in case error occurred in a loop
 
-  stacktrace
+  if [ "${Stacktrace:-}" = "yes" ] ; then
+      stacktrace
+  fi
   
   Message="$(printf \
                 "%s\n\n%s" \
@@ -1295,6 +1298,7 @@ error() {
                 "$(trim_to_bar \
                      "|  Type 'x11docker --help' for usage information
                       |  Debug options: '--verbose' (full log) or '--debug' (log excerpt).
+                      |                 '--stacktrace' (show stacktrace on error)
                       |  Logfile will be: $Logfilebackup
                       |  Please report issues at https://github.com/mviereck/x11docker"
                 )"
@@ -16931,6 +16935,7 @@ ${2:-}"                       ; shift ;;                             # Add custo
          --verbose)           Verbose="${2:-yes}" ; shift ;;                    # Be verbose
       -V)                     Verbose="${Verbose:-yes}"; Verbosecolors="yes";;  # Be verbose with colored output
       -q|--quiet)             Silent="yes" ;;                                   # Do not show warnings or errors
+      --stacktrace)           Stacktrace="yes" ;;
          --printcheck)        Printcheck="yes" ;;                               # Show dependency check messages
          --printenv)          Showdisplayenvironment="${2:-yes}" ; shift ;;     # Output of display number and cookie file on stdout. Catch with: read xenv < <(x11docker --printenv)
          --printid)           Showcontainerid="${2:-yes}" ; shift ;;            # Output of container id on stdout
@@ -20143,6 +20148,9 @@ declare_variables() {           # declare global variables
   # Debugmode : --debug: Excerpt of --verbose, also bash error checks
   Debugmode="no"
   
+  # Stacktrace : --stacktrace: Show stacktrace on error
+  Stacktrace="no"
+
   # Printcheck : --printcheck: Show X dependency check messages
   Printcheck="no"
   
