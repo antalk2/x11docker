@@ -17738,26 +17738,35 @@ check_options_arguments() {
     return 0
 } # end check_options_arguments
 
-check_options_interferences() { # check multiple option interferences, change settings if needed
-    local Message
 
+# Function: check_options_interferences
+#
+# Brief: check multiple option interferences, change settings if needed
+#
+check_options_interferences() {
+    local Message
 
     if case_match "$Dockervm" 'desktop' ; then
 
-        # --pipewire, --pulseaudio, --alsa
+        # Sharepipewire  : --pipewire,
+        # Pulseaudiomode : --pulseaudio,
+        # Sharealsa      : --alsa
+        # 
         {
             if [ "$Pulseaudiomode" = "auto" ] ; then
                 Pulseaudiomode="tcp"
             fi
 
             if    [ "$Sharepipewire"  = "yes"              ] \
-                      || [ "$Sharealsa"      = "yes"              ] \
-                      || case_match "$Pulseaudiomode" "socket|host" ;
+               || [ "$Sharealsa"      = "yes"              ] \
+               || case_match "$Pulseaudiomode" "socket|host" ;
             then
                 note_ttm "|With Docker Desktop VM,
                           |    Options --pipewire and --alsa do not work.
                           |    Pulseaudio works only in tcp mode.
-                          |  Fallback: Setting --pulseaudio=tcp"
+                          |  Fallback: Setting   --pulseaudio=tcp
+                          |            Disabling --alsa and --pipewire
+                          |"
                 #
                 check_fallback
                 Pulseaudiomode="tcp"
@@ -17766,7 +17775,7 @@ check_options_interferences() { # check multiple option interferences, change se
             fi
         }
 
-        # --printer
+        # Sharecupsmode : --printer
         {
             if   [ "$Sharecupsmode" = "auto"   ] ; then
                 Sharecupsmode="tcp"
@@ -17780,7 +17789,10 @@ check_options_interferences() { # check multiple option interferences, change se
                 check_fallback
                 Sharecupsmode="tcp"
             fi
-            #
+        }
+
+        # Sharegpu : --gpu
+        {
             case "$Sharegpu" in
                 no|iglx) ;;
                 *)
@@ -17795,7 +17807,9 @@ check_options_interferences() { # check multiple option interferences, change se
         }
     fi # case_match Dockervm desktop
 
-    # --runtime
+    # Runtime : --runtime
+    # Affects: g_Network Sharealsa Sharewebcam
+    #
     if case_match "$Runtime" 'kata-runtime' ; then
         if [ "$g_Network" = "host" ] ; then        # g_Network_host
             #
@@ -17821,7 +17835,9 @@ check_options_interferences() { # check multiple option interferences, change se
         }
     fi
 
-    # --xauth
+    # Xauthentication : --xauth
+    # depends-on: Xserver : --tty|--weston|--kwin|--hostwayland | --hostdisplay
+    #
     if [ "$Xauthentication" != "no" ] ; then
         #
         if   case_match "$Xserver" '--tty|--weston|--kwin|--hostwayland' ; then
@@ -17843,18 +17859,20 @@ check_options_interferences() { # check multiple option interferences, change se
         #
     fi
 
-    # --xtest
+    # Xtest : --xtest
+    # depends-on: "$Xserver" '--xpra*|--xvfb'
+    #
     if case_match "$Xserver" '--xpra*|--xvfb' && [ -z "$Xtest" ]; then
         note "Option $Xserver: Enabling option --xtest to allow xpra access."
         Xtest="yes"
     fi
 
-    # Check whether host X server has MIT-SHM enabled.
+    # Hostmitshm : Whether host X server has MIT-SHM enabled.
+    #
     if [ -z "$Winsubsystem" ] ; then
         #
         # Q: If we test the host X server, why are running xdpyinfo
         #    using xtool, which prefers to run it in the X container?
-        #
         #
         if xtool --nocheck "env LD_PRELOAD= xdpyinfo 2>>$Xinitlogfile | grep -q MIT-SHM" ;
         then Hostmitshm="yes"
@@ -17866,32 +17884,38 @@ check_options_interferences() { # check multiple option interferences, change se
         fi
     fi
 
-    # --clipboard
+    # Shareclipboard : --clipboard
     case "$Shareclipboard" in
         no) ;;
         *)
-            [ -z "$Hostdisplay$Hostwaylandsocket" ] && {
-                note "Option --clipboard: Did not find a host X display
-  or Wayland server to share the clipboard with.
-  DISPLAY and WAYLAND_DISPLAY are empty.
-  Fallback: Disabling option --clipboard."
+            if [ -z "$Hostdisplay$Hostwaylandsocket" ] ; then
+                note_ttm "|Option --clipboard: Did not find a host X display
+                          |  or Wayland server to share the clipboard with.
+                          |  DISPLAY and WAYLAND_DISPLAY are empty.
+                          |  Fallback: Disabling option --clipboard."
+                #
                 check_fallback
                 Shareclipboard="no"
-            }
+            fi
             ;;
     esac
     case "$Shareclipboard" in
         cmv)
-            xtool --check xbindkeys || {
-                note "Option --clipboard=$Shareclipboard needs xbindkeys.
-  Fallback: Setting --clipboard=c2h."
+            if ! xtool --check xbindkeys ; then
+                note_ttm "|Option --clipboard=$Shareclipboard needs xbindkeys.
+                          |  Fallback: Setting --clipboard=c2h."
+                #
                 check_fallback
                 Shareclipboard="c2h"
-            }
-            [ "$Xtest" = "yes" ] && warning "Options --xtest --clipboard=$Shareclipboard:
-  X extension XTEST is enabled that allows container applications
-  to fake key presses like [CTRL] + [META] + [v] so they could fool x11docker
-  to provide the host clipboard content without user interaction."
+            fi
+            if [ "$Xtest" = "yes" ] ; then
+                warning_ttm \
+                "|Options --xtest --clipboard=$Shareclipboard:
+                 |  X extension XTEST is enabled that allows container applications
+                 |  to fake key presses like [CTRL] + [META] + [v] so they could fool x11docker
+                 |  to provide the host clipboard content without user interaction."
+                #
+            fi
             ;;
     esac
     case "$Shareclipboard" in
