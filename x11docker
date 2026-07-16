@@ -17897,21 +17897,21 @@ check_options_interferences() {
         fi
     fi
     if [ "$Shareclipboard" = "cmv" ] ; then
-            if ! xtool --check xbindkeys ; then
-                note_ttm "|Option --clipboard=$Shareclipboard needs xbindkeys.
-                          |  Fallback: Setting --clipboard=c2h."
-                #
-                check_fallback
-                Shareclipboard="c2h"
-            fi
-            if [ "$Xtest" = "yes" ] ; then
-                warning_ttm \
+        if ! xtool --check xbindkeys ; then
+            note_ttm "|Option --clipboard=$Shareclipboard needs xbindkeys.
+                      |  Fallback: Setting --clipboard=c2h."
+            #
+            check_fallback
+            Shareclipboard="c2h"
+        fi
+        if [ "$Xtest" = "yes" ] ; then
+            warning_ttm \
                 "|Options --xtest --clipboard=$Shareclipboard:
                  |  X extension XTEST is enabled that allows container applications
                  |  to fake key presses like [CTRL] + [META] + [v] so they could fool x11docker
                  |  to provide the host clipboard content without user interaction."
-                #
-            fi
+            #
+        fi
     fi
     case "$Shareclipboard" in
         c2h|h2c|cmv)
