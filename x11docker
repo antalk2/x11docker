@@ -17914,15 +17914,15 @@ check_options_interferences() {
         fi
     fi
     if case_match "$Shareclipboard" 'c2h|h2c|cmv' ; then
-            case "$Xserver" in
-                --hostdisplay|--hostwayland|--xwin|--runx)
-                    note_ttm "|Option --clipboard: Option $Xserver only supports arguments yes|no.
-                              |  Fallback: Disabling option --clipboard"
-                    #
-                    check_fallback
-                    Shareclipboard="no"
-                    ;;
-            esac
+        case "$Xserver" in
+            --hostdisplay|--hostwayland|--xwin|--runx)
+                note_ttm "|Option --clipboard: Option $Xserver only supports arguments yes|no.
+                          |  Fallback: Disabling option --clipboard"
+                #
+                check_fallback
+                Shareclipboard="no"
+                ;;
+        esac
     fi
     case "$Shareclipboard" in
         yes)
