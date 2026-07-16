@@ -17434,25 +17434,27 @@ check_options_arguments() {
           '[ -z "$Rotation" ] || word_is_in "$Rotation" "0 90 180 270 flipped flipped-90 flipped-180 flipped-270"'
 
     # Runtime : --runtime
-    case "$Runtime" in
-        runc|crun|sysbox|sysbox-runc)
+    {
+        case "$Runtime" in
+            runc|crun|sysbox|sysbox-runc)
             # NOP
-        ;;
-        kata|kata-runtime)
-            Runtime="kata-runtime"
-            note_ttm "|Option --runtime=kata-runtime:
-                      |  Support of kata-runtime is deprecated."
-            #
             ;;
-    esac
-    #
-    # POST_CONDITION Runtime 'word_is_in "$Runtime" "runc crun sysbox sysbox-runc nvidia kata-runtime"'
-    # Runtime_can_be_empty and Runtime_can_be_anything in create_xcontainercommand()
-    #
-    # https://docs.docker.com/engine/daemon/alternative-runtimes/
-    # You can use any runtime that implements the containerd shim API.
-    # https://github.com/containerd/containerd/blob/main/docs/runtime-v2.md
-    #
+            kata|kata-runtime)
+                Runtime="kata-runtime"
+                note_ttm "|Option --runtime=kata-runtime:
+                      |  Support of kata-runtime is deprecated."
+                #
+                ;;
+        esac
+        #
+        # POST_CONDITION Runtime 'word_is_in "$Runtime" "runc crun sysbox sysbox-runc nvidia kata-runtime"'
+        # Runtime_can_be_empty and Runtime_can_be_anything in create_xcontainercommand()
+        #
+        # https://docs.docker.com/engine/daemon/alternative-runtimes/
+        # You can use any runtime that implements the containerd shim API.
+        # https://github.com/containerd/containerd/blob/main/docs/runtime-v2.md
+        #
+    }
 
     # --scale
     if [ -n "$Scaling" ] ; then
