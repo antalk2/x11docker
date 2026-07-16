@@ -17925,13 +17925,13 @@ check_options_interferences() {
         esac
     fi
     if [ "$Shareclipboard" = "yes" ] ; then
-            case "$Xserver" in
-                --xpra*|--nxagent)
-                    if [ "$Setupwayland" = "no" ] ; then
-                        Shareclipboard="native-$Shareclipboard"
-                    fi
-                    ;;
-            esac
+        case "$Xserver" in
+            --xpra*|--nxagent)
+                if [ "$Setupwayland" = "no" ] ; then
+                    Shareclipboard="native-$Shareclipboard"
+                fi
+                ;;
+        esac
     fi
     case "$Shareclipboard" in
         yes|c2h|h2c|cmv)
