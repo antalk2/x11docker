@@ -17150,7 +17150,7 @@ check_options_arguments() {
         yes|no|cmv|h2c|c2h) ;;
         superv|altv)
             note_ttm "|Option --clipboard=$Shareclipboard is deprecated.
-                      |  Please use --clipboard=csv instead.
+                      |  Please use --clipboard=cmv instead.
                       |  This uses key combo [CRTL] + [META] + v
                       |  Fallback: Setting --clipboard=cmv"
             #
