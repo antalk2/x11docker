@@ -17335,7 +17335,7 @@ check_options_arguments() {
     fi
     POST_CONDITION Hosthomebasefolder '[ -z "${Hosthomebasefolder}" ] || [ -e  "${Hosthomebasefolder}" ] '
 
-    # --init
+    # g_Initsystem : --init
     case "$g_Initsystem" in
         tini | systemd | sysvinit | openrc | runit | dockerinit | s6-overlay )
             : # NOP
@@ -17344,6 +17344,7 @@ check_options_arguments() {
             g_Initsystem="none"
             ;;
         *)
+            # FIXME: dockerinit is accepted above, but not mentioned here. Why?
             note_ttm "|Option --init: Unknown init system $g_Initsystem
                       |  Possible: tini systemd sysvinit openrc runit s6-overlay none
                       |  Fallback: Using --init=tini instead."
@@ -17352,6 +17353,8 @@ check_options_arguments() {
             g_Initsystem="tini"
             ;;
     esac
+    POST_CONDITION g_Initsystem 'word_is_in "${g_Initsystem}" \
+            "tini systemd sysvinit openrc runit dockerinit s6-overlay none"'
 
     # --limit N
     if [ -n "$g_Limitresources" ] ; then
