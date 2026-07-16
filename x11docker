@@ -17953,8 +17953,9 @@ check_options_interferences() {
                     ;;
                 *)
                     xtool --check xclip || {
-                        note "Option --clipboard with $Xserver needs xclip.
-  Fallback: Disabling option --clipboard."
+                        note_ttm "|Option --clipboard with $Xserver needs xclip.
+                                  |  Fallback: Disabling option --clipboard."
+                        #
                         check_fallback
                         Shareclipboard="no"
                     }
@@ -17962,9 +17963,10 @@ check_options_interferences() {
                         --weston|--kwin|--weston-xwayland|--hostwayland)
                             [ "$Setupwayland" = "yes" ] && {
                                 xtool --check wl-copy || {
-                                    note "Option --clipboard with $Xserver needs wl-copy and wl-paste.
-  Fallback: Disabling option --clipboard.
-  $Wikipackagesimage"
+                                    note_ttm "|Option --clipboard with $Xserver needs wl-copy and wl-paste.
+                                              |  Fallback: Disabling option --clipboard.
+                                              |  $Wikipackagesimage"
+                                    #
                                     check_fallback
                                     Shareclipboard="no"
                                 }
