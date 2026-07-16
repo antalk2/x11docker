@@ -17361,10 +17361,6 @@ check_options_arguments() {
     # --size
     if [ "$Screensize" ] ; then
         if ! [[  "$Screensize" =~ ^[0-9]+x[0-9]+$ ]] ; then # Screensize_parse
-        # if ! isint "$(cut -d"x" -f1 <<< "$Screensize")" \
-        # || ! isint "$(cut -d"x" -f2 <<< "$Screensize")" \
-        # || ! grep -q "x" <<< "$Screensize"              ;
-        # then
             note_ttm "|Option --size: Invalid argument: $Screensize
                       |  Must consist of two integers with an x between them.
                       |  Fallback: Disabling option --size"
