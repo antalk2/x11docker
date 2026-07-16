@@ -6866,7 +6866,7 @@ check_screensize() {
 
     if [ -n "$Screensize" ] ; then
         #  Screensize: "1920x1200"
-        Xaxis="${Screensize%x*}"
+        Xaxis="${Screensize%x*}" # Screensize_parse
         Yaxis="${Screensize#*x}"
     fi
 
@@ -6919,7 +6919,7 @@ check_screensize() {
     }
 
     if [ "$Fullscreen" = "yes" ] && [ -z "$Newxvt" ] ; then
-        Screensize="${Maxxaxis}x${Maxyaxis}"
+        Screensize="${Maxxaxis}x${Maxyaxis}" # Screensize_format
     fi
 
     if [ -z "$Xaxis" ] ; then
@@ -6937,9 +6937,9 @@ check_screensize() {
         case "$Xserver" in
             --xorg) ;;  # Xorg autodetects screen size, preset only with option --size
             --weston-xwayland|--weston|--kwin|--kwin-xwayland)
-                [ -z "$Newxvt" ] && Screensize="${Xaxis}x${Yaxis}"
+                [ -z "$Newxvt" ] && Screensize="${Xaxis}x${Yaxis}" # Screensize_format
                 ;;
-            *) Screensize="${Xaxis}x${Yaxis}" ;;
+            *) Screensize="${Xaxis}x${Yaxis}" ;;  # Screensize_format
         esac
     fi
 
@@ -9533,7 +9533,7 @@ create_xcommand() {
         --xvfb)
             Xcommand="$( trim_to_bar \
                       "|$(get_xpath Xvfb) :$Newdisplaynumber $Xserveroptions \\
-                       |  -screen 0 ${Screensize}x24"   ### FIXME: hardcoded setting of depth 24. Could be better?
+                       |  -screen 0 ${Screensize}x24" ### FIXME: hardcodes depth to 24. Could be better?
                        )"
             ;;
 
@@ -9591,8 +9591,11 @@ create_xcommand() {
                     case "$Scaling" in
                         "") $append_ops_to Compositorcommand "--fullscreen" ;;
                         *)  $append_ops_to \
-                                Compositorcommand \
-                                "--width=$(cut -dx -f1 <<< "$Screensize") --height=$(cut -dx -f2 <<< "$Screensize")"
+                                Compositorcommand "$( trim_to_mark \
+                                "|--width=$(  cut -dx -f1 <<< "$Screensize")
+                                 : --height=$(cut -dx -f2 <<< "$Screensize")"
+                                 )"
+                            # Screensize_parse
                             ;;
                     esac
                     ;;
@@ -10948,8 +10951,10 @@ create_xinitrc() {
                  |  Yaxis=${Yaxis:-768}
                  |  Screensize=\"\${Xaxis}x\${Yaxis}\"
                  |  note_ttm \"|Could not detect any connected monitor.
-                 |             |  Running on a server? Is xrandr installed? Will try to set a framebuffer size
-                 |             |  with \"xrandr --fb \$Screensize\" that may serve as a virtual display.\"
+                 |             |  Running on a server? Is xrandr installed?
+                 |             |  Will try to set a framebuffer size
+                 |             |  with  \"xrandr --fb \$Screensize\"
+                 |             |  that may serve as a virtual display.\"
                  |  xrandr --fb \$Screensize
                  |
                  |else # Monitors detected
@@ -11014,7 +11019,9 @@ create_xinitrc() {
                      |           --scale-from \$Screensize                   \\
                      |           --panning \$Screensize+0+0/\$Screensize+0+0
                      |
-                     |    if checkscreensize ; then note \"Successfully set screen size \$Screensize\" ; fi
+                     |    if checkscreensize ; then
+                     |        note \"Successfully set screen size \$Screensize\"
+                     |    fi
                      |  fi
                      |
                      |  if ! checkscreensize ; then
@@ -11028,14 +11035,17 @@ create_xinitrc() {
             if [ "$Scaling" ] ; then
                 echo         "  # --scale $Scaling"
                 if [ "$Screensize" ] && [ "$Scaling" != "1" ] ; then
-                    trim_to_bar "|  note_ttm '|Cannot set panning and scaling at the same time.
-                                 |            |  Desired screen size $Screensize will be scaled to your monitor size
-                                 |            |  for arbitrary values you may provide with option --scale.'
-                                 |"
+                    trim_to_bar \
+                        "|  note_ttm \\
+                         |     '|Cannot set panning and scaling at the same time.
+                         |      |  Desired screen size $Screensize will be scaled to your monitor size
+                         |      |  for arbitrary values you may provide with option --scale.'
+                         |"
                 fi
-                trim_to_bar  "|  # Scaling $Scaling
-                              |  note \"Setting scaled resolution \$Screensize with scale factor $Scaling.\"
-                              |"
+                trim_to_bar \
+                    "|  # Scaling $Scaling
+                     |  note \"Setting scaled resolution \$Screensize with scale factor $Scaling.\"
+                     |"
                 #
                 # Must use --scale-from and --panning below, because --scale
                 # causes mouse barriers/crtc-boundaries.
