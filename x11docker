@@ -235,14 +235,15 @@ is_a_word() {
 #       13 If (! is_a_word a_word) and  error() returned
 #
 stdin_contains_the_word() {
-  #
-  if ! is_a_word "$1" ; then
-    error_ttm "|stdin_contains_the_word():
-               : The pattern \"$(printf %q  "$1")\" is not a word"
     #
-    return 13 # Only if error returns.
-  fi
-  as_newline_separated_words | nlsv_contains_any_unsafe "${1}"
+    if ! is_a_word "$1" ; then
+        # stacktrace
+        error_ttm "|stdin_contains_the_word():
+                   : The pattern \"$(printf %q  "$1")\" is not a word."
+        #
+        return 13 # Only if error returns.
+    fi
+    as_newline_separated_words | nlsv_contains_any_unsafe "${1}"
 }
 
 # Function: stdin_contains_any_word
@@ -9133,24 +9134,23 @@ create_xcommand() {
     # Usemitshm="no" result does not matter, even if they overlap.
     # We can freely reorder them.
     #
-    if   case_match "$Runtime" 'kata-runtime | sysbox-runc'                               ; then Usemitshm="no"
-    elif [ "$Xoverip" != "no"              ]                                              ; then Usemitshm="no"
-    elif [ "$g_Containerusername" != "$Hostuser" ]                                              ; then Usemitshm="no"
+    if   case_match "$Runtime" 'kata-runtime | sysbox-runc'                       ; then Usemitshm="no"
+    elif [ "$Xoverip" != "no"              ]                                      ; then Usemitshm="no"
+    elif [ "$g_Containerusername" != "$Hostuser" ]                                ; then Usemitshm="no"
 
-    elif [ "$Xcontainer_option" = "yes"    ] && [ -n "$Newxvt" ]                          ; then Usemitshm="no"
+    elif [ "$Xcontainer_option" = "yes"    ] && [ -n "$Newxvt" ]                  ; then Usemitshm="no"
 
-    elif [ "$Xcontainer_option" = "yes"    ] && [ "$Shareipc" != "host" ]                 \
-    &&   case_match "$Xserver" '--weston* | --xpra*-xwayland'                             ; then Usemitshm="no"
+    elif [ "$Xcontainer_option" = "yes"    ] && [ "$Shareipc" != "host" ]         \
+    &&   case_match "$Xserver" '--weston* | --xpra*-xwayland'                     ; then Usemitshm="no"
 
-    elif [ "$Xcontainer_option" = "no"     ] && [ "$Shareipc" != "host" ]                 ; then Usemitshm="no"
+    elif [ "$Xcontainer_option" = "no"     ] && [ "$Shareipc" != "host" ]         ; then Usemitshm="no"
 
-    elif                                        [ "$Shareipc" = "host"  ]                 ; then   Usemitshm="yes"
+    elif                                        [ "$Shareipc" = "host"  ]         ; then   Usemitshm="yes"
 
     # -----
 
-    elif [ "$Xcontainer_option" = "yes"    ] && [ "$Xcontainerbackend" = "nerdctl"      ] ; then Usemitshm="no"
-
-    elif [ "$Xcontainer_option" = "yes"    ] && [ "$Xcontainerbackend" = "$g_BackendKind" ] ; then   Usemitshm="yes"
+    elif [ "$Xcontainer_option" = "yes" ] && [ "$Xcontainerbackend" = "nerdctl"        ] ; then Usemitshm="no"
+    elif [ "$Xcontainer_option" = "yes" ] && [ "$Xcontainerbackend" = "$g_BackendKind" ] ; then Usemitshm="yes"
     else
         : # nothing
     fi
@@ -10289,7 +10289,8 @@ create_xcontainercommand() {
         esac
 
         case "$Runtime" in
-            "") ;;
+            "") : # Runtime_can_be_empty
+                ;;
             kata-runtime) ;; ### FIXME check
             sysbox-runc)
                 [ "$Sharegpu" = "virgl" ] || grep -q "xwayland" <<< "$Xserver" && {
@@ -10308,6 +10309,7 @@ create_xcontainercommand() {
                     }
                 ;;
             *)
+                # Runtime_can_be_anything
                 $append_ops_to Xcontainercommand "--runtime $Runtime"
                 ;;
         esac
@@ -17404,6 +17406,14 @@ check_options_arguments() {
             #
             ;;
     esac
+    #
+    # POST_CONDITION Runtime 'word_is_in "$Runtime" "runc crun sysbox sysbox-runc nvidia kata-runtime"'
+    # Runtime_can_be_empty and Runtime_can_be_anything in create_xcontainercommand()
+    #
+    # https://docs.docker.com/engine/daemon/alternative-runtimes/
+    # You can use any runtime that implements the containerd shim API.
+    # https://github.com/containerd/containerd/blob/main/docs/runtime-v2.md
+    #
 
     # --scale
     if [ -n "$Scaling" ] ; then
@@ -19963,7 +19973,7 @@ declare_variables() {           # declare global variables
   #
   Backendrootless=""
 
-  # Runtime : Runtime to use. runc|nvidia|kata-runtime|crun
+  # Runtime : Runtime to use. runc|nvidia|kata-runtime|crun|sysbox|sysbox-runc
   Runtime=""
 
   # Snapsupport : --snap: Fallback mode to support docker in snap. yes/no
