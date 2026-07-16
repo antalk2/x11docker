@@ -17946,13 +17946,13 @@ check_options_interferences() {
                     Shareclipboard="no"
                     ;;
                 *)
-                    xtool --check xclip || {
+                    if ! xtool --check xclip ; then
                         note_ttm "|Option --clipboard with $Xserver needs xclip.
                                   |  Fallback: Disabling option --clipboard."
                         #
                         check_fallback
                         Shareclipboard="no"
-                    }
+                    fi
                     case "$Xserver" in
                         --weston|--kwin|--weston-xwayland|--hostwayland)
                             [ "$Setupwayland" = "yes" ] && {
