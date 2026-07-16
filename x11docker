@@ -17325,7 +17325,7 @@ check_options_arguments() {
     esac
     POST_CONDITION Sharegpu 'word_is_in "${Sharegpu}"  "yes no direct iglx virgl"'
 
-    # --homebasedir
+    # Hosthomebasefolder : --homebasedir
     if [ -n "$Hosthomebasefolder" ] ; then
         Hosthomebasefolder="$(convertpath subsystem "$Hosthomebasefolder")"
         if [ ! -e "$Hosthomebasefolder" ] ; then
@@ -17333,6 +17333,7 @@ check_options_arguments() {
                        |  $Hosthomebasefolder"
         fi
     fi
+    POST_CONDITION Hosthomebasefolder '[ -z "${Hosthomebasefolder}" ] || [ -e  "${Hosthomebasefolder}" ] '
 
     # --init
     case "$g_Initsystem" in
