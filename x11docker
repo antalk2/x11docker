@@ -17639,27 +17639,25 @@ check_options_arguments() {
     # Westonarg : --weston
     # Affects:  Xserver, Setupwayland, Desktopmode
     {
-        if [ -n "$Westonarg" ] ; then
-            case "$Westonarg" in
-                x)
-                    Xserver="--weston-xwayland"
-                    Setupwayland="yes"
-                    ;;
-                X)
-                    Xserver="--weston-xwayland"
-                    Setupwayland="yes"
-                    Desktopmode="yes"
-                    ;;
-                "") ;;
-                *)
-                    note_ttm "|Option $Xserver: Unkown argument '$Westonarg'.
-                              |  Fallback: Disabling argument."
-                    #
-                    check_fallback
-                    Westonarg=""
-                    ;;
-            esac
-        fi
+        case "$Westonarg" in
+            x)
+                Xserver="--weston-xwayland"
+                Setupwayland="yes"
+                ;;
+            X)
+                Xserver="--weston-xwayland"
+                Setupwayland="yes"
+                Desktopmode="yes"
+                ;;
+            "") ;;
+            *)
+                note_ttm "|Option $Xserver: Unkown argument '$Westonarg'.
+                          |  Fallback: Disabling argument."
+                #
+                check_fallback
+                Westonarg=""
+                ;;
+        esac
     }
     POST_CONDITION Westonarg '[ -z "$Westonarg" ] || word_is_in "$Westonarg" "x X" '
 
