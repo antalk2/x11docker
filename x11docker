@@ -17661,41 +17661,50 @@ check_options_arguments() {
     }
     POST_CONDITION Westonarg '[ -z "$Westonarg" ] || word_is_in "$Westonarg" "x X" '
 
-    # --xauth
-    case "$Xauthentication" in
-        yes|no|trusted|untrusted|-ac) ;;
-        *)
-            note_ttm "|Option --xauth: Unknown argument: $Xauthentication
-                      |  Fallback: Setting --xauth=yes"
-            #
-            check_fallback
-            Xauthentication="yes"
-            ;;
-    esac
+    # Xauthentication : --xauth
+    {
+        case "$Xauthentication" in
+            yes|no|trusted|untrusted|-ac) ;;
+            *)
+                note_ttm "|Option --xauth: Unknown argument: $Xauthentication
+                          |  Fallback: Setting --xauth=yes"
+                #
+                check_fallback
+                Xauthentication="yes"
+                ;;
+        esac
+    }
+    POST_CONDITION Xauthentication 'word_is_in "$Xauthentication" "yes no trusted untrusted -ac"'
 
-    # --xoverip
-    case "$Xoverip" in
-        yes|no|listentcp|socat|"") ;;
-        *)
-            note_ttm "|Option --xoverip: Unknown argument: $Xoverip
-                      |  Fallback: Disabling option --xoverip"
-            #
-            check_fallback
-            Xoverip="no"
-            ;;
-    esac
+    # Xoverip : --xoverip
+    {
+        case "$Xoverip" in
+            yes|no|listentcp|socat|"") ;;
+            *)
+                note_ttm "|Option --xoverip: Unknown argument: $Xoverip
+                          |  Fallback: Disabling option --xoverip"
+                #
+                check_fallback
+                Xoverip="no"
+                ;;
+        esac
+    }
+    POST_CONDITION Xoverip '[ -z "$Xoverip" ] || word_is_in "$Xoverip" "yes no listentcp socat"'
 
-    # --xtest
-    case "$Xtest" in
-        yes|no|"") ;;
-        *)
-            note_ttm "|Option --xtest: Unknown argument: $Xtest
-                      |  Fallback: Disabling option --xtest"
-            #
-            check_fallback
-            Xtest=""
-            ;;
-    esac
+    # Xtest : --xtest
+    {
+        case "$Xtest" in
+            yes|no|"") ;;
+            *)
+                note_ttm "|Option --xtest: Unknown argument: $Xtest
+                          |  Fallback: Disabling option --xtest"
+                #
+                check_fallback
+                Xtest=""
+                ;;
+        esac
+    }
+    POST_CONDITION Xtest '[ -z "$Xtest" ] || word_is_in "$Xtest" "yes no" '
 
     # --westonini
     [ -n "$Customwestonini" ] && [ ! -f "$Customwestonini" ] && {
