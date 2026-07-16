@@ -17559,15 +17559,18 @@ check_options_arguments() {
     POST_CONDITION Installerarg '[ -z "${Installerarg}" ] || word_is_in "${Installerarg}"  "diff" '
 
     # Newxvt : --vt
-    [ -n "$Newxvt" ] && {
-        [ "$Newxvt" = "auto" ] || isint "$Newxvt" || {
+    {
+        if [ -n "$Newxvt" ] ; then
+            if [ "$Newxvt" != "auto" ] && ! isint "$Newxvt" ; then
                 note_ttm "|Option --vt: Argument must be a positive integer: $Newxvt
                           |  Fallback: Disabling option --vt"
                 #
                 check_fallback
                 Newxvt=""
-            }
+            fi
+        fi
     }
+    POST_CONDITION Newxvt '[ -z "$Newxvt" ] || [ "$Newxvt" = "auto" ] || isint "$Newxvt"'
 
     # --weston
     [ -n "$Westonarg" ] && case "$Westonarg" in
