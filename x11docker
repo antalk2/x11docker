@@ -2481,14 +2481,118 @@ isint() {
     [[ "${1:-EMPTY}" =~ ^[0-9]+$ ]]
 }
 
+# ------------------------------------------------------------
 # Function isnum
 # Brief: Check if $1 is a number (according to awk)
 #
 #  For example `isnum -2.1e-3` is true
 #              `isnum 0xff`    is false
+#              `isnum 010`     is false
 #
 isnum() {
-    [ "1" = "$(awk -v a="${1:-}" 'BEGIN {print (a == a + 0)}')" ]
+    if word_is_in "$1" "inf +inf -inf" ; then
+        # debugnote "isnum(): '$1' is not considered isnum"
+        return 1
+    fi
+    if [[ "$1" =~ ^0[0-9]+$ ]] ; then
+        # debugnote "isnum(): '$1' looks octal, not considered isnum"
+        return 1
+    fi
+    [ "1" = "$( awk -v a="${1:-}" 'BEGIN { na=a+0 ;  print (a == na)}' )" ]
+}
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# Function: num_compare  a op b
+# Brief: compare two floating point numbers using awk
+#
+# Argument:
+#   a : isnum
+#  op : One of: < > <= >= == !=
+#   b : isnum
+#
+# return: 0 if a op b is true
+#         1 if a op b is false
+# error: if a or b is not isnum
+#        if op in not in {  < > <= >= == != }
+#
+num_compare() {
+    local a="${1:-}"
+    local op="${2:-}"
+    local b="${3:-}"
+    if ! isnum "$a" ; then error "num_compare(): a is not isnum" ; fi
+    if ! isnum "$b" ; then error "num_compare(): b is not isnum" ; fi
+    if ! word_is_in "${op}" '< > <= >= == !=' ; then
+        error "num_compare(): op is not in { < > <= >= == != }"
+    fi
+    awk -v a="${a}" -v b="${b}"  \
+        "BEGIN { exit ( (0 + a) $op (0 + b) ) ? 0 : 1 }"
+}
+# ------------------------------------------------------------
+
+
+# Function: is_num_in_interval
+# Usage: is_num_in_interval value interval
+# Brief: for is_num_in_interval "${g_Limitresources}" "(0,1]"
+#
+# Argument:
+#    value    : string. Error if not isnum.
+#    interval : string. Format: "(a,b)", "[a,b]", "(a,b]" or "[a,b)"
+#               where a and b pass isnum
+#
+# return: 1 if value is not in the interval
+#         0 if value is in the interval
+#
+# error:    if interval is not of the expected form
+#           if value is not isnum
+#
+is_num_in_interval() {
+    local value="${1}"
+    local interval="${2}"
+    #
+    local interval_start_ERE='[\(\[]'
+    local interval_end_ERE='(\]|\))'
+    local number_ERE='[-+]?[0-9.e]+'
+    #
+    local interval_ERE="^(${interval_start_ERE})(${number_ERE}),(${number_ERE})(${interval_end_ERE})\$"
+    #
+    if ! isnum "$value" ; then error "is_num_in_interval(): value '$value' is not isnum" ; fi
+    #
+    if ! grep -E -q  -e "${interval_ERE}" <<< "${interval}" ; then
+        error "$( printf "%s\n" \
+                 "is_num_in_interval(): interval '${interval}' " \
+                 "does not match interval_ERE '$interval_ERE' "
+                )"
+    fi
+    #
+    local interval_start="$( printf "%s" "${interval}" | sed -E -e "s/${interval_ERE}/\\1/" )"
+    local a="$(              printf "%s" "${interval}" | sed -E -e "s/${interval_ERE}/\\2/" )"
+    local b="$(              printf "%s" "${interval}" | sed -E -e "s/${interval_ERE}/\\3/" )"
+    local interval_end="$(   printf "%s" "${interval}" | sed -E -e "s/${interval_ERE}/\\4/" )"
+    #
+    # printf " '%s'  '%s' ,  '%s'  '%s' \n" "$interval_start" "$a" "$b" "$interval_end" >&2
+    #
+    local op1
+    local op2
+    #
+    if ! isnum "$a" ; then error "is_num_in_interval(): a '$a' is not isnum" ; fi
+    if ! isnum "$b" ; then error "is_num_in_interval(): b '$b' is not isnum" ; fi
+    #
+    case "$interval_start" in
+        "(" )  op1='<' ;;
+        "[" )  op1='<=' ;;
+        *)  error "is_num_in_interval(): interval start should be '[' or '(', not '${interval_start}'" ;;
+    esac
+    case "$interval_end" in
+        ")" )  op2='<' ;;
+        "]" )  op2='<=' ;;
+        *) error "is_num_in_interval(): interval end should be ']' or ')'" ;;
+    esac
+    awk             \
+        -v a="${a}" \
+        -v b="${b}" \
+        -v value="${value}" \
+        "BEGIN { if ( (a $op1 value) && (value $op2 b) ) { exit 0 } else { exit 1} }"
 }
 
 # Group: makecookie
