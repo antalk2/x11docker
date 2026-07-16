@@ -17951,17 +17951,17 @@ check_options_interferences() {
                 check_fallback
                 Shareclipboard="no"
             fi
-            if case_match "$Xserver" '--weston|--kwin|--weston-xwayland|--hostwayland' ; then
-                if [ "$Setupwayland" = "yes" ] ; then
-                    if ! xtool --check wl-copy ; then
-                        note_ttm "|Option --clipboard with $Xserver needs wl-copy and wl-paste.
-                                  |  Fallback: Disabling option --clipboard.
-                                  |  $Wikipackagesimage"
-                        #
-                        check_fallback
-                        Shareclipboard="no"
-                    fi
-                fi
+            #
+            if case_match "$Xserver" '--weston|--kwin|--weston-xwayland|--hostwayland' \
+            && [ "$Setupwayland" = "yes" ]                                             \
+            &&  ! xtool --check wl-copy                                                ;
+            then
+                note_ttm "|Option --clipboard with $Xserver needs wl-copy and wl-paste.
+                          |  Fallback: Disabling option --clipboard.
+                          |  $Wikipackagesimage"
+                #
+                check_fallback
+                Shareclipboard="no"
             fi
         fi
     fi
