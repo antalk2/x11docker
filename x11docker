@@ -17950,8 +17950,7 @@ check_options_interferences() {
                         check_fallback
                         Shareclipboard="no"
                     fi
-                    case "$Xserver" in
-                        --weston|--kwin|--weston-xwayland|--hostwayland)
+                    if case_match "$Xserver" '--weston|--kwin|--weston-xwayland|--hostwayland' ; then
                             if [ "$Setupwayland" = "yes" ] ; then
                                 if ! xtool --check wl-copy ; then
                                     note_ttm "|Option --clipboard with $Xserver needs wl-copy and wl-paste.
@@ -17962,8 +17961,7 @@ check_options_interferences() {
                                     Shareclipboard="no"
                                 fi
                             fi
-                            ;;
-                    esac
+                    fi
             fi
     fi
 
