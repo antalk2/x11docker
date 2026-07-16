@@ -109,14 +109,28 @@ test_isnum_004_minus_inf_no() {
 test_num_compare_001_zero_lt_one() {
     bashunit::set_test_title "num_compare: 0 < 1 yes"
     #
-    (num_compare 0 "<" 1) # Warning: The quotes are required.
+    num_compare 0 "<" 1 # Warning: The quotes are required.
     assert_exit_code 0
 }
 
 test_num_compare_002_zero_lt_one() {
     bashunit::set_test_title "num_compare: 0.0 < 1e0 yes"
     #
-    (num_compare 0.0 "<" 1e0)
+    num_compare 0.0 "<" 1e0
+    assert_exit_code 0
+}
+
+test_num_compare_003() {
+    bashunit::set_test_title "num_compare: -0.9 < -0.5 yes"
+    #
+    num_compare -0.9 "<" -0.5
+    assert_exit_code 0
+}
+
+test_num_compare_004() {
+    bashunit::set_test_title "num_compare: 1.23 == 123e-2 yes"
+    #
+    num_compare  1.23 "==" 123e-2
     assert_exit_code 0
 }
 

@@ -28,7 +28,7 @@ test: ./lib/bashunit
 	./lib/bashunit tests-bashunit --fail-on-risky  # -vvv
 
 test-filtered: ./lib/bashunit
-	./lib/bashunit tests-bashunit --fail-on-risky --filter createmountopt  # -vvv
+	./lib/bashunit tests-bashunit --fail-on-risky --filter num  # -vvv
 
 
 test-verbose: ./lib/bashunit
