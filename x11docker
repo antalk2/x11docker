@@ -17371,7 +17371,7 @@ check_options_arguments() {
     fi
 
     # --sudouser
-
+    #
     # FIXME: Could not figure out the purpose, or even the effect of the next line.
     # Sudouser="${Sudouser,,}"
     #
@@ -17393,7 +17393,7 @@ check_options_arguments() {
 
     # --update, --update-master
     case "$Installerarg" in
-        "") ;;
+        "")   ;;
         diff) ;;
         *)
             error "Option --update/--update-master: Unknown argument '$Installerarg'."
