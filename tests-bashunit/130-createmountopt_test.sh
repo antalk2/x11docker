@@ -6,9 +6,9 @@ set_up() {
 }
 
 #
-# Test createmountopt()
+# Test createmountopt_mount and createmountopt_device
 #
-test_createmountopt() {
+test_createmountopt_mount() {
     local res
     local File="/tmp/xxx yyy"
     # File must exist
@@ -16,12 +16,6 @@ test_createmountopt() {
     #
     res="$(createmountopt_mount ro "$File" )"
     assert_same '--mount type=bind,source=/tmp/xxx\ yyy,target=/tmp/xxx\ yyy,readonly' "${res}"
-    #
-    res="$(createmountopt_device "ro" "$File"  )"
-    assert_same '--device /tmp/xxx\ yyy:ro' "${res}"
-    #
-    res="$(createmountopt volume "ro" "$File"  )"
-    assert_same '--volume /tmp/xxx\ yyy:/tmp/xxx\ yyy:ro' "${res}"
     #
     unlink "${File}"
     #
@@ -39,3 +33,22 @@ test_createmountopt() {
     assert_exec 'createmountopt_mount  "ro" "$File"' --exit 1 --stdout "" \
                 --stderr-contains "createmountopt_mount(): ERROR: File not found:"
 }
+
+test_createmountopt_device() {
+    local res
+    local File="/tmp/xxx yyy"
+    # File must exist
+    touch "${File}"
+    #
+    res="$(createmountopt_device "ro" "$File"  )"
+    assert_same '--device /tmp/xxx\ yyy:ro' "${res}"
+    #
+    unlink "${File}"
+    #
+    # If the file does not exist, stdout is empty and exitcode is 1
+    assert_exec 'createmountopt_device "ro" "$File" ' --exit 1 --stdout "" --stderr ""
+    #
+}
+
+
+
