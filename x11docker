@@ -17934,35 +17934,36 @@ check_options_interferences() {
                 ;;
         esac
     fi
+
     if case_match "$Shareclipboard" 'yes|c2h|h2c|cmv' ; then
-            if case_match "$Xserver" '--tty|--hostwayland' ; then
-                    note_ttm "|Option --clipboard is not supported for $Xserver.
-                              |  Clipboard should be handled already by host Wayland compositor.
-                              |  Fallback: Disabling option --clipboard."
-                    #
-                    check_fallback
-                    Shareclipboard="no"
-            else
-                    if ! xtool --check xclip ; then
-                        note_ttm "|Option --clipboard with $Xserver needs xclip.
-                                  |  Fallback: Disabling option --clipboard."
+        if case_match "$Xserver" '--tty|--hostwayland' ; then
+            note_ttm "|Option --clipboard is not supported for $Xserver.
+                      |  Clipboard should be handled already by host Wayland compositor.
+                      |  Fallback: Disabling option --clipboard."
+            #
+            check_fallback
+            Shareclipboard="no"
+        else
+            if ! xtool --check xclip ; then
+                note_ttm "|Option --clipboard with $Xserver needs xclip.
+                          |  Fallback: Disabling option --clipboard."
+                #
+                check_fallback
+                Shareclipboard="no"
+            fi
+            if case_match "$Xserver" '--weston|--kwin|--weston-xwayland|--hostwayland' ; then
+                if [ "$Setupwayland" = "yes" ] ; then
+                    if ! xtool --check wl-copy ; then
+                        note_ttm "|Option --clipboard with $Xserver needs wl-copy and wl-paste.
+                                  |  Fallback: Disabling option --clipboard.
+                                  |  $Wikipackagesimage"
                         #
                         check_fallback
                         Shareclipboard="no"
                     fi
-                    if case_match "$Xserver" '--weston|--kwin|--weston-xwayland|--hostwayland' ; then
-                            if [ "$Setupwayland" = "yes" ] ; then
-                                if ! xtool --check wl-copy ; then
-                                    note_ttm "|Option --clipboard with $Xserver needs wl-copy and wl-paste.
-                                              |  Fallback: Disabling option --clipboard.
-                                              |  $Wikipackagesimage"
-                                    #
-                                    check_fallback
-                                    Shareclipboard="no"
-                                fi
-                            fi
-                    fi
+                fi
             fi
+        fi
     fi
 
     # X server
