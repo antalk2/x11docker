@@ -17174,7 +17174,7 @@ check_options_arguments() {
     esac
     POST_CONDITION Shareclipboard 'word_is_in "${Shareclipboard}" "yes no cmv h2c c2h"'
 
-    # --dbus [=system]
+    # Dbusrunsession Dbussystem : --dbus [=system]
     case "$Dbusrunsession" in
         yes|user|session) Dbusrunsession="yes" ;;
         no) ;;
