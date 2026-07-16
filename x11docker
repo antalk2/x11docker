@@ -1828,6 +1828,12 @@ containerisrunning() {
 #
 #
 pspid_sh() {
+    if [ "${1}" = "--empty-pid-is-OK" ] ; then
+        shift
+        if [ -z "${1}" ] ; then
+            return 0
+        fi
+    fi
     #
     # Three columns: USER PID COMMAND
     #
@@ -15920,8 +15926,8 @@ $Xpraclientcommand"
 
   # catch possible xpra crashes
   while rocknroll; do
-    pspid_sh "$Xpraserverpid" >/dev/null || { debugnote "xpra server terminated" ; break ; }
-    pspid_sh "$Xpraclientpid" >/dev/null || { debugnote "xpra client terminated" ; break ; }
+    pspid_sh --empty-pid-is-OK "$Xpraserverpid" >/dev/null || { debugnote "xpra server terminated" ; break ; }
+    pspid_sh --empty-pid-is-OK "$Xpraclientpid" >/dev/null || { debugnote "xpra client terminated" ; break ; }
     sleep 1
   done
 
