@@ -1562,6 +1562,12 @@ finish() {
 
         Pid="$(echo "$Line"  | awk '{print $1}')"
         Name="$(echo "$Line" | awk '{print $2}')"
+
+        if [ "${Pid}" = "NOPID" ] ; then
+            debugnote "finish(): Checking pid $Pid ($Name): No PID to check"
+            continue
+        fi
+
         debugnote "finish(): Checking pid $Pid ($Name): $(pspid_sh "$Pid" || echo '(already gone)')"
 
         checkpid "$Pid" && {
