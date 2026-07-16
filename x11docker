@@ -17190,6 +17190,8 @@ check_options_arguments() {
             Dbusrunsession="yes"
             ;;
     esac
+    POST_CONDITION Dbusrunsession 'word_is_in "${Dbusrunsession}"  "yes no"'
+    POST_CONDITION Dbussystem     'word_is_in "${Dbussystem}"      "yes no"'
     
     # --dpi
     if [ -n "$Dpi" ] ; then
@@ -17201,6 +17203,7 @@ check_options_arguments() {
             Dpi=""
         fi
     fi
+    POST_CONDITION Dpi '[ -z "${Dpi}" ] || isnum "${Dpi}" '
 
     # --gpu
     case "$Sharegpu" in
