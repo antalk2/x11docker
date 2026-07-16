@@ -17937,6 +17937,7 @@ check_options_interferences() {
     case "$Shareclipboard" in
         yes|c2h|h2c|cmv)
             case "$Xserver" in
+
                 --tty|--hostwayland)
                     note_ttm "|Option --clipboard is not supported for $Xserver.
                               |  Clipboard should be handled already by host Wayland compositor.
@@ -17945,7 +17946,8 @@ check_options_interferences() {
                     check_fallback
                     Shareclipboard="no"
                     ;;
-                *)
+
+                *) # Xserver
                     if ! xtool --check xclip ; then
                         note_ttm "|Option --clipboard with $Xserver needs xclip.
                                   |  Fallback: Disabling option --clipboard."
@@ -17955,16 +17957,16 @@ check_options_interferences() {
                     fi
                     case "$Xserver" in
                         --weston|--kwin|--weston-xwayland|--hostwayland)
-                            [ "$Setupwayland" = "yes" ] && {
-                                xtool --check wl-copy || {
+                            if [ "$Setupwayland" = "yes" ] ; then
+                                if ! xtool --check wl-copy ; then
                                     note_ttm "|Option --clipboard with $Xserver needs wl-copy and wl-paste.
                                               |  Fallback: Disabling option --clipboard.
                                               |  $Wikipackagesimage"
                                     #
                                     check_fallback
                                     Shareclipboard="no"
-                                }
-                            }
+                                fi
+                            fi
                             ;;
                     esac
                     ;;
