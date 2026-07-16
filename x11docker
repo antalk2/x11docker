@@ -4679,7 +4679,6 @@ installer() {
     local codeload_url_prefix=""
     local raw_url_prefix=""
     local colorize_diff_patterns
-    local release_line_ERE
     local release_url_pattern
     local the_unpacked_dir=""
     local the_old_version_is_beta="no"
