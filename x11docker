@@ -17466,10 +17466,13 @@ check_options_arguments() {
             Scaling=""
         fi
     fi
+    POST_CONDITION Scaling '[ -z "${Scaling}" ] || isnum "${Scaling}"'
 
-    # --share
+    # SharevolumesArray : --share
     while read Line; do
 
+        # If Line contains slash, backslash, or colon, then
+        # convertpath
         if grep -q -E "/|\\|:" <<< "$Line" ; then
             Line="$(convertpath subsystem "$Line")"
         fi
@@ -17493,6 +17496,18 @@ check_options_arguments() {
 
     done < <(store_runoption_dump_volume)
 
+    # POST_CONDITION SharevolumesArray
+    #
+    # Each entry in SharevolumesArray (printed by
+    # store_runoption_dump_volume) is either
+    #
+    # - (1) a volume name that does not contain a slash, backslash, or
+    #       colon, or
+    #
+    # - (2) a path that after @code{ convertpath subsystem } becomes
+    #       an absolute path of a file or dir that exists.
+    #
+
     # --size
     if [ "$Screensize" ] ; then
         if ! [[  "$Screensize" =~ ^[0-9]+x[0-9]+$ ]] ; then # Screensize_parse
@@ -17505,37 +17520,45 @@ check_options_arguments() {
         fi
     fi
 
-    # --sudouser
-    #
-    # FIXME: Could not figure out the purpose, or even the effect of the next line.
-    # Sudouser="${Sudouser,,}"
-    #
-    case "$Sudouser" in
-        no|"")
-            Sudouser="" # empty means disabled
-            ;;
-        yes|nopasswd)
-            : # NOP
-            ;;
-        *)
-            note_ttm "|Option --sudouser: Unknown argument '$Sudouser'.
-                      |  Fallback: Disabling option --sudouser."
-            #
-            Sudouser=""
-            check_fallback
-            ;;
-    esac
+    # Sudouser : --sudouser
+    {
+        #
+        # FIXME: Could not figure out the purpose, or even the effect
+        #        of the next line.
+        #
+        # Sudouser="${Sudouser,,}"
+        #
+        case "$Sudouser" in
+            no|"")
+                Sudouser="" # empty means disabled
+                ;;
+            yes|nopasswd)
+                : # NOP
+                ;;
+            *)
+                note_ttm "|Option --sudouser: Unknown argument '$Sudouser'.
+                          |  Fallback: Disabling option --sudouser."
+                #
+                Sudouser=""
+                check_fallback
+                ;;
+        esac
+    }
+    POST_CONDITION Sudouser '[ -z "${Sudouser}" ] || word_is_in "${Sudouser}" "yes nopasswd" '
 
-    # --update, --update-master
-    case "$Installerarg" in
-        "")   ;;
-        diff) ;;
-        *)
-            error "Option --update/--update-master: Unknown argument '$Installerarg'."
-            ;;
-    esac
+    # Installerarg : --update, --update-master
+    {
+        case "$Installerarg" in
+            "")   ;;
+            diff) ;;
+            *)
+                error "Option --update/--update-master: Unknown argument '$Installerarg'."
+                ;;
+        esac
+    }
+    POST_CONDITION Installerarg '[ -z "${Installerarg}" ] || word_is_in "${Installerarg}"  "diff" '
 
-    # --vt
+    # Newxvt : --vt
     [ -n "$Newxvt" ] && {
         [ "$Newxvt" = "auto" ] || isint "$Newxvt" || {
                 note_ttm "|Option --vt: Argument must be a positive integer: $Newxvt
