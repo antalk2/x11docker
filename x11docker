@@ -17922,8 +17922,9 @@ check_options_interferences() {
         c2h|h2c|cmv)
             case "$Xserver" in
                 --hostdisplay|--hostwayland|--xwin|--runx)
-                    note "Option --clipboard: Option $Xserver only supports arguments yes|no.
-  Fallback: Disabling option --clipboard"
+                    note_ttm "|Option --clipboard: Option $Xserver only supports arguments yes|no.
+                              |  Fallback: Disabling option --clipboard"
+                    #
                     check_fallback
                     Shareclipboard="no"
                     ;;
@@ -17943,9 +17944,10 @@ check_options_interferences() {
         yes|c2h|h2c|cmv)
             case "$Xserver" in
                 --tty|--hostwayland)
-                    note "Option --clipboard is not supported for $Xserver.
-  Clipboard should be handled already by host Wayland compositor.
-  Fallback: Disabling option --clipboard."
+                    note_ttm "|Option --clipboard is not supported for $Xserver.
+                              |  Clipboard should be handled already by host Wayland compositor.
+                              |  Fallback: Disabling option --clipboard."
+                    #
                     check_fallback
                     Shareclipboard="no"
                     ;;
