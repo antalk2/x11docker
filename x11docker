@@ -17706,27 +17706,34 @@ check_options_arguments() {
     }
     POST_CONDITION Xtest '[ -z "$Xtest" ] || word_is_in "$Xtest" "yes no" '
 
-    # --westonini
-    [ -n "$Customwestonini" ] && [ ! -f "$Customwestonini" ] && {
-        warning_ttm "|Custom weston.ini (option --westonini) not found.
-                     |  $Customwestonini"
-        #
-        check_fallback
-        Customwestonini=""
-    }
-
-    # --xc
-    case "$Xcontainer_option" in
-        yes|no|auto|force) ;;
-        docker|podman|nerdctl) ;;
-        *)
-            note_ttm "|Option --xc: Unknown argument '$Xcontainer_option'.
-                      |  Fallback: Setting --xc=auto."
+    # Customwestonini : --westonini
+    {
+        if [ -n "$Customwestonini" ] && [ ! -f "$Customwestonini" ] ; then
+            warning_ttm "|Custom weston.ini (option --westonini) not found.
+                         |  $Customwestonini"
             #
             check_fallback
-            Xcontainer_option="auto"
-            ;;
-    esac
+            Customwestonini=""
+        fi
+    }
+    POST_CONDITION Customwestonini '[ -z "$Customwestonini" ] || [ -f "$Customwestonini" ]'
+
+    # Xcontainer_option : --xc
+    {
+        case "$Xcontainer_option" in
+            yes|no|auto|force) ;;
+            docker|podman|nerdctl) ;;
+            *)
+                note_ttm "|Option --xc: Unknown argument '$Xcontainer_option'.
+                          |  Fallback: Setting --xc=auto."
+                #
+                check_fallback
+                Xcontainer_option="auto"
+                ;;
+        esac
+    }
+    POST_CONDITION Xcontainer_option \
+                   'word_is_in "$Xcontainer_option" "yes no auto force   docker podman nerdctl" '
 
     return 0
 } # end check_options_arguments
