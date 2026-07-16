@@ -12090,8 +12090,8 @@ check_backend() {
             ;;
 
         host)  # BackendKind_host
-            warning "|Option --backend=host provides no isolation at all.
-                     |  It only provides an X server for a host application."
+            warning_ttm "|Option --backend=host provides no isolation at all.
+                         |  It only provides an X server for a host application."
             #
             storeinfo_add_kv_sh "containerrootrc=ready"
             Sharefoldercontainer="$Sharefolder"
