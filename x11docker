@@ -718,17 +718,17 @@ SPY_STDOUT() {
 # Brief: Attempt to document possible values of a variable at some
 #        point.
 #
-if true ; then
-    # enforce postconditions
-    POST_CONDITION() {
-        if ! eval "$2" ; then
-            error "POST_CONDITION failed: '${1}' '${2}'"
-        fi
-    }
-else
-    # ignore postconditions
-    POST_CONDITION(){ : ; }
-fi
+#
+# enforce postconditions
+POST_CONDITION() {
+    if ! eval "$2" ; then
+        error "POST_CONDITION failed: '${1}' '${2}'"
+    fi
+}
+#
+#    # ignore postconditions
+#    POST_CONDITION(){ : ; }
+#
 
 # EndGroup: Debug_stuff
 
@@ -17326,7 +17326,7 @@ check_options_arguments() {
         fi
     fi
     POST_CONDITION g_Containername \
-                   '[ -z "${g_Containername}" ] || LC_ALL=C [[ "${g_Containername}" =~ ^([a-zA-Z0-9_.]+)$  ]] '
+                   '[ -z "${g_Containername}" ] || [[ "${g_Containername}" =~ ^([a-zA-Z0-9_.]+)$  ]] '
 
     # Allownewprivileges : --newprivileges
     if ! case_match "$Allownewprivileges" 'yes|no|auto' ; then
@@ -17390,7 +17390,7 @@ check_options_arguments() {
         fi
     fi
     POST_CONDITION Rotation \
-                   '[ -z "$Rotation" ] || word_is_in "$Rotation" "0 90 180 270 flipped flipped-90 flipped-180 flipped-270"'
+          '[ -z "$Rotation" ] || word_is_in "$Rotation" "0 90 180 270 flipped flipped-90 flipped-180 flipped-270"'
 
     # Runtime : --runtime
     case "$Runtime" in
