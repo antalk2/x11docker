@@ -17389,8 +17389,10 @@ check_options_arguments() {
             Rotation=""
         fi
     fi
+    POST_CONDITION Rotation \
+                   '[ -z "$Rotation" ] || word_is_in "$Rotation" "0 90 180 270 flipped flipped-90 flipped-180 flipped-270"'
 
-    # --runtime
+    # Runtime : --runtime
     case "$Runtime" in
         runc|crun|sysbox|sysbox-runc)
             # NOP
