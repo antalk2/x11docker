@@ -17936,18 +17936,14 @@ check_options_interferences() {
     fi
     case "$Shareclipboard" in
         yes|c2h|h2c|cmv)
-            case "$Xserver" in
-
-                --tty|--hostwayland)
+            if case_match "$Xserver" '--tty|--hostwayland' ; then
                     note_ttm "|Option --clipboard is not supported for $Xserver.
                               |  Clipboard should be handled already by host Wayland compositor.
                               |  Fallback: Disabling option --clipboard."
                     #
                     check_fallback
                     Shareclipboard="no"
-                    ;;
-
-                *) # Xserver
+            else
                     if ! xtool --check xclip ; then
                         note_ttm "|Option --clipboard with $Xserver needs xclip.
                                   |  Fallback: Disabling option --clipboard."
@@ -17969,8 +17965,7 @@ check_options_interferences() {
                             fi
                             ;;
                     esac
-                    ;;
-            esac
+            fi
             ;;
     esac
 
