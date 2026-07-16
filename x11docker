@@ -17356,7 +17356,7 @@ check_options_arguments() {
     POST_CONDITION g_Initsystem 'word_is_in "${g_Initsystem}" \
             "tini systemd sysvinit openrc runit dockerinit s6-overlay none"'
 
-    # --limit N
+    # g_Limitresources : --limit N
     if [ -n "$g_Limitresources" ] ; then
         #
         #  g_Limitresources should be in the interval "(0,1]"
@@ -17373,6 +17373,8 @@ check_options_arguments() {
             g_Limitresources="0.5"
         fi
     fi
+    POST_CONDITION g_Limitresources \
+                   '[ -z "${g_Limitresources}" ] || is_num_in_interval  "${g_Limitresources}" "(0,1]" '
 
     # --name
     if [ -n "$g_Containername" ] ; then
