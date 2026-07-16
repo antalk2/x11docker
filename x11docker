@@ -17403,8 +17403,9 @@ check_options_arguments() {
     # --vt
     [ -n "$Newxvt" ] && {
         [ "$Newxvt" = "auto" ] || isint "$Newxvt" || {
-                note "Option --vt: Argument must be a positive integer: $Newxvt
-  Fallback: Disabling option --vt"
+                note_ttm "|Option --vt: Argument must be a positive integer: $Newxvt
+                          |  Fallback: Disabling option --vt"
+                #
                 check_fallback
                 Newxvt=""
             }
@@ -17423,8 +17424,9 @@ check_options_arguments() {
             ;;
         "") ;;
         *)
-            note "Option $Xserver: Unkown argument '$Westonarg'.
-  Fallback: Disabling argument."
+            note_ttm "|Option $Xserver: Unkown argument '$Westonarg'.
+                      |  Fallback: Disabling argument."
+            #
             check_fallback
             Westonarg=""
             ;;
@@ -17434,8 +17436,9 @@ check_options_arguments() {
     case "$Xauthentication" in
         yes|no|trusted|untrusted|-ac) ;;
         *)
-            note "Option --xauth: Unknown argument: $Xauthentication
-  Fallback: Setting --xauth=yes"
+            note_ttm "|Option --xauth: Unknown argument: $Xauthentication
+                      |  Fallback: Setting --xauth=yes"
+            #
             check_fallback
             Xauthentication="yes"
             ;;
@@ -17445,8 +17448,9 @@ check_options_arguments() {
     case "$Xoverip" in
         yes|no|listentcp|socat|"") ;;
         *)
-            note "Option --xoverip: Unknown argument: $Xoverip
-  Fallback: Disabling option --xoverip"
+            note_ttm "|Option --xoverip: Unknown argument: $Xoverip
+                      |  Fallback: Disabling option --xoverip"
+            #
             check_fallback
             Xoverip="no"
             ;;
@@ -17456,8 +17460,9 @@ check_options_arguments() {
     case "$Xtest" in
         yes|no|"") ;;
         *)
-            note "Option --xtest: Unknown argument: $Xtest
-  Fallback: Disabling option --xtest"
+            note_ttm "|Option --xtest: Unknown argument: $Xtest
+                      |  Fallback: Disabling option --xtest"
+            #
             check_fallback
             Xtest=""
             ;;
@@ -17465,8 +17470,9 @@ check_options_arguments() {
 
     # --westonini
     [ -n "$Customwestonini" ] && [ ! -f "$Customwestonini" ] && {
-        warning "Custom weston.ini (option --westonini) not found.
-  $Customwestonini"
+        warning_ttm "|Custom weston.ini (option --westonini) not found.
+                     |  $Customwestonini"
+        #
         check_fallback
         Customwestonini=""
     }
@@ -17476,8 +17482,9 @@ check_options_arguments() {
         yes|no|auto|force) ;;
         docker|podman|nerdctl) ;;
         *)
-            note "Option --xc: Unknown argument '$Xcontainer_option'.
-  Fallback: Setting --xc=auto."
+            note_ttm "|Option --xc: Unknown argument '$Xcontainer_option'.
+                      |  Fallback: Setting --xc=auto."
+            #
             check_fallback
             Xcontainer_option="auto"
             ;;
