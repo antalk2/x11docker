@@ -17898,7 +17898,7 @@ check_options_interferences() {
     fi
     if [ "$Shareclipboard" = "cmv" ] ; then
         if ! xtool --check xbindkeys ; then
-            note_ttm "|Option --clipboard=$Shareclipboard needs xbindkeys.
+            note_ttm "|Option --clipboard=$Shareclipboard needs missing tool xbindkeys.
                       |  Fallback: Setting --clipboard=c2h."
             #
             check_fallback
