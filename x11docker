@@ -496,8 +496,8 @@ verbose_ttm() {
 # Example: x="$( [ -z "$a_variable" ] ; exitcode_yes_or_no )"
 #
 # Purpose: shortens
-#  @code{ if [-z "$a_variable"] ; then a_long_name=yes ; else a_long_name=no; fi  }
-#  or @code{  [-z "$a_variable"] && a_long_name=yes || a_long_name=no   }
+#  @code{ if [ -z "$a_variable" ] ; then a_long_name=yes ; else a_long_name=no; fi  }
+#  or @code{  [ -z "$a_variable" ] && a_long_name=yes || a_long_name=no   }
 #
 # Function: exitcode_yes_or_empty
 # Brief: Similar to exitcode_yes_or_no, but instead of "no" it produces no output.
@@ -17376,7 +17376,7 @@ check_options_arguments() {
                    |      Allowed values: yes|no"
         #
     fi
-    POST_CONDITION Backendrootless '[-z "${Backendrootless}" ] || word_is_in "${Backendrootless}" "yes no" '
+    POST_CONDITION Backendrootless '[ -z "${Backendrootless}" ] || word_is_in "${Backendrootless}" "yes no" '
 
     # --rotate
     if [ -n "$Rotation" ] ; then
