@@ -18134,7 +18134,7 @@ check_options_interferences() {
             yes)
                 case "$Xserver" in
                     --weston*|--xorg)
-                        if [ "$Xcforce" =  yes  ; then
+                        if [ "$Xcforce" =  yes ] ; then
                                warning_ttm \
                                    "|Option --xc=force passes by this issue:
                                      |  Options $Xserver --xc: Running weston or Xorg
