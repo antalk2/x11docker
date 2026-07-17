@@ -18206,8 +18206,9 @@ check_options_interferences() {
     # --checkwindow
     [ -n "$Checkforopenwindow" ] && {
         xtool --check xwininfo || {
-            note "Option --checkwindow needs 'xwininfo'.
-  Fallback: Disabling option --checkwindow."
+            note_ttm "|Option --checkwindow needs 'xwininfo'.
+                      |  Fallback: Disabling option --checkwindow."
+            #
             check_fallback
             Checkforopenwindow=""
         }
