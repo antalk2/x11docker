@@ -18370,11 +18370,11 @@ check_options_interferences() {
         Allownewprivileges="yes"
     fi
 
-    # --keymap: XKB keyboard layout
+    # Xkblayout : --keymap: XKB keyboard layout
     [ -n "$Xkblayout" ] && {
         case "$Xserver" in
             --kwin|--kwin-xwayland)
-                [ "$Runsonconsole" = "yes" ] || [ "$Newxvt" ] && {
+                if [ "$Runsonconsole" != "yes" ] && [ "$Newxvt" ] ; then
                     check_optionset "$Xserver" "--keymap" || {
                         note_ttm "|Option --keymap does not work with option $Xserver
                                   |  if running from console.
@@ -18383,7 +18383,7 @@ check_options_interferences() {
                         check_fallback
                         Xkblayout=""
                     }
-                }
+                fi
                 ;;
         esac
         [ "$Xkblayout" = "clone" ] && case "$Xserver" in
