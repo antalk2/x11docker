@@ -18162,16 +18162,12 @@ check_options_interferences() {
     if [ "$Desktopmode" = "no"   ]           \
     && [ -z "$Windowmanagermode" ]           ;
     then
-        
-    if [ "$Xserver" = '--weston-xwayland' ]  \
-    && [ "$Desktopmode" = "no"   ]           \
-    && [ -z "$Windowmanagermode" ]           ;
+
+    if [ "$Xserver" = '--weston-xwayland' ]  ;
     then Xwaylandrootless="yes"
     fi
 
-    if [ "$Desktopmode" = "no"      ] \
-    && [ -z "$Windowmanagermode"    ] \
-    && [ "$Xwaylandrootless" = "no" ] \
+    if [ "$Xwaylandrootless" = "no" ] \
     && case_match "$Xserver" '--xephyr|--weston-xwayland|--kwin-xwayland|--xorg|--xwayland' ;
     then
         note_ttm "|Option $Xserver: x11docker assumes that you need
