@@ -18175,7 +18175,8 @@ check_options_interferences() {
                   |  Enabling option --wm to provide a window manager."
         #
         Windowmanagermode="auto"
-        [ "$Autochooseserver" = "yes" ] && [ "$Runsonconsole" = "no" ] && {
+        #
+        if [ "$Autochooseserver" = "yes" ] && [ "$Runsonconsole" = "no" ] ; then
             case "$Sharegpu" in
                 no)  note_ttm "|Did not find a nice solution to run a seamless application
                                |  on your desktop. (Only insecure option --hostdisplay would work).
@@ -18192,7 +18193,7 @@ check_options_interferences() {
                      #
                      ;;
             esac
-        }
+        fi
     fi
     
     [ -n "$Windowmanagercommand" ] && [ "$Xcontainer_option" = "yes" ] && {
