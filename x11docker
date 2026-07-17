@@ -18501,35 +18501,35 @@ check_options_interferences() {
     fi
 
     if [ "$Dockervm" =  moby ] ; then
-            case "$Winsubsystem" in
-                WSL1|WSL2)
-                    grep -q "/c/" <<< "$Cachebasefolder" && [ -z "$Hosthomebasefolder" ] && \
-                        note_ttm "|With MobyVM and WSL x11docker stores its cache files on drive C:
-                                  |  to allow cache file sharing.
-                                  |  Your Docker setup might not allow to share files from drive C:.
-                                  |  If startup fails with an 'access denied' error,
-                                  |  please either allow access to drive C: or specify a custom folder for
-                                  |  cache storage with option '--cachebasedir D:/some/cache/folder'.
-                                  |  Same issue can occur with option '--home'.
-                                  |  Use option '--homebasedir D:/some/home/folder' in that case.
-                                  |  Option --preset can help to reduce typing for each command."
-                    ;;
-            esac
-            [ "$g_Initsystem" = "systemd" ] && {
-                note_ttm "|Option --init=systemd is not supported with MobyVM.
+        case "$Winsubsystem" in
+            WSL1|WSL2)
+                grep -q "/c/" <<< "$Cachebasefolder" && [ -z "$Hosthomebasefolder" ] && \
+                    note_ttm "|With MobyVM and WSL x11docker stores its cache files on drive C:
+                              |  to allow cache file sharing.
+                              |  Your Docker setup might not allow to share files from drive C:.
+                              |  If startup fails with an 'access denied' error,
+                              |  please either allow access to drive C: or specify a custom folder for
+                              |  cache storage with option '--cachebasedir D:/some/cache/folder'.
+                              |  Same issue can occur with option '--home'.
+                              |  Use option '--homebasedir D:/some/home/folder' in that case.
+                              |  Option --preset can help to reduce typing for each command."
+                ;;
+        esac
+        [ "$g_Initsystem" = "systemd" ] && {
+            note_ttm "|Option --init=systemd is not supported with MobyVM.
                           |  You can try another init option instead, e.g. --init=openrc.
                           |  Fallback: Disabling option --init=systemd"
-                #
-                check_fallback
-                g_Initsystem="tini"
-            }
-            [ "$Sharecgroup" = "yes" ] && {
-                note_ttm "|Option --sharecgroup is not supported with MobyVM.
+            #
+            check_fallback
+            g_Initsystem="tini"
+        }
+        [ "$Sharecgroup" = "yes" ] && {
+            note_ttm "|Option --sharecgroup is not supported with MobyVM.
                           |  Fallback: Disabling option --sharecgroup."
-                #
-                check_fallback
-                Sharecgroup="no"
-            }
+            #
+            check_fallback
+            Sharecgroup="no"
+        }
     fi
 
     case "$Winsubsystem" in
