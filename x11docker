@@ -18359,8 +18359,9 @@ check_options_interferences() {
         Runasuser=""
     fi # Containersetup = no
 
-    # --cap-default
-    [ "$Capdropall" = "no" ] && {
+    # Capdropall : --cap-default
+    # Allownewprivileges :  --newprivileges
+    if [ "$Capdropall" = "no" ] ; then
         case "$Allownewprivileges" in
             "yes"|"no") ;;
             "auto")
@@ -18370,7 +18371,7 @@ check_options_interferences() {
                 Allownewprivileges="yes"
                 ;;
         esac
-    }
+    fi
 
     # --keymap: XKB keyboard layout
     [ -n "$Xkblayout" ] && {
