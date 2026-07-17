@@ -18163,7 +18163,7 @@ check_options_interferences() {
     && [ -z "$Windowmanagermode" ] ;
     then
 
-        if [ "$Xserver" = '--weston-xwayland' ]  ;
+        if [ "$Xserver" = '--weston-xwayland' ] ;
         then Xwaylandrootless="yes"
         fi
 
