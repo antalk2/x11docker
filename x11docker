@@ -18291,9 +18291,10 @@ check_options_interferences() {
                             store_runoption_env "GALLIUM_DRIVER=virpipe"
                             ;;
                         *)  # proot|host # BackendKind_host
-                            note "Option --gpu=virgl is supported with
-  backends docker|podman|nerdctl only.
-  Fallback: Disabling option --gpu=virgl."
+                            note_ttm "|Option --gpu=virgl is supported with
+                                      |  backends docker|podman|nerdctl only.
+                                      |  Fallback: Disabling option --gpu=virgl."
+                            #
                             check_fallback
                             Sharegpu="no"
                             ;;
