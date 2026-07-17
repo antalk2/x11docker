@@ -17970,11 +17970,13 @@ check_options_interferences() {
     case "$Xserver" in
         --xorg) 
             # check if --xorg can be started by an unprivileged user
-            [ -e "/etc/X11/Xwrapper.config" ] && sed 's/ //g' /etc/X11/Xwrapper.config | grep -xq "allowed_users=anybody" && sed 's/ //g' /etc/X11/Xwrapper.config | grep -xq "needs_root_rights=yes" && {
-                    Xlegacywrapper="yes"
-                } || {
-                    Xlegacywrapper="no"
-                }
+            if [ -e "/etc/X11/Xwrapper.config" ]                                               \
+                   && sed 's/ //g' /etc/X11/Xwrapper.config | grep -xq "allowed_users=anybody" \
+                   && sed 's/ //g' /etc/X11/Xwrapper.config | grep -xq "needs_root_rights=yes" ;
+            then Xlegacywrapper="yes"
+            else Xlegacywrapper="no"
+            fi
+            
             # xrandr: --scale --size --rotate
             xtool --check xrandr || {
                 { [ "$Scaling" ] || [ -n "$Rotation" ] || [ -n "$Screensize" ] ; } && {
