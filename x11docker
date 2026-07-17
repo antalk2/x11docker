@@ -18385,7 +18385,8 @@ check_options_interferences() {
             Xkblayout=""
         fi
 
-        [ "$Xkblayout" = "clone" ] && case "$Xserver" in
+        if [ "$Xkblayout" = "clone" ] ; then
+            case "$Xserver" in
             --nxagent) ;;
             *)
                 note_ttm "|Option --keymap=clone is supported with --nxagent only.
@@ -18394,7 +18395,8 @@ check_options_interferences() {
                 check_fallback
                 Xkblayout=""
                 ;;
-        esac
+            esac
+        fi
     }
 
     # --rotate
