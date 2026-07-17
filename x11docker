@@ -18438,8 +18438,8 @@ check_options_interferences() {
         Outputcount="1"
     fi
 
-    # --xeyes
-    [ -n "$Xeyes" ] && {
+    # Xeyes : --xeyes
+    if [ -n "$Xeyes" ] ; then
         xtool --check xeyes || Xeyes=""
         case "$Xserver" in
             --weston|--kwin|--hostwayland|--tty)
@@ -18450,7 +18450,7 @@ check_options_interferences() {
                 Xeyes=""
                 ;;
         esac
-    }
+    fi
 
     # --xlogo
     [ -n "$Xlogo" ] && {
