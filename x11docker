@@ -17995,17 +17995,22 @@ check_options_interferences() {
             ;;
 
         --tty)
-            [ "$g_Interactive" = "no" ] && {
-                tput lines >/dev/null 2>&1 && {
+            if [ "$g_Interactive" = "no" ]    ; then
+                if tput lines >/dev/null 2>&1 ; then
                     store_runoption_env "LINES=$(tput lines)"
                     store_runoption_env "COLUMNS=$(tput cols)"
-                }
-            }
-            check_optionset "--tty" "--border --clipboard --composite --desktop --display --dpi
-                               --fullscreen --keymap --output-count --rotate
-                               --scale --size --vt --wm --westonini --xauth --xc --xeyes --xlogo --xfishtank
-                               --xhost --xonly --xoverip --xtest" ||:
+                fi
+            fi
+            check_optionset "--tty" "$(trim_to_bar \
+                                     "|--border --clipboard --composite
+                                      | --desktop --display --dpi
+                                      | --fullscreen --keymap --output-count
+                                      | --rotate --scale --size --vt --wm --westonini
+                                      | --xauth --xc --xeyes --xlogo --xfishtank
+                                      | --xhost --xonly --xoverip --xtest"
+                                      )" || :
             ;;
+
         --hostdisplay)
             check_optionset "$Xserver" "--xtest --composite"
             Xtest=""
