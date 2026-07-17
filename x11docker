@@ -18371,30 +18371,32 @@ check_options_interferences() {
     fi
 
     # Xkblayout : --keymap: XKB keyboard layout
-    if [ -n "$Xkblayout" ] ; then
-        
-        if case_match "$Xserver" '--kwin|--kwin-xwayland'        \
-        && ( [ "$Runsonconsole" = "yes" ] || [ -n "$Newxvt" ] )  \
-        && ! check_optionset "$Xserver" "--keymap"               ;
-        then
-            note_ttm "|Option --keymap does not work with option $Xserver
+    {
+        if [ -n "$Xkblayout" ] ; then
+
+            if case_match "$Xserver" '--kwin|--kwin-xwayland'        \
+            && ( [ "$Runsonconsole" = "yes" ] || [ -n "$Newxvt" ] )  \
+            && ! check_optionset "$Xserver" "--keymap"               ;
+            then
+                note_ttm "|Option --keymap does not work with option $Xserver
                       |  if running from console.
                       |  Fallback: disabling option --keymap."
-            #
-            check_fallback
-            Xkblayout=""
-        fi
+                #
+                check_fallback
+                Xkblayout=""
+            fi
 
-        if [ "$Xkblayout" = "clone" ]          \
-        && ! case_match "$Xserver" '--nxagent' ;
-        then
-            note_ttm "|Option --keymap=clone is supported with --nxagent only.
+            if [ "$Xkblayout" = "clone" ]          \
+            && ! case_match "$Xserver" '--nxagent' ;
+            then
+                note_ttm "|Option --keymap=clone is supported with --nxagent only.
                       |  Fallback: Disabling option --keymap."
-            #
-            check_fallback
-            Xkblayout=""
+                #
+                check_fallback
+                Xkblayout=""
+            fi
         fi
-    fi
+    }
 
     # --rotate
     [ "$Rotation" = "0" ] && Rotation="normal"
