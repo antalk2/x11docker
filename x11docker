@@ -18122,12 +18122,15 @@ check_options_interferences() {
 
         case "$Xserver" in
             --weston)
-                [ "$Xcontainer_option" = "yes" ] && note_ttm "|Option $Xserver: TTY switching will not work
+                if [ "$Xcontainer_option" = "yes" ] ; then
+                    note_ttm "|Option $Xserver: TTY switching will not work
                      |  with weston on console running in a container (option --xc).
                      |  Alternative: Run with --xc=no using weston from host."
-                #
+                    #
+                fi
                 ;;
         esac
+
         case "$Xcontainer_option" in
             yes)
                 case "$Xserver" in
