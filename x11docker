@@ -18065,14 +18065,12 @@ check_options_interferences() {
                                 fi
                         fi
                         #
-                        case "$Xauthentication" in
-                            trusted|yes)
+                        if case_match "$Xauthentication" 'trusted|yes' ; then
                                 note "Option --hostdisplay --xauth=trusted: MIT-SHM errors might occur."
                                 store_runoption_env "QT_X11_NO_MITSHM=1"
                                 store_runoption_env "_X11_NO_MITSHM=1"
                                 store_runoption_env "_MITSHM=0"
-                                ;;
-                        esac
+                        fi
                         ;;
                     *)
                         if case_match $g_BackendKind 'docker|host' ; then # BackendKind_host
