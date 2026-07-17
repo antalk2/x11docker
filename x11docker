@@ -18241,21 +18241,21 @@ check_options_interferences() {
 
     # --gpu
     if case_match "$Xoverip" 'yes|listentcp' ; then
-            case "$Sharegpu" in
-                virgl|iglx) ;;
-                yes)
-                    note "Option --gpu with X over IP: Enabling indirect rendering with --gpu=$Sharegpu."
-                    Sharegpu="iglx"
-                    ;;
-                direct)
-                    note_ttm "|Option --gpu=$Sharegpu with --xoverip is not supported.
-                              |  Try --gpu=iglx instead.
-                              |  Fallback: Disabling option --gpu."
-                    #
-                    check_fallback
-                    Sharegpu="no"
-                    ;;
-            esac
+        case "$Sharegpu" in
+            virgl|iglx) ;;
+            yes)
+                note "Option --gpu with X over IP: Enabling indirect rendering with --gpu=$Sharegpu."
+                Sharegpu="iglx"
+                ;;
+            direct)
+                note_ttm "|Option --gpu=$Sharegpu with --xoverip is not supported.
+                          |  Try --gpu=iglx instead.
+                          |  Fallback: Disabling option --gpu."
+                #
+                check_fallback
+                Sharegpu="no"
+                ;;
+        esac
        fi
 
     case "$Sharegpu" in 
