@@ -17968,6 +17968,7 @@ check_options_interferences() {
 
     # X server
     case "$Xserver" in
+
         --xorg) 
             # check if --xorg can be started by an unprivileged user
             if [ -e "/etc/X11/Xwrapper.config" ]                                               \
@@ -18106,8 +18107,8 @@ check_options_interferences() {
             ;; #  --hostdisplay
     esac # case "$Xserver"
 
-    # --vt
-    [ -n "$Newxvt" ] && {
+    # Newxvt : --vt
+    if [ -n "$Newxvt" ] ; then
         case "$Xserver" in
             --weston|--weston-xwayland)
                 [ -n "$Hostdisplay" ] && error_ttm \
@@ -18160,7 +18161,7 @@ check_options_interferences() {
                 esac
                 ;;
         esac
-    }
+    fi # Newxvt
 
     # window manager
     case "$Xserver" in
