@@ -18110,14 +18110,14 @@ check_options_interferences() {
     # Newxvt : --vt
     if [ -n "$Newxvt" ] ; then
 
-        if case_match "$Xserver" '--weston|--weston-xwayland' ; then
-                if [ -n "$Hostdisplay" ] ; then
+        if case_match "$Xserver" '--weston|--weston-xwayland' \
+        && [ -n "$Hostdisplay" ]                              ;
+        then
                     error_ttm \
                         "|Option $Xserver: Opening a TTY for weston on console
                          |  while still running on X would break TTY switching.
                          |  Please run nested without option --vt or switch to console first."
                     #
-                fi
         fi
 
         case "$Xserver" in
