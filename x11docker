@@ -18341,12 +18341,13 @@ check_options_interferences() {
             #
         fi
 
-            [ -n "$Sudouser" ] && [ "$g_Containerusername" != "root" ] && \
-                note_ttm "|Option --no-setup does not support option --sudouser.
-                          |  Fallback: Enabling needed container capabilities to allow sudo
-                          |  just in case the container user is set up for su and/or sudo.
-                          |  Consider to use --user=root."
+        if [ -n "$Sudouser" ] && [ "$g_Containerusername" != "root" ] ; then
+            note_ttm "|Option --no-setup does not support option --sudouser.
+                      |  Fallback: Enabling needed container capabilities to allow sudo
+                      |  just in case the container user is set up for su and/or sudo.
+                      |  Consider to use --user=root."
             #
+        fi
 
             ### FIXME check support of further options
             # --stdin?
