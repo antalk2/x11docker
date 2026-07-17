@@ -18240,8 +18240,7 @@ check_options_interferences() {
     fi
 
     # --gpu
-    case "$Xoverip" in
-        yes|listentcp)
+    if case_match "$Xoverip" 'yes|listentcp' ; then
             case "$Sharegpu" in
                 virgl|iglx) ;;
                 yes)
@@ -18257,8 +18256,8 @@ check_options_interferences() {
                     Sharegpu="no"
                     ;;
             esac
-            ;;
-    esac
+       fi
+
     case "$Sharegpu" in 
         yes)
             case "$Xserver" in
