@@ -18301,8 +18301,9 @@ check_options_interferences() {
                     esac
                     ;;
                 no)
-                    note "Option --gpu=virgl needs image x11docker/xserver (option --xc).
-  Fallback: Disabling option --gpu=virgl."
+                    note_ttm "|Option --gpu=virgl needs image x11docker/xserver (option --xc).
+                              |  Fallback: Disabling option --gpu=virgl."
+                    #
                     check_fallback
                     Sharegpu="no"
                     ;;
