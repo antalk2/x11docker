@@ -18025,6 +18025,7 @@ check_options_interferences() {
                      |  like --xpra, --xephyr or --nxagent."
                 #
             fi
+
             # MIT-SHM
             [ "$Hostmitshm" = "yes" ] && [ "$Shareipc" != "host" ] && [ "$Xoverip" = "no" ] && { # Shareipc_host
                 case "$Xlibnoshmfile" in
@@ -18032,19 +18033,21 @@ check_options_interferences() {
                         case "$Sharegpu" in
                             yes|direct)
                                 [ "$Xauthentication" != "trusted" ] && {
-                                    note "Option --hostdisplay --gpu=direct
-  (option --xc) would require insecure option --ipc=host to avoid MIT-SHM
-  errors. (If you don't care for MIT-SHM errors, use --xauth=trusted.)
-  Possible solutions:
-   - Use option --xc to use image x11docker/xserver
-   - Provide XlibNoSHM.so in ~/.local/share/x11docker
-     or in /usr/local/share/x11docker.
-     (Either Download it from x11docker repo,
-     or run with --xc once, it will be stored.)
-  Fallback: Disabling option --gpu."
+                                    note_ttm \
+                                        "|Option --hostdisplay --gpu=direct
+                                         |  (option --xc) would require insecure option --ipc=host to avoid MIT-SHM
+                                         |  errors. (If you don't care for MIT-SHM errors, use --xauth=trusted.)
+                                         |  Possible solutions:
+                                         |   - Use option --xc to use image x11docker/xserver
+                                         |   - Provide XlibNoSHM.so in ~/.local/share/x11docker
+                                         |     or in /usr/local/share/x11docker.
+                                         |     (Either Download it from x11docker repo,
+                                         |     or run with --xc once, it will be stored.)
+                                         |  Fallback: Disabling option --gpu."
+                                    #
                                     check_fallback
                                     Sharegpu="no"
-                                } 
+                                }
                                 ;;
                             no)
                                 case "$Xauthentication" in
