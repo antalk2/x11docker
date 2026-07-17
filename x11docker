@@ -18429,14 +18429,14 @@ check_options_interferences() {
         fi
     fi
 
-    # --output-count
-    [ "$Outputcount" != "1" ] && [ "$Runsonconsole" = "yes" ] && {
+    # Outputcount : --output-count
+    if [ "$Outputcount" != "1" ] && [ "$Runsonconsole" = "yes" ] ; then
         note_ttm "|Option --output-count works in nested/windowed mode only,
                   |  but not on console. Fallback: disabling option --output-count."
         #
         check_fallback
         Outputcount="1"
-    }
+    fi
 
     # --xeyes
     [ -n "$Xeyes" ] && {
