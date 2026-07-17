@@ -18388,11 +18388,11 @@ check_options_interferences() {
         if [ "$Xkblayout" = "clone" ]          \
         && ! case_match "$Xserver" '--nxagent' ;
         then
-                note_ttm "|Option --keymap=clone is supported with --nxagent only.
-                          |  Fallback: Disabling option --keymap."
-                #
-                check_fallback
-                Xkblayout=""
+            note_ttm "|Option --keymap=clone is supported with --nxagent only.
+                      |  Fallback: Disabling option --keymap."
+            #
+            check_fallback
+            Xkblayout=""
         fi
     }
 
