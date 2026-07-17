@@ -18481,9 +18481,16 @@ check_options_interferences() {
         if xtool --check xfishtank ; then
             case "$Xserver" in
             --xpra*|--nxagent)
-                [ "$Desktopmode" = "no" ] && Windowmanagermode="${Windowmanagermode:-auto}" && Desktopmode="yes"
+                if [ "$Desktopmode" = "no" ] ; then
+                    Windowmanagermode="${Windowmanagermode:-auto}"
+                else
+                    Desktopmode="yes"
+                fi
                 ;;
             esac
+        else
+            : # NOP. We did not find xfishtank for --xfishtank, but
+              # keep silent.
         fi
     fi
 
