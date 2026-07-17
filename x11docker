@@ -18500,8 +18500,7 @@ check_options_interferences() {
                   |  Feedback and bug reports are appreciated!"
     fi
 
-    case "$Dockervm" in
-        moby)
+    if [ "$Dockervm" =  moby ] ; then
             case "$Winsubsystem" in
                 WSL1|WSL2)
                     grep -q "/c/" <<< "$Cachebasefolder" && [ -z "$Hosthomebasefolder" ] && \
@@ -18531,8 +18530,8 @@ check_options_interferences() {
                 check_fallback
                 Sharecgroup="no"
             }
-            ;;
-    esac
+    fi
+
     case "$Winsubsystem" in
         MSYS2|CYGWIN|WSL1|WSL2)
             check_optionset "Windows" "--pulseaudio --printer --webcam" ||:
