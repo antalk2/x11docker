@@ -17979,7 +17979,10 @@ check_options_interferences() {
             
             # xrandr: --scale --size --rotate
             if ! xtool --check xrandr ; then
-                if { [ "$Scaling" ] || [ -n "$Rotation" ] || [ -n "$Screensize" ] ; } ; then
+                if  [ -n "$Scaling"    ] \
+                ||  [ -n "$Rotation"   ] \
+                ||  [ -n "$Screensize" ] ;
+                then
                     note_ttm "|Option --xorg needs 'xrandr' for several options.
                               |  Fallback: Disabling options --size, --scale and --rotate."
                     #
@@ -17990,6 +17993,7 @@ check_options_interferences() {
                 fi
             fi
             ;;
+
         --tty)
             [ "$g_Interactive" = "no" ] && {
                 tput lines >/dev/null 2>&1 && {
