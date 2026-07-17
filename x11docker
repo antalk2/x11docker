@@ -18169,8 +18169,7 @@ check_options_interferences() {
     && [ -z "$Windowmanagermode"    ] \
     && [ "$Xwaylandrootless" = "no" ] ;
     then
-        case "$Xserver" in
-        --xephyr|--weston-xwayland|--kwin-xwayland|--xorg|--xwayland)
+        if case_match "$Xserver" '--xephyr|--weston-xwayland|--kwin-xwayland|--xorg|--xwayland' ; then
             note_ttm "|Option $Xserver: x11docker assumes that you need
                       |  a window manager. If you don't want this, run with option --desktop.
                       |  Enabling option --wm to provide a window manager."
@@ -18194,8 +18193,7 @@ check_options_interferences() {
                          ;;
                 esac
             }
-            ;;
-        esac
+        fi
     fi
     
     [ -n "$Windowmanagercommand" ] && [ "$Xcontainer_option" = "yes" ] && {
