@@ -18329,12 +18329,17 @@ check_options_interferences() {
                     ;;
             esac
 
-            [ -z "$g_Workdir" ] && [ "$Sharehome" != "no" ] && note "Option --no-setup: You might need to specify
-  e.g. '--workdir=/tmp' or '--env HOME=/tmp' to allow proper functionality."
-            [ -n "$Sudouser" ] && [ "$g_Containerusername" != "root" ] && note "Option --no-setup does not support option --sudouser.
-  Fallback: Enabling needed container capabilities to allow sudo
-  just in case the container user is set up for su and/or sudo.
-  Consider to use --user=root."
+            [ -z "$g_Workdir" ] && [ "$Sharehome" != "no" ] && \
+                note_ttm "|Option --no-setup: You might need to specify
+                          |  e.g. '--workdir=/tmp' or '--env HOME=/tmp' to allow proper functionality."
+            #
+
+            [ -n "$Sudouser" ] && [ "$g_Containerusername" != "root" ] && \
+                note_ttm "|Option --no-setup does not support option --sudouser.
+                          |  Fallback: Enabling needed container capabilities to allow sudo
+                          |  just in case the container user is set up for su and/or sudo.
+                          |  Consider to use --user=root."
+            #
 
             ### FIXME check support of further options
             # --stdin?
