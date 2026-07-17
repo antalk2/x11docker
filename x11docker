@@ -18135,30 +18135,30 @@ check_options_interferences() {
                 case "$Xserver" in
                     --weston*|--xorg)
                         if [ "$Xcforce" =  yes ] ; then
-                               warning_ttm \
-                                   "|Option --xc=force passes by this issue:
-                                     |  Options $Xserver --xc: Running weston or Xorg
-                                     |  with option --xc on console can result in not being able to get back
-                                     |  to console after terminating or to switch to other ttys.
-                                     |  This is likely caused by proprietary NVIDIA drivers.
-                                     |  Consider to use free and open source nouveau driver instead.
-                                     |  Rather use $Xserver with option '--xc=no'."
-                               #
-                             elif [ -n "$Nvidiaversion" ] ; then
-                               error_ttm \
-                                   "|Options $Xserver --xc: Running weston or Xorg
-                                             |  with option --xc on console can result in not being able to get back
-                                             |  to console after terminating or to switch to other ttys.
-                                             |  This is likely caused by proprietary NVIDIA drivers.
-                                             |  Consider to use free and open source nouveau driver instead.
-                                             |  Rather use $Xserver with option '--xc=no'.
-                                             |  You can force to run with option --xc with option '--xc=force'."
-                               #
-                           fi
-                             ;;
-                             esac
-                             ;;
-                             esac
+                            warning_ttm \
+                                "|Option --xc=force passes by this issue:
+                                 |  Options $Xserver --xc: Running weston or Xorg
+                                 |  with option --xc on console can result in not being able to get back
+                                 |  to console after terminating or to switch to other ttys.
+                                 |  This is likely caused by proprietary NVIDIA drivers.
+                                 |  Consider to use free and open source nouveau driver instead.
+                                 |  Rather use $Xserver with option '--xc=no'."
+                            #
+                        elif [ -n "$Nvidiaversion" ] ; then
+                            error_ttm \
+                                "|Options $Xserver --xc: Running weston or Xorg
+                                 |  with option --xc on console can result in not being able to get back
+                                 |  to console after terminating or to switch to other ttys.
+                                 |  This is likely caused by proprietary NVIDIA drivers.
+                                 |  Consider to use free and open source nouveau driver instead.
+                                 |  Rather use $Xserver with option '--xc=no'.
+                                 |  You can force to run with option --xc with option '--xc=force'."
+                            #
+                        fi
+                        ;;
+                esac
+                ;;
+        esac
 
     fi # Newxvt
 
