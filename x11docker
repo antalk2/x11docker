@@ -18440,7 +18440,12 @@ check_options_interferences() {
 
     # Xeyes : --xeyes
     if [ -n "$Xeyes" ] ; then
-        xtool --check xeyes || Xeyes=""
+        if ! xtool --check xeyes ; then
+            note_ttm "|Option --xeyes : could not find xeyes.
+                      |  Disabling option --xeyes."
+            #
+            Xeyes=""
+        fi
         case "$Xserver" in
             --weston|--kwin|--hostwayland|--tty)
                 note_ttm "|Option --xeyes does not run on $Xserver.
