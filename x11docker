@@ -18052,16 +18052,18 @@ check_options_interferences() {
                             no)
                                 case "$Xauthentication" in
                                     yes)
-                                        note "Option --hostdisplay: To avoid MIT-SHM errors,
-  x11docker sets uncomfortable option --xauth=untrusted to limit X access.
-  Some applications might misbehave or crash.
-  Possible solutions:
-   - Use option --xc to use image x11docker/xserver.
-   - Provide XlibNoSHM.so in ~/.local/share/x11docker.
-     (Either Download it from x11docker repo,
-     or run with --xc once, it will be stored.)
-   - If you don't care about MIT-SHM errors, set --xauth=trusted.
-   - Use another X server option like --nxagent."
+                                        note_ttm \
+                                            "|Option --hostdisplay: To avoid MIT-SHM errors,
+                                             |  x11docker sets uncomfortable option --xauth=untrusted to limit X access.
+                                             |  Some applications might misbehave or crash.
+                                             |  Possible solutions:
+                                             |   - Use option --xc to use image x11docker/xserver.
+                                             |   - Provide XlibNoSHM.so in ~/.local/share/x11docker.
+                                             |     (Either Download it from x11docker repo,
+                                             |     or run with --xc once, it will be stored.)
+                                             |   - If you don't care about MIT-SHM errors, set --xauth=trusted.
+                                             |   - Use another X server option like --nxagent."
+                                        #
                                         Xauthentication="untrusted"
                                         ;;
                                 esac
