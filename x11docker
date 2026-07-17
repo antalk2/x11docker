@@ -18012,9 +18012,13 @@ check_options_interferences() {
             ;;
 
         --hostdisplay)
-            check_optionset "$Xserver" "--xtest --composite"
-            Xtest=""
-            Xcomposite=""
+
+            {
+                check_optionset "$Xserver" "--xtest --composite"
+                Xtest=""
+                Xcomposite=""
+            }
+
             if  [ "$Runsoverssh" = "yes" ] &&  ### FIXME
                 [ "$g_Network" != "host" ]  ;
             then
