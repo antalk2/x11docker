@@ -18032,7 +18032,7 @@ check_options_interferences() {
                     "")
                         case "$Sharegpu" in
                             yes|direct)
-                                [ "$Xauthentication" != "trusted" ] && {
+                                if [ "$Xauthentication" != "trusted" ] ; then
                                     note_ttm \
                                         "|Option --hostdisplay --gpu=direct
                                          |  (option --xc) would require insecure option --ipc=host to avoid MIT-SHM
@@ -18047,7 +18047,7 @@ check_options_interferences() {
                                     #
                                     check_fallback
                                     Sharegpu="no"
-                                }
+                                fi
                                 ;;
                             no)
                                 case "$Xauthentication" in
