@@ -18194,9 +18194,10 @@ check_options_interferences() {
     esac
     
     [ -n "$Windowmanagercommand" ] && [ "$Xcontainer_option" = "yes" ] && {
-        note "Option --wm=$Windowmanagercommand: With option --xc
-  only OpenBox is provided as window manager.
-  Fallback: Setting --wm=auto"
+        note_ttm "|Option --wm=$Windowmanagercommand: With option --xc
+                  |  only OpenBox is provided as window manager.
+                  |  Fallback: Setting --wm=auto"
+        #
         check_fallback
         Windowmanagermode="auto"
         Windowmanagercommand=""
