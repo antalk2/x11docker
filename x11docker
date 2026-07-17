@@ -18198,7 +18198,9 @@ check_options_interferences() {
         fi
     fi
     
-    [ -n "$Windowmanagercommand" ] && [ "$Xcontainer_option" = "yes" ] && {
+    if [ -n "$Windowmanagercommand"   ] \
+    && [ "$Xcontainer_option" = "yes" ] ;
+    then
         note_ttm "|Option --wm=$Windowmanagercommand: With option --xc
                   |  only OpenBox is provided as window manager.
                   |  Fallback: Setting --wm=auto"
@@ -18206,7 +18208,7 @@ check_options_interferences() {
         check_fallback
         Windowmanagermode="auto"
         Windowmanagercommand=""
-    }
+    fi
 
     # --checkwindow
     [ -n "$Checkforopenwindow" ] && {
