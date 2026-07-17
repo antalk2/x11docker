@@ -18028,8 +18028,7 @@ check_options_interferences() {
 
             # MIT-SHM
             [ "$Hostmitshm" = "yes" ] && [ "$Shareipc" != "host" ] && [ "$Xoverip" = "no" ] && { # Shareipc_host
-                case "$Xlibnoshmfile" in
-                    "")
+                if [ -z "$Xlibnoshmfile" ] ; then
                         if case_match "$Sharegpu"  'yes|direct' ; then
                                 if [ "$Xauthentication" != "trusted" ] ; then
                                     note_ttm \
@@ -18071,8 +18070,7 @@ check_options_interferences() {
                                 store_runoption_env "_X11_NO_MITSHM=1"
                                 store_runoption_env "_MITSHM=0"
                         fi
-                        ;;
-                    *)
+                else # [ -n "$Xlibnoshmfile" ]
                         if case_match $g_BackendKind 'docker|host' ; then # BackendKind_host
                                 if [ -f "$Libdlsofile" ] ; then
                                     # Ignore the directory, assume there is a copy
@@ -18093,11 +18091,10 @@ check_options_interferences() {
                                      |  Rather use another X server option."
                                 #
                         fi
-                        ;;
-                esac
-            }
-            ;;
-    esac
+                fi # "$Xlibnoshmfile"
+            } # MIT-SHM
+            ;; #  --hostdisplay
+    esac # case "$Xserver"
 
     # --vt
     [ -n "$Newxvt" ] && {
