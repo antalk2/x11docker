@@ -18349,15 +18349,15 @@ check_options_interferences() {
             #
         fi
 
-            ### FIXME check support of further options
-            # --stdin?
-            # --hostdbus
+        ### FIXME check support of further options
+        # --stdin?
+        # --hostdbus
 
-            Dbusrunsession="no"
-            g_Noentrypoint="no"
-            Runasroot=""
-            Runasuser=""
-    fi
+        Dbusrunsession="no"
+        g_Noentrypoint="no"
+        Runasroot=""
+        Runasuser=""
+    fi # Containersetup = no
 
     # --cap-default
     [ "$Capdropall" = "no" ] && {
