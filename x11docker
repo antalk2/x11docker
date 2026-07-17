@@ -18230,16 +18230,13 @@ check_options_interferences() {
     # --gpu --xoverip
     if [ "$Xoverip" = 'socat' ] ; then
         store_runoption_env "LIBGL_ALWAYS_SOFTWARE=1"
-        case "$Sharegpu" in
-            virgl|no) ;;
-            yes|direct|iglx)
+        if case_match "$Sharegpu" 'yes|direct|iglx' ; then
                 note_ttm "|Option --gpu=$Sharegpu is not possible with --xoverip=socat.
                           |  Fallback: Setting option --gpu=no"
                 #
                 check_fallback
                 Sharegpu="no"
-                ;;
-        esac
+        fi
     fi
 
     # --gpu
