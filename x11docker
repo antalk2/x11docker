@@ -18170,29 +18170,29 @@ check_options_interferences() {
     && [ "$Xwaylandrootless" = "no" ] \
     && case_match "$Xserver" '--xephyr|--weston-xwayland|--kwin-xwayland|--xorg|--xwayland' ;
     then
-            note_ttm "|Option $Xserver: x11docker assumes that you need
-                      |  a window manager. If you don't want this, run with option --desktop.
-                      |  Enabling option --wm to provide a window manager."
-            #
-            Windowmanagermode="auto"
-            [ "$Autochooseserver" = "yes" ] && [ "$Runsonconsole" = "no" ] && {
-                case "$Sharegpu" in
-                    no)  note_ttm "|Did not find a nice solution to run a seamless application
-                                   |  on your desktop. (Only insecure option --hostdisplay would work).
-                                   |  It is recommended to install xpra or nxagent
-                                   |  to allow a seamless mode without the need of a window manager.
-                                   |  $Wikipackagesimage"
-                         #
-                         ;;
-                    yes) note_ttm "|Did not find a nice solution to run a seamless application with
-                                   |  option --gpu on your desktop. (Only insecure option --hostdisplay would work).
-                                   |  It is recommended to install xpra, weston, Xwayland and xdotool
-                                   |  to allow a seamless mode without the need of a window manager.
-                                   |  $Wikipackagesimage"
-                         #
-                         ;;
-                esac
-            }
+        note_ttm "|Option $Xserver: x11docker assumes that you need
+                  |  a window manager. If you don't want this, run with option --desktop.
+                  |  Enabling option --wm to provide a window manager."
+        #
+        Windowmanagermode="auto"
+        [ "$Autochooseserver" = "yes" ] && [ "$Runsonconsole" = "no" ] && {
+            case "$Sharegpu" in
+                no)  note_ttm "|Did not find a nice solution to run a seamless application
+                               |  on your desktop. (Only insecure option --hostdisplay would work).
+                               |  It is recommended to install xpra or nxagent
+                               |  to allow a seamless mode without the need of a window manager.
+                               |  $Wikipackagesimage"
+                     #
+                     ;;
+                yes) note_ttm "|Did not find a nice solution to run a seamless application with
+                               |  option --gpu on your desktop. (Only insecure option --hostdisplay would work).
+                               |  It is recommended to install xpra, weston, Xwayland and xdotool
+                               |  to allow a seamless mode without the need of a window manager.
+                               |  $Wikipackagesimage"
+                     #
+                     ;;
+            esac
+        }
     fi
     
     [ -n "$Windowmanagercommand" ] && [ "$Xcontainer_option" = "yes" ] && {
