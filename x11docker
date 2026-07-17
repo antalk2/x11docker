@@ -18321,8 +18321,9 @@ check_options_interferences() {
             case "$g_Initsystem" in
                 none|tini|dockerinit) ;;
                 *) 
-                    note "Option --no-setup: Option --init=$g_Initsystem is not supported.
-  Fallback: Setting --init=tini"
+                    note_ttm "|Option --no-setup: Option --init=$g_Initsystem is not supported.
+                              |  Fallback: Setting --init=tini"
+                    #
                     check_fallback
                     g_Initsystem="tini"
                     ;;
