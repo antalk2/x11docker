@@ -18083,26 +18083,24 @@ check_options_interferences() {
                     fi
                     #
                 else # [ -n "$Xlibnoshmfile" ]
-                        if case_match $g_BackendKind 'docker|host' ; then # BackendKind_host
-                                if [ -f "$Libdlsofile" ] ; then
-                                    # Ignore the directory, assume there is a copy
-                                    # in Sharefoldercontainer.
-                                    store_runoption_env "$(trim_to_mark \
+                    if case_match $g_BackendKind 'docker|host' ; then # BackendKind_host
+                        if [ -f "$Libdlsofile" ] ; then
+                            # Ignore the directory, assume there is a copy
+                            # in Sharefoldercontainer.
+                            store_runoption_env "$(trim_to_mark \
                                                            "|LD_PRELOAD
                                                             :=$Sharefoldercontainer/$(basename "$Libdlsofile")
                                                             ::$Sharefoldercontainer/XlibNoSHM.so"
                                                             )"
-                                else
-                                    store_runoption_env "LD_PRELOAD=$Sharefoldercontainer/XlibNoSHM.so"
-                                fi
-                        elif case_match $g_BackendKind 'podman' ; then
-                                note_ttm \
-                                    "|Option --hostdisplay: Cannot set LD_PRELOAD with
-                                     |  --backend=podman to avoid MIT-SHM issues.
-                                     |  Graphical glitches might occur.
-                                     |  Rather use another X server option."
-                                #
+                        else
+                            store_runoption_env "LD_PRELOAD=$Sharefoldercontainer/XlibNoSHM.so"
                         fi
+                    elif case_match $g_BackendKind 'podman' ; then
+                        note_ttm "|Option --hostdisplay: Cannot set LD_PRELOAD with
+                                  |  --backend=podman to avoid MIT-SHM issues.
+                                  |  Graphical glitches might occur.
+                                  |  Rather use another X server option."
+                    fi
                 fi # "$Xlibnoshmfile"
             fi # MIT-SHM
             ;; #  --hostdisplay
