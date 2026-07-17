@@ -18159,11 +18159,12 @@ check_options_interferences() {
     fi # Newxvt
 
     # window manager
-    case "$Xserver" in
-        --weston-xwayland)
-            [ "$Desktopmode" = "no" ] && [ -z "$Windowmanagermode" ] && Xwaylandrootless="yes"
-            ;;
-    esac
+    if [ "$Xserver" = '--weston-xwayland' ]  \
+    && [ "$Desktopmode" = "no"   ]           \
+    && [ -z "$Windowmanagermode" ]           ;
+    then Xwaylandrootless="yes"
+    fi
+
     [ "$Desktopmode" = "no" ] && [ -z "$Windowmanagermode" ] && [ "$Xwaylandrootless" = "no" ] && case "$Xserver" in
         --xephyr|--weston-xwayland|--kwin-xwayland|--xorg|--xwayland)
             note "Option $Xserver: x11docker assumes that you need
