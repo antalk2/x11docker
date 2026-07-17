@@ -18495,11 +18495,11 @@ check_options_interferences() {
     fi
 
     # MSYS2, Cygwin, WSL
-    case "$Winsubsystem" in
-        WSL2) note_ttm "|WSL2 support is experimental and barely tested yet.
-                        |  Feedback and bug reports are appreciated!"
-              ;;
-    esac
+    if [ "$Winsubsystem" = WSL2 ] ; then
+        note_ttm "|WSL2 support is experimental and barely tested yet.
+                  |  Feedback and bug reports are appreciated!"
+    fi
+
     case "$Dockervm" in
         moby)
             case "$Winsubsystem" in
