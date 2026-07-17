@@ -18067,6 +18067,7 @@ check_options_interferences() {
                                 fi
                                 ;;
                         esac
+                        #
                         case "$Xauthentication" in
                             trusted|yes)
                                 note "Option --hostdisplay --xauth=trusted: MIT-SHM errors might occur."
@@ -18077,29 +18078,26 @@ check_options_interferences() {
                         esac
                         ;;
                     *)
-                        case $g_BackendKind in
-                            docker|host) # BackendKind_host
+                        if case_match $g_BackendKind 'docker|host' ; then # BackendKind_host
                                 if [ -f "$Libdlsofile" ] ; then
                                     # Ignore the directory, assume there is a copy
                                     # in Sharefoldercontainer.
                                     store_runoption_env "$(trim_to_mark \
-                       "|LD_PRELOAD
-                        :=$Sharefoldercontainer/$(basename "$Libdlsofile")
-                        ::$Sharefoldercontainer/XlibNoSHM.so"
-                        )"
+                                                           "|LD_PRELOAD
+                                                            :=$Sharefoldercontainer/$(basename "$Libdlsofile")
+                                                            ::$Sharefoldercontainer/XlibNoSHM.so"
+                                                            )"
                                 else
                                     store_runoption_env "LD_PRELOAD=$Sharefoldercontainer/XlibNoSHM.so"
                                 fi
-                                ;;
-                            podman)
+                        elif case_match $g_BackendKind 'podman' ; then
                                 note_ttm \
                                     "|Option --hostdisplay: Cannot set LD_PRELOAD with
                                      |  --backend=podman to avoid MIT-SHM issues.
                                      |  Graphical glitches might occur.
                                      |  Rather use another X server option."
                                 #
-                                ;;
-                        esac
+                        fi
                         ;;
                 esac
             }
