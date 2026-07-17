@@ -18159,8 +18159,8 @@ check_options_interferences() {
     fi # Newxvt
 
     # window manager
-    if [ "$Desktopmode" = "no"   ]           \
-    && [ -z "$Windowmanagermode" ]           ;
+    if [ "$Desktopmode" = "no"   ] \
+    && [ -z "$Windowmanagermode" ] ;
     then
 
         if [ "$Xserver" = '--weston-xwayland' ]  ;
