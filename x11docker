@@ -18176,7 +18176,9 @@ check_options_interferences() {
         #
         Windowmanagermode="auto"
         #
-        if [ "$Autochooseserver" = "yes" ] && [ "$Runsonconsole" = "no" ] ; then
+        if [ "$Autochooseserver" = "yes" ] \
+        && [ "$Runsonconsole"    = "no"  ] ;
+        then
             case "$Sharegpu" in
                 no)  note_ttm "|Did not find a nice solution to run a seamless application
                                |  on your desktop. (Only insecure option --hostdisplay would work).
