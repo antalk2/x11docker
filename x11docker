@@ -18113,11 +18113,11 @@ check_options_interferences() {
         if case_match "$Xserver" '--weston|--weston-xwayland' \
         && [ -n "$Hostdisplay" ]                              ;
         then
-                    error_ttm \
-                        "|Option $Xserver: Opening a TTY for weston on console
-                         |  while still running on X would break TTY switching.
-                         |  Please run nested without option --vt or switch to console first."
-                    #
+            error_ttm \
+                "|Option $Xserver: Opening a TTY for weston on console
+                 |  while still running on X would break TTY switching.
+                 |  Please run nested without option --vt or switch to console first."
+            #
         fi
 
         case "$Xserver" in
