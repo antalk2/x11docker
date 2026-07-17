@@ -18314,7 +18314,7 @@ check_options_interferences() {
     # --no-setup
     case "$Containersetup" in
         no)
-            check_optionset "--no-setup" "--dbus --no-entrypoint --runasroot --runasuser" ||:
+            check_optionset "--no-setup" "--dbus --no-entrypoint --runasroot --runasuser" || :
 
             [ "$Langwunsch" ] && store_runoption_env "LANG=$Langwunsch"
 
