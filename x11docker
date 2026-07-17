@@ -18167,26 +18167,32 @@ check_options_interferences() {
 
     [ "$Desktopmode" = "no" ] && [ -z "$Windowmanagermode" ] && [ "$Xwaylandrootless" = "no" ] && case "$Xserver" in
         --xephyr|--weston-xwayland|--kwin-xwayland|--xorg|--xwayland)
-            note "Option $Xserver: x11docker assumes that you need
-  a window manager. If you don't want this, run with option --desktop.
-  Enabling option --wm to provide a window manager."
+            note_ttm "|Option $Xserver: x11docker assumes that you need
+                      |  a window manager. If you don't want this, run with option --desktop.
+                      |  Enabling option --wm to provide a window manager."
+            #
             Windowmanagermode="auto"
             [ "$Autochooseserver" = "yes" ] && [ "$Runsonconsole" = "no" ] && {
                 case "$Sharegpu" in
-                    no)  note "Did not find a nice solution to run a seamless application
-  on your desktop. (Only insecure option --hostdisplay would work).
-  It is recommended to install xpra or nxagent
-  to allow a seamless mode without the need of a window manager.
-  $Wikipackagesimage" ;;
-                    yes) note "Did not find a nice solution to run a seamless application with
-  option --gpu on your desktop. (Only insecure option --hostdisplay would work).
-  It is recommended to install xpra, weston, Xwayland and xdotool
-  to allow a seamless mode without the need of a window manager.
-  $Wikipackagesimage" ;;
+                    no)  note_ttm "|Did not find a nice solution to run a seamless application
+                                   |  on your desktop. (Only insecure option --hostdisplay would work).
+                                   |  It is recommended to install xpra or nxagent
+                                   |  to allow a seamless mode without the need of a window manager.
+                                   |  $Wikipackagesimage"
+                         #
+                         ;;
+                    yes) note_ttm "|Did not find a nice solution to run a seamless application with
+                                   |  option --gpu on your desktop. (Only insecure option --hostdisplay would work).
+                                   |  It is recommended to install xpra, weston, Xwayland and xdotool
+                                   |  to allow a seamless mode without the need of a window manager.
+                                   |  $Wikipackagesimage"
+                         #
+                         ;;
                 esac
             }
             ;;
     esac
+    
     [ -n "$Windowmanagercommand" ] && [ "$Xcontainer_option" = "yes" ] && {
         note "Option --wm=$Windowmanagercommand: With option --xc
   only OpenBox is provided as window manager.
