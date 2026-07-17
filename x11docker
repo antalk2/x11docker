@@ -18267,10 +18267,11 @@ check_options_interferences() {
                     Sharegpu="direct"
                     ;;
                 *)
-                    note "Option --gpu=direct is not supported by $Xserver.
-  Options supporting direct rendering:
-  --xpra-xwayland, --weston-xwayland, --xwayland, --xorg, --hostdisplay
-  Fallback: Disabling option --gpu"
+                    note_ttm "|Option --gpu=direct is not supported by $Xserver.
+                              |  Options supporting direct rendering:
+                              |  --xpra-xwayland, --weston-xwayland, --xwayland, --xorg, --hostdisplay
+                              |  Fallback: Disabling option --gpu"
+                    #
                     check_fallback
                     Sharegpu="no"
                     ;;
