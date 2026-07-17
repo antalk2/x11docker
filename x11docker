@@ -17980,8 +17980,9 @@ check_options_interferences() {
             # xrandr: --scale --size --rotate
             xtool --check xrandr || {
                 { [ "$Scaling" ] || [ -n "$Rotation" ] || [ -n "$Screensize" ] ; } && {
-                    note "Option --xorg needs 'xrandr' for several options.
-  Fallback: Disabling options --size, --scale and --rotate."
+                    note_ttm "|Option --xorg needs 'xrandr' for several options.
+                              |  Fallback: Disabling options --size, --scale and --rotate."
+                    #
                     check_fallback
                     Screensize=""
                     Rotation=""
