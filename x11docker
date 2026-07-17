@@ -18228,96 +18228,98 @@ check_options_interferences() {
     fi
 
     # Sharegpu : --gpu
-    # Xoverip : --xoverip
-    if [ "$Xoverip" = 'socat' ] ; then
-        store_runoption_env "LIBGL_ALWAYS_SOFTWARE=1"
-        if case_match "$Sharegpu" 'yes|direct|iglx' ; then
+    {
+        # Xoverip : --xoverip
+        if [ "$Xoverip" = 'socat' ] ; then
+            store_runoption_env "LIBGL_ALWAYS_SOFTWARE=1"
+            if case_match "$Sharegpu" 'yes|direct|iglx' ; then
                 note_ttm "|Option --gpu=$Sharegpu is not possible with --xoverip=socat.
                           |  Fallback: Setting option --gpu=no"
                 #
                 check_fallback
                 Sharegpu="no"
+            fi
         fi
-    fi
 
-    # --gpu
-    if case_match "$Xoverip" 'yes|listentcp' ; then
-        case "$Sharegpu" in
-            virgl|iglx) ;;
-            yes)
-                note_ttm "|Option --gpu=$Sharegpu with X over IP.
-                          | Enabling indirect rendering with --gpu=iglx"
-                Sharegpu="iglx"
-                ;;
-            direct)
-                note_ttm "|Option --gpu=$Sharegpu with --xoverip is not supported.
-                          |  Try --gpu=iglx instead.
-                          |  Fallback: Disabling option --gpu."
-                #
-                check_fallback
-                Sharegpu="no"
-                ;;
-        esac
-    fi
-
-    if case_match "$Sharegpu" 'yes' ; then
-        case "$Xserver" in
-            --weston|--kwin|--hostwayland)
-                Sharegpu="direct"
-                ;;
-            --xorg|*xwayland|--satellite|--hostdisplay)
-                Sharegpu="direct"
-                ;;
-            --xwin|--runx)
-                Sharegpu="iglx"
-                ;;
-            --tty)
-                Sharegpu="direct"
-                ;;
-            *)
-                note_ttm "|Option --gpu=direct is not supported by $Xserver.
-                          |  Options supporting direct rendering:
-                          |  --xpra-xwayland, --weston-xwayland, --xwayland, --xorg, --hostdisplay
-                          |  Fallback: Disabling option --gpu"
-                #
-                check_fallback
-                Sharegpu="no"
-                ;;
-        esac
-    fi
-
-    case "$Sharegpu" in
-        iglx)
-            store_runoption_env "LIBGL_ALWAYS_INDIRECT=1"
-            ;;
-        virgl)
-            case "$Xcontainer_option" in
+        # --gpu
+        if case_match "$Xoverip" 'yes|listentcp' ; then
+            case "$Sharegpu" in
+                virgl|iglx) ;;
                 yes)
-                    case "$g_BackendKind" in
-                        docker|podman|nerdctl) 
-                            store_runoption_env "LIBGL_ALWAYS_SOFTWARE=1"   ### FIXME rather belongs to setup_gpu()
-                            store_runoption_env "GALLIUM_DRIVER=virpipe"
-                            ;;
-                        *)  # proot|host # BackendKind_host
-                            note_ttm "|Option --gpu=virgl is supported with
-                                      |  backends docker|podman|nerdctl only.
-                                      |  Fallback: Disabling option --gpu=virgl."
-                            #
-                            check_fallback
-                            Sharegpu="no"
-                            ;;
-                    esac
+                    note_ttm "|Option --gpu=$Sharegpu with X over IP.
+                              | Enabling indirect rendering with --gpu=iglx"
+                    Sharegpu="iglx"
                     ;;
-                no)
-                    note_ttm "|Option --gpu=virgl needs image x11docker/xserver (option --xc).
-                              |  Fallback: Disabling option --gpu=virgl."
+                direct)
+                    note_ttm "|Option --gpu=$Sharegpu with --xoverip is not supported.
+                              |  Try --gpu=iglx instead.
+                              |  Fallback: Disabling option --gpu."
                     #
                     check_fallback
                     Sharegpu="no"
                     ;;
             esac
-            ;;
-    esac
+        fi
+
+        if case_match "$Sharegpu" 'yes' ; then
+            case "$Xserver" in
+                --weston|--kwin|--hostwayland)
+                    Sharegpu="direct"
+                    ;;
+                --xorg|*xwayland|--satellite|--hostdisplay)
+                    Sharegpu="direct"
+                    ;;
+                --xwin|--runx)
+                    Sharegpu="iglx"
+                    ;;
+                --tty)
+                    Sharegpu="direct"
+                    ;;
+                *)
+                    note_ttm "|Option --gpu=direct is not supported by $Xserver.
+                              |  Options supporting direct rendering:
+                              |  --xpra-xwayland, --weston-xwayland, --xwayland, --xorg, --hostdisplay
+                              |  Fallback: Disabling option --gpu"
+                    #
+                    check_fallback
+                    Sharegpu="no"
+                    ;;
+            esac
+        fi
+
+        case "$Sharegpu" in
+            iglx)
+                store_runoption_env "LIBGL_ALWAYS_INDIRECT=1"
+                ;;
+            virgl)
+                case "$Xcontainer_option" in
+                    yes)
+                        case "$g_BackendKind" in
+                            docker|podman|nerdctl)
+                                store_runoption_env "LIBGL_ALWAYS_SOFTWARE=1"   ### FIXME rather belongs to setup_gpu()
+                                store_runoption_env "GALLIUM_DRIVER=virpipe"
+                                ;;
+                            *)  # proot|host # BackendKind_host
+                                note_ttm "|Option --gpu=virgl is supported with
+                                          |  backends docker|podman|nerdctl only.
+                                          |  Fallback: Disabling option --gpu=virgl."
+                                #
+                                check_fallback
+                                Sharegpu="no"
+                                ;;
+                        esac
+                        ;;
+                    no)
+                        note_ttm "|Option --gpu=virgl needs image x11docker/xserver (option --xc).
+                                  |  Fallback: Disabling option --gpu=virgl."
+                        #
+                        check_fallback
+                        Sharegpu="no"
+                        ;;
+                esac
+                ;;
+        esac
+    }
 
     # --no-setup
     case "$Containersetup" in
