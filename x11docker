@@ -18476,14 +18476,16 @@ check_options_interferences() {
         esac
     fi
 
-    # --xfishtank
-    [ "$Xfishtank" = "yes" ] && {
-        xtool --check xfishtank && case "$Xserver" in
+    # Xfishtank : --xfishtank
+    if [ "$Xfishtank" = "yes" ] ; then
+        if xtool --check xfishtank ; then
+            case "$Xserver" in
             --xpra*|--nxagent)
                 [ "$Desktopmode" = "no" ] && Windowmanagermode="${Windowmanagermode:-auto}" && Desktopmode="yes"
                 ;;
-        esac
-    }
+            esac
+        fi
+    fi
 
     # MSYS2, Cygwin, WSL
     case "$Winsubsystem" in
