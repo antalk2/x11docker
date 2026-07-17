@@ -18027,7 +18027,10 @@ check_options_interferences() {
             fi
 
             # MIT-SHM
-            [ "$Hostmitshm" = "yes" ] && [ "$Shareipc" != "host" ] && [ "$Xoverip" = "no" ] && { # Shareipc_host
+            if [ "$Hostmitshm" = "yes"  ] \
+            && [ "$Shareipc"  != "host" ] \
+            && [ "$Xoverip"    = "no"   ] ; # Shareipc_host
+            then
                 if [ -z "$Xlibnoshmfile" ] ; then
                         if case_match "$Sharegpu"  'yes|direct' ; then
                                 if [ "$Xauthentication" != "trusted" ] ; then
@@ -18092,7 +18095,7 @@ check_options_interferences() {
                                 #
                         fi
                 fi # "$Xlibnoshmfile"
-            } # MIT-SHM
+            fi # MIT-SHM
             ;; #  --hostdisplay
     esac # case "$Xserver"
 
