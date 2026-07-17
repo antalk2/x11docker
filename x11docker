@@ -18371,7 +18371,7 @@ check_options_interferences() {
     fi
 
     # Xkblayout : --keymap: XKB keyboard layout
-    [ -n "$Xkblayout" ] && {
+    if [ -n "$Xkblayout" ] ; then
         
         if case_match "$Xserver" '--kwin|--kwin-xwayland'        \
         && ( [ "$Runsonconsole" = "yes" ] || [ -n "$Newxvt" ] )  \
@@ -18394,7 +18394,7 @@ check_options_interferences() {
             check_fallback
             Xkblayout=""
         fi
-    }
+    fi
 
     # --rotate
     [ "$Rotation" = "0" ] && Rotation="normal"
