@@ -18501,9 +18501,10 @@ check_options_interferences() {
     fi
 
     if [ "$Dockervm" =  moby ] ; then
+
         case "$Winsubsystem" in
             WSL1|WSL2)
-                grep -q "/c/" <<< "$Cachebasefolder" && [ -z "$Hosthomebasefolder" ] && \
+                if grep -q "/c/" <<< "$Cachebasefolder" && [ -z "$Hosthomebasefolder" ] ; then
                     note_ttm "|With MobyVM and WSL x11docker stores its cache files on drive C:
                               |  to allow cache file sharing.
                               |  Your Docker setup might not allow to share files from drive C:.
@@ -18513,28 +18514,33 @@ check_options_interferences() {
                               |  Same issue can occur with option '--home'.
                               |  Use option '--homebasedir D:/some/home/folder' in that case.
                               |  Option --preset can help to reduce typing for each command."
+                    #
+                fi
                 ;;
         esac
-        [ "$g_Initsystem" = "systemd" ] && {
+
+        if [ "$g_Initsystem" = "systemd" ] ; then
             note_ttm "|Option --init=systemd is not supported with MobyVM.
-                          |  You can try another init option instead, e.g. --init=openrc.
-                          |  Fallback: Disabling option --init=systemd"
+                      |  You can try another init option instead, e.g. --init=openrc.
+                      |  Fallback: Disabling option --init=systemd"
             #
             check_fallback
             g_Initsystem="tini"
-        }
-        [ "$Sharecgroup" = "yes" ] && {
+        fi
+
+        if [ "$Sharecgroup" = "yes" ] ; then
             note_ttm "|Option --sharecgroup is not supported with MobyVM.
-                          |  Fallback: Disabling option --sharecgroup."
+                      |  Fallback: Disabling option --sharecgroup."
             #
             check_fallback
             Sharecgroup="no"
-        }
+        fi
+
     fi
 
     case "$Winsubsystem" in
-        MSYS2|CYGWIN|WSL1|WSL2)
-            check_optionset "Windows" "--pulseaudio --printer --webcam" ||:
+        MSYS2 | CYGWIN | WSL1 | WSL2 )
+            check_optionset "Windows" "--pulseaudio --printer --webcam" || :
             Sharecupsmode=""
             Pulseaudiomode=""
             Sharewebcam="no"
