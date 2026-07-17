@@ -18227,7 +18227,8 @@ check_options_interferences() {
         Checkforopenwindow=""
     fi
 
-    # --gpu --xoverip
+    # Sharegpu : --gpu
+    # Xoverip : --xoverip
     if [ "$Xoverip" = 'socat' ] ; then
         store_runoption_env "LIBGL_ALWAYS_SOFTWARE=1"
         if case_match "$Sharegpu" 'yes|direct|iglx' ; then
@@ -18244,7 +18245,8 @@ check_options_interferences() {
         case "$Sharegpu" in
             virgl|iglx) ;;
             yes)
-                note "Option --gpu with X over IP: Enabling indirect rendering with --gpu=$Sharegpu."
+                note_ttm "|Option --gpu=$Sharegpu with X over IP.
+                          | Enabling indirect rendering with --gpu=iglx"
                 Sharegpu="iglx"
                 ;;
             direct)
@@ -18256,7 +18258,7 @@ check_options_interferences() {
                 Sharegpu="no"
                 ;;
         esac
-       fi
+    fi
 
     case "$Sharegpu" in 
         yes)
