@@ -18357,8 +18357,9 @@ check_options_interferences() {
         case "$Allownewprivileges" in
             "yes"|"no") ;;
             "auto")
-                note "Option --cap-default: Enabling option --newprivileges.
-  You can avoid this with --newprivileges=no"
+                note_ttm "|Option --cap-default: Enabling option --newprivileges.
+                          |  You can avoid this with --newprivileges=no"
+                #
                 Allownewprivileges="yes"
                 ;;
         esac
