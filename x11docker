@@ -9736,7 +9736,7 @@ create_xcommand() {
                             echo
                             #
                             [ "$Xwaylandrootless" = "no" ] && echo "mode=$Screensize"
-                            [ "$Scaling" ]                 && echo "scale=$Scaling"
+                            [ -n "$Scaling"  ]             && echo "scale=$Scaling"
                             [ -n "$Rotation" ]             && echo "transform=$Rotation"
                             #
                         done
