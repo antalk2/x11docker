@@ -18016,10 +18016,12 @@ check_options_interferences() {
             Xtest=""
             Xcomposite=""
             [ "$Runsoverssh" = "yes" ] && { ### FIXME
-                [ "$g_Network" != "host" ]  && error "For SSH connection with option --hostdisplay # g_Network_host
-  x11docker would need insecure option --network=host.
-  It is recommended to use another X server option
-  like --xpra, --xephyr or --nxagent."
+                [ "$g_Network" != "host" ]  && error_ttm \
+                   "|For SSH connection with option --hostdisplay # g_Network_host
+                    |  x11docker would need insecure option --network=host.
+                    |  It is recommended to use another X server option
+                    |  like --xpra, --xephyr or --nxagent."
+                #
             }
             # MIT-SHM
             [ "$Hostmitshm" = "yes" ] && [ "$Shareipc" != "host" ] && [ "$Xoverip" = "no" ] && { # Shareipc_host
