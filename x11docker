@@ -18120,6 +18120,8 @@ check_options_interferences() {
             #
         fi
 
+        if [ "$Xcontainer_option" =  yes ] ; then
+
         if case_match "$Xserver" '--weston' \
         && [ "$Xcontainer_option" = "yes" ] ;
         then
@@ -18130,7 +18132,6 @@ check_options_interferences() {
             #
         fi
 
-        if [ "$Xcontainer_option" =  yes ] ; then
             if case_match "$Xserver" '--weston*|--xorg' ; then
                         if [ "$Xcforce" =  yes ] ; then
                             warning_ttm \
