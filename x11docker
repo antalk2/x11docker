@@ -18089,10 +18089,10 @@ check_options_interferences() {
                             # Ignore the directory, assume there is a copy
                             # in Sharefoldercontainer.
                             store_runoption_env "$(trim_to_mark \
-                                                           "|LD_PRELOAD
-                                                            :=$Sharefoldercontainer/$(basename "$Libdlsofile")
-                                                            ::$Sharefoldercontainer/XlibNoSHM.so"
-                                                            )"
+                                                 "|LD_PRELOAD
+                                                  :=$Sharefoldercontainer/$(basename "$Libdlsofile")
+                                                  ::$Sharefoldercontainer/XlibNoSHM.so"
+                                                  )"
                         else
                             store_runoption_env "LD_PRELOAD=$Sharefoldercontainer/XlibNoSHM.so"
                         fi
