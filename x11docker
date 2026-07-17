@@ -18143,7 +18143,7 @@ check_options_interferences() {
                                      |  This is likely caused by proprietary NVIDIA drivers.
                                      |  Consider to use free and open source nouveau driver instead.
                                      |  Rather use $Xserver with option '--xc=no'."
-                                ;;
+                                #
                             else # Xcforce
                                 if [ -n "$Nvidiaversion" ] ; then
                                         error_ttm \
