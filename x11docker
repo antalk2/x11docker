@@ -18020,10 +18020,10 @@ check_options_interferences() {
             }
 
             if  [ "$Runsoverssh" = "yes" ] &&  ### FIXME
-                [ "$g_Network" != "host" ]  ;
+                [ "$g_Network" != "host" ]  ; # g_Network_host
             then
                 error_ttm \
-                    "|For SSH connection with option --hostdisplay # g_Network_host
+                    "|For SSH connection with option --hostdisplay
                      |  x11docker would need insecure option --network=host.
                      |  It is recommended to use another X server option
                      |  like --xpra, --xephyr or --nxagent."
