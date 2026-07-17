@@ -18362,15 +18362,13 @@ check_options_interferences() {
     # Capdropall : --cap-default
     # Allownewprivileges :  --newprivileges
     if [ "$Capdropall" = "no" ] ; then
-        case "$Allownewprivileges" in
-            "yes"|"no") ;;
-            "auto")
+        if [ "$Allownewprivileges" =  "auto" ] ; then
+            # "yes"|"no") ;;
                 note_ttm "|Option --cap-default: Enabling option --newprivileges.
                           |  You can avoid this with --newprivileges=no"
                 #
                 Allownewprivileges="yes"
-                ;;
-        esac
+        fi
     fi
 
     # --keymap: XKB keyboard layout
