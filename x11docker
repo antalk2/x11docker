@@ -18241,9 +18241,10 @@ check_options_interferences() {
                     Sharegpu="iglx"
                     ;;
                 direct)
-                    note "Option --gpu=$Sharegpu with --xoverip is not supported.
-  Try --gpu=iglx instead.
-  Fallback: Disabling option --gpu."
+                    note_ttm "|Option --gpu=$Sharegpu with --xoverip is not supported.
+                              |  Try --gpu=iglx instead.
+                              |  Fallback: Disabling option --gpu."
+                    #
                     check_fallback
                     Sharegpu="no"
                     ;;
