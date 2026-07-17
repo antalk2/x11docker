@@ -18335,10 +18335,11 @@ check_options_interferences() {
             g_Initsystem="tini"
         fi
 
-            [ -z "$g_Workdir" ] && [ "$Sharehome" != "no" ] && \
-                note_ttm "|Option --no-setup: You might need to specify
-                          |  e.g. '--workdir=/tmp' or '--env HOME=/tmp' to allow proper functionality."
+        if [ -z "$g_Workdir" ] && [ "$Sharehome" != "no" ] ; then
+            note_ttm "|Option --no-setup: You might need to specify
+                      |  e.g. '--workdir=/tmp' or '--env HOME=/tmp' to allow proper functionality."
             #
+        fi
 
             [ -n "$Sudouser" ] && [ "$g_Containerusername" != "root" ] && \
                 note_ttm "|Option --no-setup does not support option --sudouser.
