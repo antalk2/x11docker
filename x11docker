@@ -18130,10 +18130,8 @@ check_options_interferences() {
             #
         fi
 
-        case "$Xcontainer_option" in
-            yes)
-                case "$Xserver" in
-                    --weston*|--xorg)
+        if [ "$Xcontainer_option" =  yes ] ; then
+            if case_match "$Xserver" '--weston*|--xorg' ; then
                         if [ "$Xcforce" =  yes ] ; then
                             warning_ttm \
                                 "|Option --xc=force passes by this issue:
@@ -18155,10 +18153,8 @@ check_options_interferences() {
                                  |  You can force to run with option --xc with option '--xc=force'."
                             #
                         fi
-                        ;;
-                esac
-                ;;
-        esac
+                fi
+           fi
 
     fi # Newxvt
 
