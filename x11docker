@@ -18030,8 +18030,7 @@ check_options_interferences() {
             [ "$Hostmitshm" = "yes" ] && [ "$Shareipc" != "host" ] && [ "$Xoverip" = "no" ] && { # Shareipc_host
                 case "$Xlibnoshmfile" in
                     "")
-                        case "$Sharegpu" in
-                            yes|direct)
+                        if case_match "$Sharegpu"  'yes|direct' ; then
                                 if [ "$Xauthentication" != "trusted" ] ; then
                                     note_ttm \
                                         "|Option --hostdisplay --gpu=direct
@@ -18048,8 +18047,7 @@ check_options_interferences() {
                                     check_fallback
                                     Sharegpu="no"
                                 fi
-                                ;;
-                            no)
+                        elif case_match "$Sharegpu" 'no' ;  then
                                 if [ "$Xauthentication" =  yes ] ; then
                                     note_ttm \
                                         "|Option --hostdisplay: To avoid MIT-SHM errors,
@@ -18065,8 +18063,7 @@ check_options_interferences() {
                                     #
                                     Xauthentication="untrusted"
                                 fi
-                                ;;
-                        esac
+                        fi
                         #
                         case "$Xauthentication" in
                             trusted|yes)
