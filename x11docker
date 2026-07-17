@@ -18144,8 +18144,7 @@ check_options_interferences() {
                                      |  Consider to use free and open source nouveau driver instead.
                                      |  Rather use $Xserver with option '--xc=no'."
                                 #
-                            else # Xcforce
-                                if [ -n "$Nvidiaversion" ] ; then
+                            elif [ -n "$Nvidiaversion" ] ; then
                                         error_ttm \
                                             "|Options $Xserver --xc: Running weston or Xorg
                                              |  with option --xc on console can result in not being able to get back
@@ -18155,7 +18154,6 @@ check_options_interferences() {
                                              |  Rather use $Xserver with option '--xc=no'.
                                              |  You can force to run with option --xc with option '--xc=force'."
                                         #
-                                fi
                         fi
                         ;;
                 esac
