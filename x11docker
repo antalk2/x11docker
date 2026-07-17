@@ -18181,14 +18181,16 @@ check_options_interferences() {
             then
                 case "$Sharegpu" in
                     no)  note_ttm "|Did not find a nice solution to run a seamless application
-                                   |  on your desktop. (Only insecure option --hostdisplay would work).
+                                   |  on your desktop.
+                                   |  (Only insecure option --hostdisplay would work).
                                    |  It is recommended to install xpra or nxagent
                                    |  to allow a seamless mode without the need of a window manager.
                                    |  $Wikipackagesimage"
                          #
                          ;;
                     yes) note_ttm "|Did not find a nice solution to run a seamless application with
-                                   |  option --gpu on your desktop. (Only insecure option --hostdisplay would work).
+                                   |  option --gpu on your desktop.
+                                   |  (Only insecure option --hostdisplay would work).
                                    |  It is recommended to install xpra, weston, Xwayland and xdotool
                                    |  to allow a seamless mode without the need of a window manager.
                                    |  $Wikipackagesimage"
