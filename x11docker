@@ -18327,16 +18327,13 @@ check_options_interferences() {
 
         if [ "$Langwunsch" ] ; then store_runoption_env "LANG=$Langwunsch" ; fi
 
-            case "$g_Initsystem" in
-                none|tini|dockerinit) ;;
-                *) 
-                    note_ttm "|Option --no-setup: Option --init=$g_Initsystem is not supported.
-                              |  Fallback: Setting --init=tini"
-                    #
-                    check_fallback
-                    g_Initsystem="tini"
-                    ;;
-            esac
+        if ! case_match "$g_Initsystem"  'none|tini|dockerinit' ; then
+            note_ttm "|Option --no-setup: Option --init=$g_Initsystem is not supported.
+                      |  Fallback: Setting --init=tini"
+            #
+            check_fallback
+            g_Initsystem="tini"
+        fi
 
             [ -z "$g_Workdir" ] && [ "$Sharehome" != "no" ] && \
                 note_ttm "|Option --no-setup: You might need to specify
