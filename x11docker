@@ -9737,7 +9737,7 @@ create_xcommand() {
                             #
                             [ "$Xwaylandrootless" = "no" ] && echo "mode=$Screensize"
                             [ -n "$Scaling"  ]             && echo "scale=$Scaling"
-                            [ -n "$Rotation" ]             && echo "transform=$Rotation"
+                            [ -n "$Rotation" ]             && echo "transform=$Rotation" # WestonRotation
                             #
                         done
                     } >> "$Westonini"
@@ -11180,7 +11180,7 @@ create_xinitrc() {
                 trim_to_bar "|  # --rotate $Rotation
                              |  verbose 'Rotation $Rotation'
                              |"
-                case "$Rotation" in
+                case "$Rotation" in # recoding_Rotation in create_xinitrc, for --xorg / xrandr
                     0|normal)    Rotation="" ;;
                     90)          Rotation="--rotate right";;
                     180)         Rotation="--reflect xy" ;;
@@ -18398,20 +18398,24 @@ check_options_interferences() {
         fi
     }
 
-    # --rotate
-    [ "$Rotation" = "0" ] && Rotation="normal"
-    case "$Xserver" in
-        --weston*)
-            case "$Rotation" in
-                90)          Rotation="rotate-270" ;;
-                180)         Rotation="rotate-180" ;;
-                270)         Rotation="rotate-90" ;;
-                flipped-90)  Rotation="flipped-rotate-270" ;;
-                flipped-180) Rotation="flipped-rotate-180" ;;
-                flipped-270) Rotation="flipped-rotate-90" ;;
-            esac
-            ;;
-    esac
+    # Rotation : --rotate
+    {
+        if [ "$Rotation" = "0" ] ; then  Rotation="normal" ; fi
+        case "$Xserver" in
+            --weston*)
+                # recoding_Rotation for --weston* (to WestonRotation)
+                # This changes the set of allowed values.
+                case "$Rotation" in
+                    90)          Rotation="rotate-270" ;;
+                    180)         Rotation="rotate-180" ;;
+                    270)         Rotation="rotate-90" ;;
+                    flipped-90)  Rotation="flipped-rotate-270" ;;
+                    flipped-180) Rotation="flipped-rotate-180" ;;
+                    flipped-270) Rotation="flipped-rotate-90" ;;
+                esac
+                ;;
+        esac
+    }
 
     # --shell
     case "$Containerusershell" in
