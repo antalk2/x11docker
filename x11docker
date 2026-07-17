@@ -18134,8 +18134,7 @@ check_options_interferences() {
             yes)
                 case "$Xserver" in
                     --weston*|--xorg)
-                        case "$Xcforce" in
-                            yes) 
+                        if [ "$Xcforce" =  yes ; then
                                 warning_ttm \
                                     "|Option --xc=force passes by this issue:
                                      |  Options $Xserver --xc: Running weston or Xorg
@@ -18145,7 +18144,7 @@ check_options_interferences() {
                                      |  Consider to use free and open source nouveau driver instead.
                                      |  Rather use $Xserver with option '--xc=no'."
                                 ;;
-                            *)
+                            else # Xcforce
                                 if [ -n "$Nvidiaversion" ] ; then
                                         error_ttm \
                                             "|Options $Xserver --xc: Running weston or Xorg
@@ -18157,8 +18156,7 @@ check_options_interferences() {
                                              |  You can force to run with option --xc with option '--xc=force'."
                                         #
                                 fi
-                                ;;
-                        esac
+                        fi
                         ;;
                 esac
                 ;;
