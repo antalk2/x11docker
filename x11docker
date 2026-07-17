@@ -18096,7 +18096,8 @@ check_options_interferences() {
                             podman)
                                 note_ttm \
                                     "|Option --hostdisplay: Cannot set LD_PRELOAD with
-                                     |  --backend=podman to avoid MIT-SHM issues. Graphical glitches might occur.
+                                     |  --backend=podman to avoid MIT-SHM issues.
+                                     |  Graphical glitches might occur.
                                      |  Rather use another X server option."
                                 #
                                 ;;
@@ -18111,16 +18112,19 @@ check_options_interferences() {
     [ -n "$Newxvt" ] && {
         case "$Xserver" in
             --weston|--weston-xwayland)
-                [ -n "$Hostdisplay" ] && error "Option $Xserver: Opening a TTY for weston on console
-  while still running on X would break TTY switching.
-  Please run nested without option --vt or switch to console first."
+                [ -n "$Hostdisplay" ] && error_ttm \
+                                             "|Option $Xserver: Opening a TTY for weston on console
+                                              |  while still running on X would break TTY switching.
+                                              |  Please run nested without option --vt or switch to console first."
+                #
                 ;;
         esac
         case "$Xserver" in
             --weston)
-                [ "$Xcontainer_option" = "yes" ] && note "Option $Xserver: TTY switching will not work
-  with weston on console running in a container (option --xc).
-  Alternative: Run with --xc=no using weston from host."
+                [ "$Xcontainer_option" = "yes" ] && note_ttm "|Option $Xserver: TTY switching will not work
+                     |  with weston on console running in a container (option --xc).
+                     |  Alternative: Run with --xc=no using weston from host."
+                #
                 ;;
         esac
         case "$Xcontainer_option" in
