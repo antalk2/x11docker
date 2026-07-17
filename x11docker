@@ -18261,29 +18261,29 @@ check_options_interferences() {
     fi
 
     if case_match "$Sharegpu" 'yes' ; then
-            case "$Xserver" in
-                --weston|--kwin|--hostwayland)
-                    Sharegpu="direct"
-                    ;;
-                --xorg|*xwayland|--satellite|--hostdisplay)
-                    Sharegpu="direct"
-                    ;;
-                --xwin|--runx)
-                    Sharegpu="iglx"
-                    ;;
-                --tty)
-                    Sharegpu="direct"
-                    ;;
-                *)
-                    note_ttm "|Option --gpu=direct is not supported by $Xserver.
-                              |  Options supporting direct rendering:
-                              |  --xpra-xwayland, --weston-xwayland, --xwayland, --xorg, --hostdisplay
-                              |  Fallback: Disabling option --gpu"
-                    #
-                    check_fallback
-                    Sharegpu="no"
-                    ;;
-            esac
+        case "$Xserver" in
+            --weston|--kwin|--hostwayland)
+                Sharegpu="direct"
+                ;;
+            --xorg|*xwayland|--satellite|--hostdisplay)
+                Sharegpu="direct"
+                ;;
+            --xwin|--runx)
+                Sharegpu="iglx"
+                ;;
+            --tty)
+                Sharegpu="direct"
+                ;;
+            *)
+                note_ttm "|Option --gpu=direct is not supported by $Xserver.
+                          |  Options supporting direct rendering:
+                          |  --xpra-xwayland, --weston-xwayland, --xwayland, --xorg, --hostdisplay
+                          |  Fallback: Disabling option --gpu"
+                #
+                check_fallback
+                Sharegpu="no"
+                ;;
+        esac
     fi
 
     case "$Sharegpu" in
