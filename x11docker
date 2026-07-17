@@ -18221,8 +18221,9 @@ check_options_interferences() {
             case "$Sharegpu" in
                 virgl|no) ;;
                 yes|direct|iglx)
-                    note "Option --gpu=$Sharegpu is not possible with --xoverip=socat.
-  Fallback: Setting option --gpu=no"
+                    note_ttm "|Option --gpu=$Sharegpu is not possible with --xoverip=socat.
+                              |  Fallback: Setting option --gpu=no"
+                    #
                     check_fallback
                     Sharegpu="no"
                     ;;
