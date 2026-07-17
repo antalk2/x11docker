@@ -18094,9 +18094,11 @@ check_options_interferences() {
                                 fi
                                 ;;
                             podman)
-                                note "Option --hostdisplay: Cannot set LD_PRELOAD with
-  --backend=podman to avoid MIT-SHM issues. Graphical glitches might occur.
-  Rather use another X server option."
+                                note_ttm \
+                                    "|Option --hostdisplay: Cannot set LD_PRELOAD with
+                                     |  --backend=podman to avoid MIT-SHM issues. Graphical glitches might occur.
+                                     |  Rather use another X server option."
+                                #
                                 ;;
                         esac
                         ;;
