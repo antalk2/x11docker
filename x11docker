@@ -18417,7 +18417,8 @@ check_options_interferences() {
         esac
     }
 
-    # --shell
+    # Containerusershell : --shell
+    # using: Containersetup : --no-setup
     if ! case_match "$Containerusershell" 'auto' ; then
         store_runoption_env "SHELL=$Containerusershell"
         if [ "$Containersetup" = "no" ] ; then
