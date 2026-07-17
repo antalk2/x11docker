@@ -18457,9 +18457,14 @@ check_options_interferences() {
         esac
     fi
 
-    # --xlogo
-    [ -n "$Xlogo" ] && {
-        xtool --check xlogo || Xlogo=""
+    # Xlogo : --xlogo
+    if [ -n "$Xlogo" ] ; then
+        if ! xtool --check xlogo ; then
+            note_ttm "|Option --xlogo : coudl not find xlogo.
+                      |  Disabling option --xlogo."
+            #
+            Xlogo=""
+        fi
         case "$Xserver" in
             --weston|--kwin|--hostwayland|--tty)
                 note_ttm "|Option --xlogo does not run on $Xserver.
@@ -18469,7 +18474,7 @@ check_options_interferences() {
                 Xlogo=""
                 ;;
         esac
-    }
+    fi
 
     # --xfishtank
     [ "$Xfishtank" = "yes" ] && {
