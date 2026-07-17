@@ -18321,12 +18321,11 @@ check_options_interferences() {
         esac
     }
 
-    # --no-setup
-    case "$Containersetup" in
-        no)
-            check_optionset "--no-setup" "--dbus --no-entrypoint --runasroot --runasuser" || :
+    # Containersetup : --no-setup
+    if [ "$Containersetup" = 'no' ] ; then
+        check_optionset "--no-setup" "--dbus --no-entrypoint --runasroot --runasuser" || :
 
-            [ "$Langwunsch" ] && store_runoption_env "LANG=$Langwunsch"
+        if [ "$Langwunsch" ] ; then store_runoption_env "LANG=$Langwunsch" ; fi
 
             case "$g_Initsystem" in
                 none|tini|dockerinit) ;;
@@ -18359,8 +18358,7 @@ check_options_interferences() {
             g_Noentrypoint="no"
             Runasroot=""
             Runasuser=""
-            ;;
-    esac
+    fi
 
     # --cap-default
     [ "$Capdropall" = "no" ] && {
