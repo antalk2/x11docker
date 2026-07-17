@@ -18122,8 +18122,7 @@ check_options_interferences() {
 
         if [ "$Xcontainer_option" =  yes ] ; then
 
-        if case_match "$Xserver" '--weston' \
-        && [ "$Xcontainer_option" = "yes" ] ;
+        if case_match "$Xserver" '--weston' ;
         then
             note_ttm \
                 "|Option $Xserver: TTY switching will not work
