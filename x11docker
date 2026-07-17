@@ -18469,34 +18469,38 @@ check_options_interferences() {
 
     # MSYS2, Cygwin, WSL
     case "$Winsubsystem" in
-        WSL2) note "WSL2 support is experimental and barely tested yet.
-  Feedback and bug reports are appreciated!" ;;
+        WSL2) note_ttm "|WSL2 support is experimental and barely tested yet.
+                        |  Feedback and bug reports are appreciated!"
+              ;;
     esac
     case "$Dockervm" in
         moby)
             case "$Winsubsystem" in
                 WSL1|WSL2)
-                    grep -q "/c/" <<< "$Cachebasefolder" && [ -z "$Hosthomebasefolder" ] && note "With MobyVM and WSL x11docker stores its cache files on drive C:
-  to allow cache file sharing.
-  Your Docker setup might not allow to share files from drive C:.
-  If startup fails with an 'access denied' error,
-  please either allow access to drive C: or specify a custom folder for
-  cache storage with option '--cachebasedir D:/some/cache/folder'.
-  Same issue can occur with option '--home'.
-  Use option '--homebasedir D:/some/home/folder' in that case.
-  Option --preset can help to reduce typing for each command."
+                    grep -q "/c/" <<< "$Cachebasefolder" && [ -z "$Hosthomebasefolder" ] && \
+                        note_ttm "|With MobyVM and WSL x11docker stores its cache files on drive C:
+                                  |  to allow cache file sharing.
+                                  |  Your Docker setup might not allow to share files from drive C:.
+                                  |  If startup fails with an 'access denied' error,
+                                  |  please either allow access to drive C: or specify a custom folder for
+                                  |  cache storage with option '--cachebasedir D:/some/cache/folder'.
+                                  |  Same issue can occur with option '--home'.
+                                  |  Use option '--homebasedir D:/some/home/folder' in that case.
+                                  |  Option --preset can help to reduce typing for each command."
                     ;;
             esac
             [ "$g_Initsystem" = "systemd" ] && {
-                note "Option --init=systemd is not supported with MobyVM.
-  You can try another init option instead, e.g. --init=openrc.
-  Fallback: Disabling option --init=systemd"
+                note_ttm "|Option --init=systemd is not supported with MobyVM.
+                          |  You can try another init option instead, e.g. --init=openrc.
+                          |  Fallback: Disabling option --init=systemd"
+                #
                 check_fallback
                 g_Initsystem="tini"
             }
             [ "$Sharecgroup" = "yes" ] && {
-                note "Option --sharecgroup is not supported with MobyVM.
-  Fallback: Disabling option --sharecgroup."
+                note_ttm "|Option --sharecgroup is not supported with MobyVM.
+                          |  Fallback: Disabling option --sharecgroup."
+                #
                 check_fallback
                 Sharecgroup="no"
             }
@@ -18523,15 +18527,17 @@ check_options_interferences() {
     case "$g_Interactive" in
         yes)
             [ "$Forwardstdin" = "yes" ] && {
-                note "Option --stdin is not compatible with option --interactive.
-  Fallback: Disabling option --stdin."
+                note_ttm "|Option --stdin is not compatible with option --interactive.
+                          |  Fallback: Disabling option --stdin."
+                #
                 check_fallback
                 Forwardstdin="no"
             }
             [ "$Runsinteractive" = "yes" ] && {
-                note "Option -i, --interactive: Does not work in interactive
-  bash mode (option --enforce-i).
-  Fallback: Disabling option --interactive."
+                note_ttm "|Option -i, --interactive: Does not work in interactive
+                          |  bash mode (option --enforce-i).
+                          |  Fallback: Disabling option --interactive."
+                #
                 check_fallback
                 g_Interactive="no"
             }
@@ -18539,10 +18545,11 @@ check_options_interferences() {
                 MSYS2|CYGWIN|WSL1)
                     Winpty="$(command -v winpty)"
                     Winpty="$(escapestring "$Winpty")"
-                    [ -z "$Winpty" ] && error "Option --interactive on MS Windows needs 'winpty'
-  to run x11docker in interactive mode. MSYS2 provides winpty as a package.
-  On Cygwin it can be compiled from source. WSL1 isn't supported yet.
-  WSL2 might work, but is not tested yet."
+                    [ -z "$Winpty" ] && \
+                        error_ttm "|Option --interactive on MS Windows needs 'winpty'
+                                   |  to run x11docker in interactive mode. MSYS2 provides winpty as a package.
+                                   |  On Cygwin it can be compiled from source. WSL1 isn't supported yet.
+                                   |  WSL2 might work, but is not tested yet."
                     ;;
             esac
             ;;
