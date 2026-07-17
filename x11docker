@@ -18375,14 +18375,14 @@ check_options_interferences() {
         case "$Xserver" in
             --kwin|--kwin-xwayland)
                 if [ "$Runsonconsole" != "yes" ] && [ "$Newxvt" ] ; then
-                    check_optionset "$Xserver" "--keymap" || {
+                    if ! check_optionset "$Xserver" "--keymap" ; then
                         note_ttm "|Option --keymap does not work with option $Xserver
                                   |  if running from console.
                                   |  Fallback: disabling option --keymap."
                         #
                         check_fallback
                         Xkblayout=""
-                    }
+                    fi
                 fi
                 ;;
         esac
