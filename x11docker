@@ -18418,17 +18418,14 @@ check_options_interferences() {
     }
 
     # --shell
-    case "$Containerusershell" in
-        auto) ;;
-        *)
+    if ! case_match "$Containerusershell" 'auto' ; then
             store_runoption_env "SHELL=$Containerusershell"
             [ "$Containersetup" = "no" ] && \
                 note_ttm "|Option --shell: With option --no-setup
                           |  x11docker only sets variable SHELL, but does no setup in /etc/passwd.
                           |  Some terminal emulators might not work as expected."
             #
-            ;;
-    esac
+    fi
 
     # --output-count
     [ "$Outputcount" != "1" ] && [ "$Runsonconsole" = "yes" ] && {
