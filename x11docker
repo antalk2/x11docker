@@ -19035,8 +19035,8 @@ check_options_messages() {
     if [ "$Runtime" = 'sysbox-runc'   ] \
     && [ "$g_BackendKind" != 'docker' ] ;
     then
-                note_ttm "|Option --runtime=$Runtime --backend=$g_BackendKind: $Runtime is known
-                          |  to work with Docker only yet."
+        note_ttm "|Option --runtime=$Runtime --backend=$g_BackendKind: $Runtime is known
+                  |  to work with Docker only yet."
     fi
 
     # --scale
