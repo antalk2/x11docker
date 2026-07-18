@@ -18792,9 +18792,11 @@ check_options_messages() {
                       |  like --xpra (seamless) or --xephyr (windowed)."
             #
 
-            [ "$Xcomposite" = "yes" ] && \
+            if [ "$Xcomposite" = "yes" ] ; then
                 note_ttm "|Option --nxagent: nxagent can have issues with option
-                    |  --composite. Maybe rather try --xephyr (windowed) or --xpra (seamless)."
+                          |  --composite. Maybe rather try --xephyr (windowed) or --xpra (seamless)."
+               #
+            fi
             ;;
 
         --weston|--kwin|--hostwayland)
