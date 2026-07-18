@@ -19070,7 +19070,7 @@ check_options_messages() {
         #
     fi
 
-    [ "$Customdockeroptions" ] && {
+    if [ -n "$Customdockeroptions" ] ; then
         warning_ttm "|Found custom CUSTOM_RUN_OPTIONS.
                      |  x11docker will add them to 'docker run' command without
                      |  a serious check for validity or security. Found options:
@@ -19107,7 +19107,7 @@ check_options_messages() {
                           |  Otherwise x11docker might behave wrong."
             #
         done
-    }
+    fi
 
     return 0
 }
