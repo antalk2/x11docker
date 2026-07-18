@@ -18787,10 +18787,11 @@ check_options_messages() {
             fi
 
             note_ttm "|Option --nxagent: A few applications do not work well
-                |  with --nxagent. In that case, you can try to fix the issue with
-                |  option --composite or try another X server option
-                |  like --xpra (seamless) or --xephyr (windowed)."
+                      |  with --nxagent. In that case, you can try to fix the issue with
+                      |  option --composite or try another X server option
+                      |  like --xpra (seamless) or --xephyr (windowed)."
             #
+
             [ "$Xcomposite" = "yes" ] && \
                 note_ttm "|Option --nxagent: nxagent can have issues with option
                     |  --composite. Maybe rather try --xephyr (windowed) or --xpra (seamless)."
