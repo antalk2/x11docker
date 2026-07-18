@@ -18822,16 +18822,17 @@ check_options_messages() {
     esac # Xserver_case_1
 
     if case_match "$Xserver" '--weston|--kwin|--hostwayland' ; then
-            note_ttm "|Option $Xserver: You are running a pure Wayland
-                      |  environment. X applications without Wayland support will fail."
-            #
+        note_ttm "|Option $Xserver: You are running a pure Wayland
+                  |  environment. X applications without Wayland support will fail."
+        #
     fi
-            if [ "$Xserver" = "--kwin" ] ; then
-                note_ttm "|Option --kwin: kwin_wayland does not support the xdg_shell
-                          |  interface in all versions. Some GTK3 Wayland applications depend on it.
-                          |  If application startup fails, try --weston instead."
-                #
-            fi
+
+    if [ "$Xserver" = "--kwin" ] ; then
+        note_ttm "|Option --kwin: kwin_wayland does not support the xdg_shell
+                  |  interface in all versions. Some GTK3 Wayland applications depend on it.
+                  |  If application startup fails, try --weston instead."
+        #
+    fi
     
     case "$Xserver" in
         --weston|--weston-xwayland)
