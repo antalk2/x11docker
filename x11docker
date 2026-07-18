@@ -18706,11 +18706,12 @@ check_options_messages() {
             && [ "$Xcontainer_option" = "no" ] \
             && [ -e "/var/log/Xorg.0.log"    ] ;
             then
-                # grep yields somethng like:
-                # [    40.001] xorg-server 2:21.1.12-1ubuntu1.5 (For technical support[...]
-                #                            ^^^^^^^^^^^^^^^^^^
+                # Xorgversion :
+                #   grep yields something like:
+                #   [    40.001] xorg-server 2:21.1.12-1ubuntu1.5 (For technical support[...]
+                #                              ^^^^^^^^^^^^^^^^^^
                 #
-                # cuts get the underlined part
+                #   cuts get the underlined part (between teh first colon and the following space)
                 #
                 Xorgversion="$(grep -m1 xorg-server </var/log/Xorg.0.log | cut -d: -f2 | cut -d' ' -f1)"
                 #
