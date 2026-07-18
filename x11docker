@@ -18615,12 +18615,12 @@ check_options_messages() {
 
             # --xauth
             if ! case_match "$Xauthentication" 'untrusted' ; then
-                    warning_ttm \
-                        "|Option --hostdisplay provides QUITE BAD container isolation!
-                         |  Abuse of X11 protocol for keylogging and remote host control is possible.
-                         |  It is recommended to use another X server option like --nxagent or --xpra.
-                         |  You can mitigate the issue with option --xauth=untrusted."
-                    #
+                warning_ttm \
+                    "|Option --hostdisplay provides QUITE BAD container isolation!
+                     |  Abuse of X11 protocol for keylogging and remote host control is possible.
+                     |  It is recommended to use another X server option like --nxagent or --xpra.
+                     |  You can mitigate the issue with option --xauth=untrusted."
+                #
             fi
 
             # --checkwindow
