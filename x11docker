@@ -18654,20 +18654,20 @@ check_options_messages() {
                 #
             fi
 
-        case "$Xlegacywrapper" in
-            yes)
-                warning_ttm "|Option --xorg: Although x11docker starts Xorg as
-                             |  unprivileged user, most system setups wrap Xorg to give it root
-                             |  permissions (setuid). Evil containers may try to abuse this.
-                             |  Other x11docker X server options like --xephyr are more secure at this point."
-                #
-                ;;
-            no)
-                if [ "$Startuser" = "root" ] ; then
-                    warning "Option --xorg: x11docker will run Xorg as root."
-                else
-                    if [ "$Xcontainer_option" = "no" ] && [ "$Runsonconsole" = "no" ] && [ -z "$Newxvt" ] ; then
-                        warning_ttm "|Option --xorg: Your configuration seems not to allow
+            case "$Xlegacywrapper" in
+                yes)
+                    warning_ttm "|Option --xorg: Although x11docker starts Xorg as
+                                 |  unprivileged user, most system setups wrap Xorg to give it root
+                                 |  permissions (setuid). Evil containers may try to abuse this.
+                                 |  Other x11docker X server options like --xephyr are more secure at this point."
+                    #
+                    ;;
+                no)
+                    if [ "$Startuser" = "root" ] ; then
+                        warning "Option --xorg: x11docker will run Xorg as root."
+                    else
+                        if [ "$Xcontainer_option" = "no" ] && [ "$Runsonconsole" = "no" ] && [ -z "$Newxvt" ] ; then
+                            warning_ttm "|Option --xorg: Your configuration seems not to allow
                                      |  to start a second core Xorg server from within X. Option --xorg may fail.
                                      |  (Per default, only root or console users are allowed to run an Xorg server).
                                      |
@@ -18687,18 +18687,18 @@ check_options_messages() {
                                      |
                                      |   Be aware that switching directly between Xorg servers can crash them.
                                      |   Always switch to a black console first before switching to Xorg."
-                        #
+                            #
+                        fi
                     fi
-                fi
-                ;;
-        esac
+                    ;;
+            esac
 
-        if [ "$Runsoverssh" = "yes" ] ; then
-            note "|Option --xorg: x11docker can run Xorg,
+            if [ "$Runsoverssh" = "yes" ] ; then
+                note "|Option --xorg: x11docker can run Xorg,
                   |  but you won't see it in an 'ssh -X' session.
                   |  Rather install e.g. Xephyr on ssh server and use option --xephyr."
-            #
-        fi
+                #
+            fi
 
         # --gpu=iglx
         if [ "$Sharegpu" = "iglx"        ] \
