@@ -19076,36 +19076,40 @@ check_options_messages() {
                      |  a serious check for validity or security. Found options:
                      |  $Customdockeroptions"
         #
-        grep -q -- '--privileged'           <<< "$Customdockeroptions" && \
+        if grep -q -- '--privileged'           <<< "$Customdockeroptions" ; then
             warning_ttm "|Found option --privileged
                          |  in CUSTOM_RUN_OPTIONS. That is A VERY BAD IDEA.
                          |  A privileged setup allows unrestricted access from container to host.
                          |  Malicious applications can cause arbitrary harm."
+        fi
         #
-        grep -q -i -- '--cap-add.ALL'       <<< "$Customdockeroptions" && \
+        if grep -q -i -- '--cap-add.ALL'       <<< "$Customdockeroptions" ; then
             warning_ttm "|Found option --cap-add=ALL
                          |  in CUSTOM_RUN_OPTIONS. That is A VERY BAD IDEA.
                          |  That is a very privileged setup.
                          |  Malicious applications may harm to the host."
+        fi
         #
-        grep -q -i -- '--cap-add.SYS_ADMIN' <<< "$Customdockeroptions" && \
+        if grep -q -i -- '--cap-add.SYS_ADMIN' <<< "$Customdockeroptions" ; then
             warning_ttm "|Found option --cap-add=SYS_ADMIN
                          |  in CUSTOM_RUN_OPTIONS. That is A VERY BAD IDEA.
                          |  That is a very privileged setup.
                          |  Malicious applications may harm to the host."
+        fi
         #
-        grep -q -- '--entrypoint'           <<< "$Customdockeroptions" && \
+        if grep -q -- '--entrypoint'           <<< "$Customdockeroptions" ; then
             warning_ttm "|Found option --entrypoint
                          |  in CUSTOM_RUN_OPTIONS. x11docker uses this option, too.
                          |  This setup will probably fail. Use x11docker option --no-entrypoint instead
                          |  and add desired command as container command after the image name."
+        fi
         #
         for Line in "--group-add" "--ipc" "--name" "--network" "--user=" "--runtime" "--workdir"; do
-            grep -q -- "$Line" <<< "$Customdockeroptions" && \
+            if grep -q -- "$Line" <<< "$Customdockeroptions" ; then
                 note_ttm "|Found option $Line in CUSTOM_RUN_OPTIONS.
                           |  Please use x11docker option $Line instead.
                           |  Otherwise x11docker might behave wrong."
-            #
+            fi
         done
     fi
 
