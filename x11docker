@@ -18841,7 +18841,9 @@ check_options_messages() {
                           |  Please report issues at https://github.com/mviereck/x11docker"
                 #
            fi
-            [ "$Sharegpu" = "no" ] && note "Option $Xserver: You might need option --gpu."
+           if [ "$Sharegpu" = "no" ] ; then
+               note "Option $Xserver: You might need option --gpu."
+           fi
     fi
 
     # NVIDIA without --gpu
