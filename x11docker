@@ -18865,6 +18865,8 @@ check_options_messages() {
     #
 
     # --clipboard
+
+    # --clipboard=cmv
     if case_match "$Shareclipboard" 'cmv' \
     && [ "$Setupwayland" = "yes" ]        \
     && [ "$Xcontainer_option" = "no" ]    ;
