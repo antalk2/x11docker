@@ -18896,10 +18896,18 @@ check_options_messages() {
     fi
 
     [ "$Shareclipboard" = "yes" ] || {
-        [ "$Xserver" = "--hostdisplay" ] && warning "Option --hostdisplay:
-  The clipboard is not isolated."
-        [ "$Sharehostwayland" = "yes" ]  && warning "Option --hostwayland:
-  The clipboard is not isolated."
+        #
+        if [ "$Xserver" = "--hostdisplay" ] ; then
+            warning_ttm "|Option --hostdisplay:
+                         |  The clipboard is not isolated."
+            #
+        fi
+        #
+        if [ "$Sharehostwayland" = "yes" ]  ; then
+            warning_ttm "|Option --hostwayland:
+                         |  The clipboard is not isolated."
+            #
+        fi
     }
 
     # --fullscreen
