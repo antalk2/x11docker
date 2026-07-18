@@ -18847,7 +18847,7 @@ check_options_messages() {
     fi
 
     # NVIDIA without --gpu
-    [ "$Nvidiaversion" ] && [ "$Sharegpu" = "no" ] && \
+    if [ "$Nvidiaversion" ] && [ "$Sharegpu" = "no" ] ; then
         case "$Xserver" in
             --hostdisplay|--xorg)
                 note_ttm "|Option $Xserver may fail with proprietary NVIDIA driver
@@ -18855,6 +18855,7 @@ check_options_messages() {
                           |  In that case try other X server options like --nxagent, --xpra or --xephyr."
                 ;;
         esac
+    fi
 
     # --cap-default
     [ "$Capdropall" = "no" ] && \
