@@ -18622,11 +18622,12 @@ check_options_messages() {
             fi
 
             # --checkwindow
-            [ "$Checkforopenwindow" = "yes" ] && \
+            if [ "$Checkforopenwindow" = "yes" ] ; then
                 note_ttm "|Option --checkwindow along with --hostdisplay
                           |  should only be used with a keyword as a check argument.
                           |  Otherwise the container is likely to run forever."
-            #
+                #
+            fi
             ;;
 
     --xorg)
