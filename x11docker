@@ -18732,8 +18732,8 @@ check_options_messages() {
         #
       }
       case "$Xauthentication" in
-        -ac) ;;
-        *) warning "Option --nxagent: X server nxagent is set up
+          -ac) ;;
+          *) warning "Option --nxagent: X server nxagent is set up
   with X option -ac that disables X access control entirely because it has
   issues with X authentication cookie setup. Access to nxagent from
   different networks and arbitrary users might be possible." ;;
@@ -18744,259 +18744,259 @@ check_options_messages() {
   like --xpra (seamless) or --xephyr (windowed)."
       [ "$Xcomposite" = "yes" ] && note "Option --nxagent: nxagent can have issues with option
   --composite. Maybe rather try --xephyr (windowed) or --xpra (seamless)."
-    ;;
+      ;;
 
     --weston|--kwin|--hostwayland)
-      note "Option $Xserver: You are running a pure Wayland
+        note "Option $Xserver: You are running a pure Wayland
   environment. X applications without Wayland support will fail."
-      [ "$Xserver" = "--kwin" ] && note "Option --kwin: kwin_wayland does not support the xdg_shell
+        [ "$Xserver" = "--kwin" ] && note "Option --kwin: kwin_wayland does not support the xdg_shell
   interface in all versions. Some GTK3 Wayland applications depend on it.
   If application startup fails, try --weston instead."
-    ;;
+        ;;
 
     --xwayland|--weston-xwayland)
-      [ -e "/usr/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so" ] || [ -e "/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so" ] || {
-        [ "$Xcontainer_option" = "no" ] && note "Option $Xserver: You might need to install
+        [ -e "/usr/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so" ] || [ -e "/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so" ] || {
+            [ "$Xcontainer_option" = "no" ] && note "Option $Xserver: You might need to install
   libdecor cairo plugin for Xwayland window decoration.
   $Wikipackages"
-      }
-    ;;
+        }
+        ;;
 
     --xwin|--runx) 
-      note "Windows firewall settings can forbid application access
+        note "Windows firewall settings can forbid application access
   to the X server. If no application window appears, but no obvious error
   is shown, please check your firewall settings. Compare issue #108 on github."
-    ;;
-  esac
-  case "$Xserver" in
-    --weston|--weston-xwayland)
-      { [ "$Runsonconsole" = "yes" ] || [ -n "$Newxvt" ] ; } && note "Option --$Xserver: Running Weston on console
+        ;;
+    esac
+    case "$Xserver" in
+        --weston|--weston-xwayland)
+            { [ "$Runsonconsole" = "yes" ] || [ -n "$Newxvt" ] ; } && note "Option --$Xserver: Running Weston on console
   is experimental and might fail.
   Please report issues at https://github.com/mviereck/x11docker"
-      [ "$Sharegpu" = "no" ] && note "Option $Xserver: You might need option --gpu."
-    ;;
-  esac
+            [ "$Sharegpu" = "no" ] && note "Option $Xserver: You might need option --gpu."
+            ;;
+    esac
 
-  # NVIDIA without --gpu
-  [ "$Nvidiaversion" ] && [ "$Sharegpu" = "no" ] && case "$Xserver" in
-    --hostdisplay|--xorg) note "Option $Xserver may fail with proprietary NVIDIA driver
+    # NVIDIA without --gpu
+    [ "$Nvidiaversion" ] && [ "$Sharegpu" = "no" ] && case "$Xserver" in
+        --hostdisplay|--xorg) note "Option $Xserver may fail with proprietary NVIDIA driver
   on host without enabling option --gpu.
   In that case try other X server options like --nxagent, --xpra or --xephyr." ;;
-  esac
+    esac
 
-  # --cap-default
-  [ "$Capdropall" = "no" ] && warning "Option --cap-default disables security hardening
+    # --cap-default
+    [ "$Capdropall" = "no" ] && warning "Option --cap-default disables security hardening
   for containers done by x11docker. Default docker capabilities are allowed.
   This is considered to be less secure."
 
-  # --clipboard
-  case "$Shareclipboard" in
-    cmv)
-      [ "$Setupwayland" = "yes" ] && [ "$Xcontainer_option" = "no" ] && note "Option --clipboard=$Shareclipboard:
+    # --clipboard
+    case "$Shareclipboard" in
+        cmv)
+            [ "$Setupwayland" = "yes" ] && [ "$Xcontainer_option" = "no" ] && note "Option --clipboard=$Shareclipboard:
   Keyboard binding works only if an X window of container that has focus.
   Options --xeyes or --xlogo can provide an X window for this purpose.
   Alternatively provide image x11docker/xserver (option --xc)
   that contains a bindkey helper for Wayland."
-    ;;
-  esac
-  case "$Shareclipboard" in
-    native*) ;;
-    no) ;;
-    *)
-      { [ "$Setupwayland" = "yes" ] || [ -n "$Hostwaylandsocket" ] ; } && note "Option --clipboard:
+            ;;
+    esac
+    case "$Shareclipboard" in
+        native*) ;;
+        no) ;;
+        *)
+            { [ "$Setupwayland" = "yes" ] || [ -n "$Hostwaylandsocket" ] ; } && note "Option --clipboard:
   Wayland windows might show undesired flickering due to
   focus switches for clipboard checks with wl-clipboard."
-      note "Option --clipboard: For X11 options --xpra* and --nagent
+            note "Option --clipboard: For X11 options --xpra* and --nagent
   provide the best clipboard support. (Supported args: yes|c2h|h2c)."
-    ;;
-  esac
-  [ "$Shareclipboard" = "yes" ] || {
-    [ "$Xserver" = "--hostdisplay" ] && warning "Option --hostdisplay:
-  The clipboard is not isolated."
-    [ "$Sharehostwayland" = "yes" ]  && warning "Option --hostwayland:
-  The clipboard is not isolated."
-  }
-
-  # --fullscreen
-  [ "$Fullscreen" = "yes" ] && {
-    case "$Xserver" in
-      --xephyr|--weston|--weston-xwayland|--nxagent|--xpra*|--xwin) ;;
-      --xvfb|--xorg) ;;
-      *) note "Option --fullscreen is not supported by option $Xserver." ;;
+            ;;
     esac
-  }
+    [ "$Shareclipboard" = "yes" ] || {
+        [ "$Xserver" = "--hostdisplay" ] && warning "Option --hostdisplay:
+  The clipboard is not isolated."
+        [ "$Sharehostwayland" = "yes" ]  && warning "Option --hostwayland:
+  The clipboard is not isolated."
+    }
 
-  # --gpu
-  case "$Sharegpu" in
-    iglx)
-      [ -z "$Nvidiaversion" ] && note "Option --gpu=iglx: iGLX is known to work only with new
+    # --fullscreen
+    [ "$Fullscreen" = "yes" ] && {
+        case "$Xserver" in
+            --xephyr|--weston|--weston-xwayland|--nxagent|--xpra*|--xwin) ;;
+            --xvfb|--xorg) ;;
+            *) note "Option --fullscreen is not supported by option $Xserver." ;;
+        esac
+    }
+
+    # --gpu
+    case "$Sharegpu" in
+        iglx)
+            [ -z "$Nvidiaversion" ] && note "Option --gpu=iglx: iGLX is known to work only with new
   MESA drivers and new X servers. Otherwise you might get black content only."
-      case "$Xserver" in
-        --xorg) ;;
-        *) note "Option --gpu=iglx is useful with option --xorg only." ;;
-      esac
-    ;;
-    direct|virgl)
-      warning "Option --gpu=$Sharegpu degrades container isolation.
+            case "$Xserver" in
+                --xorg) ;;
+                *) note "Option --gpu=iglx is useful with option --xorg only." ;;
+            esac
+            ;;
+        direct|virgl)
+            warning "Option --gpu=$Sharegpu degrades container isolation.
   Container gains access to GPU hardware.
   This allows reading host window content (palinopsia leak)
   and GPU rootkits (compare proof of concept: jellyfish).
   An alternative is --gpu=iglx that works with --xorg only."
-    ;;
-  esac
+            ;;
+    esac
 
-  # --interactive
-  [ "$g_Interactive" = "yes" ] && {
-    case "$g_Initsystem" in
-      openrc|runit|sysvinit)  note "Option --interactive: Interactive mode with option
+    # --interactive
+    [ "$g_Interactive" = "yes" ] && {
+        case "$g_Initsystem" in
+            openrc|runit|sysvinit)  note "Option --interactive: Interactive mode with option
   --init=$g_Initsystem is not well integrated yet.
   Shells do not have job control and CTRL-C can behave different than expected." ;;
-      systemd) note "Option --interactive might fail with old systemd versions." ;;
-    esac
-  }
+            systemd) note "Option --interactive might fail with old systemd versions." ;;
+        esac
+    }
 
-  # --ipc=host
-  [ "$Shareipc" = "host" ] && { # Shareipc_host
-    case "$g_BackendKind" in
-      docker|podman|nerdctl)
-        warning "Option --ipc=host severely degrades
+    # --ipc=host
+    [ "$Shareipc" = "host" ] && { # Shareipc_host
+        case "$g_BackendKind" in
+            docker|podman|nerdctl)
+                warning "Option --ipc=host severely degrades
   container isolation. IPC namespace remapping is disabled."
-      ;;
-    esac
-  }
+                ;;
+        esac
+    }
 
-  # --limit N
-  [ "$g_Limitresources" ] && note "Option --limit does not avoid possibly flooding the hard disk
+    # --limit N
+    [ "$g_Limitresources" ] && note "Option --limit does not avoid possibly flooding the hard disk
   in docker's container partition or in shared folders.
   It only restricts memory and CPU usage."
 
-  # --network
-  case "$g_BackendKind" in
-    host) ;; # BackendKind_host
-    proot) ;;
-    docker|podman|nerdctl)
-      case "$g_Network" in
-        none)
-          note "Option --network=none is set to disable network access.
+    # --network
+    case "$g_BackendKind" in
+        host) ;; # BackendKind_host
+        proot) ;;
+        docker|podman|nerdctl)
+            case "$g_Network" in
+                none)
+                    note "Option --network=none is set to disable network access.
   If you need network and internet access, set option -I, --network [=NET]."
-        ;;
-        ""|bridge)
-          warning "Option --network: Container has access to
+                    ;;
+                ""|bridge)
+                    warning "Option --network: Container has access to
   local network and internet." ;;
-        host)
-          warning "Option --network=host severely degrades
+                host)
+                    warning "Option --network=host severely degrades
   container isolation. Network namespacing is disabled.
   Container shares host network stack.
   Spying on network traffic may be possible.
   Access to host X server $Hostdisplay may be possible
   through abstract unix socket." ;;
-        *)
-          warning "Option --network=$g_Network: Some sort of network access
+                *)
+                    warning "Option --network=$g_Network: Some sort of network access
      is enabled." ;;
-      esac
-    ;;
-  esac
-  case "$g_Network" in
-    none) ;;
-    *)
-      case "$g_BackendKind" in
-        docker|podman|nerdctl)
-          case "$Xserver" in
-              --tty|--weston|--kwin|--hostwayland)
-              ;;
-            --hostdisplay)
-              warning "Option --hostdisplay with enabled internet access
+            esac
+            ;;
+    esac
+    case "$g_Network" in
+        none) ;;
+        *)
+            case "$g_BackendKind" in
+                docker|podman|nerdctl)
+                    case "$Xserver" in
+                        --tty|--weston|--kwin|--hostwayland)
+                        ;;
+                        --hostdisplay)
+                            warning "Option --hostdisplay with enabled internet access
   allows the container to provide your host X server to the entire world."
-            ;;
-            *)
-              note "Option -I, --network: The container is able to provide
+                            ;;
+                        *)
+                            note "Option -I, --network: The container is able to provide
   access to X server $Newdisplay ($Xserver) to the entire world."
+                            ;;
+                    esac
+                    ;;
+            esac
             ;;
-          esac
-        ;;
-      esac
-    ;;
-  esac
+    esac
 
-  # --output-count
-  [ "$Outputcount" != "1" ] && {
-    case "$Xserver" in
-      --weston-xwayland) note "Option --output-count: Xwayland sometimes does not position itself well
+    # --output-count
+    [ "$Outputcount" != "1" ] && {
+        case "$Xserver" in
+            --weston-xwayland) note "Option --output-count: Xwayland sometimes does not position itself well
   at origin 0+0 of first virtual screen, and some screens appear to be unused.
   You may need to move Xwayland manually with [META]+[LeftMouseButton].
   (Bug report at https://bugzilla.redhat.com/show_bug.cgi?id=1498665 )" ;;
-    esac
-  }
+        esac
+    }
 
-  # --runtime
-  case "$Runtime" in
-    sysbox-runc)
-      case "$g_BackendKind" in
-        docker) ;;
-        *) note "Option --runtime=$Runtime --backend=$g_BackendKind: $Runtime is known
+    # --runtime
+    case "$Runtime" in
+        sysbox-runc)
+            case "$g_BackendKind" in
+                docker) ;;
+                *) note "Option --runtime=$Runtime --backend=$g_BackendKind: $Runtime is known
   to work with Docker only yet." ;;
-      esac
-    ;;
-  esac
+            esac
+            ;;
+    esac
 
-  # --scale
-  [ "$Scaling" ] && case "$Xserver" in
-    --xorg)
-      [ -n "$Rotation" ] && [ "1" = "$(awk -v a="$Scaling" 'BEGIN {print (a < 1)}')" ] && note "Option --xorg does not work well with combination
+    # --scale
+    [ "$Scaling" ] && case "$Xserver" in
+        --xorg)
+            [ -n "$Rotation" ] && [ "1" = "$(awk -v a="$Scaling" 'BEGIN {print (a < 1)}')" ] && note "Option --xorg does not work well with combination
   of --scale smaller than 1 and rotation different from 0."
-    ;;
-  esac
+            ;;
+    esac
 
-  # --user=RETAIN / keep container user defined in image
-  case "$Createcontaineruser" in
-    no)
-      [ "$Sudouser" ] && note "Option --sudouser has limited support with --user=RETAIN.
+    # --user=RETAIN / keep container user defined in image
+    case "$Createcontaineruser" in
+        no)
+            [ "$Sudouser" ] && note "Option --sudouser has limited support with --user=RETAIN.
   x11docker will only set needed capabilities.
   User setup and /etc/sudoers won't be touched.
   Option --group-add=sudo might be useful."
-    ;;
-  esac
+            ;;
+    esac
 
-  # --xoverip
-  case "$Xoverip" in
-    no) ;;
-    *)
-      [ "$Xcontainer_option" = "yes" ] && [ "$g_Network" = "none" ] || warning "Option --xoverip might allow undesired access to the X server.
+    # --xoverip
+    case "$Xoverip" in
+        no) ;;
+        *)
+            [ "$Xcontainer_option" = "yes" ] && [ "$g_Network" = "none" ] || warning "Option --xoverip might allow undesired access to the X server.
   At least along with image x11docker/xserver (option --xc) and 
   --network=none (x11docker default) the setup is considered to be secure
   because a private network is used."
-    ;;
-  esac
+            ;;
+    esac
 
-  [ "$Customdockeroptions" ] && {
-    warning "Found custom CUSTOM_RUN_OPTIONS.
+    [ "$Customdockeroptions" ] && {
+        warning "Found custom CUSTOM_RUN_OPTIONS.
   x11docker will add them to 'docker run' command without
   a serious check for validity or security. Found options:
   $Customdockeroptions"
-    grep -q -- '--privileged'           <<< "$Customdockeroptions" && warning "Found option --privileged
+        grep -q -- '--privileged'           <<< "$Customdockeroptions" && warning "Found option --privileged
   in CUSTOM_RUN_OPTIONS. That is A VERY BAD IDEA.
   A privileged setup allows unrestricted access from container to host.
   Malicious applications can cause arbitrary harm."
-    grep -q -i -- '--cap-add.ALL'       <<< "$Customdockeroptions" && warning "Found option --cap-add=ALL
+        grep -q -i -- '--cap-add.ALL'       <<< "$Customdockeroptions" && warning "Found option --cap-add=ALL
   in CUSTOM_RUN_OPTIONS. That is A VERY BAD IDEA.
   That is a very privileged setup.
   Malicious applications may harm to the host."
-    grep -q -i -- '--cap-add.SYS_ADMIN' <<< "$Customdockeroptions" && warning "Found option --cap-add=SYS_ADMIN
+        grep -q -i -- '--cap-add.SYS_ADMIN' <<< "$Customdockeroptions" && warning "Found option --cap-add=SYS_ADMIN
   in CUSTOM_RUN_OPTIONS. That is A VERY BAD IDEA.
   That is a very privileged setup.
   Malicious applications may harm to the host."
-    grep -q -- '--entrypoint'           <<< "$Customdockeroptions" && warning "Found option --entrypoint
+        grep -q -- '--entrypoint'           <<< "$Customdockeroptions" && warning "Found option --entrypoint
   in CUSTOM_RUN_OPTIONS. x11docker uses this option, too.
   This setup will probably fail. Use x11docker option --no-entrypoint instead
   and add desired command as container command after the image name."
-    for Line in "--group-add" "--ipc" "--name" "--network" "--user=" "--runtime" "--workdir"; do
-      grep -q -- "$Line" <<< "$Customdockeroptions" && note "Found option $Line in CUSTOM_RUN_OPTIONS.
+        for Line in "--group-add" "--ipc" "--name" "--network" "--user=" "--runtime" "--workdir"; do
+            grep -q -- "$Line" <<< "$Customdockeroptions" && note "Found option $Line in CUSTOM_RUN_OPTIONS.
   Please use x11docker option $Line instead.
   Otherwise x11docker might behave wrong."
-    done
-  }
+        done
+    }
 
-  return 0
+    return 0
 }
 
 #
