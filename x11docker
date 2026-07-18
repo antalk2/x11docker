@@ -18593,118 +18593,143 @@ check_options_interferences() {
 } # end check_options_interferences
 
 # Function: check_options_messages
+#
 # Brief: Some messages depending on options, but not changing settings
+#
 check_options_messages() {
-  # X server specific messages
-  case "$Xserver" in
-    --hostdisplay)
-      [ "$Autochooseserver" = "yes" ] && [ -z "$Winsubsystem" ] && note "Option --hostdisplay: To allow protection against
-  X security leaks, please install 'xinit' and one or more of:
-    xpra, Xephyr, nxagent, weston+Xwayland,
-  or run a second Xorg server with option --xorg.
-  $Wikipackagesimage"
-      # --xauth
-      case "$Xauthentication" in
-        untrusted) ;;
-        *)
-          warning "Option --hostdisplay provides QUITE BAD container isolation!
-  Abuse of X11 protocol for keylogging and remote host control is possible.
-  It is recommended to use another X server option like --nxagent or --xpra.
-  You can mitigate the issue with option --xauth=untrusted."
-        ;;
-      esac
-      # --checkwindow
-      [ "$Checkforopenwindow" = "yes" ] && note "Option --checkwindow along with --hostdisplay
-  should only be used with a keyword as a check argument.
-  Otherwise the container is likely to run forever."
-    ;;
+
+    # X server specific messages
+    case "$Xserver" in
+        --hostdisplay)
+            [ "$Autochooseserver" = "yes" ] && [ -z "$Winsubsystem" ] && \
+                note_ttm  "|Option --hostdisplay: To allow protection against
+                           |  X security leaks, please install 'xinit' and one or more of:
+                           |    xpra, Xephyr, nxagent, weston+Xwayland,
+                           |  or run a second Xorg server with option --xorg.
+                           |  $Wikipackagesimage"
+            #
+
+            # --xauth
+            case "$Xauthentication" in
+                untrusted) ;;
+                *)
+                    warning_ttm \
+                        "|Option --hostdisplay provides QUITE BAD container isolation!
+                     |  Abuse of X11 protocol for keylogging and remote host control is possible.
+                     |  It is recommended to use another X server option like --nxagent or --xpra.
+                     |  You can mitigate the issue with option --xauth=untrusted."
+                    #
+                    ;;
+            esac
+            # --checkwindow
+            [ "$Checkforopenwindow" = "yes" ] && \
+                note_ttm "|Option --checkwindow along with --hostdisplay
+                          |  should only be used with a keyword as a check argument.
+                          |  Otherwise the container is likely to run forever."
+            #
+            ;;
 
     --xorg)
-      [ "$Xcontainer_option" = "yes" ]  && note "Options --xorg --xc: Running Xorg in container is experimental
-  and might misbehave, fail or crash.
-  Please report issues at https://github.com/mviereck/x11docker"
+        [ "$Xcontainer_option" = "yes" ]  && \
+            note_ttm "|Options --xorg --xc: Running Xorg in container is experimental
+                      |  and might misbehave, fail or crash.
+                      |  Please report issues at https://github.com/mviereck/x11docker"
+        #
 
-      [ "$Hostsystem" = "opensuse" ] && [ "$Runsonconsole" = "no" ] && [ "$Startuser" != "root" ] && warning "Option --xorg: openSUSE does not support starting
-  a second Xorg server from within X. Possible solutions:
-  1.) Install nested X server 'Xephyr', 'nxagent' or 'Xnest',
-      or for --gpu support: install 'Weston' and 'Xwayland'.
-  2.) Switch to console tty1...tty6 with <CTRL><ALT><F1>...<F6>
-      and start x11docker there.
-  3.) Run x11docker as root."
+        [ "$Hostsystem" = "opensuse" ] && [ "$Runsonconsole" = "no" ] && [ "$Startuser" != "root" ] && \
+            warning_ttm "|Option --xorg: openSUSE does not support starting
+                         |  a second Xorg server from within X. Possible solutions:
+                         |  1.) Install nested X server 'Xephyr', 'nxagent' or 'Xnest',
+                         |      or for --gpu support: install 'Weston' and 'Xwayland'.
+                         |  2.) Switch to console tty1...tty6 with <CTRL><ALT><F1>...<F6>
+                         |      and start x11docker there.
+                         |  3.) Run x11docker as root."
+        #
+        case "$Xlegacywrapper" in
+            yes)
+                warning_ttm "|Option --xorg: Although x11docker starts Xorg as
+                             |  unprivileged user, most system setups wrap Xorg to give it root
+                             |  permissions (setuid). Evil containers may try to abuse this.
+                             |  Other x11docker X server options like --xephyr are more secure at this point."
+                #
+                ;;
+            no)
+                case "$Startuser" in
+                    "root")
+                        warning "Option --xorg: x11docker will run Xorg as root."
+                        ;;
+                    *)
+                        [ "$Xcontainer_option" = "no" ] && [ "$Runsonconsole" = "no" ] && [ -z "$Newxvt" ] && \
+                            warning_ttm "|Option --xorg: Your configuration seems not to allow
+                                         |  to start a second core Xorg server from within X. Option --xorg may fail.
+                                         |  (Per default, only root or console users are allowed to run an Xorg server).
+                                         |
+                                         |  Possible solutions:
+                                         |  1.) Install one of nested X servers 'Xephyr', 'Xnest' or 'nxagent'.
+                                         |      For --gpu support: install 'weston' and 'Xwayland'.
+                                         |  2.) Switch to console tty1...tty6 with <CTRL><ALT><F1>...<F6>
+                                         |      and start x11docker there.
+                                         |  3.) Run x11docker as root.
+                                         |  4.) Edit file '/etc/X11/Xwrapper.config' and replace line:
+                                         |          allowed_users=console
+                                         |      with lines
+                                         |          allowed_users=anybody
+                                         |          needs_root_rights=yes
+                                         |      If the file does not exist already, you can create it.
+                                         |      On Debian and Ubuntu you need package xserver-xorg-legacy.
+                                         |
+                                         |   Be aware that switching directly between Xorg servers can crash them.
+                                         |   Always switch to a black console first before switching to Xorg."
+                        #
+                        ;;
+                esac
+                ;;
+        esac
 
-      case "$Xlegacywrapper" in
-        yes)
-          warning "Option --xorg: Although x11docker starts Xorg as
-  unprivileged user, most system setups wrap Xorg to give it root
-  permissions (setuid). Evil containers may try to abuse this.
-  Other x11docker X server options like --xephyr are more secure at this point." 
-          ;;
-        no)
-          case "$Startuser" in
-            "root")
-              warning "Option --xorg: x11docker will run Xorg as root."
-            ;;
-            *)
-              [ "$Xcontainer_option" = "no" ] && [ "$Runsonconsole" = "no" ] && [ -z "$Newxvt" ] && warning "Option --xorg: Your configuration seems not to allow
-  to start a second core Xorg server from within X. Option --xorg may fail.
-  (Per default, only root or console users are allowed to run an Xorg server).
+        [ "$Runsoverssh" = "yes" ] && \
+            note "|Option --xorg: x11docker can run Xorg,
+                  |  but you won't see it in an 'ssh -X' session.
+                  |  Rather install e.g. Xephyr on ssh server and use option --xephyr."
+        #
 
-  Possible solutions:
-  1.) Install one of nested X servers 'Xephyr', 'Xnest' or 'nxagent'.
-      For --gpu support: install 'weston' and 'Xwayland'.
-  2.) Switch to console tty1...tty6 with <CTRL><ALT><F1>...<F6>
-      and start x11docker there.
-  3.) Run x11docker as root.
-  4.) Edit file '/etc/X11/Xwrapper.config' and replace line:
-          allowed_users=console
-      with lines
-          allowed_users=anybody
-          needs_root_rights=yes
-      If the file does not exist already, you can create it.
-      On Debian and Ubuntu you need package xserver-xorg-legacy.
-
-   Be aware that switching directly between Xorg servers can crash them.
-   Always switch to a black console first before switching to Xorg."
-            ;;
-          esac
+        # --gpu=iglx
+        [ "$Sharegpu" = "iglx" ] && [ "$Xcontainer_option" = "no" ] && [ -e "/var/log/Xorg.0.log" ] && {
+            Xorgversion="$(grep -m1 xorg-server </var/log/Xorg.0.log | cut -d: -f2 | cut -d' ' -f1)"
+            [ -z "$Nvidiaversion" ] && [ -n "$Xorgversion" ] && version_less_than "$Xorgversion" "1.20.8" && \
+                note_ttm "|Options --xorg --gpu=iglx: 
+                          |  It seems you have Xorg v$Xorgversion. iGLX is known to have a bug
+                          |  in Xorg<v1.20.8. --gpu=iglx may fail and give black content."
+            #
+        }
         ;;
-      esac
-
-      [ "$Runsoverssh" = "yes" ] && note "Option --xorg: x11docker can run Xorg,
-  but you won't see it in an 'ssh -X' session.
-  Rather install e.g. Xephyr on ssh server and use option --xephyr."
-
-      # --gpu=iglx
-      [ "$Sharegpu" = "iglx" ] && [ "$Xcontainer_option" = "no" ] && [ -e "/var/log/Xorg.0.log" ] && {
-        Xorgversion="$(grep -m1 xorg-server </var/log/Xorg.0.log | cut -d: -f2 | cut -d' ' -f1)"
-        [ -z "$Nvidiaversion" ] && [ -n "$Xorgversion" ] && version_less_than "$Xorgversion" "1.20.8" && note "Options --xorg --gpu=iglx: 
-  It seems you have Xorg v$Xorgversion. iGLX is known to have a bug
-  in Xorg<v1.20.8. --gpu=iglx may fail and give black content."
-      }
-    ;;
 
     --xpra*)
-      [ "$Sharegpu" = "yes" ] && note "Option $Xserver: If performance of GPU acceleration
-  is not satisfying, you can try insecure '--hostdisplay --gpu'
-  or, better but windowed, '--weston-xwayland --gpu'."
-      note "Option $Xserver: If you encounter issues with xpra,
-  you can try --nxagent instead.
-  Rather use xpra from www.xpra.org than from distribution repositories."
+        [ "$Sharegpu" = "yes" ] && \
+            note_ttm "|Option $Xserver: If performance of GPU acceleration
+                      |  is not satisfying, you can try insecure '--hostdisplay --gpu'
+                      |  or, better but windowed, '--weston-xwayland --gpu'."
+        #
+        note_ttm "|Option $Xserver: If you encounter issues with xpra,
+                  |  you can try --nxagent instead.
+                  |  Rather use xpra from www.xpra.org than from distribution repositories."
+        #
     ;;
 
     --kwin)
-      [ "$Newxvt" ] && note "Option --kwin: Switching console with STRG+ALT+Fn fails."
+        [ "$Newxvt" ] && note "Option --kwin: Switching console with STRG+ALT+Fn fails."
     ;;
 
     --nxagent)
       [ "$Hostsystem" = "mageia" ] && {
         [ "$Desktopmode" = "no" ] && [ "$Autochooseserver" = "yes" ] && Desktopmode="yes" && Windowmanagermode="${Windowmanagermode:-auto}"
-        [ "$Desktopmode" = "no" ] && warning "Option --nxagent: nxagent version 3.5.0 on Mageia 6
-  is known to crash in seamless mode. 
-  (Detected version: '$(strings --bytes 20 /usr/libexec/nx/nxagent | grep "NXAGENT - Version")').
-  If you encounter issues, please try seamless --xpra (secure),
-  --hostdisplay (insecure), or run --nxagent in desktop mode with a
-  host window manager (--wm=WINDOWMANAGER or --wm=auto or short -wm)."
+        [ "$Desktopmode" = "no" ] && \
+            warning_ttm "|Option --nxagent: nxagent version 3.5.0 on Mageia 6
+                         |  is known to crash in seamless mode. 
+                         |  (Detected version: '$(strings --bytes 20 /usr/libexec/nx/nxagent | grep "NXAGENT - Version")').
+                         |  If you encounter issues, please try seamless --xpra (secure),
+                         |  --hostdisplay (insecure), or run --nxagent in desktop mode with a
+                         |  host window manager (--wm=WINDOWMANAGER or --wm=auto or short -wm)."
+        #
       }
       case "$Xauthentication" in
         -ac) ;;
