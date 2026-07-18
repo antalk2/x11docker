@@ -18557,23 +18557,25 @@ check_options_interferences() {
 
     # g_Interactive : --interactive
     if [ "$g_Interactive" = yes ] ; then
-            [ "$Forwardstdin" = "yes" ] && {
+
+        if [ "$Forwardstdin" = "yes" ] ; then
                 note_ttm "|Option --stdin is not compatible with option --interactive.
                           |  Fallback: Disabling option --stdin."
                 #
                 check_fallback
                 Forwardstdin="no"
-            }
-            [ "$Runsinteractive" = "yes" ] && {
+        fi
+
+        if [ "$Runsinteractive" = "yes" ] ; then
                 note_ttm "|Option -i, --interactive: Does not work in interactive
                           |  bash mode (option --enforce-i).
                           |  Fallback: Disabling option --interactive."
                 #
                 check_fallback
                 g_Interactive="no"
-            }
-            case "$Winsubsystem" in
-                MSYS2|CYGWIN|WSL1)
+        fi
+
+        if case_match "$Winsubsystem"  'MSYS2 | CYGWIN | WSL1' ; then
                     Winpty="$(command -v winpty)"
                     Winpty="$(escapestring "$Winpty")"
                     [ -z "$Winpty" ] && \
@@ -18581,8 +18583,8 @@ check_options_interferences() {
                                    |  to run x11docker in interactive mode. MSYS2 provides winpty as a package.
                                    |  On Cygwin it can be compiled from source. WSL1 isn't supported yet.
                                    |  WSL2 might work, but is not tested yet."
-                    ;;
-            esac
+                    #
+           fi
     fi
 
     [ "$g_Interactive" = "yes" ] && Showcontaineroutput="no"
