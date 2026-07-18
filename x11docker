@@ -18596,6 +18596,15 @@ check_options_interferences() {
 #
 # Brief: Some messages depending on options, but not changing settings
 #
+#
+# Exception: under
+#            [ "$Xserver" = '--nxagent' ]
+#         && [ "$Hostsystem" = "mageia" ]
+#         && [ "$Desktopmode" = "no" ]
+#         && [ "$Autochooseserver" = "yes" ]
+#
+#   the value of Desktopmode and Windowmanagermode ae modified.
+#
 check_options_messages() {
 
     # X server specific messages
@@ -18751,16 +18760,24 @@ check_options_messages() {
                 #
                 # https://www.mageia.org/en/about/
                 #
-                [ "$Desktopmode" = "no" ] && [ "$Autochooseserver" = "yes" ] && Desktopmode="yes" && Windowmanagermode="${Windowmanagermode:-auto}"
-                [ "$Desktopmode" = "no" ] && \
+                if [ "$Desktopmode" = "no"       ] \
+                && [ "$Autochooseserver" = "yes" ] ;
+                then
+                    Desktopmode="yes"
+                    Windowmanagermode="${Windowmanagermode:-auto}"
+                fi
+
+                if [ "$Desktopmode" = "no" ] ; then
                     warning_ttm "|Option --nxagent: nxagent version 3.5.0 on Mageia 6
-                         |  is known to crash in seamless mode. 
-                         |  (Detected version: '$(strings --bytes 20 /usr/libexec/nx/nxagent | grep "NXAGENT - Version")').
-                         |  If you encounter issues, please try seamless --xpra (secure),
-                         |  --hostdisplay (insecure), or run --nxagent in desktop mode with a
-                         |  host window manager (--wm=WINDOWMANAGER or --wm=auto or short -wm)."
-                #
-            fi
+                                 |  is known to crash in seamless mode. 
+                                 |  (Detected version: '$(strings --bytes 20 /usr/libexec/nx/nxagent | grep "NXAGENT - Version")').
+                                 |  If you encounter issues, please try seamless --xpra (secure),
+                                 |  --hostdisplay (insecure), or run --nxagent in desktop mode with a
+                                 |  host window manager (--wm=WINDOWMANAGER or --wm=auto or short -wm)."
+                    #
+                fi
+            fi # mageia
+
             case "$Xauthentication" in
                 -ac) ;;
                 *) warning_ttm "|Option --nxagent: X server nxagent is set up
@@ -18769,6 +18786,7 @@ check_options_messages() {
                           |  different networks and arbitrary users might be possible."
                    ;;
             esac
+
             note_ttm "|Option --nxagent: A few applications do not work well
                 |  with --nxagent. In that case, you can try to fix the issue with
                 |  option --composite or try another X server option
