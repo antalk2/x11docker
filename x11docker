@@ -18740,65 +18740,65 @@ check_options_messages() {
             #
             ;;
 
-    --kwin)
-        [ "$Newxvt" ] && note "Option --kwin: Switching console with STRG+ALT+Fn fails."
-    ;;
+        --kwin)
+            [ "$Newxvt" ] && note "Option --kwin: Switching console with STRG+ALT+Fn fails."
+            ;;
 
-    --nxagent)
-      [ "$Hostsystem" = "mageia" ] && {
-        [ "$Desktopmode" = "no" ] && [ "$Autochooseserver" = "yes" ] && Desktopmode="yes" && Windowmanagermode="${Windowmanagermode:-auto}"
-        [ "$Desktopmode" = "no" ] && \
-            warning_ttm "|Option --nxagent: nxagent version 3.5.0 on Mageia 6
+        --nxagent)
+            [ "$Hostsystem" = "mageia" ] && {
+                [ "$Desktopmode" = "no" ] && [ "$Autochooseserver" = "yes" ] && Desktopmode="yes" && Windowmanagermode="${Windowmanagermode:-auto}"
+                [ "$Desktopmode" = "no" ] && \
+                    warning_ttm "|Option --nxagent: nxagent version 3.5.0 on Mageia 6
                          |  is known to crash in seamless mode. 
                          |  (Detected version: '$(strings --bytes 20 /usr/libexec/nx/nxagent | grep "NXAGENT - Version")').
                          |  If you encounter issues, please try seamless --xpra (secure),
                          |  --hostdisplay (insecure), or run --nxagent in desktop mode with a
                          |  host window manager (--wm=WINDOWMANAGER or --wm=auto or short -wm)."
-        #
-      }
-      case "$Xauthentication" in
-          -ac) ;;
-          *) warning_ttm "|Option --nxagent: X server nxagent is set up
+                #
+            }
+            case "$Xauthentication" in
+                -ac) ;;
+                *) warning_ttm "|Option --nxagent: X server nxagent is set up
                           |  with X option -ac that disables X access control entirely because it has
                           |  issues with X authentication cookie setup. Access to nxagent from
                           |  different networks and arbitrary users might be possible."
-             ;;
-      esac
-      note_ttm "|Option --nxagent: A few applications do not work well
+                   ;;
+            esac
+            note_ttm "|Option --nxagent: A few applications do not work well
                 |  with --nxagent. In that case, you can try to fix the issue with
                 |  option --composite or try another X server option
                 |  like --xpra (seamless) or --xephyr (windowed)."
-      #
-      [ "$Xcomposite" = "yes" ] && \
-          note_ttm "|Option --nxagent: nxagent can have issues with option
+            #
+            [ "$Xcomposite" = "yes" ] && \
+                note_ttm "|Option --nxagent: nxagent can have issues with option
                     |  --composite. Maybe rather try --xephyr (windowed) or --xpra (seamless)."
-      ;;
+            ;;
 
-    --weston|--kwin|--hostwayland)
-        note_ttm "|Option $Xserver: You are running a pure Wayland
+        --weston|--kwin|--hostwayland)
+            note_ttm "|Option $Xserver: You are running a pure Wayland
                   |  environment. X applications without Wayland support will fail."
-        #
-        [ "$Xserver" = "--kwin" ] && \
-            note_ttm "|Option --kwin: kwin_wayland does not support the xdg_shell
+            #
+            [ "$Xserver" = "--kwin" ] && \
+                note_ttm "|Option --kwin: kwin_wayland does not support the xdg_shell
                       |  interface in all versions. Some GTK3 Wayland applications depend on it.
                       |  If application startup fails, try --weston instead."
-        ;;
+            ;;
 
-    --xwayland|--weston-xwayland)
-        [ -e "/usr/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so" ] || [ -e "/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so" ] || {
-            [ "$Xcontainer_option" = "no" ] && \
-                note_ttm "|Option $Xserver: You might need to install
+        --xwayland|--weston-xwayland)
+            [ -e "/usr/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so" ] || [ -e "/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so" ] || {
+                [ "$Xcontainer_option" = "no" ] && \
+                    note_ttm "|Option $Xserver: You might need to install
                           |  libdecor cairo plugin for Xwayland window decoration.
                           |  $Wikipackages"
-            #
-        }
-        ;;
+                #
+            }
+            ;;
 
-    --xwin|--runx) 
-        note_ttm "|Windows firewall settings can forbid application access
+        --xwin|--runx) 
+            note_ttm "|Windows firewall settings can forbid application access
                   |  to the X server. If no application window appears, but no obvious error
                   |  is shown, please check your firewall settings. Compare issue #108 on github."
-        ;;
+            ;;
     esac
     case "$Xserver" in
         --weston|--weston-xwayland)
@@ -18999,11 +18999,11 @@ check_options_messages() {
     # --scale
     [ "$Scaling" ] && \
         case "$Xserver" in
-        --xorg)
-            [ -n "$Rotation" ] && [ "1" = "$(awk -v a="$Scaling" 'BEGIN {print (a < 1)}')" ] && \
-                note_ttm "|Option --xorg does not work well with combination
+            --xorg)
+                [ -n "$Rotation" ] && [ "1" = "$(awk -v a="$Scaling" 'BEGIN {print (a < 1)}')" ] && \
+                    note_ttm "|Option --xorg does not work well with combination
                           |  of --scale smaller than 1 and rotation different from 0."
-            ;;
+                ;;
         esac
 
     # --user=RETAIN / keep container user defined in image
