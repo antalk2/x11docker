@@ -19050,8 +19050,9 @@ check_options_messages() {
     fi
 
     # --user=RETAIN / keep container user defined in image
-    if [ "$Createcontaineruser" = no ] ; then
-            [ "$Sudouser" ] && \
+    if [ "$Createcontaineruser" = no ] \
+    && [ -n "$Sudouser" ]              ;
+    then
                 note_ttm "|Option --sudouser has limited support with --user=RETAIN.
                           |  x11docker will only set needed capabilities.
                           |  User setup and /etc/sudoers won't be touched.
