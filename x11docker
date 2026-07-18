@@ -18865,8 +18865,10 @@ check_options_messages() {
     #
 
     # --clipboard
-    if case_match "$Shareclipboard" 'cmv' ; then
-            [ "$Setupwayland" = "yes" ] && [ "$Xcontainer_option" = "no" ] && \
+    if case_match "$Shareclipboard" 'cmv' \
+    && [ "$Setupwayland" = "yes" ]        \
+    && [ "$Xcontainer_option" = "no" ]    ;
+    then
                 note_ttm "|Option --clipboard=$Shareclipboard:
                           |  Keyboard binding works only if an X window of container that has focus.
                           |  Options --xeyes or --xlogo can provide an X window for this purpose.
