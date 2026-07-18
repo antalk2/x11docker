@@ -18551,10 +18551,8 @@ check_options_interferences() {
     # Setupwayland : --wayland
     if [ "$Setupwayland" = "yes" ] ; then Dbusrunsession="yes" ; fi
 
-    # --init
-    case "$g_Initsystem" in
-        systemd|sysvinit|openrc|runit) Dbussystem="yes" ;;
-    esac
+    # g_Initsystem : --init
+    if case_match "$g_Initsystem" 'systemd|sysvinit|openrc|runit' ; then Dbussystem="yes" ; fi
 
     # --interactive
     case "$g_Interactive" in
