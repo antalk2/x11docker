@@ -18895,7 +18895,7 @@ check_options_messages() {
         #
     fi
 
-    [ "$Shareclipboard" = "yes" ] || {
+    if [ "$Shareclipboard" != "yes" ] ; then
         #
         if [ "$Xserver" = "--hostdisplay" ] ; then
             warning_ttm "|Option --hostdisplay:
@@ -18908,7 +18908,7 @@ check_options_messages() {
                          |  The clipboard is not isolated."
             #
         fi
-    }
+    fi
 
     # --fullscreen
     [ "$Fullscreen" = "yes" ] && {
