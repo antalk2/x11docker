@@ -19060,16 +19060,14 @@ check_options_messages() {
     fi
 
     # --xoverip
-    case "$Xoverip" in
-        no) ;;
-        *)
+    if [ "$Xoverip" !=  no ] ; then
             [ "$Xcontainer_option" = "yes" ] && [ "$g_Network" = "none" ] || \
                 warning_ttm "|Option --xoverip might allow undesired access to the X server.
                              |  At least along with image x11docker/xserver (option --xc) and 
                              |  --network=none (x11docker default) the setup is considered to be secure
                              |  because a private network is used."
-            ;;
-    esac
+            #
+    fi
 
     [ "$Customdockeroptions" ] && {
         warning_ttm "|Found custom CUSTOM_RUN_OPTIONS.
