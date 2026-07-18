@@ -18778,14 +18778,13 @@ check_options_messages() {
                 fi
             fi # mageia
 
-            case "$Xauthentication" in
-                -ac) ;;
-                *) warning_ttm "|Option --nxagent: X server nxagent is set up
+            if [ "$Xauthentication" != '-ac' ; then
+                warning_ttm "|Option --nxagent: X server nxagent is set up
                           |  with X option -ac that disables X access control entirely because it has
                           |  issues with X authentication cookie setup. Access to nxagent from
                           |  different networks and arbitrary users might be possible."
-                   ;;
-            esac
+               #
+            fi
 
             note_ttm "|Option --nxagent: A few applications do not work well
                 |  with --nxagent. In that case, you can try to fix the issue with
