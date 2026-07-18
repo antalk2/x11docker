@@ -19083,6 +19083,7 @@ check_options_messages() {
                          |  Malicious applications can cause arbitrary harm."
         fi
         #
+        # FIXME: using '.' for '=' in pattern. Why not grep -F ?
         if grep -q -i -- '--cap-add.ALL'       <<< "$Customdockeroptions" ; then
             warning_ttm "|Found option --cap-add=ALL
                          |  in CUSTOM_RUN_OPTIONS. That is A VERY BAD IDEA.
@@ -19090,6 +19091,7 @@ check_options_messages() {
                          |  Malicious applications may harm to the host."
         fi
         #
+        # FIXME: using '.' for '=' in pattern. Why not grep -F ?
         if grep -q -i -- '--cap-add.SYS_ADMIN' <<< "$Customdockeroptions" ; then
             warning_ttm "|Found option --cap-add=SYS_ADMIN
                          |  in CUSTOM_RUN_OPTIONS. That is A VERY BAD IDEA.
