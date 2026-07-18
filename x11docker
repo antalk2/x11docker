@@ -18608,7 +18608,7 @@ check_options_interferences() {
 check_options_messages() {
 
     # X server specific messages
-    case "$Xserver" in
+    case "$Xserver" in # Xserver_case_1
         --hostdisplay)
 
             if [ "$Autochooseserver" = "yes" ] \
@@ -18639,7 +18639,7 @@ check_options_messages() {
                           |  Otherwise the container is likely to run forever."
                 #
             fi
-            ;;
+            ;; # --hostdisplay
 
         --xorg)
             if [ "$Xcontainer_option" = "yes" ] ; then
@@ -18734,7 +18734,7 @@ check_options_messages() {
                     #
                 fi
             fi
-            ;;
+            ;; # --xorg
 
         --xpra*)
             if [ "$Sharegpu" = "yes" ] ; then
@@ -18747,13 +18747,13 @@ check_options_messages() {
                       |  you can try --nxagent instead.
                       |  Rather use xpra from www.xpra.org than from distribution repositories."
             #
-            ;;
+            ;; # --xpra*
 
         --kwin)
             if [ "$Newxvt" ] ; then
                 note "Option --kwin: Switching console with STRG+ALT+Fn fails."
             fi
-            ;;
+            ;; # --kwin
 
         --nxagent)
             if [ "$Hostsystem" = "mageia" ] ; then
@@ -18797,7 +18797,7 @@ check_options_messages() {
                           |  --composite. Maybe rather try --xephyr (windowed) or --xpra (seamless)."
                 #
             fi
-            ;;
+            ;; # --nxagent
 
         --weston|--kwin|--hostwayland)
             #
@@ -18823,7 +18823,7 @@ check_options_messages() {
                           |  If application startup fails, try --weston instead."
                 #
             fi
-            ;;
+            ;; # --weston|--kwin|--hostwayland
 
         --xwayland|--weston-xwayland)
 
@@ -18836,15 +18836,17 @@ check_options_messages() {
                           |  $Wikipackages"
                 #
             fi
-            ;;
+            ;; # --xwayland|--weston-xwayland
 
         --xwin|--runx) 
             note_ttm "|Windows firewall settings can forbid application access
                       |  to the X server. If no application window appears, but no obvious error
                       |  is shown, please check your firewall settings. Compare issue #108 on github."
             #
-            ;;
-    esac
+            ;; # --xwin|--runx
+
+    esac # Xserver_case_1
+
     case "$Xserver" in
         --weston|--weston-xwayland)
             { [ "$Runsonconsole" = "yes" ] || [ -n "$Newxvt" ] ; } && \
