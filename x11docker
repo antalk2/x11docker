@@ -19024,11 +19024,11 @@ check_options_messages() {
     if [ "$Outputcount" != "1" ]            \
     && [ "$Xserver" = '--weston-xwayland' ] ;
     then
-                note_ttm "|Option --output-count: Xwayland sometimes does not position itself well
-                          |  at origin 0+0 of first virtual screen, and some screens appear to be unused.
-                          |  You may need to move Xwayland manually with [META]+[LeftMouseButton].
-                          |  (Bug report at https://bugzilla.redhat.com/show_bug.cgi?id=1498665 )"
-                # Reported: 2017-10-04. Status: closed EOL, not fixed.
+        note_ttm "|Option --output-count: Xwayland sometimes does not position itself well
+                  |  at origin 0+0 of first virtual screen, and some screens appear to be unused.
+                  |  You may need to move Xwayland manually with [META]+[LeftMouseButton].
+                  |  (Bug report at https://bugzilla.redhat.com/show_bug.cgi?id=1498665 )"
+        # Reported: 2017-10-04. Status: closed EOL, not fixed.
     fi
 
     # --runtime
