@@ -18814,13 +18814,17 @@ check_options_messages() {
             ;;
 
         --xwayland|--weston-xwayland)
-            [ -e "/usr/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so" ] || [ -e "/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so" ] || {
+
+            if [ ! -e "/usr/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so" ] \
+            && [ ! -e "/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so"     ] ;
+            then {
                 [ "$Xcontainer_option" = "no" ] && \
                     note_ttm "|Option $Xserver: You might need to install
-                          |  libdecor cairo plugin for Xwayland window decoration.
-                          |  $Wikipackages"
+                              |  libdecor cairo plugin for Xwayland window decoration.
+                              |  $Wikipackages"
                 #
             }
+            fi
             ;;
 
         --xwin|--runx) 
