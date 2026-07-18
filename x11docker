@@ -18799,32 +18799,6 @@ check_options_messages() {
             fi
             ;; # --nxagent
 
-        --weston|--kwin|--hostwayland)
-            #
-            # FIXME: --kwin here is already matched above.
-            # The --kwin part of this condition overlaps the case "--kwin)" above,
-            # thus the block here is not executed for --kwin, including --kwin specific part
-            # under [ "$Xserver" = "--kwin" ]
-            #
-            # here:  https://github.com/mviereck/x11docker/blob/e22c320b8b986056944985d29da48486ff73ead3/x11docker#L11600
-            # above: https://github.com/mviereck/x11docker/blob/e22c320b8b986056944985d29da48486ff73ead3/x11docker#L11571
-            # below: https://github.com/mviereck/x11docker/blob/e22c320b8b986056944985d29da48486ff73ead3/x11docker#L11603
-            #
-            # Sent: https://github.com/mviereck/x11docker/issues/577
-            #
-
-            note_ttm "|Option $Xserver: You are running a pure Wayland
-                      |  environment. X applications without Wayland support will fail."
-            #
-
-            if [ "$Xserver" = "--kwin" ] ; then
-                note_ttm "|Option --kwin: kwin_wayland does not support the xdg_shell
-                          |  interface in all versions. Some GTK3 Wayland applications depend on it.
-                          |  If application startup fails, try --weston instead."
-                #
-            fi
-            ;; # --weston|--kwin|--hostwayland
-
         --xwayland|--weston-xwayland)
 
             if [ ! -e "/usr/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so" ] \
@@ -18847,6 +18821,28 @@ check_options_messages() {
 
     esac # Xserver_case_1
 
+    case "$Xserver" in
+        --weston|--kwin|--hostwayland)
+            #
+            # Sent: https://github.com/mviereck/x11docker/issues/577
+            # Moved '--weston|--kwin|--hostwayland' to its own case statement
+            # to avoid overlap of --kwin with another case.
+            #
+
+            note_ttm "|Option $Xserver: You are running a pure Wayland
+                      |  environment. X applications without Wayland support will fail."
+            #
+
+            if [ "$Xserver" = "--kwin" ] ; then
+                note_ttm "|Option --kwin: kwin_wayland does not support the xdg_shell
+                          |  interface in all versions. Some GTK3 Wayland applications depend on it.
+                          |  If application startup fails, try --weston instead."
+                #
+            fi
+            ;; # --weston|--kwin|--hostwayland
+    esac
+
+    
     case "$Xserver" in
         --weston|--weston-xwayland)
             { [ "$Runsonconsole" = "yes" ] || [ -n "$Newxvt" ] ; } && \
