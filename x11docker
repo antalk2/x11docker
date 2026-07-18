@@ -18953,15 +18953,13 @@ check_options_messages() {
         fi
     fi
 
-    # --ipc=host
-    [ "$Shareipc" = "host" ] && { # Shareipc_host
-        case "$g_BackendKind" in
-            docker|podman|nerdctl)
-                warning_ttm "|Option --ipc=host severely degrades
-                             |  container isolation. IPC namespace remapping is disabled."
-                ;;
-        esac
-    }
+    # --ipc=host  # Shareipc_host
+    if [ "$Shareipc" = "host" ]                            \
+    && case_match "$g_BackendKind" 'docker|podman|nerdctl' ;
+    then
+        warning_ttm "|Option --ipc=host severely degrades
+                     |  container isolation. IPC namespace remapping is disabled."
+    fi
 
     # --limit N
     [ "$g_Limitresources" ] && \
