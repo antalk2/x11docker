@@ -18693,11 +18693,12 @@ check_options_messages() {
                 ;;
         esac
 
-        [ "$Runsoverssh" = "yes" ] && \
+        if [ "$Runsoverssh" = "yes" ] ; then
             note "|Option --xorg: x11docker can run Xorg,
                   |  but you won't see it in an 'ssh -X' session.
                   |  Rather install e.g. Xephyr on ssh server and use option --xephyr."
-        #
+            #
+        fi
 
         # --gpu=iglx
         [ "$Sharegpu" = "iglx" ] && [ "$Xcontainer_option" = "no" ] && [ -e "/var/log/Xorg.0.log" ] && {
