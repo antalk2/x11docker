@@ -18828,8 +18828,9 @@ check_options_messages() {
 
         --xwin|--runx) 
             note_ttm "|Windows firewall settings can forbid application access
-                  |  to the X server. If no application window appears, but no obvious error
-                  |  is shown, please check your firewall settings. Compare issue #108 on github."
+                      |  to the X server. If no application window appears, but no obvious error
+                      |  is shown, please check your firewall settings. Compare issue #108 on github."
+            #
             ;;
     esac
     case "$Xserver" in
