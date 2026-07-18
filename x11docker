@@ -18847,13 +18847,14 @@ check_options_messages() {
     fi
 
     # NVIDIA without --gpu
-    if [ "$Nvidiaversion" ] && [ "$Sharegpu" = "no" ] ; then
-        if case_match "$Xserver" '--hostdisplay|--xorg' ; then
+    if [ -n "$Nvidiaversion" ]                       \
+    && [ "$Sharegpu" = "no"  ]                       \
+    &&  case_match "$Xserver" '--hostdisplay|--xorg' ;
+    then
                 note_ttm "|Option $Xserver may fail with proprietary NVIDIA driver
                           |  on host without enabling option --gpu.
                           |  In that case try other X server options like --nxagent, --xpra or --xephyr."
                 #
-        fi
     fi
 
     # --cap-default
