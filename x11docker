@@ -18911,10 +18911,10 @@ check_options_messages() {
     fi
 
     # --fullscreen
-    if [ "$Fullscreen" = "yes" ] ; then
-        if ! case_match "$Xserver" ' --xephyr|--weston|--weston-xwayland|--nxagent|--xpra*|--xwin  |  --xvfb|--xorg' ; then
-            note "Option --fullscreen is not supported by option $Xserver."
-        fi
+    if [ "$Fullscreen" = "yes" ]                                                                                 \
+    && ! case_match "$Xserver" ' --xephyr|--weston|--weston-xwayland|--nxagent|--xpra*|--xwin  |  --xvfb|--xorg' ;
+    then
+        note "Option --fullscreen is not supported by option $Xserver."
     fi
 
     # --gpu
