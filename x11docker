@@ -18666,7 +18666,7 @@ check_options_messages() {
                 if [ "$Startuser" = "root" ] ; then
                     warning "Option --xorg: x11docker will run Xorg as root."
                 else
-                        [ "$Xcontainer_option" = "no" ] && [ "$Runsonconsole" = "no" ] && [ -z "$Newxvt" ] && \
+                    if [ "$Xcontainer_option" = "no" ] && [ "$Runsonconsole" = "no" ] && [ -z "$Newxvt" ] ; then
                             warning_ttm "|Option --xorg: Your configuration seems not to allow
                                          |  to start a second core Xorg server from within X. Option --xorg may fail.
                                          |  (Per default, only root or console users are allowed to run an Xorg server).
@@ -18687,7 +18687,8 @@ check_options_messages() {
                                          |
                                          |   Be aware that switching directly between Xorg servers can crash them.
                                          |   Always switch to a black console first before switching to Xorg."
-                        #
+                            #
+                    fi
                 fi
                 ;;
         esac
