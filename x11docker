@@ -18879,10 +18879,7 @@ check_options_messages() {
         #
     fi
 
-    case "$Shareclipboard" in
-        native*) ;;
-        no) ;;
-        *)
+    if ! case_match "$Shareclipboard"  'native* | no' ; then
             { [ "$Setupwayland" = "yes" ] || [ -n "$Hostwaylandsocket" ] ; } && \
                 note_ttm "|Option --clipboard:
                           |  Wayland windows might show undesired flickering due to
@@ -18891,8 +18888,8 @@ check_options_messages() {
             note_ttm "|Option --clipboard: For X11 options --xpra* and --nagent
                       |  provide the best clipboard support. (Supported args: yes|c2h|h2c)."
             #
-            ;;
-    esac
+    fi
+
     [ "$Shareclipboard" = "yes" ] || {
         [ "$Xserver" = "--hostdisplay" ] && warning "Option --hostdisplay:
   The clipboard is not isolated."
