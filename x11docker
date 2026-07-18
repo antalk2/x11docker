@@ -18556,7 +18556,7 @@ check_options_interferences() {
 
 
     # g_Interactive : --interactive
-    if case_match "$g_Interactive" yes ; then
+    if [ "$g_Interactive" = yes ] ; then
             [ "$Forwardstdin" = "yes" ] && {
                 note_ttm "|Option --stdin is not compatible with option --interactive.
                           |  Fallback: Disabling option --stdin."
