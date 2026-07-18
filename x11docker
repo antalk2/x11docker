@@ -18815,12 +18815,6 @@ check_options_messages() {
 
         --xwayland|--weston-xwayland)
 
-            # Originally: a || b ||   { c && note }
-            # Next        !a && !b && { c && note }
-            # Next        if !a && !b ; then { c && note } ; fi
-            # Next        if !a && !b ; then { if c ; then  note; fi ; } ; fi
-            # Next        if !a && !b ; then  if c ; then  note; fi ;  ; fi
-            # Next        if !a && !b && c ; then  note; fi
             if [ ! -e "/usr/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so" ] \
             && [ ! -e "/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so"     ] \
             && [ "$Xcontainer_option" = "no" ]                                           ;
