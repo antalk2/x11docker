@@ -18970,10 +18970,7 @@ check_options_messages() {
 
     # --network
     {
-        case "$g_BackendKind" in
-            host) ;; # BackendKind_host
-            proot) ;;
-            docker|podman|nerdctl)
+        if case_match "$g_BackendKind" 'docker|podman|nerdctl' ; then
                 case "$g_Network" in
                     none)
                         note_ttm "|Option --network=none is set to disable network access.
@@ -18996,8 +18993,9 @@ check_options_messages() {
                                  |     is enabled."
                         ;;
                 esac
-                ;;
-        esac
+        elif case_match "$g_BackendKind" 'host | proot' ; then
+            : # NOP
+        fi
 
         case "$g_Network" in
             none) ;;
