@@ -19008,18 +19008,15 @@ check_options_messages() {
         if [ "$g_Network" !=  none ]                           \
         && case_match "$g_BackendKind" 'docker|podman|nerdctl' ;
         then
-            case "$Xserver" in
-                --tty|--weston|--kwin|--hostwayland)
-                ;;
-                --hostdisplay)
-                    warning_ttm "|Option --hostdisplay with enabled internet access
-                                 |  allows the container to provide your host X server to the entire world."
-                    ;;
-                *)
-                    note_ttm "|Option -I, --network: The container is able to provide
-                              |  access to X server $Newdisplay ($Xserver) to the entire world."
-                    ;;
-            esac
+            if case_match "$Xserver" '--hostdisplay' ; then
+                warning_ttm "|Option --hostdisplay with enabled internet access
+                             |  allows the container to provide your host X server to the entire world."
+                #
+             elif ! case_match  "$Xserver" '--tty|--weston|--kwin|--hostwayland' ; then
+                note_ttm "|Option -I, --network: The container is able to provide
+                          |  access to X server $Newdisplay ($Xserver) to the entire world."
+                #
+            fi
         fi
     }
 
