@@ -18880,11 +18880,12 @@ check_options_messages() {
     fi
 
     if ! case_match "$Shareclipboard"  'native* | no' ; then
-            { [ "$Setupwayland" = "yes" ] || [ -n "$Hostwaylandsocket" ] ; } && \
+        if { [ "$Setupwayland" = "yes" ] || [ -n "$Hostwaylandsocket" ] ; } ; then
                 note_ttm "|Option --clipboard:
                           |  Wayland windows might show undesired flickering due to
                           |  focus switches for clipboard checks with wl-clipboard."
-            #
+                #
+        fi
             note_ttm "|Option --clipboard: For X11 options --xpra* and --nagent
                       |  provide the best clipboard support. (Supported args: yes|c2h|h2c)."
             #
