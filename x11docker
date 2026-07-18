@@ -18880,7 +18880,7 @@ check_options_messages() {
     fi
 
     if ! case_match "$Shareclipboard"  'native* | no' ; then
-        if { [ "$Setupwayland" = "yes" ] || [ -n "$Hostwaylandsocket" ] ; } ; then
+        if [ "$Setupwayland" = "yes" ] || [ -n "$Hostwaylandsocket" ] ; then
                 note_ttm "|Option --clipboard:
                           |  Wayland windows might show undesired flickering due to
                           |  focus switches for clipboard checks with wl-clipboard."
