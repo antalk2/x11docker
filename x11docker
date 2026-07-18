@@ -18592,7 +18592,9 @@ check_options_interferences() {
     return 0
 } # end check_options_interferences
 
-check_options_messages() {      # some messages depending on options, but not changing settings
+# Function: check_options_messages
+# Brief: Some messages depending on options, but not changing settings
+check_options_messages() {
   # X server specific messages
   case "$Xserver" in
     --hostdisplay)
