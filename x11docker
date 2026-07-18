@@ -18587,7 +18587,7 @@ check_options_interferences() {
         fi
     fi
 
-    [ "$g_Interactive" = "yes" ] && Showcontaineroutput="no"
+    if [ "$g_Interactive" = "yes" ] ; then Showcontaineroutput="no" ; fi
 
     return 0
 } # end check_options_interferences
