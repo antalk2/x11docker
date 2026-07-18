@@ -18807,8 +18807,8 @@ check_options_messages() {
 
             if [ "$Xserver" = "--kwin" ] ; then
                 note_ttm "|Option --kwin: kwin_wayland does not support the xdg_shell
-                      |  interface in all versions. Some GTK3 Wayland applications depend on it.
-                      |  If application startup fails, try --weston instead."
+                          |  interface in all versions. Some GTK3 Wayland applications depend on it.
+                          |  If application startup fails, try --weston instead."
                 #
             fi
             ;;
