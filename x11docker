@@ -19040,7 +19040,7 @@ check_options_messages() {
     fi
 
     # --scale
-    [ "$Scaling" ] && \
+    if [ -n "$Scaling" ] ; then
         case "$Xserver" in
             --xorg)
                 [ -n "$Rotation" ] && [ "1" = "$(awk -v a="$Scaling" 'BEGIN {print (a < 1)}')" ] && \
@@ -19048,6 +19048,7 @@ check_options_messages() {
                           |  of --scale smaller than 1 and rotation different from 0."
                 ;;
         esac
+    fi
 
     # --user=RETAIN / keep container user defined in image
     case "$Createcontaineruser" in
