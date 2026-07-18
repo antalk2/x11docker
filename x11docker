@@ -18962,11 +18962,11 @@ check_options_messages() {
     fi
 
     # --limit N
-    [ "$g_Limitresources" ] && \
+    if [ "$g_Limitresources" ] ; then
         note_ttm "|Option --limit does not avoid possibly flooding the hard disk
                   |  in docker's container partition or in shared folders.
                   |  It only restricts memory and CPU usage."
-    #
+    fi
 
     # --network
     case "$g_BackendKind" in
