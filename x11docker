@@ -18969,55 +18969,58 @@ check_options_messages() {
     fi
 
     # --network
-    case "$g_BackendKind" in
-        host) ;; # BackendKind_host
-        proot) ;;
-        docker|podman|nerdctl)
-            case "$g_Network" in
-                none)
-                    note_ttm "|Option --network=none is set to disable network access.
+    {
+        case "$g_BackendKind" in
+            host) ;; # BackendKind_host
+            proot) ;;
+            docker|podman|nerdctl)
+                case "$g_Network" in
+                    none)
+                        note_ttm "|Option --network=none is set to disable network access.
                               |  If you need network and internet access, set option -I, --network [=NET]."
-                    ;;
-                ""|bridge)
-                    warning_ttm "|Option --network: Container has access to
+                        ;;
+                    ""|bridge)
+                        warning_ttm "|Option --network: Container has access to
                                  |  local network and internet."
-                    ;;
-                host)
-                    warning_ttm "|Option --network=host severely degrades
+                        ;;
+                    host)
+                        warning_ttm "|Option --network=host severely degrades
                                  |  container isolation. Network namespacing is disabled.
                                  |  Container shares host network stack.
                                  |  Spying on network traffic may be possible.
                                  |  Access to host X server $Hostdisplay may be possible
                                  |  through abstract unix socket."
-                    ;;
-                *)
-                    warning_ttm "|Option --network=$g_Network: Some sort of network access
-                                 |     is enabled."
-                    ;;
-            esac
-            ;;
-    esac
-    case "$g_Network" in
-        none) ;;
-        *)
-            case "$g_BackendKind" in
-                docker|podman|nerdctl)
-                    case "$Xserver" in
-                        --tty|--weston|--kwin|--hostwayland)
                         ;;
-                        --hostdisplay)
-                            warning_ttm "|Option --hostdisplay with enabled internet access
+                    *)
+                        warning_ttm "|Option --network=$g_Network: Some sort of network access
+                                 |     is enabled."
+                        ;;
+                esac
+                ;;
+        esac
+
+        case "$g_Network" in
+            none) ;;
+            *)
+                case "$g_BackendKind" in
+                    docker|podman|nerdctl)
+                        case "$Xserver" in
+                            --tty|--weston|--kwin|--hostwayland)
+                            ;;
+                            --hostdisplay)
+                                warning_ttm "|Option --hostdisplay with enabled internet access
                                          |  allows the container to provide your host X server to the entire world."
-                            ;;
-                        *)
-                            note_ttm "|Option -I, --network: The container is able to provide
+                                ;;
+                            *)
+                                note_ttm "|Option -I, --network: The container is able to provide
                                       |  access to X server $Newdisplay ($Xserver) to the entire world."
-                            ;;
-                    esac
-                    ;;
-            esac
-            ;;
-    esac
+                                ;;
+                        esac
+                        ;;
+                esac
+                ;;
+        esac
+    }
 
     # --output-count
     [ "$Outputcount" != "1" ] && {
