@@ -18918,26 +18918,28 @@ check_options_messages() {
     fi
 
     # --gpu
-    if [ "$Sharegpu" = iglx  ] \
-    && [ -z "$Nvidiaversion" ] ;
-    then
-        note_ttm "|Option --gpu=iglx: iGLX is known to work only with new
-                  |  MESA drivers and new X servers. Otherwise you might get black content only."
-    fi
-    
-    if [ "$Sharegpu" = iglx ]           \
-    && ! case_match "$Xserver" '--xorg' ;
-    then
-        note "Option --gpu=iglx is useful with option --xorg only."
-    fi
+    {
+        if [ "$Sharegpu" = iglx  ] \
+               && [ -z "$Nvidiaversion" ] ;
+        then
+            note_ttm "|Option --gpu=iglx: iGLX is known to work only with new
+                      |  MESA drivers and new X servers. Otherwise you might get black content only."
+        fi
 
-    if case_match  "$Sharegpu" 'direct|virgl' ; then
-        warning_ttm "|Option --gpu=$Sharegpu degrades container isolation.
-                     |  Container gains access to GPU hardware.
-                     |  This allows reading host window content (palinopsia leak)
-                     |  and GPU rootkits (compare proof of concept: jellyfish).
-                     |  An alternative is --gpu=iglx that works with --xorg only."
-    fi
+        if [ "$Sharegpu" = iglx ]           \
+               && ! case_match "$Xserver" '--xorg' ;
+        then
+            note "Option --gpu=iglx is useful with option --xorg only."
+        fi
+
+        if case_match  "$Sharegpu" 'direct|virgl' ; then
+            warning_ttm "|Option --gpu=$Sharegpu degrades container isolation.
+                         |  Container gains access to GPU hardware.
+                         |  This allows reading host window content (palinopsia leak)
+                         |  and GPU rootkits (compare proof of concept: jellyfish).
+                         |  An alternative is --gpu=iglx that works with --xorg only."
+        fi
+    }
 
     # g_Interactive : --interactive
     if [ "$g_Interactive" = "yes" ] ; then
