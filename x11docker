@@ -18869,12 +18869,12 @@ check_options_messages() {
     && [ "$Setupwayland" = "yes" ]        \
     && [ "$Xcontainer_option" = "no" ]    ;
     then
-                note_ttm "|Option --clipboard=$Shareclipboard:
-                          |  Keyboard binding works only if an X window of container that has focus.
-                          |  Options --xeyes or --xlogo can provide an X window for this purpose.
-                          |  Alternatively provide image x11docker/xserver (option --xc)
-                          |  that contains a bindkey helper for Wayland."
-            #
+        note_ttm "|Option --clipboard=$Shareclipboard:
+                  |  Keyboard binding works only if an X window of container that has focus.
+                  |  Options --xeyes or --xlogo can provide an X window for this purpose.
+                  |  Alternatively provide image x11docker/xserver (option --xc)
+                  |  that contains a bindkey helper for Wayland."
+        #
     fi
 
     case "$Shareclipboard" in
