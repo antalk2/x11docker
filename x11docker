@@ -18548,8 +18548,8 @@ check_options_interferences() {
         Sharewebcam="no"
     fi
 
-    # --wayland
-    [ "$Setupwayland" = "yes" ] && Dbusrunsession="yes"
+    # Setupwayland : --wayland
+    if [ "$Setupwayland" = "yes" ] ; then Dbusrunsession="yes" ; fi
 
     # --init
     case "$g_Initsystem" in
