@@ -18713,11 +18713,15 @@ check_options_messages() {
             #
             Xorgversion="$(grep -m1 xorg-server </var/log/Xorg.0.log | cut -d: -f2 | cut -d' ' -f1)"
             #
-            [ -z "$Nvidiaversion" ] && [ -n "$Xorgversion" ] && version_less_than "$Xorgversion" "1.20.8" && \
+            if [ -z "$Nvidiaversion" ]                   \
+            && [ -n "$Xorgversion"   ]                   \
+            && version_less_than "$Xorgversion" "1.20.8" ;
+            then
                 note_ttm "|Options --xorg --gpu=iglx: 
                           |  It seems you have Xorg v$Xorgversion. iGLX is known to have a bug
                           |  in Xorg<v1.20.8. --gpu=iglx may fail and give black content."
-            #
+                #
+            fi
         fi
         ;;
 
