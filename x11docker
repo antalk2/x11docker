@@ -19061,6 +19061,7 @@ check_options_messages() {
 
     # --xoverip
     if [ "$Xoverip" !=  no ] ; then
+        # !(a&&b) = !a || !b
             [ "$Xcontainer_option" = "yes" ] && [ "$g_Network" = "none" ] || \
                 warning_ttm "|Option --xoverip might allow undesired access to the X server.
                              |  At least along with image x11docker/xserver (option --xc) and 
