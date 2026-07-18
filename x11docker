@@ -18779,11 +18779,11 @@ check_options_messages() {
             fi # mageia
 
             if [ "$Xauthentication" != '-ac' ] ; then
-                   warning_ttm "|Option --nxagent: X server nxagent is set up
-                                |  with X option -ac that disables X access control entirely because it has
-                                |  issues with X authentication cookie setup. Access to nxagent from
-                                |  different networks and arbitrary users might be possible."
-                   #
+                warning_ttm "|Option --nxagent: X server nxagent is set up
+                             |  with X option -ac that disables X access control entirely because it has
+                             |  issues with X authentication cookie setup. Access to nxagent from
+                             |  different networks and arbitrary users might be possible."
+                #
             fi
 
             note_ttm "|Option --nxagent: A few applications do not work well
@@ -18795,7 +18795,7 @@ check_options_messages() {
             if [ "$Xcomposite" = "yes" ] ; then
                 note_ttm "|Option --nxagent: nxagent can have issues with option
                           |  --composite. Maybe rather try --xephyr (windowed) or --xpra (seamless)."
-               #
+                #
             fi
             ;;
 
