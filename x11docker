@@ -18640,15 +18640,20 @@ check_options_messages() {
                 #
             fi
 
-        [ "$Hostsystem" = "opensuse" ] && [ "$Runsonconsole" = "no" ] && [ "$Startuser" != "root" ] && \
-            warning_ttm "|Option --xorg: openSUSE does not support starting
-                         |  a second Xorg server from within X. Possible solutions:
-                         |  1.) Install nested X server 'Xephyr', 'nxagent' or 'Xnest',
-                         |      or for --gpu support: install 'Weston' and 'Xwayland'.
-                         |  2.) Switch to console tty1...tty6 with <CTRL><ALT><F1>...<F6>
-                         |      and start x11docker there.
-                         |  3.) Run x11docker as root."
-        #
+            if [ "$Hostsystem" = "opensuse" ] \
+            && [ "$Runsonconsole" = "no"    ] \
+            && [ "$Startuser" != "root"     ] ;
+            then
+                warning_ttm "|Option --xorg: openSUSE does not support starting
+                             |  a second Xorg server from within X. Possible solutions:
+                             |  1.) Install nested X server 'Xephyr', 'nxagent' or 'Xnest',
+                             |      or for --gpu support: install 'Weston' and 'Xwayland'.
+                             |  2.) Switch to console tty1...tty6 with <CTRL><ALT><F1>...<F6>
+                             |      and start x11docker there.
+                             |  3.) Run x11docker as root."
+                #
+            fi
+
         case "$Xlegacywrapper" in
             yes)
                 warning_ttm "|Option --xorg: Although x11docker starts Xorg as
