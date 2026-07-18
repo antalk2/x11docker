@@ -19050,15 +19050,14 @@ check_options_messages() {
     fi
 
     # --user=RETAIN / keep container user defined in image
-    case "$Createcontaineruser" in
-        no)
+    if [ "$Createcontaineruser" = no ] ; then
             [ "$Sudouser" ] && \
                 note_ttm "|Option --sudouser has limited support with --user=RETAIN.
                           |  x11docker will only set needed capabilities.
                           |  User setup and /etc/sudoers won't be touched.
                           |  Option --group-add=sudo might be useful."
-            ;;
-    esac
+            #
+    fi
 
     # --xoverip
     case "$Xoverip" in
