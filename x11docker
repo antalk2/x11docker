@@ -18542,10 +18542,10 @@ check_options_interferences() {
     # Sharecupsmode : --printer
     # Sharewebcam : --webcam
     if case_match "$Winsubsystem"  'MSYS2 | CYGWIN | WSL1 | WSL2' ; then
-            check_optionset "Windows" "--pulseaudio --printer --webcam" || :
-            Sharecupsmode=""
-            Pulseaudiomode=""
-            Sharewebcam="no"
+        check_optionset "Windows" "--pulseaudio --printer --webcam" || :
+        Sharecupsmode=""
+        Pulseaudiomode=""
+        Sharewebcam="no"
     fi
 
     # --wayland
