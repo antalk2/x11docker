@@ -18631,11 +18631,12 @@ check_options_messages() {
             ;;
 
     --xorg)
-        [ "$Xcontainer_option" = "yes" ]  && \
+        if [ "$Xcontainer_option" = "yes" ] ; then
             note_ttm "|Options --xorg --xc: Running Xorg in container is experimental
                       |  and might misbehave, fail or crash.
                       |  Please report issues at https://github.com/mviereck/x11docker"
-        #
+            #
+        fi
 
         [ "$Hostsystem" = "opensuse" ] && [ "$Runsonconsole" = "no" ] && [ "$Startuser" != "root" ] && \
             warning_ttm "|Option --xorg: openSUSE does not support starting
