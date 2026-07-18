@@ -18834,16 +18834,14 @@ check_options_messages() {
         #
     fi
     
-    case "$Xserver" in
-        --weston|--weston-xwayland)
+    if case_match "$Xserver" '--weston|--weston-xwayland' ; then
             { [ "$Runsonconsole" = "yes" ] || [ -n "$Newxvt" ] ; } && \
                 note_ttm "|Option --$Xserver: Running Weston on console
                           |  is experimental and might fail.
                           |  Please report issues at https://github.com/mviereck/x11docker"
             #
             [ "$Sharegpu" = "no" ] && note "Option $Xserver: You might need option --gpu."
-            ;;
-    esac
+    fi
 
     # NVIDIA without --gpu
     [ "$Nvidiaversion" ] && [ "$Sharegpu" = "no" ] && \
