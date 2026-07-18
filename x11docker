@@ -18700,32 +18700,32 @@ check_options_messages() {
                 #
             fi
 
-        # --gpu=iglx
-        if [ "$Sharegpu" = "iglx"        ] \
-        && [ "$Xcontainer_option" = "no" ] \
-        && [ -e "/var/log/Xorg.0.log"    ] ;
-        then
-            # grep yields somethng like:
-            # [    40.001] xorg-server 2:21.1.12-1ubuntu1.5 (For technical support please see http://www.ubuntu.com/support)
-            #                            ^^^^^^^^^^^^^^^^^^
-            #
-            # cuts get the underlined part
-            #
-            Xorgversion="$(grep -m1 xorg-server </var/log/Xorg.0.log | cut -d: -f2 | cut -d' ' -f1)"
-            #
-            if [ -z "$Nvidiaversion" ]                   \
-            && [ -n "$Xorgversion"   ]                   \
-            && version_less_than "$Xorgversion" "1.20.8" ;
+            # --gpu=iglx
+            if [ "$Sharegpu" = "iglx"        ] \
+            && [ "$Xcontainer_option" = "no" ] \
+            && [ -e "/var/log/Xorg.0.log"    ] ;
             then
-                note_ttm "|Options --xorg --gpu=iglx: 
-                          |  It seems you have Xorg v$Xorgversion. iGLX is known to have a bug
-                          |  in Xorg<v1.20.8. --gpu=iglx may fail and give black content."
+                # grep yields somethng like:
+                # [    40.001] xorg-server 2:21.1.12-1ubuntu1.5 (For technical support[...]
+                #                            ^^^^^^^^^^^^^^^^^^
                 #
+                # cuts get the underlined part
+                #
+                Xorgversion="$(grep -m1 xorg-server </var/log/Xorg.0.log | cut -d: -f2 | cut -d' ' -f1)"
+                #
+                if [ -z "$Nvidiaversion" ]                   \
+                && [ -n "$Xorgversion"   ]                   \
+                && version_less_than "$Xorgversion" "1.20.8" ;
+                then
+                    note_ttm "|Options --xorg --gpu=iglx: 
+                              |  It seems you have Xorg v$Xorgversion. iGLX is known to have a bug
+                              |  in Xorg<v1.20.8. --gpu=iglx may fail and give black content."
+                    #
+                fi
             fi
-        fi
-        ;;
+            ;;
 
-    --xpra*)
+        --xpra*)
         if [ "$Sharegpu" = "yes" ] ; then
             note_ttm "|Option $Xserver: If performance of GPU acceleration
                       |  is not satisfying, you can try insecure '--hostdisplay --gpu'
