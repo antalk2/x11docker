@@ -18747,7 +18747,10 @@ check_options_messages() {
             ;;
 
         --nxagent)
-            [ "$Hostsystem" = "mageia" ] && {
+            if [ "$Hostsystem" = "mageia" ] ; then
+                #
+                # https://www.mageia.org/en/about/
+                #
                 [ "$Desktopmode" = "no" ] && [ "$Autochooseserver" = "yes" ] && Desktopmode="yes" && Windowmanagermode="${Windowmanagermode:-auto}"
                 [ "$Desktopmode" = "no" ] && \
                     warning_ttm "|Option --nxagent: nxagent version 3.5.0 on Mageia 6
@@ -18757,7 +18760,7 @@ check_options_messages() {
                          |  --hostdisplay (insecure), or run --nxagent in desktop mode with a
                          |  host window manager (--wm=WINDOWMANAGER or --wm=auto or short -wm)."
                 #
-            }
+            fi
             case "$Xauthentication" in
                 -ac) ;;
                 *) warning_ttm "|Option --nxagent: X server nxagent is set up
