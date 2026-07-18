@@ -18726,11 +18726,12 @@ check_options_messages() {
         ;;
 
     --xpra*)
-        [ "$Sharegpu" = "yes" ] && \
+        if [ "$Sharegpu" = "yes" ] ; then
             note_ttm "|Option $Xserver: If performance of GPU acceleration
                       |  is not satisfying, you can try insecure '--hostdisplay --gpu'
                       |  or, better but windowed, '--weston-xwayland --gpu'."
-        #
+           #
+        fi
         note_ttm "|Option $Xserver: If you encounter issues with xpra,
                   |  you can try --nxagent instead.
                   |  Rather use xpra from www.xpra.org than from distribution repositories."
