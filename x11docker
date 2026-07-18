@@ -18778,7 +18778,7 @@ check_options_messages() {
                 fi
             fi # mageia
 
-            if [ "$Xauthentication" != '-ac' ; then
+            if [ "$Xauthentication" != '-ac' ] ; then
                    warning_ttm "|Option --nxagent: X server nxagent is set up
                                 |  with X option -ac that disables X access control entirely because it has
                                 |  issues with X authentication cookie setup. Access to nxagent from
