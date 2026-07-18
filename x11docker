@@ -19040,14 +19040,12 @@ check_options_messages() {
     fi
 
     # --scale
-    if [ -n "$Scaling" ] ; then
-        case "$Xserver" in
-            --xorg)
+    if [ -n "$Scaling" ]         \
+    && [ "$Xserver" = '--xorg' ] ;
+    then
                 [ -n "$Rotation" ] && [ "1" = "$(awk -v a="$Scaling" 'BEGIN {print (a < 1)}')" ] && \
                     note_ttm "|Option --xorg does not work well with combination
                           |  of --scale smaller than 1 and rotation different from 0."
-                ;;
-        esac
     fi
 
     # --user=RETAIN / keep container user defined in image
