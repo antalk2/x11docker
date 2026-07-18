@@ -18741,7 +18741,9 @@ check_options_messages() {
             ;;
 
         --kwin)
-            [ "$Newxvt" ] && note "Option --kwin: Switching console with STRG+ALT+Fn fails."
+            if [ "$Newxvt" ] ; then
+                note "Option --kwin: Switching console with STRG+ALT+Fn fails."
+            fi
             ;;
 
         --nxagent)
