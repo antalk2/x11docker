@@ -18924,10 +18924,9 @@ check_options_messages() {
                           |  MESA drivers and new X servers. Otherwise you might get black content only."
            #
         fi
-            case "$Xserver" in
-                --xorg) ;;
-                *) note "Option --gpu=iglx is useful with option --xorg only." ;;
-            esac
+        if ! case_match "$Xserver" '--xorg' ; then
+            note "Option --gpu=iglx is useful with option --xorg only."
+        fi
     elif case_match  "$Sharegpu" 'direct|virgl' ; then
             warning_ttm "|Option --gpu=$Sharegpu degrades container isolation.
                          |  Container gains access to GPU hardware.
