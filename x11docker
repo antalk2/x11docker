@@ -18942,9 +18942,10 @@ check_options_messages() {
     # g_Interactive : --interactive
     if [ "$g_Interactive" = "yes" ] ; then
         if case_match "$g_Initsystem" 'openrc|runit|sysvinit' ; then
-                note_ttm "|Option --interactive: Interactive mode with option
-                          |  --init=$g_Initsystem is not well integrated yet.
-                          |  Shells do not have job control and CTRL-C can behave different than expected."
+            note_ttm "|Option --interactive: Interactive mode with option
+                      |  --init=$g_Initsystem is not well integrated yet.
+                      |  Shells do not have job control and CTRL-C can behave different than expected."
+            #
         elif case_match "$g_Initsystem" 'systemd' ; then
             note "Option --interactive might fail with old systemd versions."
         fi
