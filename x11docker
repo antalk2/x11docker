@@ -18554,9 +18554,9 @@ check_options_interferences() {
     # g_Initsystem : --init
     if case_match "$g_Initsystem" 'systemd|sysvinit|openrc|runit' ; then Dbussystem="yes" ; fi
 
-    # --interactive
-    case "$g_Interactive" in
-        yes)
+
+    # g_Interactive : --interactive
+    if case_match "$g_Interactive" yes ; then
             [ "$Forwardstdin" = "yes" ] && {
                 note_ttm "|Option --stdin is not compatible with option --interactive.
                           |  Fallback: Disabling option --stdin."
@@ -18583,8 +18583,8 @@ check_options_interferences() {
                                    |  WSL2 might work, but is not tested yet."
                     ;;
             esac
-            ;;
-    esac
+    fi
+
     [ "$g_Interactive" = "yes" ] && Showcontaineroutput="no"
 
     return 0
