@@ -19005,9 +19005,7 @@ check_options_messages() {
         fi
 
         # --network, --backend and Xserver
-        case "$g_Network" in
-            none) ;;
-            *)
+        if [ "$g_Network" !=  none ] ; then
                 if case_match "$g_BackendKind" 'docker|podman|nerdctl' ; then
                         case "$Xserver" in
                             --tty|--weston|--kwin|--hostwayland)
@@ -19021,9 +19019,8 @@ check_options_messages() {
                                       |  access to X server $Newdisplay ($Xserver) to the entire world."
                                 ;;
                         esac
-                   fi
-                ;;
-        esac
+                fi
+        fi
     }
 
     # --output-count
