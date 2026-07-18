@@ -18601,6 +18601,7 @@ check_options_messages() {
     # X server specific messages
     case "$Xserver" in
         --hostdisplay)
+
             if [ "$Autochooseserver" = "yes" ] \
             && [ -z "$Winsubsystem"          ] ;
             then
@@ -18610,6 +18611,7 @@ check_options_messages() {
                            |  or run a second Xorg server with option --xorg.
                            |  $Wikipackagesimage"
                 #
+            fi
 
             # --xauth
             if ! case_match "$Xauthentication" 'untrusted' ; then
