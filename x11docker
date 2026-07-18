@@ -18970,29 +18970,36 @@ check_options_messages() {
 
     # --network
     {
+        # --network and --backend
         if case_match "$g_BackendKind" 'docker|podman|nerdctl' ; then
-                case "$g_Network" in
-                    none)
-                        note_ttm "|Option --network=none is set to disable network access.
+            #
+            case "$g_Network" in
+                #
+                none)
+                    note_ttm "|Option --network=none is set to disable network access.
                               |  If you need network and internet access, set option -I, --network [=NET]."
-                        ;;
-                    ""|bridge)
-                        warning_ttm "|Option --network: Container has access to
+                    ;;
+                #
+                ""|bridge)
+                    warning_ttm "|Option --network: Container has access to
                                  |  local network and internet."
-                        ;;
-                    host)
-                        warning_ttm "|Option --network=host severely degrades
+                    ;;
+                #
+                host)
+                    warning_ttm "|Option --network=host severely degrades
                                  |  container isolation. Network namespacing is disabled.
                                  |  Container shares host network stack.
                                  |  Spying on network traffic may be possible.
                                  |  Access to host X server $Hostdisplay may be possible
                                  |  through abstract unix socket."
-                        ;;
-                    *)
-                        warning_ttm "|Option --network=$g_Network: Some sort of network access
+                    ;;
+                #
+                *)
+                    warning_ttm "|Option --network=$g_Network: Some sort of network access
                                  |     is enabled."
-                        ;;
-                esac
+                    ;;
+                #
+            esac
         elif case_match "$g_BackendKind" 'host | proot' ; then
             : # NOP
         fi
