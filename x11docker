@@ -18818,11 +18818,12 @@ check_options_messages() {
             if [ ! -e "/usr/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so" ] \
             && [ ! -e "/lib/x86_64-linux-gnu/libdecor/plugins-1/libdecor-cairo.so"     ] ;
             then {
-                [ "$Xcontainer_option" = "no" ] && \
+                if [ "$Xcontainer_option" = "no" ] ; then
                     note_ttm "|Option $Xserver: You might need to install
                               |  libdecor cairo plugin for Xwayland window decoration.
                               |  $Wikipackages"
-                #
+                    #
+                fi
             }
             fi
             ;;
