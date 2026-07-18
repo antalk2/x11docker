@@ -18932,11 +18932,11 @@ check_options_messages() {
     fi
 
     if case_match  "$Sharegpu" 'direct|virgl' ; then
-            warning_ttm "|Option --gpu=$Sharegpu degrades container isolation.
-                         |  Container gains access to GPU hardware.
-                         |  This allows reading host window content (palinopsia leak)
-                         |  and GPU rootkits (compare proof of concept: jellyfish).
-                         |  An alternative is --gpu=iglx that works with --xorg only."
+        warning_ttm "|Option --gpu=$Sharegpu degrades container isolation.
+                     |  Container gains access to GPU hardware.
+                     |  This allows reading host window content (palinopsia leak)
+                     |  and GPU rootkits (compare proof of concept: jellyfish).
+                     |  An alternative is --gpu=iglx that works with --xorg only."
     fi
 
     # --interactive
