@@ -21155,7 +21155,9 @@ main() {
                               |  Using 'ln -s' to provide X unix socket on host.
                               |  GTK3 application might fail to access X."
                     #
-                    [ "$Newdisplay" ]     && ln -s "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber"  "/tmp/.X11-unix/X$Newdisplaynumber"  2>>$Xinitlogfile ||:
+                    if [ -n "$Newdisplay" ] ; then
+                        ln -s "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber"  "/tmp/.X11-unix/X$Newdisplaynumber"  2>>$Xinitlogfile ||:
+                    fi
                 fi
                 [ "$Newwaylandsocket" ] && ln -s "$Cachefolder/XDG_RUNTIME_DIR/$Newwaylandsocket" "$XDG_RUNTIME_DIR/$Newwaylandsocket" 2>>$Xinitlogfile ||:
                 ;;
