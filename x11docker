@@ -14666,18 +14666,26 @@ create_containerrc() {
 
         case "$g_Interactive" in
             no)
-                echo "env LD_PRELOAD= tail -f $(convertpath share "$Cmdstdoutlogfile")     2>/dev/null & Stdoutpid=\$!"
-                echo "env LD_PRELOAD= tail -f $(convertpath share "$Cmdstderrlogfile") >&2 2>/dev/null & Stderrpid=\$!"
-                case "$g_BackendKind" in
-                    proot)
-                        echo 'storepid $Stdoutpid tail_stdout'
-                        echo 'storepid $Stderrpid tail_stderr'
-                        ;;
-                esac
                 trim_to_bar \
-                    "|exec \$Dbus sh $(convertpath share "$Cmdrc")     \\
-                     |    >> $(convertpath share "$Cmdstdoutlogfile ") \\
-                     |   2>> $(convertpath share "$Cmdstderrlogfile ")
+                    "|env LD_PRELOAD=                                        \\
+                     |    tail -f $( convertpath share "$Cmdstdoutlogfile" ) \\
+                     |    2>/dev/null & Stdoutpid=\$!
+                     |
+                     |env LD_PRELOAD=                                       \\
+                     |    tail -f $(convertpath share "$Cmdstderrlogfile" ) \\
+                     |    >&2 2>/dev/null & Stderrpid=\$!
+                     |"
+                #
+                if [ "$g_BackendKind" = 'proot' ] ; then
+                    trim_to_bar '|storepid $Stdoutpid tail_stdout
+                                 |storepid $Stderrpid tail_stderr
+                                 |'
+                fi
+                #
+                trim_to_bar \
+                    "|exec \$Dbus sh $(convertpath share "$Cmdrc"    ) \\
+                     |    >> $(convertpath share "$Cmdstdoutlogfile" ) \\
+                     |   2>> $(convertpath share "$Cmdstderrlogfile" )
                      |"
                 #
                 ;;
