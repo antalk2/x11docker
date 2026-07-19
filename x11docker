@@ -14529,7 +14529,7 @@ create_containerrc() {
 
         trim_to_bar \
             "|
-             |[ \"\$Containeruserhome\" ] && export HOME=\"\$Containeruserhome\"
+             |if [ \"\$Containeruserhome\" ] ; then export HOME=\"\$Containeruserhome\" ; fi
              |
              |# XDG_RUNTIME_DIR
              |
