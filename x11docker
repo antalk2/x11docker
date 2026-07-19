@@ -14537,12 +14537,12 @@ create_containerrc() {
              |
              |Containeruseruid=\$(id -u \$g_Containerusername)
              |export XDG_RUNTIME_DIR=/tmp/XDG_RUNTIME_DIR
-             |[ -e /run/user/\$Containeruseruid ] && {
+             |if [ -e /run/user/\$Containeruseruid ] ; then
              |  ln -s /run/user/\$Containeruseruid \$XDG_RUNTIME_DIR
              |  export XDG_RUNTIME_DIR=/run/user/\$Containeruseruid
-             |} || {
+             |else
              |  mkdir -p -m700 \$XDG_RUNTIME_DIR
-             |}
+             |fi
              |"
         #
 
