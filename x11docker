@@ -14611,14 +14611,14 @@ create_containerrc() {
         esac
 
         if [ "$Setupwayland" = "yes" ] ; then
-            [ "$Sharehostwayland" = "yes" ] && {
+            if [ "$Sharehostwayland" = "yes" ] ; then
                 echo "export WAYLAND_DISPLAY='$Hostwaylandsocket'"
                 echo "ln -s /$Hostwaylandsocket \$XDG_RUNTIME_DIR/$Hostwaylandsocket"
-            }
-            [ -n "$Newwaylandsocket" ] && {
+            fi
+            if [ -n "$Newwaylandsocket" ] ; then
                 echo "export WAYLAND_DISPLAY='$Newwaylandsocket'"
                 echo "ln -s /$Newwaylandsocket \$XDG_RUNTIME_DIR/$Newwaylandsocket"
-            }
+            fi
         else
             echo "export XDG_SESSION_TYPE=x11"
         fi
