@@ -21136,15 +21136,14 @@ main() {
 
         # --xc : softlink (or socat) to X or Wayland unix socket in container
         if [ "$Xcontainer_option" = yes ] ; then
+            if [ -n "$Newdisplay" ] ; then
                 if have_command socat ; then
-                    if [ -n "$Newdisplay" ] ; then
                         unpriv "$(trim_to_mark \
                                     "|socat -lf $Xinitlogfile
                                      : -d   UNIX-LISTEN:/tmp/.X11-unix/X$Newdisplaynumber,ignoreeof,fork
                                      : UNIX:$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber"
                                 )" &
                         storepid "$!" socat-X
-                    fi
                 else
                     if [ -n "$Showdisplayenvironment" ] ;
                     then Message="note_ttm"
@@ -21155,13 +21154,12 @@ main() {
                               |  Using 'ln -s' to provide X unix socket on host.
                               |  GTK3 application might fail to access X."
                     #
-                    if [ -n "$Newdisplay" ] ; then
                         ln -s                                              \
                            "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber" \
                                        "/tmp/.X11-unix/X$Newdisplaynumber" \
                            2>>$Xinitlogfile || true
-                    fi
                 fi
+            fi
 
                 if [ -n "$Newwaylandsocket" ] ; then
                     ln -s                                               \
