@@ -14474,18 +14474,20 @@ create_containerrc() {
             docker|podman|nerdctl)
                 if [ "$Switchcontaineruserflag" = "yes" ] ; then
                     echo '# Environment variables found in image:'
-                    IFS=$'\n'
-                    while read -r Line; do
-                        echo "export $(escapestring "$Line")"
-                    done < <( unpriv_backend                                                 \
-                                  "$g_Backendbin run --rm --entrypoint env $g_Imagename env" \
-                                  2>> "$Containerlogfile"                                    \
-                                  | rmcr                                                     \
-                                  | grep -v 'HOSTNAME='                                      \
-                                  || :
-                            )
-                    #
-                    IFS=$' \t\n' # restore the default
+                    (
+                        # Using subshell to keep global IFS as is
+                        IFS=$'\n'
+                        while read -r Line; do
+                            echo "export $(escapestring "$Line")"
+                        done < <( unpriv_backend                                                 \
+                                      "$g_Backendbin run --rm --entrypoint env $g_Imagename env" \
+                                      2>> "$Containerlogfile"                                    \
+                                      | rmcr                                                     \
+                                      | grep -v 'HOSTNAME='                                      \
+                                      || true
+                                )
+                        #
+                    )
                 fi
                 ;;
             # host) ;; # BackendKind_host
