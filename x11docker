@@ -21146,7 +21146,10 @@ main() {
                         storepid "$!" socat-X
                     fi
                 else
-                    [ -n "$Showdisplayenvironment" ] && Message="note_ttm" || Message="debugnote_ttm"
+                    if [ -n "$Showdisplayenvironment" ] ;
+                    then Message="note_ttm"
+                    else Message="debugnote_ttm"
+                    fi
                     #
                     $Message "|Option --xc --printenv: Command 'socat' not found.
                               |  Using 'ln -s' to provide X unix socket on host.
