@@ -14610,7 +14610,7 @@ create_containerrc() {
                 ;;
         esac
 
-        [ "$Setupwayland" = "yes" ] && {
+        if [ "$Setupwayland" = "yes" ] ; then
             [ "$Sharehostwayland" = "yes" ] && {
                 echo "export WAYLAND_DISPLAY='$Hostwaylandsocket'"
                 echo "ln -s /$Hostwaylandsocket \$XDG_RUNTIME_DIR/$Hostwaylandsocket"
@@ -14619,9 +14619,9 @@ create_containerrc() {
                 echo "export WAYLAND_DISPLAY='$Newwaylandsocket'"
                 echo "ln -s /$Newwaylandsocket \$XDG_RUNTIME_DIR/$Newwaylandsocket"
             }
-        } || {
+        else
             echo "export XDG_SESSION_TYPE=x11"
-        }
+        fi
 
         [ "$Dbusrunsession" = "yes" ]  && {
             trim_to_bar \
