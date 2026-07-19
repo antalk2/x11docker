@@ -21136,10 +21136,10 @@ main() {
                 #            2>>$Xinitlogfile || :
                 # fi
 
-                have_command socat  && {
+                if have_command socat ; then
                     [ "$Newdisplay" ]     && unpriv "socat -lf $Xinitlogfile -d UNIX-LISTEN:/tmp/.X11-unix/X$Newdisplaynumber,ignoreeof,fork UNIX:$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber" &
                     storepid "$!" socat-X
-                } || {
+                else
                     [ -n "$Showdisplayenvironment" ] && Message="note_ttm" || Message="debugnote_ttm"
                     #
                     $Message "|Option --xc --printenv: Command 'socat' not found.
@@ -21147,7 +21147,7 @@ main() {
                               |  GTK3 application might fail to access X."
                     #
                     [ "$Newdisplay" ]     && ln -s "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber"  "/tmp/.X11-unix/X$Newdisplaynumber"  2>>$Xinitlogfile ||:
-                }
+                fi
                 [ "$Newwaylandsocket" ] && ln -s "$Cachefolder/XDG_RUNTIME_DIR/$Newwaylandsocket" "$XDG_RUNTIME_DIR/$Newwaylandsocket" 2>>$Xinitlogfile ||:
                 ;;
         esac
