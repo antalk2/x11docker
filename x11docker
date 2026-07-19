@@ -21195,10 +21195,10 @@ main() {
             done <<< "$Runfromhost"
         fi
 
-    # start container
-    start_container
-    Pid1pid="$(storeinfo_dump_sh pid1pid)"
-    Containerip="$(storeinfo_dump_sh containerip)"
+        # start container
+        start_container
+        Pid1pid="$(storeinfo_dump_sh pid1pid)"
+        Containerip="$(storeinfo_dump_sh containerip)"
 
     # --xoverip -listen tcp: Use xhost instead of XAUTHORITY
     case "$Xoverip" in
