@@ -20911,66 +20911,66 @@ main() {
         finish
     fi
 
-  rocknroll || return 0
+    rocknroll || return 0
 
-  # Open message channels for container, xinitrc and watchpidlist().
-  # Also start corresponding background processes.
-  setup_fifo
+    # Open message channels for container, xinitrc and watchpidlist().
+    # Also start corresponding background processes.
+    setup_fifo
 
-  check_xdg_runtime_dir
+    check_xdg_runtime_dir
 
-  # Check X environment from host ### FIXME could use xtool()+X
-  #                                   container for xauth
-  check_hostxenv
+    # Check X environment from host ### FIXME could use xtool()+X
+    #                                   container for xauth
+    check_hostxenv
 
-  # Check if docker is installed in snap; causes restrictions
-  check_snap
+    # Check if docker is installed in snap; causes restrictions
+    check_snap
 
-  # Check if x11docker/xserver can/will be used    # --xc
-  check_xcontainer
+    # Check if x11docker/xserver can/will be used    # --xc
+    check_xcontainer
 
-  # Check chosen X server or auto-choose one
-  check_xserver
+    # Check chosen X server or auto-choose one
+    check_xserver
 
-  # Look for nvidia installer file                 # --gpu
-  check_nvidiainstaller || true
+    # Look for nvidia installer file                 # --gpu
+    check_nvidiainstaller || true
 
-  if [ "$Xserver" = "--xorg" ] || [ -n "$Newxvt" ] || [ "$Runsonconsole" = "yes" ] ; then
-      if [ -z "$Winsubsystem" ] ; then
-          check_vt   # --vt: find free tty/virtual terminal for Xorg or weston
-      fi
-  fi
+    if [ "$Xserver" = "--xorg" ] || [ -n "$Newxvt" ] || [ "$Runsonconsole" = "yes" ] ; then
+        if [ -z "$Winsubsystem" ] ; then
+            check_vt   # --vt: find free tty/virtual terminal for Xorg or weston
+        fi
+    fi
 
-  # Find free display
-  check_newxenv
+    # Find free display
+    check_newxenv
 
-  # Internal network for --xc --xoverip
-  setup_xcnetwork || true
-  if [ "$Xcontainer_option" = "yes" ] ; then
-      # --xc
-      create_xcontainercommand
-      debugnote_ttm \
-          "|X container command (rootless ${Xcrootless:-undefined}):
-           |  $Xcontainercommand"
-      #
-      start_xcontainer
-  fi
-  store_newxenv
+    # Internal network for --xc --xoverip
+    setup_xcnetwork || true
+    if [ "$Xcontainer_option" = "yes" ] ; then
+        # --xc
+        create_xcontainercommand
+        debugnote_ttm \
+            "|X container command (rootless ${Xcrootless:-undefined}):
+             |  $Xcontainercommand"
+        #
+        start_xcontainer
+    fi
+    store_newxenv
 
-  # Look for XlibNoSHM.so and libdl.so.2 / fake MIT-SHM
-  check_xlibnoshm || true
+    # Look for XlibNoSHM.so and libdl.so.2 / fake MIT-SHM
+    check_xlibnoshm || true
 
-  # Check options, change settings if needed
-  check_options_interferences
+    # Check options, change settings if needed
+    check_options_interferences
 
-  # Create persistent container home               # --home
-  check_containerhome
+    # Create persistent container home               # --home
+    check_containerhome
 
-  # Some messages depending on options, but not changing anything
-  check_options_messages
+    # Some messages depending on options, but not changing anything
+    check_options_messages
 
-  # --wm
-  check_windowmanager
+    # --wm
+    check_windowmanager
 
   if [ "$Sharegpu"   = "direct" ] ; then setup_gpu              || true ; fi      # --gpu
   if [ "$Sharewebcam"   = "yes" ] ; then setup_webcam                   ; fi      # --webcam
