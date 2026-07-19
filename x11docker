@@ -21156,7 +21156,7 @@ main() {
                     #
                     ln -s                                              \
                        "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber" \
-                       "/tmp/.X11-unix/X$Newdisplaynumber" \
+                                   "/tmp/.X11-unix/X$Newdisplaynumber" \
                        2>>$Xinitlogfile || true
                 fi
             fi
@@ -21164,7 +21164,7 @@ main() {
             if [ -n "$Newwaylandsocket" ] ; then
                 ln -s                                               \
                    "$Cachefolder/XDG_RUNTIME_DIR/$Newwaylandsocket" \
-                   "$XDG_RUNTIME_DIR/$Newwaylandsocket" \
+                               "$XDG_RUNTIME_DIR/$Newwaylandsocket" \
                    2>>$Xinitlogfile || true
             fi
         fi
