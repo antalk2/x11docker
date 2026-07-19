@@ -21138,7 +21138,11 @@ main() {
 
                 if have_command socat ; then
                     if [ -n "$Newdisplay" ] ; then
-                        unpriv "socat -lf $Xinitlogfile -d UNIX-LISTEN:/tmp/.X11-unix/X$Newdisplaynumber,ignoreeof,fork UNIX:$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber" &
+                        unpriv "$(trim_to_mark \
+                                    "|socat -lf $Xinitlogfile
+                                     : -d   UNIX-LISTEN:/tmp/.X11-unix/X$Newdisplaynumber,ignoreeof,fork
+                                     : UNIX:$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber"
+                                )" &
                         storepid "$!" socat-X
                     fi
                 else
