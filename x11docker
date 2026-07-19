@@ -19858,7 +19858,8 @@ declare_variables() {           # declare global variables
   # Xpracontainerenv :  environment variables
   #
   # Note: The entries go through escapestring(), which does not handle
-  #       single-quote characters.
+  #       single-quote characters. It also changes "" to \"\".
+  #       Consequence:  keep 'UBUNTU_MENUPROXY=' as is below.
   #
   # MWNOCAPTURE MWNO_RIT MWWM:
   #
@@ -19875,7 +19876,7 @@ declare_variables() {           # declare global variables
   #             to control misbehaving MainWin-based applications.
   #
   Xpracontainerenv=""; printf -v Xpracontainerenv "%s"      \
-                              'UBUNTU_MENUPROXY=""'         \
+                              'UBUNTU_MENUPROXY='           \
                               " QT_X11_NO_NATIVE_MENUBAR=1" \
                               " MWNOCAPTURE=true"           \
                               " MWNO_RIT=true"              \
