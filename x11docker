@@ -21185,7 +21185,12 @@ main() {
 
         if [ -n "$Runfromhost" ] ; then # --runfromhost
             while read Line; do
-                unpriv "env $Newxenv $Runfromhost"
+                # https://github.com/mviereck/x11docker/issues/578
+                # --runfromhost Thunar runs Thunar twice
+                if [ -n "$Line" ] ; then
+                    # debugnote "main(): Runfromhost: '$Line'"
+                    unpriv "env $Newxenv $Line"
+                fi
             done <<< "$Runfromhost"
         fi
 
