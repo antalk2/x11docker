@@ -20476,14 +20476,14 @@ declare_variables() {           # declare global variables
   # Custom additional commands
   # =============================================
 
-  # Runasuser : --runasuser: Add container command to containerrc
+  # Runasuser : --runasuser : Add container command to containerrc
   Runasuser=""
 
-  # Runasroot : --runasroot: Add container command to container setup
+  # Runasroot : --runasroot : Add container command to container setup
   #             script running as root
   Runasroot=""
 
-  # Runfromhost : --runfromhost: Add host command to xinitrc
+  # Runfromhost : --runfromhost : Add host command to xinitrc
   Runfromhost=""
 
   # =============================================
