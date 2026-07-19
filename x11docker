@@ -14547,7 +14547,7 @@ create_containerrc() {
         #
 
         # softlinks from shared folders to HOME
-        [ "$Persistanthomevolume" != "$Containeruserhosthome" ] && { # not for --home=$HOME
+        [ "$Persistanthomevolume" != "$Containeruserhosthome" ] ; then # not for --home=$HOME
             while read -r Line; do
                 Path="$(convertpath container "$Line")"
                 [ "$(cut -c1-5 <<< "$Line")" != "/dev/" ] && {
@@ -14566,7 +14566,7 @@ create_containerrc() {
                     }
                 }
             done < <(store_runoption_dump_volume)
-        }
+        fi
 
         trim_to_bar \
             "|
