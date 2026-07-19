@@ -14633,8 +14633,12 @@ create_containerrc() {
              |
              |storeinfo_test_sh locale && export LANG=\"\$(storeinfo_dump_sh locale)\"
              |
-             |if [ ! -e \"$Hostlocaltimefile\" ]                 ; then export TZ=$Hostutctime ; fi
-             |if [ \"\$(date -Ihours)\" != \"$(date -Ihours)\" ] ; then export TZ=$Hostutctime ; fi
+             |if [ ! -e \"$Hostlocaltimefile\" ] ; then
+             |    export TZ=$Hostutctime
+             |fi
+             |if [ \"\$(date -Ihours)\" != \"$(date -Ihours)\" ] ; then
+             |    export TZ=$Hostutctime
+             |fi
              |
              |if [ \"\$DEBIAN_FRONTEND\" = noninteractive ] ; then
              |    unset  DEBIAN_FRONTEND
