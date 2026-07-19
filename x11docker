@@ -14648,8 +14648,12 @@ create_containerrc() {
 
         trim_to_bar \
             "|
-             |[ -d \"\$HOME\" ] && cd \"\$HOME\"
-             |[ -n '$g_Workdir' ] && [ -d '$g_Workdir' ] && cd '$g_Workdir'    # WORKDIR in image or option --workdir
+             |if [ -n '$g_Workdir' ] && [ -d '$g_Workdir' ] ; then
+             |    # WORKDIR in image or option --workdir
+             |    cd '$g_Workdir'
+             |elif [ -d \"\$HOME\" ] ; then
+             |    cd \"\$HOME\"
+             |fi
              |
              |unset -f rmcr
              |env >> $(convertpath share "$Containerenvironmentfile")
