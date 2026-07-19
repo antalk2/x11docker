@@ -21135,8 +21135,8 @@ main() {
                 #           "/tmp/.X11-unix/X$Newdisplaynumber"             \
                 #            2>>$Xinitlogfile || :
                 # fi
-          
-                command -v socat >/dev/null && {
+
+                have_command socat  && {
                     [ "$Newdisplay" ]     && unpriv "socat -lf $Xinitlogfile -d UNIX-LISTEN:/tmp/.X11-unix/X$Newdisplaynumber,ignoreeof,fork UNIX:$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber" &
                     storepid "$!" socat-X
                 } || {
