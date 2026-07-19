@@ -14611,13 +14611,13 @@ create_containerrc() {
                  |if [ -z \"\$DBUS_SESSION_BUS_ADDRESS\" ] && [ -d \"\$XDG_RUNTIME_DIR/bus\" ] ; then
                  |  DBUS_SESSION_BUS_ADDRESS=\"unix:path=\$XDG_RUNTIME_DIR/bus;autolaunch:\" ;
                  |fi
-                 |[ -z \"\$DBUS_SESSION_BUS_ADDRESS\" ] && {
+                 |if [ -z \"\$DBUS_SESSION_BUS_ADDRESS\" ] ; then
                  |  command -v dbus-run-session >/dev/null && Dbus=dbus-run-session
                  |  command -v dbus-launch      >/dev/null && Dbus=dbus-launch
                  |  [ -z \"\$Dbus\" ] && note \"Option --dbus: Neither dbus-run-session
                  |  nor dbus-launch found. Cannot run a DBus user session. 
                  |  Please install package dbus or even dbus-x11 in image.\"
-                 |}
+                 |fi
                  |"
             #
         }
