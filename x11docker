@@ -21128,8 +21128,7 @@ main() {
         waitforlogentry_sh 'start_container()' $Xinitlogfile 'xinitrc is ready' "$Xiniterrorcodes"
 
         # softlink (or socat) to X or Wayland unix socket in container                           # --xc
-        case "$Xcontainer_option" in
-            yes)
+        if [ "$Xcontainer_option" = yes ] ; then
                 # if [ "$Newdisplay" ] ; then
                 #     ln -s "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber" \
                 #           "/tmp/.X11-unix/X$Newdisplaynumber"             \
@@ -21169,8 +21168,7 @@ main() {
                                    "$XDG_RUNTIME_DIR/$Newwaylandsocket" \
                        2>>$Xinitlogfile || true
                 fi
-                ;;
-        esac
+        fi
 
     rocknroll || {
       saygoodbye main-runshell
