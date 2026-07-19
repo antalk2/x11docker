@@ -20884,16 +20884,16 @@ main() {
         finish
     fi
 
-  if [ "$Cleanup" ] ; then
-      # --cleanup: Clean up cache and orphaned x11docker containers
-      check_optionset \
-          "--cleanup" \
-          "$(grep -v -E -- '--cleanup|--backend' <<< "$g_AllAvailableLongOptions")" \
-          || true
-      #
-      cleanup
-      finish
-  fi
+    if [ "$Cleanup" ] ; then
+        # --cleanup: Clean up cache and orphaned x11docker containers
+        check_optionset \
+            "--cleanup" \
+            "$(grep -v -E -- '--cleanup|--backend' <<< "$g_AllAvailableLongOptions")" \
+            || true
+        #
+        cleanup
+        finish
+    fi
 
   if [ "$Buildimage" ] ; then
       # --build: Build image from x11docker repository
