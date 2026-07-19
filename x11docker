@@ -14433,6 +14433,8 @@ create_containerrc() {
         echo
         declare -f waitforlogentry_sh
         echo
+        declare -f have_command
+        echo
         #
         trim_to_bar \
             "|$Messagefifofuncs
@@ -14612,8 +14614,8 @@ create_containerrc() {
                  |  DBUS_SESSION_BUS_ADDRESS=\"unix:path=\$XDG_RUNTIME_DIR/bus;autolaunch:\" ;
                  |fi
                  |if [ -z \"\$DBUS_SESSION_BUS_ADDRESS\" ] ; then
-                 |  command -v dbus-run-session >/dev/null && Dbus=dbus-run-session
-                 |  command -v dbus-launch      >/dev/null && Dbus=dbus-launch
+                 |  have_command dbus-run-session && Dbus=dbus-run-session
+                 |  have_command dbus-launch      && Dbus=dbus-launch
                  |  [ -z \"\$Dbus\" ] && note \"Option --dbus: Neither dbus-run-session
                  |  nor dbus-launch found. Cannot run a DBus user session. 
                  |  Please install package dbus or even dbus-x11 in image.\"
