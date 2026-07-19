@@ -18639,7 +18639,7 @@ check_options_messages() {
                           |  Otherwise the container is likely to run forever."
                 #
             fi
-            ;; # --hostdisplay
+            ;; # Xserver --hostdisplay
 
         --xorg)
             if [ "$Xcontainer_option" = "yes" ] ; then
@@ -18670,7 +18670,7 @@ check_options_messages() {
                                  |  permissions (setuid). Evil containers may try to abuse this.
                                  |  Other x11docker X server options like --xephyr are more secure at this point."
                     #
-                    ;;
+                    ;; # Xlegacywrapper yes
                 no)
                     if [ "$Startuser" = "root" ] ; then
                         warning "Option --xorg: x11docker will run Xorg as root."
@@ -18700,7 +18700,7 @@ check_options_messages() {
                             #
                         fi
                     fi
-                    ;;
+                    ;; # Xlegacywrapper no
             esac
 
             if [ "$Runsoverssh" = "yes" ] ; then
@@ -18734,7 +18734,7 @@ check_options_messages() {
                     #
                 fi
             fi
-            ;; # --xorg
+            ;; # Xserver --xorg
 
         --xpra*)
             if [ "$Sharegpu" = "yes" ] ; then
@@ -18747,13 +18747,13 @@ check_options_messages() {
                       |  you can try --nxagent instead.
                       |  Rather use xpra from www.xpra.org than from distribution repositories."
             #
-            ;; # --xpra*
+            ;; # Xserver --xpra*
 
         --kwin)
             if [ "$Newxvt" ] ; then
                 note "Option --kwin: Switching console with STRG+ALT+Fn fails."
             fi
-            ;; # --kwin
+            ;; # Xserver --kwin
 
         --nxagent)
             if [ "$Hostsystem" = "mageia" ] ; then
@@ -18806,7 +18806,7 @@ check_options_messages() {
                           |  --composite. Maybe rather try --xephyr (windowed) or --xpra (seamless)."
                 #
             fi
-            ;; # --nxagent
+            ;; # Xserver --nxagent
 
         --xwayland|--weston-xwayland)
 
@@ -18819,14 +18819,14 @@ check_options_messages() {
                           |  $Wikipackages"
                 #
             fi
-            ;; # --xwayland|--weston-xwayland
+            ;; # Xserver --xwayland|--weston-xwayland
 
         --xwin|--runx) 
             note_ttm "|Windows firewall settings can forbid application access
                       |  to the X server. If no application window appears, but no obvious error
                       |  is shown, please check your firewall settings. Compare issue #108 on github."
             #
-            ;; # --xwin|--runx
+            ;; # Xserver --xwin|--runx
 
     esac # Xserver_case_1
 
@@ -18920,8 +18920,9 @@ check_options_messages() {
     fi
 
     # --fullscreen
-    if [ "$Fullscreen" = "yes" ]                                                                                 \
-    && ! case_match "$Xserver" ' --xephyr|--weston|--weston-xwayland|--nxagent|--xpra*|--xwin  |  --xvfb|--xorg' ;
+    if [ "$Fullscreen" = "yes" ]                                                             \
+    && ! case_match "$Xserver"                                                               \
+           ' --xephyr|--weston|--weston-xwayland|--nxagent|--xpra*|--xwin  |  --xvfb|--xorg' ;
     then
         note "Option --fullscreen is not supported by option $Xserver."
     fi
@@ -19079,6 +19080,9 @@ check_options_messages() {
         #
     fi
 
+    #
+    # Customdockeroptions : CUSTOM_RUN_OPTIONS
+    #
     if [ -n "$Customdockeroptions" ] ; then
         warning_ttm "|Found custom CUSTOM_RUN_OPTIONS.
                      |  x11docker will add them to 'docker run' command without
@@ -19127,10 +19131,10 @@ check_options_messages() {
                           |  Otherwise x11docker might behave wrong."
             fi
         done
-    fi
+    fi # Customdockeroptions
 
     return 0
-}
+} # end check_options_messages()
 
 #
 # Function: check_optionset
