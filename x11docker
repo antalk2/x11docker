@@ -21136,19 +21136,19 @@ main() {
                 #            2>>$Xinitlogfile || :
                 # fi
           
-        command -v socat >/dev/null && {
-          [ "$Newdisplay" ]     && unpriv "socat -lf $Xinitlogfile -d UNIX-LISTEN:/tmp/.X11-unix/X$Newdisplaynumber,ignoreeof,fork UNIX:$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber" &
-          storepid "$!" socat-X
-        } || {
-          [ -n "$Showdisplayenvironment" ] && Message="note" || Message="debugnote"
-          $Message "Option --xc --printenv: Command 'socat' not found. 
+                command -v socat >/dev/null && {
+                    [ "$Newdisplay" ]     && unpriv "socat -lf $Xinitlogfile -d UNIX-LISTEN:/tmp/.X11-unix/X$Newdisplaynumber,ignoreeof,fork UNIX:$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber" &
+                    storepid "$!" socat-X
+                } || {
+                    [ -n "$Showdisplayenvironment" ] && Message="note" || Message="debugnote"
+                    $Message "Option --xc --printenv: Command 'socat' not found.
   Using 'ln -s' to provide X unix socket on host.
   GTK3 application might fail to access X."
-          [ "$Newdisplay" ]     && ln -s "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber"  "/tmp/.X11-unix/X$Newdisplaynumber"  2>>$Xinitlogfile ||:
-        }
-        [ "$Newwaylandsocket" ] && ln -s "$Cachefolder/XDG_RUNTIME_DIR/$Newwaylandsocket" "$XDG_RUNTIME_DIR/$Newwaylandsocket" 2>>$Xinitlogfile ||:
-      ;;
-    esac
+                    [ "$Newdisplay" ]     && ln -s "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber"  "/tmp/.X11-unix/X$Newdisplaynumber"  2>>$Xinitlogfile ||:
+                }
+                [ "$Newwaylandsocket" ] && ln -s "$Cachefolder/XDG_RUNTIME_DIR/$Newwaylandsocket" "$XDG_RUNTIME_DIR/$Newwaylandsocket" 2>>$Xinitlogfile ||:
+                ;;
+        esac
 
     rocknroll || {
       saygoodbye main-runshell
