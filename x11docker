@@ -21117,15 +21117,15 @@ main() {
              |  Using docker VM:               $Dockervm"
     fi
 
-  { #### Run docker image
-    # For code flow logic, start_xserver() should run here first and be moved to background.
-    # For technical reasons, xinit must not run in a subshell:
-    #   --xorg on tty only works if xinit runs in foreground to grab the tty.
-    #   Otherwise, Xwrapper.config must be edited to 'allowed_users=anybody' even on console.
-    # Thus docker runs in this subshell after X server is ready to accept connections.
+    { #### Run docker image
+        # For code flow logic, start_xserver() should run here first and be moved to background.
+        # For technical reasons, xinit must not run in a subshell:
+        #   --xorg on tty only works if xinit runs in foreground to grab the tty.
+        #   Otherwise, Xwrapper.config must be edited to 'allowed_users=anybody' even on console.
+        # Thus docker runs in this subshell after X server is ready to accept connections.
 
-    # wait for X to be ready
-    waitforlogentry_sh 'start_container()' $Xinitlogfile 'xinitrc is ready' "$Xiniterrorcodes"
+        # wait for X to be ready
+        waitforlogentry_sh 'start_container()' $Xinitlogfile 'xinitrc is ready' "$Xiniterrorcodes"
 
     # softlink (or socat) to X or Wayland unix socket in container                           # --xc
     case "$Xcontainer_option" in
