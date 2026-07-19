@@ -18768,9 +18768,18 @@ check_options_messages() {
                 fi
 
                 if [ "$Desktopmode" = "no" ] ; then
+                    #
+                    # Note: on Ubuntu 24.04,
+                    #
+                    # the path would be /usr/bin/nxagent or
+                    # /usr/lib/x86_64-linux-gnu/nx/bin/nxagent
+                    #
+                    # and the result: "NXAGENT - Version 3.5.99.27" twice.
+                    #
                     warning_ttm "|Option --nxagent: nxagent version 3.5.0 on Mageia 6
                                  |  is known to crash in seamless mode. 
-                                 |  (Detected version: '$(strings --bytes 20 /usr/libexec/nx/nxagent | grep "NXAGENT - Version")').
+                                 |  (Detected version:
+                                 : '$(strings --bytes 20 /usr/libexec/nx/nxagent | grep "NXAGENT - Version")').
                                  |  If you encounter issues, please try seamless --xpra (secure),
                                  |  --hostdisplay (insecure), or run --nxagent in desktop mode with a
                                  |  host window manager (--wm=WINDOWMANAGER or --wm=auto or short -wm)."
