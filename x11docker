@@ -21163,7 +21163,9 @@ main() {
                     fi
                 fi
 
-                [ "$Newwaylandsocket" ] && ln -s "$Cachefolder/XDG_RUNTIME_DIR/$Newwaylandsocket" "$XDG_RUNTIME_DIR/$Newwaylandsocket" 2>>$Xinitlogfile ||:
+                if [ -n "$Newwaylandsocket" ] ; then
+                    ln -s "$Cachefolder/XDG_RUNTIME_DIR/$Newwaylandsocket" "$XDG_RUNTIME_DIR/$Newwaylandsocket" 2>>$Xinitlogfile ||:
+                fi
                 ;;
         esac
 
