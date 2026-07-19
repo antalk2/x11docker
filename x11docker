@@ -20904,7 +20904,7 @@ main() {
             "--build"                           \
             "$( nlsw_set_difference             \
                    "$g_AllAvailableLongOptions" \
-                    '--build|--backend'         \
+                    '--build --backend'         \
               )" || true
         #
         buildimage "$g_Imagename"
