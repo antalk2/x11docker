@@ -21156,9 +21156,13 @@ main() {
                               |  GTK3 application might fail to access X."
                     #
                     if [ -n "$Newdisplay" ] ; then
-                        ln -s "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber"  "/tmp/.X11-unix/X$Newdisplaynumber"  2>>$Xinitlogfile ||:
+                        ln -s                                              \
+                           "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber" \
+                                       "/tmp/.X11-unix/X$Newdisplaynumber" \
+                           2>>$Xinitlogfile || true
                     fi
                 fi
+
                 [ "$Newwaylandsocket" ] && ln -s "$Cachefolder/XDG_RUNTIME_DIR/$Newwaylandsocket" "$XDG_RUNTIME_DIR/$Newwaylandsocket" 2>>$Xinitlogfile ||:
                 ;;
         esac
