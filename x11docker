@@ -14493,7 +14493,9 @@ create_containerrc() {
             # host) ;; # BackendKind_host
         esac
 
-        [ "$g_Initsystem" = 'systemd' ] && echo "systemctl --user start dbus"  ### FIXME
+        if [ "$g_Initsystem" = 'systemd' ] ; then
+            echo "systemctl --user start dbus"  ### FIXME
+        fi
 
         trim_to_bar \
             "|
