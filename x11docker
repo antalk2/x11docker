@@ -21183,11 +21183,11 @@ main() {
                                  :"
                  )"  >> "$Xinitlogfile" 2>&1 || true
 
-        [ "$Runfromhost" ] && {  # --runfromhost
+        if [ -n "$Runfromhost" ] ; then # --runfromhost
             while read Line; do
                 unpriv "env $Newxenv $Runfromhost"
             done <<< "$Runfromhost"
-        }
+        fi
 
     # start container
     start_container
