@@ -14623,7 +14623,7 @@ create_containerrc() {
             echo "export XDG_SESSION_TYPE=x11"
         fi
 
-        [ "$Dbusrunsession" = "yes" ]  && {
+        if [ "$Dbusrunsession" = "yes" ] ; then
             trim_to_bar \
                 "|
                  |# Check for dbus user daemon command
@@ -14642,7 +14642,7 @@ create_containerrc() {
                  |fi
                  |"
             #
-        }
+        fi
 
         trim_to_bar \
             "|
