@@ -21183,7 +21183,8 @@ main() {
                                  :"
                  )"  >> "$Xinitlogfile" 2>&1 || true
 
-        if [ -n "$Runfromhost" ] ; then # --runfromhost
+        # Runfromhost : --runfromhost
+        if [ -n "$Runfromhost" ] ; then
             while read Line; do
                 # https://github.com/mviereck/x11docker/issues/578
                 # --runfromhost Thunar runs Thunar twice
