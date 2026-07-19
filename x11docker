@@ -20872,12 +20872,13 @@ main() {
             esac
         fi
         #
-        check_optionset         \
-            "$Installermode"    \
-            "$( grep -v -E --                                                       \
-                '--install|--update|--update-master|--remove|--remove-oldprefix'  \
-                 <<< "$g_AllAvailableLongOptions"
-           )" || true
+        # Each $Installermode is incomatible with all other options.
+        check_optionset                                                             \
+            "$Installermode"                                                        \
+            "$( nlsw_set_difference                                                 \
+                  "$g_AllAvailableLongOptions"                                      \
+                  '--install --update --update-master --remove --remove-oldprefix'  \
+              )" || true
         #
         installer "$Installermode"
         finish
