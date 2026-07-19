@@ -21169,10 +21169,10 @@ main() {
             fi
         fi
 
-    rocknroll || {
-      saygoodbye main-runshell
-      return 1
-    }
+        if ! rocknroll ; then
+            saygoodbye main-runshell
+            return 1
+        fi
 
     # xinit(?) sets variables to new display for host applications, too. This undoes it.
     unpriv "dbus-update-activation-environment --systemd DISPLAY='$DISPLAY' XAUTHORITY='$XAUTHORITY'" >> "$Xinitlogfile" 2>&1 ||:
