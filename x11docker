@@ -21127,10 +21127,14 @@ main() {
         # wait for X to be ready
         waitforlogentry_sh 'start_container()' $Xinitlogfile 'xinitrc is ready' "$Xiniterrorcodes"
 
-          # if [ "$Newdisplay" ] ; then  ln -s "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber"  "/tmp/.X11-unix/X$Newdisplaynumber"  2>>$Xinitlogfile || : ; fi
         # softlink (or socat) to X or Wayland unix socket in container                           # --xc
         case "$Xcontainer_option" in
             yes)
+                # if [ "$Newdisplay" ] ; then
+                #     ln -s "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber" \
+                #           "/tmp/.X11-unix/X$Newdisplaynumber"             \
+                #            2>>$Xinitlogfile || :
+                # fi
           
         command -v socat >/dev/null && {
           [ "$Newdisplay" ]     && unpriv "socat -lf $Xinitlogfile -d UNIX-LISTEN:/tmp/.X11-unix/X$Newdisplaynumber,ignoreeof,fork UNIX:$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber" &
