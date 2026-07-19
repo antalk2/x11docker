@@ -20972,150 +20972,150 @@ main() {
     # --wm
     check_windowmanager
 
-  if [ "$Sharegpu"   = "direct" ] ; then setup_gpu              || true ; fi      # --gpu
-  if [ "$Sharewebcam"   = "yes" ] ; then setup_webcam                   ; fi      # --webcam
-  if [ "$Sharecupsmode"         ] ; then setup_printer                  ; fi      # --printer
-  if [ "$Sharepipewire" = "yes" ] ; then setup_sound_pipewire   || true ; fi      # --pipewire
-  if [ "$Pulseaudiomode"        ] ; then setup_sound_pulseaudio || true ; fi      # --pulseaudio
-  if [ "$Sharealsa"     = "yes" ] ; then setup_sound_alsa               ; fi      # --alsa
-  if [ "$Sharehostdbus" = "yes" ] ; then setup_hostdbus                 ; fi      # --hostdbus
-  if [ "$Cleanxhost"    = "yes" ] ; then clean_xhost                    ; fi      # --clean-xhost
+    if [ "$Sharegpu"   = "direct" ] ; then setup_gpu              || true ; fi      # --gpu
+    if [ "$Sharewebcam"   = "yes" ] ; then setup_webcam                   ; fi      # --webcam
+    if [ "$Sharecupsmode"         ] ; then setup_printer                  ; fi      # --printer
+    if [ "$Sharepipewire" = "yes" ] ; then setup_sound_pipewire   || true ; fi      # --pipewire
+    if [ "$Pulseaudiomode"        ] ; then setup_sound_pulseaudio || true ; fi      # --pulseaudio
+    if [ "$Sharealsa"     = "yes" ] ; then setup_sound_alsa               ; fi      # --alsa
+    if [ "$Sharehostdbus" = "yes" ] ; then setup_hostdbus                 ; fi      # --hostdbus
+    if [ "$Cleanxhost"    = "yes" ] ; then clean_xhost                    ; fi      # --clean-xhost
   
-  create_clipboardrc >> "$Clipboardrc"                                            # --clipboard
+    create_clipboardrc >> "$Clipboardrc"                                            # --clipboard
 
-  # size of host X and of new X server
-  check_screensize                                                                # --size
+    # size of host X and of new X server
+    check_screensize                                                                # --size
 
-  #### Create command to run X server [and/or Wayland compositor]
-  create_xcommand                # set up start command for X server              # all X server and Wayland options
+    #### Create command to run X server [and/or Wayland compositor]
+    create_xcommand                # set up start command for X server              # all X server and Wayland options
 
-  if [ "$Xcommand" ] ; then
-      case "$Xwaylandrootless" in
-          no)   debugnote "X server command:${NEWLINE}  $Xcommand" ;;
-          yes)  debugnote "Xwayland wrapper:${NEWLINE}$(cat $Xwaylandwrapper)" ;;
-      esac
-  fi
+    if [ "$Xcommand" ] ; then
+        case "$Xwaylandrootless" in
+            no)   debugnote "X server command:${NEWLINE}  $Xcommand" ;;
+            yes)  debugnote "Xwayland wrapper:${NEWLINE}$(cat $Xwaylandwrapper)" ;;
+        esac
+    fi
 
-  if [ "$Compositorcommand" ] ; then
-      debugnote "Wayland compositor command:${NEWLINE}  $Compositorcommand"
-  fi
+    if [ "$Compositorcommand" ] ; then
+        debugnote "Wayland compositor command:${NEWLINE}  $Compositorcommand"
+    fi
 
-  if [ -s "$Westonini" ] ; then
-      debugnote "Generated weston.ini:${NEWLINE}$(nl -ba <$Westonini)"
-  fi
+    if [ -s "$Westonini" ] ; then
+        debugnote "Generated weston.ini:${NEWLINE}$(nl -ba <$Westonini)"
+    fi
 
-  # init in container.                                            # --init
-  setup_initsystem
+    # init in container.                                            # --init
+    setup_initsystem
 
-  case "$g_BackendKind" in
+    case "$g_BackendKind" in
 
-      docker|podman|nerdctl)
-        if [ -z "$g_Rootfs" ] ; then
-            check_image
-        fi
+        docker|podman|nerdctl)
+            if [ -z "$g_Rootfs" ] ; then
+                check_image
+            fi
 
-        # Add linux capabilities if needed for some options.
-        # Default: --cap-drop=ALL
-        setup_capabilities
+            # Add linux capabilities if needed for some options.
+            # Default: --cap-drop=ALL
+            setup_capabilities
 
-        if [ "$Sharegpu" = "yes" ] ; then                         # --gpu
-            setup_vaapi
-        fi
-    ;;
-  esac
+            if [ "$Sharegpu" = "yes" ] ; then                         # --gpu
+                setup_vaapi
+            fi
+            ;;
+    esac
 
-  case "$g_BackendKind" in
-      proot|docker|podman|nerdctl)
+    case "$g_BackendKind" in
+        proot|docker|podman|nerdctl)
 
-          create_backendcommand           # create 'docker run' command
-          echo "$Backendcommand" >> "$Backendcommandfile"
-          debugnote_ttm \
-             "|$g_BackendKind command (rootless ${Backendrootless:-undefined}):
+            create_backendcommand           # create 'docker run' command
+            echo "$Backendcommand" >> "$Backendcommandfile"
+            debugnote_ttm \
+                "|$g_BackendKind command (rootless ${Backendrootless:-undefined}):
               |  $Backendcommand"
-          #
-          if [ "$Containersetup" = "yes" ] ; then
-              ## containerrootrc runs as root in container.
-              #
-              # Main jobs: create unprivileged container user,
-              #            disable possible privilege leaks,
-              #            set local time.
-              #
-              # Optional jobs: run init system,
-              #                run DBus daemon,
-              #                install nvidia driver,
-              #                create language locale.
-              #
-              create_containerrootrc >> "$Containerrootrc"
-              verbose "Generated containerrootrc:${NEWLINE}$(nl -ba <$Containerrootrc)"
-          fi
-          ;;
-      # host) ;; # BackendKind_host
-  esac
+            #
+            if [ "$Containersetup" = "yes" ] ; then
+                ## containerrootrc runs as root in container.
+                #
+                # Main jobs: create unprivileged container user,
+                #            disable possible privilege leaks,
+                #            set local time.
+                #
+                # Optional jobs: run init system,
+                #                run DBus daemon,
+                #                install nvidia driver,
+                #                create language locale.
+                #
+                create_containerrootrc >> "$Containerrootrc"
+                verbose "Generated containerrootrc:${NEWLINE}$(nl -ba <$Containerrootrc)"
+            fi
+            ;;
+        # host) ;; # BackendKind_host
+    esac
 
-  if [ "$Containersetup" = "yes" ] ; then
-      create_containerrc
-      verbose "Generated containerrc:${NEWLINE}$(nl -ba <$Containerrc)"
-      create_cmdrc
-      verbose "Generated cmdrc:${NEWLINE}$(nl -ba <$Cmdrc)"
-      create_sshenv
-      verbose "Generated sshenv:${NEWLINE}$(nl -ba <$Sshenvscript)"
-  fi
+    if [ "$Containersetup" = "yes" ] ; then
+        create_containerrc
+        verbose "Generated containerrc:${NEWLINE}$(nl -ba <$Containerrc)"
+        create_cmdrc
+        verbose "Generated cmdrc:${NEWLINE}$(nl -ba <$Cmdrc)"
+        create_sshenv
+        verbose "Generated sshenv:${NEWLINE}$(nl -ba <$Sshenvscript)"
+    fi
 
-  storeinfo_add_kv_sh "x11dockerpid=$$"    # store pid of x11docker
+    storeinfo_add_kv_sh "x11dockerpid=$$"    # store pid of x11docker
 
-  (
-      # Values for the debugnote below
-      local Backendbin_version="$(${g_Backendbin:-:} --version 2>&1)"
-      local Host_system_to_report="$(
+    (
+        # Values for the debugnote below
+        local Backendbin_version="$(${g_Backendbin:-:} --version 2>&1)"
+        local Host_system_to_report="$(
                 grep '^PRETTY_NAME' /etc/os-release 2>/dev/null  \
                 | cut -d= -f2                                    \
                 || echo "$Hostsystem"
             )"
-      local Container_user_will_be="$(
+        local Container_user_will_be="$(
                if [ "$Createcontaineruser" = "yes" ] ; then
                   echo "$g_Containerusername"
                else
                   echo "(retaining USER of image)"
                fi
             )"
-      local Container_user_password="$(
+        local Container_user_password="$(
                if [ "$Createcontaineruser" = "yes" ] ; then
                   echo "x11docker"
                else
                    echo "(unknown)"
                fi
             )"
-      #
-      debugnote_ttm \
-      "|x11docker version:  $Version
-       |  Backend version:               ${Backendbin_version}
-       |  Running rootless:              $Backendrootless
-       |  OCI Runtime:                   $Runtime
-       |  Host system:                   ${Host_system_to_report}
-       |  Host architecture:             $Hostarchitecture
-       |  Command:
-       |    '$0' $(for Line in "$@"; do echo -n "'$Line' " ; done)
-       |  Parsed options:
-       |    $Parsedoptions_global
-       |  x11docker was started by:      $Startuser
-       |  As host user serves:           $Hostuser
-       |  Container user will be:        ${Container_user_will_be}
-       |  Container user password:       ${Container_user_password}
-       |  Running in a terminal:         $Runsinterminal
-       |  Running on console:            $Runsonconsole
-       |  Running over SSH:              $Runsoverssh
-       |  Running sourced:               $Runssourced
-       |  bash \$-:                       $-"
-  )
+        #
+        debugnote_ttm \
+            "|x11docker version:  $Version
+             |  Backend version:               ${Backendbin_version}
+             |  Running rootless:              $Backendrootless
+             |  OCI Runtime:                   $Runtime
+             |  Host system:                   ${Host_system_to_report}
+             |  Host architecture:             $Hostarchitecture
+             |  Command:
+             |    '$0' $(for Line in "$@"; do echo -n "'$Line' " ; done)
+             |  Parsed options:
+             |    $Parsedoptions_global
+             |  x11docker was started by:      $Startuser
+             |  As host user serves:           $Hostuser
+             |  Container user will be:        ${Container_user_will_be}
+             |  Container user password:       ${Container_user_password}
+             |  Running in a terminal:         $Runsinterminal
+             |  Running on console:            $Runsonconsole
+             |  Running over SSH:              $Runsoverssh
+             |  Running sourced:               $Runssourced
+             |  bash \$-:                       $-"
+    )
 
-  if [ "$Winsubsystem" ] ; then
-      debugnote_ttm \
-          "|
-           |  Running on Windows subsystem:  $Winsubsystem
-           |  Path to subsystem:             $(convertpath windows "$Winsubpath")/
-           |  Mount path in subsystem:       $Winsubmount/
-           |  Using docker VM:               $Dockervm"
-  fi
+    if [ "$Winsubsystem" ] ; then
+        debugnote_ttm \
+            "|
+             |  Running on Windows subsystem:  $Winsubsystem
+             |  Path to subsystem:             $(convertpath windows "$Winsubpath")/
+             |  Mount path in subsystem:       $Winsubmount/
+             |  Using docker VM:               $Dockervm"
+    fi
 
   { #### Run docker image
     # For code flow logic, start_xserver() should run here first and be moved to background.
@@ -21130,7 +21130,8 @@ main() {
     # softlink (or socat) to X or Wayland unix socket in container                           # --xc
     case "$Xcontainer_option" in
       yes)
-        #[ "$Newdisplay" ]       && ln -s "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber"  "/tmp/.X11-unix/X$Newdisplaynumber"  2>>$Xinitlogfile ||:
+          # if [ "$Newdisplay" ] ; then  ln -s "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber"  "/tmp/.X11-unix/X$Newdisplaynumber"  2>>$Xinitlogfile || : ; fi
+          
         command -v socat >/dev/null && {
           [ "$Newdisplay" ]     && unpriv "socat -lf $Xinitlogfile -d UNIX-LISTEN:/tmp/.X11-unix/X$Newdisplaynumber,ignoreeof,fork UNIX:$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber" &
           storepid "$!" socat-X
