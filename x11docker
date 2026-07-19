@@ -14549,9 +14549,9 @@ create_containerrc() {
         # softlinks from shared folders to HOME
         [ "$Persistanthomevolume" != "$Containeruserhosthome" ] ; then # not for --home=$HOME
             while read -r Line; do
-                Path="$(convertpath container "$Line")"
-                [ "$(cut -c1-5 <<< "$Line")" != "/dev/" ] && {
-                    [ "$Line" != "$Path" ] && {   # different for paths in HOME without --home
+                Path="$( convertpath container "$Line" )"
+                if [ "$(cut -c1-5 <<< "$Line")" != "/dev/" ] ; then
+                    if [ "$Line" != "$Path" ] ; then   # different for paths in HOME without --home
                         case "$Line" in
                             "$Containeruserhosthome") # --share=$HOME
                                 echo "ln -s '$Path' -T '$Containeruserhome/home.host.$g_Containerusername'"
@@ -14563,8 +14563,8 @@ create_containerrc() {
                                 Ungrep="$Ungrep|$(basename "$Line")"
                                 ;;
                         esac
-                    }
-                }
+                    fi
+                fi
             done < <(store_runoption_dump_volume)
         fi
 
