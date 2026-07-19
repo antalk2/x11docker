@@ -14437,7 +14437,7 @@ create_containerrc() {
         trim_to_bar \
             "|$Messagefifofuncs
              |
-             |Messagefile=$(convertpath share "$Messagefifo")
+             |Messagefile=$(  convertpath share "$Messagefifo")
              |Storeinfofile=$(convertpath share "$Storeinfofile")
              |Storepidfile=$Sharefoldercontainer/store.pids
              |Timetosaygoodbyefile=$(convertpath share "$Timetosaygoodbyefile")
