@@ -14439,21 +14439,22 @@ create_containerrc() {
         trim_to_bar \
             "|$Messagefifofuncs
              |
-             |Messagefile=$(  convertpath share "$Messagefifo")
-             |Storeinfofile=$(convertpath share "$Storeinfofile")
+             |Messagefile=$(   convertpath share "$Messagefifo"   )
+             |Storeinfofile=$( convertpath share "$Storeinfofile" )
              |Storepidfile=$Sharefoldercontainer/store.pids
-             |Timetosaygoodbyefile=$(convertpath share "$Timetosaygoodbyefile")
+             |Timetosaygoodbyefile=$( convertpath share "$Timetosaygoodbyefile" )
              |
              |waitforlogentry_sh containerrc \$Storeinfofile containerrootrc=ready '' infinity
              |debugnote 'Running containerrc: Unprivileged user commands in container'
              |
              |verbose \"containerrc: Container system:
-             |\$(cat /etc/os-release 2>&1 ||:)\"
+             |\$(cat /etc/os-release 2>&1 || true )\"
              |
              |"
         #
         
         case "$g_BackendKind" in
+
             proot)
                 # set another hostname ### FIXME fails
                 sed "s/$(hostname)/$g_BackendKind-$g_Imagebasename/g" "/etc/hosts" > "$g_Rootfs/etc/hosts"
@@ -14469,6 +14470,7 @@ create_containerrc() {
                 echo "export PATH='/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/sbin:/usr/sbin'"
                 echo 'export PS1="\u@'"$g_BackendKind"'-'"$g_Imagebasename"':\w\$ "' ### FIXME fails
                 ;;
+
             docker|podman|nerdctl)
                 if [ "$Switchcontaineruserflag" = "yes" ] ; then
                     echo '# Environment variables found in image:'
