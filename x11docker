@@ -21136,12 +21136,6 @@ main() {
 
         # --xc : softlink (or socat) to X or Wayland unix socket in container
         if [ "$Xcontainer_option" = yes ] ; then
-                # if [ "$Newdisplay" ] ; then
-                #     ln -s "$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber" \
-                #                       "/tmp/.X11-unix/X$Newdisplaynumber" \
-                #            2>>$Xinitlogfile || :
-                # fi
-
                 if have_command socat ; then
                     if [ -n "$Newdisplay" ] ; then
                         unpriv "$(trim_to_mark \
