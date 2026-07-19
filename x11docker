@@ -21137,7 +21137,9 @@ main() {
                 # fi
 
                 if have_command socat ; then
-                    [ "$Newdisplay" ]     && unpriv "socat -lf $Xinitlogfile -d UNIX-LISTEN:/tmp/.X11-unix/X$Newdisplaynumber,ignoreeof,fork UNIX:$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber" &
+                    if [ -n "$Newdisplay" ] ; then
+                        unpriv "socat -lf $Xinitlogfile -d UNIX-LISTEN:/tmp/.X11-unix/X$Newdisplaynumber,ignoreeof,fork UNIX:$Cachefolder/tmp/.X11-unix/X$Newdisplaynumber" &
+                    fi
                     storepid "$!" socat-X
                 else
                     [ -n "$Showdisplayenvironment" ] && Message="note_ttm" || Message="debugnote_ttm"
