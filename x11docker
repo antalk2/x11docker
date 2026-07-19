@@ -20898,16 +20898,18 @@ main() {
         finish
     fi
 
-  if [ "$Buildimage" ] ; then
-      # --build: Build image from x11docker repository
-      check_optionset \
-          "--build"   \
-          "$(grep -v -E -- '--build|--backend' <<< "$g_AllAvailableLongOptions")" \
-          || true
-      #
-      buildimage "$g_Imagename"
-      finish
-  fi
+    if [ "$Buildimage" ] ; then
+        # --build: Build image from x11docker repository
+        check_optionset                         \
+            "--build"                           \
+            "$( nlsw_set_difference             \
+                   "$g_AllAvailableLongOptions" \
+                    '--build|--backend'         \
+              )" || true
+        #
+        buildimage "$g_Imagename"
+        finish
+    fi
 
   rocknroll || return 0
 
