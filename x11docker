@@ -14429,7 +14429,7 @@ create_containerrc() {
         echo
         # declare -f error_ttm
         declare -f debugnote_ttm
-        # declare -f note_ttm
+        declare -f note_ttm
         echo
         declare -f waitforlogentry_sh
         echo
@@ -14614,11 +14614,14 @@ create_containerrc() {
                  |  DBUS_SESSION_BUS_ADDRESS=\"unix:path=\$XDG_RUNTIME_DIR/bus;autolaunch:\" ;
                  |fi
                  |if [ -z \"\$DBUS_SESSION_BUS_ADDRESS\" ] ; then
-                 |  have_command dbus-run-session && Dbus=dbus-run-session
-                 |  have_command dbus-launch      && Dbus=dbus-launch
-                 |  [ -z \"\$Dbus\" ] && note \"Option --dbus: Neither dbus-run-session
-                 |  nor dbus-launch found. Cannot run a DBus user session. 
-                 |  Please install package dbus or even dbus-x11 in image.\"
+                 |  if have_command dbus-run-session ; then  Dbus=dbus-run-session ; fi
+                 |  if have_command dbus-launch      ; then  Dbus=dbus-launch
+                 |
+                 |  if [ -z \"\$Dbus\" ] ; then
+                 |      note_ttm \"|Option --dbus: Neither dbus-run-session
+                 |                 |  nor dbus-launch found. Cannot run a DBus user session.
+                 |                 |  Please install package dbus or even dbus-x11 in image.\"
+                 |  fi
                  |fi
                  |"
             #
