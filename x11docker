@@ -14650,8 +14650,16 @@ create_containerrc() {
         #
 
         case "$Containerusershell" in
-            auto) echo "command -v /bin/bash >/dev/null && export SHELL=/bin/bash || export SHELL=/bin/sh" ;;
-            *)    echo "export $(escapestring "SHELL=$Containerusershell")" ;;
+            auto)
+                trim_to_bar "|if   have_command /bin/bash
+                             |then export SHELL=/bin/bash
+                             |else export SHELL=/bin/sh
+                             |fi
+                             |"
+                ;;
+            *)
+                echo "export $(escapestring "SHELL=$Containerusershell")"
+                ;;
         esac
         while read -r Line ; do
             echo "export $(escapestring "$Line")"
