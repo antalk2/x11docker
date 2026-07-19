@@ -21161,12 +21161,12 @@ main() {
                 fi
             fi
 
-                if [ -n "$Newwaylandsocket" ] ; then
-                    ln -s                                               \
-                       "$Cachefolder/XDG_RUNTIME_DIR/$Newwaylandsocket" \
-                                   "$XDG_RUNTIME_DIR/$Newwaylandsocket" \
-                       2>>$Xinitlogfile || true
-                fi
+            if [ -n "$Newwaylandsocket" ] ; then
+                ln -s                                               \
+                   "$Cachefolder/XDG_RUNTIME_DIR/$Newwaylandsocket" \
+                   "$XDG_RUNTIME_DIR/$Newwaylandsocket" \
+                   2>>$Xinitlogfile || true
+            fi
         fi
 
     rocknroll || {
