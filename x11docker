@@ -14547,45 +14547,54 @@ create_containerrc() {
         #
 
         # softlinks from shared folders to HOME
-        [ "$Persistanthomevolume" != "$Containeruserhosthome" ] ; then # not for --home=$HOME
-            while read -r Line; do
-                Path="$( convertpath container "$Line" )"
-                if [ "$(cut -c1-5 <<< "$Line")" != "/dev/" ] ; then
-                    if [ "$Line" != "$Path" ] ; then   # different for paths in HOME without --home
-                        case "$Line" in
-                            "$Containeruserhosthome") # --share=$HOME
-                                echo "ln -s '$Path' -T '$Containeruserhome/home.host.$g_Containerusername'"
-                                Ungrep="$Ungrep|home.host.$g_Containerusername"
-                                ;;
-                            *)
-                                echo "mkdir -p $(dirname "$Line")"
-                                echo "ln -s '$Path' -T '$Line'"
-                                Ungrep="$Ungrep|$(basename "$Line")"
-                                ;;
-                        esac
+        {
+            #
+            # Ungrep: part of an ERE pattern filtered from ls -A below.
+            #         Filenames matching it do not count when deciding if
+            #         the directry $Containeruserhome is empty.
+            Ungrep=""
+            if [ "$Persistanthomevolume" != "$Containeruserhosthome" ] ; then # not for --home=$HOME
+                while read -r Line; do
+                    Path="$( convertpath container "$Line" )"
+                    if [ "$(cut -c1-5 <<< "$Line")" = "/dev/" ] ; then
+                        continue
                     fi
-                fi
-            done < <(store_runoption_dump_volume)
-        fi
+                    if [ "$Line" = "$Path" ] ; then   # different for paths in HOME without --home
+                        continue
+                    fi
+                    case "$Line" in
+                        "$Containeruserhosthome") # --share=$HOME
+                            echo "ln -s '$Path' -T '$Containeruserhome/home.host.$g_Containerusername'"
+                            Ungrep="$Ungrep|home.host.$g_Containerusername"
+                            ;;
+                        *)
+                            echo "mkdir -p $(dirname "$Line")"
+                            echo "ln -s '$Path' -T '$Line'"
+                            Ungrep="$Ungrep|$(basename "$Line")"
+                            ;;
+                    esac
+                done < <(store_runoption_dump_volume)
+            fi
 
-        trim_to_bar \
-            "|
-             |# Copy files from /etc/skel into empty HOME
-             |if [ -d \"\$HOME\" ] ; then
-             |  if    [ -d /etc/skel ]                                                  \\
-             |     && [ -z \"\$( ls -A \"\$Containeruserhome\" 2>/dev/null              \\
-             |                   | grep -v -E \"\.bashrc|\.profile|gnupg${Ungrep}\" )\" \\
-             |        ] ;
-             |  then
-             |    debugnote \"containerrc: HOME is empty. Copying from /etc/skel\"
-             |    cp -n -R /etc/skel/. \$Containeruserhome
-             |    :
-             |  else
-             |    debugnote \"containerrc: HOME is not empty. Not copying from /etc/skel\"
-             |  fi
-             |fi
-             |"
-        #
+            trim_to_bar \
+                "|
+                 |# Copy files from /etc/skel into empty HOME
+                 |if [ -d \"\$HOME\" ] ; then
+                 |  if    [ -d /etc/skel ]                                                  \\
+                 |     && [ -z \"\$( ls -A \"\$Containeruserhome\" 2>/dev/null              \\
+                 |                   | grep -v -E \"\.bashrc|\.profile|gnupg${Ungrep}\" )\" \\
+                 |        ] ;
+                 |  then
+                 |    debugnote \"containerrc: HOME is empty. Copying from /etc/skel\"
+                 |    cp -n -R /etc/skel/. \$Containeruserhome
+                 |    :
+                 |  else
+                 |    debugnote \"containerrc: HOME is not empty. Not copying from /etc/skel\"
+                 |  fi
+                 |fi
+                 |"
+            #
+        }
 
         echo "export DISPLAY='$Newdisplay' XAUTHORITY=$(convertpath share "$Xclientcookie")"
         case "$Xserver" in
