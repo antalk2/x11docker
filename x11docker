@@ -14783,8 +14783,20 @@ create_containerrc() {
 # Function: create_cmdrc
 #
 # Brief: This script runs as unprivileged user in container and starts
-#        the final command. Started from containerrc
+#        the final command.
 #
+# Description:
+#
+#   cmdrc is exec-ed from containerrc, under a dbus user session (if possible).
+#   cmdrc
+#      - runs $g_Containerentrypoint $g_Containercommand
+#      - waits for it to exit
+#      - Notfies others using: storeinfo_add_kv_sh cmdexitcode=\$?
+#
+#      - Optinally: waitfortheend (if Checkforopenwindow, aka --checkwindow
+#                                  "Run container until all windows are closed")
+#
+#      - saygoodbye cmdrc
 #
 create_cmdrc() {
     local Line
@@ -14792,7 +14804,10 @@ create_cmdrc() {
     { # begin redirection to cmdrc
         trim_to_bar \
             "|#! /bin/sh
-             |# Created startscript for cmdrc containing final container command
+             |# This is cmdrc containing final container command
+             |# Called from containerrc, as
+             |#        exec \$Dbus sh $(convertpath share "$Cmdrc")
+             |# so normally runs in a dbus user session.
              |"
         #
         echo
