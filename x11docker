@@ -17247,11 +17247,35 @@ ${2:-}"                       ; shift ;;                             # Add custo
             shift
           done
         }
+
+        # Parse the rest as [ Customdockeroptions ] [ g_Imagename [ g_Containercommand and args ] ]
         while [ $# -gt 0 ] ; do
-          [ -n "${1:-}" ] && [ -z "$g_Imagename" ] && [ "$(echo "${1:-}" | cut -c1)"  = "-" ]  && Customdockeroptions="$Customdockeroptions ${1:-}"
-          [ -n "${1:-}" ] && [ -z "$g_Imagename" ] && [ "$(echo "${1:-}" | cut -c1)" != "-" ]  && g_Imagename="${1:-}" && shift
-          [ -n "${1:-}" ] && [ -n "$g_Imagename" ] && g_Containercommand="$g_Containercommand '${1:-}'"
-          shift
+            #
+            # Skip empty args
+            if [ -z "${1:-}" ] ; then
+                shift
+                continue
+            fi
+            #
+            if [ -z "$g_Imagename" ] ; then
+                # No g_Imagename yet
+                if [ "$(echo "${1:-}" | cut -c1)"  = "-" ] ; then
+                    # Looks like an option
+                    Customdockeroptions="$Customdockeroptions ${1:-}"
+                else
+                    g_Imagename="${1:-}"
+                fi
+            else
+                # g_Containercommand may come from multiple command line arguments.
+                # Single-quote each, and collect them space-separated.
+                #
+                if [ -z  "$g_Containercommand" ] ; then
+                    g_Containercommand="'${1:-}'"
+                else
+                    g_Containercommand="$g_Containercommand '${1:-}'"
+                fi
+            fi
+            shift
         done
       ;;
       '') ;;
