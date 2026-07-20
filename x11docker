@@ -14865,7 +14865,7 @@ create_cmdrc() {
       #
       trim_to_bar  "|
                     |g_Containerentrypoint='$g_Containerentrypoint'
-                    |g_Containercommand=$(printf %q  "$g_Containercommand" )
+                    |g_Containercommand=\"$(printf %q  "$g_Containercommand" )\"
                     |"
       trim_to_mark "|debugnote
                     : \"cmdrc: Running container command:
