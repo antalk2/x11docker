@@ -1,5 +1,7 @@
 #!/bin/bash
 
+if false ; then
+
 myfun() {
     declare_variables
 
@@ -32,7 +34,6 @@ myfun
     rm tmp.sh
 )
 
-if false ; then
 meld rootrc_prepare_init_runit-out-orig.sh \
      rootrc_prepare_init_runit-out-ak.sh
 
