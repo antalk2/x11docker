@@ -14665,6 +14665,11 @@ create_containerrc() {
                  |fi
                  |"
             #
+        else
+            trim_to_bar \
+                "|# Dbusrunsession='${Dbusrunsession}', so Dbus is empty
+                 |Dbus=''
+                 |"
         fi
 
         trim_to_bar \
