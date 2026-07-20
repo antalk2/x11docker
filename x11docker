@@ -14071,6 +14071,8 @@ create_containerrootrc() {
     declare -f ws_colon_is_continuation_filter
     declare -f trim_to_mark
     #
+    declare -f note_ttm
+    #
     echo "$Messagefifofuncs_1"
 
     trim_to_mark \
