@@ -14892,8 +14892,6 @@ create_cmdrc() {
         #
         trim_to_bar "|
                      |export LD_PRELOAD=
-                     |# Note: Homesoftlink appears nowhere else, probably unused
-                     |# if [ -h \"\$Homesoftlink\" ] ; then rm \$Homesoftlink ; fi
                      |saygoodbye cmdrc
                      |"
         #
