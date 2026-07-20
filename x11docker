@@ -1807,10 +1807,12 @@ containerisrunning() {
 
 #
 # Function: pspid_sh
-# Usage: pspid_sh pid
+# Usage: pspid_sh [{--empty-pid-is-OK|--empty-pid-is-FAIL}] pid
 # Brief:  Get USER and COMMAND for PID=pid (using ps)
 #
 # Argument:
+#    --empty-pid-is-OK   return 0 on empty pid
+#    --empty-pid-is-FAIL return 1 on empty pid
 #    pid : PID of a process. May have already exited.
 #
 # stdout: Line containing
@@ -1832,6 +1834,11 @@ pspid_sh() {
         shift
         if [ -z "${1}" ] ; then
             return 0
+        fi
+    elif [ "${1}" = "--empty-pid-is-FAIL" ] ; then
+        shift
+        if [ -z "${1}" ] ; then
+            return 1
         fi
     fi
     #
