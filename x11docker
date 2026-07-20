@@ -1313,7 +1313,7 @@ error() {
   # output to logfile
   logentry "$(printf "%s\n" "x11docker ERROR: $Message")"
   saygoodbye error
-  storeinfo_test_sh error && waitfortheend
+  if storeinfo_test_sh error ; then  waitfortheend ; fi
   storeinfo_add_kv_sh error=64
 
   # output to X dialogbox if not running in terminal
@@ -1986,7 +1986,7 @@ termpid() {
 # return: 0 if rocknroll returned false
 #
 # Used-by: @code{error}
-# Used-by: May appear in the file @code{cmdrc}
+# Used-by: May appear in the file @code{cmdrc}, under /bin/sh
 #
 waitfortheend() {
     # signal is byte in $Timetosaygoodbyefifo
@@ -14787,108 +14787,117 @@ create_containerrc() {
 #
 #
 create_cmdrc() {
-  local Line
+    local Line
 
-  { # begin redirection to cmdrc
-      trim_to_bar \
-          "|#! /bin/sh
-           |# Created startscript for cmdrc containing final container command
-           |"
-      #
-      echo
-      echo '# begin_functions'
-      declare -f storeinfo_test_sh
-      declare -f storeinfo_drop_sh
-      declare -f storeinfo_add_kv_sh
-      declare -f saygoodbye
-      declare -f waitfortheend
-      declare -f rocknroll
-      echo
-      declare -f trim_to_bar_filter
-      declare -f trim_to_bar
-      declare -f trim_to_mark
-      declare -f ws_colon_is_continuation_filter
-      echo
-      #
-      trim_to_bar \
-          "|$Messagefifofuncs
-           |# end_functions
-           |
-           |Messagefile=$(convertpath share "$Messagefifo")
-           |Storeinfofile=\"$(convertpath share "$Storeinfofile")\"
-           |Timetosaygoodbyefile=$(convertpath share "$Timetosaygoodbyefile")
-           |
-           |if [ -n \"\$DBUS_SESSION_BUS_ADDRESS\" ] ; then
-           |    echo 'cmdrc_note: before dbus-update-activation-environment'
-           |    dbus-update-activation-environment \\
-           |       --verbose                       \\
-           |       --systemd                       \\
-           |       DBUS_SESSION_BUS_ADDRESS        \\
-           |       DISPLAY                         \\
-           |       XAUTHORITY                      \\
-           |       WAYLAND_DISPLAY                 \\
-           |       XDG_RUNTIME_DIR                 \\
-           |       >$(convertpath share "$Containerlogfile") 2>&1
-           |fi
-           |"
-      #
-      trim_to_bar \
-          "|
-           |# Wait for the the existence of the file Sharefolder/xhostready
-           |while rocknroll; do
-           |    if [ -e '$(convertpath share $Sharefolder/xhostready)' ] ; then
-           |        break
-           |    fi
-           |    sleep 0.1
-           |    verbose 'cmdrc(): Waiting for /x11docker/xhostready'
-           |done
-           |"
-      #
+    { # begin redirection to cmdrc
+        trim_to_bar \
+            "|#! /bin/sh
+             |# Created startscript for cmdrc containing final container command
+             |"
+        #
+        echo
+        echo '# begin_functions'
+        declare -f storeinfo_test_sh
+        declare -f storeinfo_drop_sh
+        declare -f storeinfo_add_kv_sh
+        declare -f saygoodbye
+        declare -f waitfortheend
+        declare -f rocknroll
+        echo
+        declare -f trim_to_bar_filter
+        declare -f trim_to_bar
+        declare -f trim_to_mark
+        declare -f ws_colon_is_continuation_filter
+        echo
+        #
+        trim_to_bar \
+            "|$Messagefifofuncs
+             |# end_functions
+             |
+             |Messagefile=$(convertpath share "$Messagefifo")
+             |Storeinfofile=\"$(convertpath share "$Storeinfofile")\"
+             |Timetosaygoodbyefile=$(convertpath share "$Timetosaygoodbyefile")
+             |
+             |if [ -n \"\$DBUS_SESSION_BUS_ADDRESS\" ] ; then
+             |    echo 'cmdrc_note: before dbus-update-activation-environment'
+             |    dbus-update-activation-environment \\
+             |       --verbose                       \\
+             |       --systemd                       \\
+             |       DBUS_SESSION_BUS_ADDRESS        \\
+             |       DISPLAY                         \\
+             |       XAUTHORITY                      \\
+             |       WAYLAND_DISPLAY                 \\
+             |       XDG_RUNTIME_DIR                 \\
+             |       >$(convertpath share "$Containerlogfile") 2>&1
+             |fi
+             |"
+        #
+        trim_to_bar \
+            "|
+             |# Wait for the the existence of the file Sharefolder/xhostready
+             |while rocknroll; do
+             |    if [ -e '$(convertpath share $Sharefolder/xhostready)' ] ; then
+             |        break
+             |    fi
+             |    sleep 0.1
+             |    verbose 'cmdrc(): Waiting for /x11docker/xhostready'
+             |done
+             |"
+        #
 
-      # --runasuser commands added here
-      if [ -n "$Runasuser" ] ; then
-          while read Line; do
-              # The echoed string containing the debugnote command should not contain a newline character
-              # to avoid problems with the generated cmdrc.
-              echo "debugnote \"cmdrc: running --runsasuser command: $Line\""
-              trim_to_bar \
-                  "|
-                   |$Line
-                   |"
-              #
-          done <<< "$(grep . <<< "$Runasuser")"
-      fi
+        # --runasuser commands added here
+        if [ -n "$Runasuser" ] ; then
+            while read Line; do
+                #
+                # The echoed string containing the debugnote command
+                # should not contain a newline character
+                # to avoid problems with the generated cmdrc.
+                #
+                echo "debugnote \"cmdrc: running --runsasuser command: $Line\""
+                trim_to_bar \
+                    "|
+                     |$Line
+                     |"
+                #
+            done <<< "$(grep . <<< "$Runasuser")"
+        fi
 
-      # The echoed string containing the debugnote command should not
-      # contain a newline character to avoid problems with the
-      # generated cmdrc.
-      #
-      trim_to_bar  "|
-                    |g_Containerentrypoint='$g_Containerentrypoint'
-                    |g_Containercommand=\"$(printf %q  "$g_Containercommand" )\"
-                    |"
-      trim_to_mark "|debugnote
-                    : \"cmdrc: Running container command:
-                    : \$g_Containerentrypoint \$g_Containercommand
-                    :\"
-                    |"
-      #
-    case "$Forwardstdin" in
-      yes) echo "$g_Containerentrypoint $g_Containercommand <$(convertpath share "$Cmdstdinfifo")" ;;
-      no)  echo "$g_Containerentrypoint $g_Containercommand" ;;
-    esac
+        # The echoed string containing the debugnote command should not
+        # contain a newline character to avoid problems with the
+        # generated cmdrc.
+        #
+        trim_to_bar  "|
+                      |g_Containerentrypoint='$g_Containerentrypoint'
+                      |g_Containercommand=\"$(printf %q  "$g_Containercommand" )\"
+                      |"
+        #
+        trim_to_mark "|debugnote
+                      : \"cmdrc: Running container command:
+                      : \$g_Containerentrypoint \$g_Containercommand
+                      :\"
+                      |"
+        #
+        case "$Forwardstdin" in
+            yes) echo "$g_Containerentrypoint $g_Containercommand <$(convertpath share "$Cmdstdinfifo")" ;;
+            no)  echo "$g_Containerentrypoint $g_Containercommand" ;;
+        esac
 
-    echo "
-storeinfo_add_kv_sh cmdexitcode=\$?
-"
-    [ "$Checkforopenwindow" = "yes" ] && echo "waitfortheend"
-    echo "
-export LD_PRELOAD=
-[ -h \"\$Homesoftlink\" ] && rm \$Homesoftlink
-saygoodbye cmdrc
-"
-  } >> "$Cmdrc"
-  return 0
+        trim_to_bar "|
+                     |storeinfo_add_kv_sh cmdexitcode=\$?
+                     |"
+        #
+        if [ "$Checkforopenwindow" = "yes" ] ; then
+            echo "waitfortheend" # cmdrc
+        fi
+        #
+        trim_to_bar "|
+                     |export LD_PRELOAD=
+                     |[ -h \"\$Homesoftlink\" ] && rm \$Homesoftlink
+                     |saygoodbye cmdrc
+                     |"
+        #
+    } >> "$Cmdrc"
+    return 0
 }
 
 create_sshenv() {               # Helper scripts for running ssh server in container
