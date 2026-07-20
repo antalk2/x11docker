@@ -14780,35 +14780,57 @@ create_containerrc() {
     return 0
 }
 
-create_cmdrc() {                # This script runs as unprivileged user in container and starts the final command
+# Function: create_cmdrc
+#
+# Brief: This script runs as unprivileged user in container and starts
+#        the final command. Started from containerrc
+#
+#
+create_cmdrc() {
   local Line
 
-  {
-    echo "#! /bin/sh
-# Created startscript for cmdrc containing final container command
+  { # begin redirection to cmdrc
+      trim_to_bar \
+          "|#! /bin/sh
+           |# Created startscript for cmdrc containing final container command
+           |
+           |$(declare -f storeinfo_test_sh)
+           |$(declare -f storeinfo_drop_sh)
+           |$(declare -f storeinfo_add_kv_sh)
+           |$(declare -f saygoodbye)
+           |$(declare -f waitfortheend)
+           |$(declare -f rocknroll)
+           |$Messagefifofuncs
+           |
+           |Messagefile=$(convertpath share "$Messagefifo")
+           |Storeinfofile=\"$(convertpath share "$Storeinfofile")\"
+           |Timetosaygoodbyefile=$(convertpath share "$Timetosaygoodbyefile")
+           |
+           |if [ -n \"\$DBUS_SESSION_BUS_ADDRESS\" ] ; then
+           |    echo 'cmdrc_note: before dbus-update-activation-environment'
+           |    dbus-update-activation-environment \\
+           |       --verbose                       \\
+           |       --systemd                       \\
+           |       DBUS_SESSION_BUS_ADDRESS        \\
+           |       DISPLAY                         \\
+           |       XAUTHORITY                      \\
+           |       WAYLAND_DISPLAY                 \\
+           |       XDG_RUNTIME_DIR                 \\
+           |       >$(convertpath share "$Containerlogfile") 2>&1
+           |fi
+           |"
+      #
+      trim_to_bar \
+          "|
+           |while rocknroll; do
+           |  [ -e '$(convertpath share $Sharefolder/xhostready)' ] && break
+           |  sleep 0.1
+           |  verbose 'cmdrc(): Waiting for /x11docker/xhostready'
+           |done
+           |"
+      #
 
-$(declare -f storeinfo_test_sh)
-$(declare -f storeinfo_drop_sh)
-$(declare -f storeinfo_add_kv_sh)
-$(declare -f saygoodbye)
-$(declare -f waitfortheend)
-$(declare -f rocknroll)
-$Messagefifofuncs
-Messagefile=$(convertpath share "$Messagefifo")
-Storeinfofile=\"$(convertpath share "$Storeinfofile")\"
-Timetosaygoodbyefile=$(convertpath share "$Timetosaygoodbyefile")
-
-[ -n \"\$DBUS_SESSION_BUS_ADDRESS\" ] && dbus-update-activation-environment --verbose --systemd DBUS_SESSION_BUS_ADDRESS DISPLAY XAUTHORITY WAYLAND_DISPLAY XDG_RUNTIME_DIR >$(convertpath share "$Containerlogfile") 2>&1
-"
-    echo "
-while rocknroll; do
-  [ -e '$(convertpath share $Sharefolder/xhostready)' ] && break
-  sleep 0.1
-  verbose 'cmdrc(): Waiting for /x11docker/xhostready'
-done
-"
-
-    # --runasuser commands added here
+      # --runasuser commands added here
     [ -n "$Runasuser" ] && {
       while read Line; do
         # The echoed string containing the debugnote command should not contain a newline character
