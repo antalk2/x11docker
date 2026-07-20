@@ -14670,6 +14670,7 @@ create_containerrc() {
              |"
         #
 
+        echo '# Containerusershell'
         case "$Containerusershell" in
             auto)
                 trim_to_bar "|if   have_command /bin/bash
@@ -14682,25 +14683,32 @@ create_containerrc() {
                 echo "export $(escapestring "SHELL=$Containerusershell")"
                 ;;
         esac
+
+        echo '# ContainerenvironmentArray'
         while read -r Line ; do
             echo "export $(escapestring "$Line")"
         done < <(store_runoption_dump_env)
 
-        [ "$Xauthentication" = "no" ] && echo "unset XAUTHORITY && export XAUTHORITY"
+        if [ "$Xauthentication" = "no" ] ; then
+            echo "unset XAUTHORITY && export XAUTHORITY"
+        fi
 
         trim_to_bar \
-            "|
-             |if [ -n '$g_Workdir' ] && [ -d '$g_Workdir' ] ; then
+            "|# set PWD
+             |g_Workdir='${g_Workdir}'
+             |if [ -n \"\$g_Workdir\" ] && [ -d \"\$g_Workdir\" ] ; then
              |    # WORKDIR in image or option --workdir
-             |    cd '$g_Workdir'
+             |    cd \"\$g_Workdir\"
              |elif [ -d \"\$HOME\" ] ; then
              |    cd \"\$HOME\"
              |fi
              |
+             |# Create Containerenvironmentfile='Containerenvironmentfile'
              |unset -f rmcr
              |env >> $(convertpath share "$Containerenvironmentfile")
              |verbose \"Container environment:
              |\$(env | sort)\"
+             |# end container environment (--env)
              |"
         #
 
