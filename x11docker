@@ -328,7 +328,7 @@ nlsw_set_difference() {
   B="$( echo "$2" | as_newline_separated_words | LC_ALL=C sort -u )"
   # grep considers newline-separated list of patterns as alternatives to match.
   # -v selects lines of A that are not in B
-  echo "$A" | grep -Fvx "$B"
+  echo "$A" | grep -Fvx -- "$B"
 }
 
 # Function: case_match
