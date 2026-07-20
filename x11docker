@@ -19841,7 +19841,9 @@ declare_variables() {           # declare global variables
   # Autochooseserver : --auto: automatic choice of X server (default)
   Autochooseserver="yes"
 
-  # Checkforopenwindow : --checkwindow  yes/no
+  # Checkforopenwindow : --checkwindow  yes/""/window_identifier
+  # where window_identifier is looked for using xwininfo, in the window title
+  #
   Checkforopenwindow=""
 
   # Cleanxhost : --clean-xhost: remove xhost access policies on host X
