@@ -15434,65 +15434,79 @@ rootrc_prepare_dbus() {
   return 0
 } # end rootrc_prepare_dbus()
 
-
+# Function: rootrc_prepare_init_openrc
+#
 rootrc_prepare_init_openrc() {
     # BackendKind_host BackendKind_in_output
 
-  echo "
-# --init=openrc
+    trim_to_bar "|
+                 |# begin rootrc_prepare_init_openrc
+                 |# --init=openrc
+                 |
+                 |# Tell openrc that it runs in a container
+                 |sed -e 's/#rc_sys=\"\"/rc_sys=\"$g_BackendKind\"/g' -i /etc/rc.conf
+                 |
+                 |# Create and enable x11docker service containing container command
+                 |trim_to_bar \"|#!/sbin/openrc-run
+                 |              |name=x11docker
+                 |              |depend() {
+                 |              |  after *
+                 |              |}
+                 |              |start() {
+                 |              |  ebegin 'Starting x11docker-agetty'
+                 |              |  /usr/local/bin/x11docker-agetty
+                 |              |  openrc-shutdown --poweroff 0
+                 |              |  shutdown 0
+                 |              |  halt
+                 |              |  halt -f
+                 |              |  eend \$?
+                 |              |}
+                 |              |\" > /etc/init.d/x11docker.service
+                 |
+                 |chmod +x /etc/init.d/x11docker.service
+                 |rc-update add x11docker.service default
+                 |
+                 |# DBus service
+                 |if [ ! -e /etc/init.d/dbus ] ; then
+                 |  trim_to_mark '|#!/sbin/openrc-run
+                 |                |start() {
+                 |                |  ebegin \"Starting D-BUS system messagebus\"
+                 |                |  /usr/bin/dbus-uuidgen --ensure=/etc/machine-id
+                 |                |  mkdir -p /var/run/dbus
+                 |                |  start-stop-daemon --start --pidfile /var/run/dbus.pid
+                 |                : --exec /usr/bin/dbus-daemon -- --system
+                 |                |  eend \$?
+                 |                |}
+                 |                |stop() {
+                 |                |  ebegin \"Stopping D-BUS system messagebus\"
+                 |                |  start-stop-daemon --stop --pidfile /var/run/dbus.pid
+                 |                |  retval=\$?
+                 |                |  eend \${retval}
+                 |                |  [ -S /var/run/dbus/system_bus_socket ]
+                 |                : && rm -f /var/run/dbus/system_bus_socket
+                 |                |  return \${retval}
+                 |                |}
+                 |                |reload() {
+                 |                |  ebegin \"Reloading D-BUS messagebus config\"
+                 |                |  /usr/bin/dbus-send --print-reply --system --type=method_call
+                 |                : --dest=org.freedesktop.DBus / org.freedesktop.DBus.ReloadConfig
+                 |                : > /dev/null
+                 |                |  retval=\$?
+                 |                |  eend \${retval}
+                 |                |  return \${retval}
+                 |                |}
+                 |                |' >/etc/init.d/dbus
+                 |  chmod +x /etc/init.d/dbus
+                 |fi
+                 |verbose 'DBus: enabling dbus service'
+                 |rc-update add dbus default
+                 |# end rootrc_prepare_init_openrc
+                 |"
+    #
+    return 0
+} # end rootrc_prepare_init_openrc
 
-# Tell openrc that it runs in a container
-sed -e 's/#rc_sys=\"\"/rc_sys=\"$g_BackendKind\"/g' -i /etc/rc.conf
 
-# Create and enable x11docker service containing container command
-printf \"#!/sbin/openrc-run
-name=x11docker
-depend() {
-  after *
-}
-start() {
-  ebegin 'Starting x11docker-agetty'
-  /usr/local/bin/x11docker-agetty
-  openrc-shutdown --poweroff 0
-  shutdown 0
-  halt
-  halt -f
-  eend \$?
-}
-\" > /etc/init.d/x11docker.service
-chmod +x /etc/init.d/x11docker.service
-rc-update add x11docker.service default
-
-# DBus service
-[ -e /etc/init.d/dbus ] || echo '#!/sbin/openrc-run
-start() {
-  ebegin \"Starting D-BUS system messagebus\"
-  /usr/bin/dbus-uuidgen --ensure=/etc/machine-id
-  mkdir -p /var/run/dbus
-  start-stop-daemon --start --pidfile /var/run/dbus.pid --exec /usr/bin/dbus-daemon -- --system
-  eend \$?
-}
-stop() {
-  ebegin \"Stopping D-BUS system messagebus\"
-  start-stop-daemon --stop --pidfile /var/run/dbus.pid
-  retval=\$?
-  eend \${retval}
-  [ -S /var/run/dbus/system_bus_socket ] && rm -f /var/run/dbus/system_bus_socket
-  return \${retval}
-}
-reload() {
-  ebegin \"Reloading D-BUS messagebus config\"
-  /usr/bin/dbus-send --print-reply --system --type=method_call --dest=org.freedesktop.DBus / org.freedesktop.DBus.ReloadConfig > /dev/null
-  retval=\$?
-  eend \${retval}
-  return \${retval}
-}
-' >/etc/init.d/dbus && chmod +x /etc/init.d/dbus
-verbose 'DBus: enabling dbus service'
-rc-update add dbus default
-"
-  return 0
-}
 rootrc_prepare_init_runit() {
   echo "
 # --init=runit
