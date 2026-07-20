@@ -14863,7 +14863,15 @@ create_cmdrc() {
       # contain a newline character to avoid problems with the
       # generated cmdrc.
       #
-      echo "debugnote \"cmdrc: Running container command: $g_Containerentrypoint $g_Containercommand\""
+      trim_to_bar  "|
+                    |g_Containerentrypoint='$g_Containerentrypoint'
+                    |g_Containercommand=$(printf %q  "$g_Containercommand" )
+                    |"
+      trim_to_mark "|debugnote
+                    : \"cmdrc: Running container command:
+                    : \$g_Containerentrypoint \$g_Containercommand
+                    :\"
+                    |"
       #
     case "$Forwardstdin" in
       yes) echo "$g_Containerentrypoint $g_Containercommand <$(convertpath share "$Cmdstdinfifo")" ;;
