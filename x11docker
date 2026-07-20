@@ -14987,7 +14987,7 @@ create_sshenv() {
 # Function: rootrc_create_helperscripts
 #
 # Globals:
-#    Messagefifofuncs_escaped
+#    Messagefifofuncs_escaped_1
 #    Messagefifo
 #    Containerrc
 #
@@ -15002,42 +15002,60 @@ create_sshenv() {
 # stdout goes to Sharefolder/containerrootrc
 #
 rootrc_create_helperscripts() {
-  trim_to_bar "|
-               |# Create some helper scripts
-               |
-               |mkdir -p /usr/local/bin
-               |
-               |### x11docker-message
-               |echo \"#! /bin/sh
-               |# Send messages to x11docker on host.
-               |# To be sourced by other scripts.
-               |$Messagefifofuncs_escaped
-               |Messagefile=$(convertpath share "$Messagefifo")
-               |\" >/usr/local/bin/x11docker-message
-               |"
-  #
-  trim_to_bar "|
-               |### x11docker-su
-               |echo \"#! /bin/sh
-               |# User switch from root in containerrootrc to unprivileged user in containerrc.
-               |# Called e.g. by x11docker-agetty.
-               |. /usr/local/bin/x11docker-message
-               |debugnote 'Running x11docker-su'
-               |chmod +x $(convertpath share "$Containerrc")
-               |\" >/usr/local/bin/x11docker-su
-               |
-               |"
-  #
+    #
+    echo "# begin rootrc_create_helperscripts"
+    #
+    # x11docker-message
+    trim_to_bar "|
+                 |# Create some helper scripts
+                 |
+                 |mkdir -p /usr/local/bin
+                 |
+                 |### x11docker-message
+                 |{
+                 |    trim_to_bar \"|#! /bin/sh
+                 |                  |# Send messages to x11docker on host.
+                 |                  |# To be sourced by other scripts.
+                 |                  |# Provides: note debugnote error
+                 |                  |\"
+                 |    #
+                 |    echo \"$Messagefifofuncs_escaped_1\"
+                 |    echo \"Messagefile=$(convertpath share "$Messagefifo")\"
+                 |    #
+                 |} >/usr/local/bin/x11docker-message
+                 |"
+    #
+    # x11docker-su : run Containerrc as g_Containerusername under /bin/sh
+    trim_to_bar "|
+                 |### x11docker-su
+                 |trim_to_bar \"|#! /bin/sh
+                 |              |# User switch from root in containerrootrc to unprivileged user in containerrc.
+                 |              |# Called e.g. by x11docker-agetty.
+                 |              |
+                 |              |. /usr/local/bin/x11docker-message
+                 |              |debugnote 'Running x11docker-su'
+                 |              |chmod +x $(convertpath share "$Containerrc")
+                 |              |
+                 |              |\" >/usr/local/bin/x11docker-su
+                 |
+                 |"
+    #
   
-  case "$g_BackendKind" in
-      proot)
-          echo "echo 'exec /bin/sh - $(convertpath share "$Containerrc")'                          >>/usr/local/bin/x11docker-su"
-          ;;
-      docker|podman|nerdctl)
-          echo "echo \"exec su - -s /bin/sh  \$g_Containerusername $(convertpath share "$Containerrc")\" >>/usr/local/bin/x11docker-su"
-          ;;
-      # host) ;; # BackendKind_host
-  esac
+    case "$g_BackendKind" in
+        proot)
+            echo "echo 'exec /bin/sh - $(convertpath share "$Containerrc")' >>/usr/local/bin/x11docker-su"
+            ;;
+        docker|podman|nerdctl)
+            #
+            # su [options] [-] [user [argument...]]
+            # -s, --shell=shell : Run the specified shell
+            # -, -l, --login    : Start the shell as a login shell
+            #                     with an environment similar to a real login
+            #
+            echo "echo \"exec su - -s /bin/sh  \$g_Containerusername $(convertpath share "$Containerrc")\" >>/usr/local/bin/x11docker-su"
+            ;;
+        # host) ;; # BackendKind_host
+    esac
 
   echo "
 chmod +x /usr/local/bin/x11docker-su
@@ -21027,9 +21045,9 @@ declare_variables() {           # declare global variables
      |error()     {  echo "$*:ERROR"     | sed "s/\$/ /" >>$Messagefile ;  exit 64 ; }
      |stdout()    {  echo "$*:STDOUT"    | sed "s/\$/ /" >>$Messagefile ; }' )"
 
-  Messagefifofuncs_escaped="$(trim_to_bar \
+  Messagefifofuncs_escaped_1="$(trim_to_bar \
     '|
-     |# Messagefifofuncs_escaped
+     |# Messagefifofuncs_escaped_1
      |warning()   {  echo \"\$*:WARNING\"   >>\$Messagefile ; }
      |note()      {  echo \"\$*:NOTE\"      >>\$Messagefile ; }
      |verbose()   {  echo \"\$*:VERBOSE\"   >>\$Messagefile ; }
