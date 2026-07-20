@@ -14410,10 +14410,12 @@ create_containerrc() {
              |# Created startscript for docker run used as container command.
              |# Runs as unprivileged user in container.
              |
-             |[ '$g_Interactive' = 'no' ] && exec >> $(convertpath share "$Containerlogfile") 2>&1
+             |g_Interactive='${g_Interactive}'
+             |[ \"\$g_Interactive\" = 'no' ] && exec >> $(convertpath share "$Containerlogfile") 2>&1
              |"
         #
         echo
+        echo '# begin_functions'
         declare -f mysleep
         declare -f pspid_sh
         declare -f rocknroll
@@ -14438,12 +14440,14 @@ create_containerrc() {
         #
         trim_to_bar \
             "|$Messagefifofuncs
+             |# end_functions
              |
              |Messagefile=$(   convertpath share "$Messagefifo"   )
              |Storeinfofile=$( convertpath share "$Storeinfofile" )
              |Storepidfile=$Sharefoldercontainer/store.pids
              |Timetosaygoodbyefile=$( convertpath share "$Timetosaygoodbyefile" )
              |
+             |# Wait for containerrootrc=ready
              |waitforlogentry_sh containerrc \$Storeinfofile containerrootrc=ready '' infinity
              |debugnote 'Running containerrc: Unprivileged user commands in container'
              |
@@ -14646,69 +14650,72 @@ create_containerrc() {
 
         trim_to_bar \
             "|
-             |export TERM=xterm
+             |# container environment (--env) in $Containerenvironmentfile
+             |{
+             |    export TERM=xterm
              |
-             |storeinfo_test_sh locale && export LANG=\"\$(storeinfo_dump_sh locale)\"
+             |    if storeinfo_test_sh locale ; then
+             |        export LANG=\"\$(storeinfo_dump_sh locale)\"
+             |    fi
              |
-             |if [ ! -e \"$Hostlocaltimefile\" ] ; then
-             |    export TZ=$Hostutctime
-             |fi
-             |if [ \"\$(date -Ihours)\" != \"$(date -Ihours)\" ] ; then
-             |    export TZ=$Hostutctime
-             |fi
+             |    if [ ! -e \"$Hostlocaltimefile\" ] ; then
+             |        export TZ=$Hostutctime
+             |    fi
+             |    if [ \"\$(date -Ihours)\" != \"$(date -Ihours)\" ] ; then
+             |        export TZ=$Hostutctime
+             |    fi
              |
-             |if [ \"\$DEBIAN_FRONTEND\" = noninteractive ] ; then
-             |    unset  DEBIAN_FRONTEND
-             |    export DEBIAN_FRONTEND
-             |fi
-             |if [ \"\$DEBIAN_FRONTEND\" = newt ] ; then
-             |    unset  DEBIAN_FRONTEND
-             |    export DEBIAN_FRONTEND
-             |fi
+             |    if [ \"\$DEBIAN_FRONTEND\" = noninteractive ] ; then
+             |        unset  DEBIAN_FRONTEND
+             |        export DEBIAN_FRONTEND
+             |    fi
+             |    if [ \"\$DEBIAN_FRONTEND\" = newt ] ; then
+             |        unset  DEBIAN_FRONTEND
+             |        export DEBIAN_FRONTEND
+             |    fi
              |
-             |# container environment (--env)
              |"
         #
 
-        echo '# Containerusershell'
+        echo '    # Containerusershell'
         case "$Containerusershell" in
             auto)
-                trim_to_bar "|if   have_command /bin/bash
-                             |then export SHELL=/bin/bash
-                             |else export SHELL=/bin/sh
-                             |fi
+                trim_to_bar "|    if   have_command /bin/bash
+                             |    then export SHELL=/bin/bash
+                             |    else export SHELL=/bin/sh
+                             |    fi
                              |"
                 ;;
             *)
-                echo "export $(escapestring "SHELL=$Containerusershell")"
+                echo "    export $(escapestring "SHELL=$Containerusershell")"
                 ;;
         esac
 
-        echo '# ContainerenvironmentArray'
+        echo '    # ContainerenvironmentArray'
         while read -r Line ; do
-            echo "export $(escapestring "$Line")"
+            echo "    export $(escapestring "$Line")"
         done < <(store_runoption_dump_env)
 
         if [ "$Xauthentication" = "no" ] ; then
-            echo "unset XAUTHORITY && export XAUTHORITY"
+            echo "    unset XAUTHORITY && export XAUTHORITY"
         fi
 
         trim_to_bar \
-            "|# set PWD
-             |g_Workdir='${g_Workdir}'
-             |if [ -n \"\$g_Workdir\" ] && [ -d \"\$g_Workdir\" ] ; then
-             |    # WORKDIR in image or option --workdir
-             |    cd \"\$g_Workdir\"
-             |elif [ -d \"\$HOME\" ] ; then
-             |    cd \"\$HOME\"
-             |fi
+            "|    # set PWD
+             |    g_Workdir='${g_Workdir}'
+             |    if [ -n \"\$g_Workdir\" ] && [ -d \"\$g_Workdir\" ] ; then
+             |        # WORKDIR in image or option --workdir
+             |        cd \"\$g_Workdir\"
+             |    elif [ -d \"\$HOME\" ] ; then
+             |        cd \"\$HOME\"
+             |    fi
              |
-             |# Create Containerenvironmentfile='Containerenvironmentfile'
-             |unset -f rmcr
-             |env >> $(convertpath share "$Containerenvironmentfile")
-             |verbose \"Container environment:
-             |\$(env | sort)\"
-             |# end container environment (--env)
+             |    # Create Containerenvironmentfile='$Containerenvironmentfile'
+             |    unset -f rmcr
+             |    env >> $(convertpath share "$Containerenvironmentfile")
+             |    verbose \"Container environment:
+             |    \$(env | sort)\"
+             |} # end container environment (--env)
              |"
         #
 
