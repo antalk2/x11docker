@@ -15247,9 +15247,12 @@ rootrc_create_locale() {
     return 0
 } # end rootrc_create_locale()
 
+# Function: rootrc_nvidia_installer
+# Brief: Print code to install NVIDIA driver in container.
+#
+# Note: $Nvidiainstallerfile must be shared with container as $Nvidiacontainerfile
+#
 rootrc_nvidia_installer() {
-  # print code to install NVIDIA driver in container
-  # $Nvidiainstallerfile must be shared with container as $Nvidiacontainerfile
   ### FIXME $Containerlibc
 
   echo "
