@@ -9097,11 +9097,10 @@ create_modelinefile() {
         mkfile "$Newmodelinefile"
         for     Ycount in 25 30 40 45 50 55 60 65 70 75 80 85 90 95 100; do
             for Xcount in 25 30 40 45 50 55 60 65 70 75 80 85 90 95 100; do
-                Modeline="$( cvt                                                                \
-                               "$(awk -v a="$X" -v b="$Xcount" 'BEGIN {print (a * b / 100)}' )" \ 
-                               "$(awk -v a="$Y" -v b="$Ycount" 'BEGIN {print (a * b / 100)}' )" \
-                            | tail -n1
-                          )"
+                Modeline="$( cvt                                                                 \
+                               "$( awk -v a="$X" -v b="$Xcount" 'BEGIN {print (a * b / 100)}' )" \
+                               "$( awk -v a="$Y" -v b="$Ycount" 'BEGIN {print (a * b / 100)}' )" \
+                            | tail -n1                                                           )"
                 #
                 Modeline="${Modeline//"_60.00"/""}" # "2000x1920_60.00" to "2000x1920"
                 echo "$Modeline" >> "$Newmodelinefile"
