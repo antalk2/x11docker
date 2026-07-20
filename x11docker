@@ -11297,6 +11297,7 @@ create_xinitrc() {
             ;;
     esac
     trim_to_bar  "|done # while rocknroll
+                  |debugnote 'xinitrc: after Checkforopenwindow loop'
                   |saygoodbye
                   |"
   fi
