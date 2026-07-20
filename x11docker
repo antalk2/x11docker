@@ -14738,10 +14738,14 @@ create_containerrc() {
              |"
         #
 
+        #
+        # Finally: run Cmdrc=Sharefolder/cmdrc via "exec $Dbus sh"
+        #
         case "$g_Interactive" in
             no)
                 trim_to_bar \
-                    "|env LD_PRELOAD=                                        \\
+                    "|
+                     |env LD_PRELOAD=                                        \\
                      |    tail -f $( convertpath share "$Cmdstdoutlogfile" ) \\
                      |    2>/dev/null & Stdoutpid=\$!
                      |
