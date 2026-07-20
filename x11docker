@@ -15257,43 +15257,81 @@ rootrc_nvidia_installer() {
 
     trim_to_bar
     "|
+     |# begin rootrc_nvidia_installer
+     |
      |# Install NVIDIA driver
-     |#Nvidiaversion=\"\$(nvidia-settings -v 2>/dev/null | grep version | rev | cut -d' ' -f1 | rev)\"
+     |# Nvidiaversion=\"\$(nvidia-settings -v 2>/dev/null | grep version | rev | cut -d' ' -f1 | rev)\"
      |Nvidiaversion=\"\$(ls /lib/firmware/nvidia | grep -x -E '[0-9.]+')\"
-     |[ -n \"\$Nvidiaversion\" ] && note \"Found NVIDIA driver \$Nvidiaversion in image.\"
+     |
+     |if [ -n \"\$Nvidiaversion\" ] ; then
+     |    note \"Found NVIDIA driver \$Nvidiaversion in image.\"
+     |fi
+     |
      |case \"\$Nvidiaversion\" in
-     |  $Nvidiaversion) note 'NVIDIA driver version in image matches version on host. Skipping installation.' ;;
-     |  *)
-     |    Installationwillsucceed=maybe
-     |    case \"\$Containerlibc\" in
-     |      musl) note 'Option --gpu: Installing NVIDIA driver in container
-     |  systems based on musl libc like Alpine is not possible due to
-     |  proprietary closed source policy of NVIDIA corporation.'
-     |        Installationwillsucceed=no
+     |  $Nvidiaversion)
+     |      note 'NVIDIA driver version in image matches version on host. Skipping installation.'
      |      ;;
-     |    esac
-     |    [ \"\$Installationwillsucceed\" = \"maybe\" ] && {
-     |      debugnote 'rootrc_nvidia_installer(): Starting NVIDIA driver installation'
-     |      mkdir -m 1777 /tmp2
-     |      # provide fake tools to fool installer dependency check
-     |      ln -s /bin/true /tmp2/modprobe
-     |      ln -s /bin/true /tmp2/depmod
-     |      ln -s /bin/true /tmp2/lsmod
-     |      ln -s /bin/true /tmp2/rmmod
-     |      ln -s /bin/true /tmp2/ld
-     |      ln -s /bin/true /tmp2/objcopy
-     |      ln -s /bin/true /tmp2/insmod
-     |      Nvidiaoptions='--accept-license --no-runlevel-check --no-questions --no-backup --ui=none --no-kernel-module --no-nouveau-check'
-     |      env TMPDIR=/tmp2 PATH=\"/tmp2:\$PATH\" sh $Nvidiacontainerfile -A | grep -q -- '--install-libglvnd'        && Nvidiaoptions=\"\$Nvidiaoptions --install-libglvnd\"
-     |      env TMPDIR=/tmp2 PATH=\"/tmp2:\$PATH\" sh $Nvidiacontainerfile -A | grep -q -- '--no-nvidia-modprobe'      && Nvidiaoptions=\"\$Nvidiaoptions --no-nvidia-modprobe\"
-     |      env TMPDIR=/tmp2 PATH=\"/tmp2:\$PATH\" sh $Nvidiacontainerfile -A | grep -q -- '--no-kernel-module-source' && Nvidiaoptions=\"\$Nvidiaoptions --no-kernel-module-source\"
-     |      env TMPDIR=/tmp2 PATH=\"/tmp2:\$PATH\" sh $Nvidiacontainerfile --tmpdir /tmp2 \$Nvidiaoptions || note 'ERROR: Installation of NVIDIA driver failed.
-     |  Run with option --verbose to see installer output.'
-     |      rm -R /tmp2 && unset TMPDIR
-     |      :
-     |    } || note 'Skipping installation of $Nvidiacontainerfile'
-     |  ;;
+     |  *)
+     |      Installationwillsucceed=maybe
+     |      case \"\$Containerlibc\" in
+     |        musl) note_ttm '|Option --gpu: Installing NVIDIA driver in container
+     |                        |  systems based on musl libc like Alpine is not possible due to
+     |                        |  proprietary closed source policy of NVIDIA corporation.'
+     |              #
+     |              Installationwillsucceed=no
+     |              ;;
+     |
+     |      esac
+     |      if [ \"\$Installationwillsucceed\" = \"maybe\" ] ; then
+     |          debugnote 'rootrc_nvidia_installer(): Starting NVIDIA driver installation'
+     |          mkdir -m 1777 /tmp2
+     |          # provide fake tools to fool installer dependency check
+     |          ln -s /bin/true /tmp2/modprobe
+     |          ln -s /bin/true /tmp2/depmod
+     |          ln -s /bin/true /tmp2/lsmod
+     |          ln -s /bin/true /tmp2/rmmod
+     |          ln -s /bin/true /tmp2/ld
+     |          ln -s /bin/true /tmp2/objcopy
+     |          ln -s /bin/true /tmp2/insmod
+     |
+     |          Nvidiaoptions=\"\$(trim_to_mark '|--accept-license --no-runlevel-check
+     |                                           : --no-questions --no-backup --ui=none
+     |                                           : --no-kernel-module --no-nouveau-check' )\"
+     |
+     |          if env TMPDIR=/tmp2 PATH=\"/tmp2:\$PATH\" sh $Nvidiacontainerfile -A \\
+     |             | grep -q -- '--install-libglvnd'                                 ;
+     |          then
+     |             Nvidiaoptions=\"\$Nvidiaoptions --install-libglvnd\"
+     |          fi
+     |
+     |          if env TMPDIR=/tmp2 PATH=\"/tmp2:\$PATH\" sh $Nvidiacontainerfile -A \\
+     |             | grep -q -- '--no-nvidia-modprobe'                                ;
+     |          then
+     |             Nvidiaoptions=\"\$Nvidiaoptions --no-nvidia-modprobe\"
+     |          fi
+     |          if env TMPDIR=/tmp2 PATH=\"/tmp2:\$PATH\" sh $Nvidiacontainerfile -A \\
+     |             | grep -q -- '--no-kernel-module-source'                           ;
+     |          then
+     |             Nvidiaoptions=\"\$Nvidiaoptions --no-kernel-module-source\"
+     |          fi
+     |
+     |          if ! env TMPDIR=/tmp2 PATH=\"/tmp2:\$PATH\" sh $Nvidiacontainerfile \\
+     |                 --tmpdir /tmp2 \$Nvidiaoptions                                ;
+     |          then
+     |              note_ttm '|ERROR: Installation of NVIDIA driver failed.
+     |                        |  Run with option --verbose to see installer output.'
+     |          fi
+     |
+     |          rm -R /tmp2 && unset TMPDIR
+     |          true
+     |      else
+     |          note 'Skipping installation of $Nvidiacontainerfile'
+     |      fi
+     |     ;; # Nvidiaversion *
      |esac
+     |
+     |# end rootrc_nvidia_installer
+     |
      |"
     #
     return 0
