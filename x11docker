@@ -15592,11 +15592,12 @@ rootrc_prepare_init_runit() {
                  |fi
                  |chmod +x /etc/runit/1
                  |
-                 |[ -e /etc/runit/2 ] || echo '#!/usr/bin/env sh
-                 |set -eu
-                 |runsvdir -P /service \"log: ..................................................................\"
-                 |' >/etc/runit/2
-                 |
+                 |if [ ! -e /etc/runit/2 ] ; then
+                 |   trim_to_bar '|#!/usr/bin/env sh
+                 |                |set -eu
+                 |                |runsvdir -P /service \"log: ..................................................................\"
+                 |                |' >/etc/runit/2
+                 |fi
                  |chmod +x /etc/runit/2
                  |
                  |[ -e /etc/runit/3 ] || echo \"#!/usr/bin/env sh
