@@ -15632,7 +15632,8 @@ rootrc_prepare_init_runit() {
                  |               |exec dbus-send --system / org.freedesktop.DBus.Peer.Ping > /dev/null 2> /dev/null
                  |               |' >/etc/sv/dbus/check
                  |  chmod +x /etc/sv/dbus/run /etc/sv/dbus/check
-                 |}
+                 |fi
+                 |
                  |verbose 'DBus: enabling dbus service'
                  |ln -s /etc/sv/dbus  /etc/runit/runsvdir/default  # void
                  |ln -s /etc/sv/dbus  /service                     # alpine
