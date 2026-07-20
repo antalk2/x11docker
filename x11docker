@@ -14930,17 +14930,38 @@ create_cmdrc() {
     return 0
 } # end create_cmdrc
 
-create_sshenv() {               # Helper scripts for running ssh server in container
-  # ssh -X environment
-  # helper script for ssh -X to set evnvironment variables
-  # Value of DISPLAY is a good guess only and can differ
-  
-  echo "#! /bin/bash
-# guessed environment variables for ssh -X access
-# can be sourced after running ssh -X" >> "$Sshenvscript"
-  [ "$Newdisplay" ]              && echo "export DISPLAY=localhost:10"                      >> "$Sshenvscript"
-  [ "$Xauthentication" != "no" ] && echo "export XAUTHORITY=$Containeruserhome/.Xauthority" >> "$Sshenvscript"
-  chmod +x "$Sshenvscript"
+# Function: create_sshenv
+# Brief: Helper script for running ssh server in container
+#
+# Description: Creates Sshenvscript=Sharefolder/sshenv
+#
+# Used-by: main()
+#
+# Globals:
+#    Sshenvscript
+#    Newdisplay
+#    Xauthentication
+#    Containeruserhome
+#
+create_sshenv() {
+    # ssh -X environment
+    # Helper script for ssh -X to set environment variables
+    # Value of DISPLAY is a good guess only and can differ
+    {
+        trim_to_bar "|#! /bin/bash
+                     |# guessed environment variables for ssh -X access
+                     |# can be sourced after running ssh -X
+                     |"
+        #
+        if [ "$Newdisplay" ] ; then
+            echo "export DISPLAY=localhost:10"
+        fi
+        if [ "$Xauthentication" != "no" ] ; then
+            echo "export XAUTHORITY=$Containeruserhome/.Xauthority"
+        fi
+    } >> "$Sshenvscript"
+    #
+    chmod +x "$Sshenvscript"
 }
 
 # code pieces for containerrootrc
@@ -21303,8 +21324,10 @@ main() {
     if [ "$Containersetup" = "yes" ] ; then
         create_containerrc
         verbose "Generated containerrc:${NEWLINE}$(nl -ba <$Containerrc)"
+        #
         create_cmdrc
         verbose "Generated cmdrc:${NEWLINE}$(nl -ba <$Cmdrc)"
+        #
         create_sshenv
         verbose "Generated sshenv:${NEWLINE}$(nl -ba <$Sshenvscript)"
     fi
