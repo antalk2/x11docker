@@ -14898,7 +14898,7 @@ create_cmdrc() {
         #
     } >> "$Cmdrc"
     return 0
-}
+} # end create_cmdrc
 
 create_sshenv() {               # Helper scripts for running ssh server in container
   # ssh -X environment
