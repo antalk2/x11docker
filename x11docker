@@ -10665,6 +10665,7 @@ create_xinitrc() {
     declare -f trim_to_bar
     declare -f ws_colon_is_continuation_filter
     declare -f trim_to_mark
+
     declare -f error_ttm
     declare -f debugnote_ttm
     declare -f note_ttm
@@ -14064,6 +14065,12 @@ create_containerrootrc() {
     declare -f storeinfo_drop_sh
     declare -f storeinfo_add_kv_sh
     declare -f rocknroll
+    #
+    declare -f trim_to_bar_filter
+    declare -f trim_to_bar
+    declare -f ws_colon_is_continuation_filter
+    declare -f trim_to_mark
+    #
     echo "$Messagefifofuncs"
 
     trim_to_mark \
