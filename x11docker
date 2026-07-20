@@ -15146,6 +15146,7 @@ rootrc_create_helperscripts() {
                  |
                  |"
     #
+    echo "# end rootrc_create_helperscripts"
     return 0
 }
 
