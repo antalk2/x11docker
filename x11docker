@@ -14414,7 +14414,7 @@ create_containerrootrc() {
         esac
     fi
     return 0
-} # create_containerrootrc()
+} # end create_containerrootrc()
 
 
 # Function: create_containerrc
@@ -14454,10 +14454,12 @@ create_containerrc() {
         declare -f storeinfo_test_sh
         declare -f storepid
         echo
+        #
         declare -f trim_to_bar_filter
         declare -f trim_to_bar
         declare -f trim_to_mark
         declare -f ws_colon_is_continuation_filter
+        #
         echo
         # declare -f error_ttm
         declare -f debugnote_ttm
@@ -14493,9 +14495,12 @@ create_containerrc() {
             proot)
                 echo
                 echo "# begin g_BackendKind=proot"
-                # set another hostname ### FIXME fails
+                #
+                # Set another hostname ### FIXME fails
+                #
                 sed "s/$(hostname)/$g_BackendKind-$g_Imagebasename/g" "/etc/hosts" > "$g_Rootfs/etc/hosts"
                 echo "$g_BackendKind-$g_Imagebasename"                             > "$g_Rootfs/etc/hostname"
+                #
                 # clean environment variables
                 while read -r Line; do
                     Line="$(cut -d= -f1 <<< "$Line")"
