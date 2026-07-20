@@ -14834,16 +14834,18 @@ create_cmdrc() {
       #
 
       # --runasuser commands added here
-    if [ -n "$Runasuser" ] ; then
-      while read Line; do
-        # The echoed string containing the debugnote command should not contain a newline character
-        # to avoid problems with the generated cmdrc.
-        echo "debugnote \"cmdrc: running --runsasuser command: $Line\""
-        echo "
-$Line
-"
-      done <<< "$(grep . <<< "$Runasuser")"
-    fi
+      if [ -n "$Runasuser" ] ; then
+          while read Line; do
+              # The echoed string containing the debugnote command should not contain a newline character
+              # to avoid problems with the generated cmdrc.
+              echo "debugnote \"cmdrc: running --runsasuser command: $Line\""
+              trim_to_bar \
+                  "|
+                   |$Line
+                   |"
+              #
+          done <<< "$(grep . <<< "$Runasuser")"
+      fi
 
     # The echoed string containing the debugnote command should not contain a newline character
     # to avoid problems with the generated cmdrc.
