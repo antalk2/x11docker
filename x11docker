@@ -11279,7 +11279,8 @@ create_xinitrc() {
             trim_to_bar "|  if ! xwininfo -root -children        \\
                          |       | grep -q '$Checkforopenwindow' ;
                          |  then break
-                         |  fi"
+                         |  fi
+                         |"
             ;;
     esac
     trim_to_bar  "|done # while rocknroll
