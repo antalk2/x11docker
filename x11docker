@@ -14211,7 +14211,9 @@ create_containerrootrc() {
     if [ -n "$Hostlocaltimefile" ] ; then rootrc_timezone ; fi
 
     printf "\n# Langwunsch:  rootrc_create_locale()\n"
-    if [ -n "$Langwunsch"        ] ; then rootrc_create_locale ; fi
+    if [ -n "$Langwunsch"        ] ; then
+        rootrc_create_locale # in create_containerrootrc()
+    fi
     
     printf "\n# Installing NVIDIA driver:  rootrc_nvidia_installer()\n"
     if [ "$Nvidiainstallerfile" ] && [ "$Sharegpu" = "direct" ] ; then
@@ -15150,68 +15152,97 @@ rootrc_create_helperscripts() {
     return 0
 }
 
+# Function: rootrc_create_locale
+# Used-by: create_containerrootrc()
+#
 rootrc_create_locale() {
-  local Line
-  while read Line; do
-    echo "
-# --lang: Language locale $Line
-verbose \"Searching for language locale matching $Line\"
-Locales=\"\$(locale -a)\"
-Langall=\"\$(cat /usr/share/i18n/SUPPORTED | grep -E 'UTF-8|utf8' | cut -d' ' -f1 | cut -d. -f1 | cut -d@ -f1 | sort | uniq)\"
-Langland=\"\$(echo $Line | cut -d. -f1)\"
-Langcontainer=''
+    echo "# begin rootrc_create_locale"
+    local Line
+    while read Line; do
+        trim_to_bar \
+            "|
+             |# --lang: Language locale $Line
+             |verbose \"Searching for language locale matching $Line\"
+             |Locales=\"\$(locale -a)\"
+             |Langall=\"\$( cat /usr/share/i18n/SUPPORTED \\
+             |              | grep -E 'UTF-8|utf8'        \\
+             |              | cut -d' ' -f1               \\
+             |              | cut -d. -f1                 \\
+             |              | cut -d@ -f1                 \\
+             |              | sort                        \\
+             |              | uniq                        \\
+             |              )\"
+             |Langland=\"\$(echo $Line | cut -d. -f1)\"
+             |Langcontainer=''
+             |
+             |if ! echo \"\$Langland\" | grep -q '_' ; then
+             |    # fr to fr_FR    de to de_DE ...
+             |    Langland=\"\$(     echo \$Langland | tr '[:upper:]' '[:lower:]'
+             |                 )_\$( echo \$Langland | tr '[:lower:]' '[:upper:]'
+             |                     )\"
+             |    if   ! echo \"\$Langall\" | grep -q \"\$Langland\" ; then
+             |        if echo \"\$Langall\" | grep -i -q \"$Line\" ; then
+             |            Langland=\"\$(echo \"\$Langall\" | grep -i -m1 \"$Line\")\"
+             |        fi
+             |    fi
+             |fi
+             |
+             |Langland=\"\$(     echo \"\$Langland\" | cut -d_ -f1 | tr '[:upper:]' '[:lower:]'
+             |             )_\$( echo \"\$Langland\" | cut -d_ -f2 | tr '[:lower:]' '[:upper:]' )\"
+             |
+             |if echo \"\$Locales\" | grep -q \"\$Langland.UTF-8\" ; then
+             |    Langcontainer=\"\$Langland.UTF-8\"
+             |fi
+             |if echo \"\$Locales\" | grep -q \"\$Langland.utf8\"  ; then
+             |    Langcontainer=\"\$Langland.utf8\"
+             |fi
+             |
+             |if [ -z \"\$Langcontainer\" ] ; then
+             |    if [ ! -e /usr/share/i18n/SUPPORTED ] ; then
+             |        note_ttm \"|Option --lang: /usr/share/i18n/SUPPORTED not found.
+             |                   |  Please install package 'locales' in image (belongs to glibc).
+             |                   |  Look here to find a package for your image system:
+             |                   |  https://github.com/mviereck/x11docker/wiki/dependencies#dependencies-in-image\"
+             |    fi
+             |
+             |    Langcontainer=\"\$Langland.utf8\"
+             |    note \"Option --lang: Generating language locale \$Langcontainer\".
+             |    if ! have_command localedef ; then
+             |        note_ttm '|Option --lang: Command localedef not found in image.
+             |                  |  Need it for language locale creation.
+             |                  |  Look here to find a package for your image system:
+             |                  |  https://github.com/mviereck/x11docker/wiki/dependencies#dependencies-in-image'
+             |    fi
+             |
+             |    if ! localedef --verbose --force -i \"\$Langland\" -f UTF-8 \$Langcontainer ; then
+             |        verbose \"localedef exit code: \$?\"
+             |    fi
+             |  
+             |    if ! locale -a | grep -q \"\$Langcontainer\" ; then
+             |        note \"Option --lang: Generation of locale \$Langcontainer failed.\"
+             |        Langcontainer=''
+             |    fi
+             |else
+             |    debugnote \"Option --lang: Found locale in image: \$Langcontainer\"
+             |fi
+             |
+             |if [ -n \"\$Langcontainer\" ] ; then
+             |    storeinfo_add_kv_sh locale=\"\$Langcontainer\"
+             |    echo \"LANG=\$Langcontainer\" > /etc/default/locale
+             |else
+             |    note 'Option --lang: Desired locale for '$Line' not found and not generated.'
+             |fi
+             |
+             |# end --lang $Line
+             |
+             |"
+    done < <( tac <<< "$Langwunsch" | grep . || : )
 
-echo \"\$Langland\" | grep -q '_' || {
-  Langland=\"\$(echo \$Langland | tr '[:upper:]' '[:lower:]')_\$(echo \$Langland | tr '[:lower:]' '[:upper:]')\"
-  echo \"\$Langall\" | grep -q \"\$Langland\" || {
-    echo \"\$Langall\" | grep -i -q \"$Line\" && {
-      Langland=\"\$(echo \"\$Langall\" | grep -i -m1 \"$Line\")\"
-    }
-  }
-}
-
-Langland=\"\$(echo \"\$Langland\" | cut -d_ -f1 | tr '[:upper:]' '[:lower:]')_\$(echo \"\$Langland\" | cut -d_ -f2 | tr '[:lower:]' '[:upper:]')\"
-
-echo \"\$Locales\" | grep -q \"\$Langland.UTF-8\" && Langcontainer=\"\$Langland.UTF-8\"
-echo \"\$Locales\" | grep -q \"\$Langland.utf8\"  && Langcontainer=\"\$Langland.utf8\"
-
-[ -z \"\$Langcontainer\" ] && {
-  [ -e /usr/share/i18n/SUPPORTED ] || note \"Option --lang: /usr/share/i18n/SUPPORTED not found.
-  Please install package 'locales' in image (belongs to glibc).
-  Look here to find a package for your image system:
-  https://github.com/mviereck/x11docker/wiki/dependencies#dependencies-in-image\"
-
-  Langcontainer=\"\$Langland.utf8\"
-  note \"Option --lang: Generating language locale \$Langcontainer\".
-  command -v localedef >/dev/null || note 'Option --lang: Command localedef not found in image.
-  Need it for language locale creation.
-  Look here to find a package for your image system:
-  https://github.com/mviereck/x11docker/wiki/dependencies#dependencies-in-image'
-  
-  localedef --verbose --force -i \"\$Langland\" -f UTF-8 \$Langcontainer || verbose \"localedef exit code: \$?\"
-  
-  locale -a | grep -q \"\$Langcontainer\" || {
-    note \"Option --lang: Generation of locale \$Langcontainer failed.\"
-    Langcontainer=''
-  }
-} || {
-  debugnote \"Option --lang: Found locale in image: \$Langcontainer\"
-}
-
-[ \"\$Langcontainer\" ] && {
-  storeinfo_add_kv_sh locale=\"\$Langcontainer\"
-  echo \"LANG=\$Langcontainer\" > /etc/default/locale
-} || {
-  note 'Option --lang: Desired locale for '$Line' not found and not generated.'
-}
-"
-  done < <(tac <<< "$Langwunsch" | grep . ||:)
-
-echo "
-debugnote \"Option --lang: Output of locale -a:
-\$(locale -a)\"
-"
-  return 0
+    echo
+    echo "debugnote \"Option --lang: Output of locale -a:${NEWLINE}\$(locale -a)\""
+    echo
+    echo "# end rootrc_create_locale"
+    return 0
 }
 
 rootrc_nvidia_installer() {
