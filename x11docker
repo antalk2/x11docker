@@ -15253,7 +15253,7 @@ rootrc_create_locale() {
 # Note: $Nvidiainstallerfile must be shared with container as $Nvidiacontainerfile
 #
 rootrc_nvidia_installer() {
-  ### FIXME $Containerlibc
+    ### FIXME $Containerlibc
 
     trim_to_bar
     "|
@@ -15335,11 +15335,15 @@ rootrc_nvidia_installer() {
      |"
     #
     return 0
-}
+} # end rootrc_nvidia_installer()
 
+# Function: rootrc_prepare_dbus
+#
 rootrc_prepare_dbus() {
     trim_to_bar \
         "|
+         |# begin rootrc_prepare_dbus
+         |
          |# check /etc/machine-id
          |[ -s /etc/machine-id ] || dbus-uuidgen >/etc/machine-id
          |# Prepare DBus services
@@ -15369,17 +15373,17 @@ rootrc_prepare_dbus() {
          |#      ### FIXME test
          |#      Service=/etc/init.d/elogind
          |#      echo 'output_log=$(convertpath share $Containerlogfile)' >> \$Service
-         |#      echo 'error_log=$(convertpath share $Containerlogfile)' >> \$Service
+         |#      echo 'error_log=$( convertpath share $Containerlogfile)' >> \$Service
          |#      cat \$Service
          |
          |# find is not available on fedora
          |for Service in /usr/share/dbus-1/system-services/* /usr/share/dbus-1/services/*; do
-         |  Name=\"\$(cat \$Service | grep Name= | cut -d= -f2)\"
-         |  Command=\"\$(cat \"\$Service\" | grep Exec= | cut -d= -f2)\"
-         |  echo \"\$Unservicelist\" | grep -q -w \"\$Name\" && {
+         |  Name=\"\$(    cat \"\$Service\" | grep Name= | cut -d= -f2 )\"
+         |  Command=\"\$( cat \"\$Service\" | grep Exec= | cut -d= -f2 )\"
+         |  if echo \"\$Unservicelist\" | grep -q -w \"\$Name\" ; then
          |    debugnote \"DBus: Removing \$Name: \$Service\"
          |    rm \"\$Service\"
-         |  }
+         |  fi
          |  case \"\$Name\" in
          |"
     #
@@ -15387,7 +15391,7 @@ rootrc_prepare_dbus() {
     if [ "$g_Initsystem" != "systemd" ] ; then
         trim_to_bar \
             "|
-             |    org.freedesktop.systemd1|org.freedesktop.hostname1|org.freedesktop.locale1)
+             |    org.freedesktop.systemd1 | org.freedesktop.hostname1 | org.freedesktop.locale1 )
              |      debugnote \"DBus: Removing \$Name: \$Service\"
              |      rm \"\$Service\"
              |    ;;
@@ -15397,7 +15401,7 @@ rootrc_prepare_dbus() {
 
     trim_to_bar \
         "|
-         |    org.freedesktop.login1)
+         |    org.freedesktop.login1 )
          |      debugnote \"DBus: Found login service \$Name: \$Command\"
          |"
     #
@@ -15407,11 +15411,12 @@ rootrc_prepare_dbus() {
             "|
              |      debugnote \"DBus: \$Name: Removing \$Service\"
              |      rm \"\$Service\"
-             |      echo \"\$Command\" | grep -q elogind && {
-             |        note 'Found login service elogind in container
-             |  and cgroup v1 on host.
-             |  If you want to use elogind in container, enable option --sharecgroup.'
-             |      }
+             |      if echo \"\$Command\" | grep -q elogind ; then
+             |        note_ttm '|Found login service elogind in container
+             |                  |  and cgroup v1 on host.
+             |                  |  If you want to use elogind in container,
+             |                  : enable option --sharecgroup.'
+             |      fi
              |"
         #
     fi
@@ -15421,10 +15426,13 @@ rootrc_prepare_dbus() {
          |    ;;
          |  esac
          |done
+         |
+         |# end rootrc_prepare_dbus
+         |
          |"
     #
   return 0
-}
+} # end rootrc_prepare_dbus()
 
 
 rootrc_prepare_init_openrc() {
