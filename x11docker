@@ -15570,13 +15570,13 @@ rootrc_prepare_init_runit() {
                  |
                  |chmod +x /etc/sv/x11docker/run
                  |
-                 |echo \"#! /bin/sh
-                 |sv down x11docker
-                 |runit-init 0
-                 |init 0
-                 |shutdown -h 0
-                 |halt
-                 |\" > /etc/sv/x11docker/finish
+                 |trim_to_bar \"|#! /bin/sh
+                 |              |sv down x11docker
+                 |              |runit-init 0
+                 |              |init 0
+                 |              |shutdown -h 0
+                 |              |halt
+                 |              |\" > /etc/sv/x11docker/finish
                  |
                  |chmod +x /etc/sv/x11docker/finish
                  |
