@@ -2060,7 +2060,7 @@ watchpidlist() {
                 #
                 ListOfLines=""
                 for Line in $Watchpidlist; do
-                    ListOfLines+="$(pspid_sh "$Line" || echo "(pid $Line not found)")" ;
+                    ListOfLines+="$(pspid_sh --empty-pid-is-FAIL "$Line" || echo "(pid $Line not found)")${NEWLINE}" ;
                 done
                 debugnote "watchpidlist(): Watching pids:${NEWLINE}${ListOfLines}"
             fi
