@@ -11262,10 +11262,11 @@ create_xinitrc() {
 
   # --checkwindow
   if [ "$Checkforopenwindow" ] ; then
-    trim_to_bar "|sleep 5
-                 |while rocknroll; do
-                 |  sleep 2
-                 |"
+      trim_to_bar "|debugnote 'xinitrc: starting Checkforopenwindow loop'
+                   |sleep 5
+                   |while rocknroll; do
+                   |  sleep 2
+                   |"
     #
     case "$Checkforopenwindow" in
         yes)
