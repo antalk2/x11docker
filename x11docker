@@ -21053,6 +21053,9 @@ declare_variables() {           # declare global variables
      |error()     {  echo "$*:ERROR"     | sed "s/\$/ /" >>$Messagefile ;  exit 64 ; }
      |stdout()    {  echo "$*:STDOUT"    | sed "s/\$/ /" >>$Messagefile ; }' )"
 
+  # Messagefifofuncs_escaped_1
+  #   Used-by: rootrc_create_helperscripts()
+  #
   Messagefifofuncs_escaped_1="$(trim_to_bar \
     '|
      |# Messagefifofuncs_escaped_1
