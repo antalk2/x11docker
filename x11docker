@@ -15603,17 +15603,17 @@ rootrc_prepare_init_runit() {
                  |if [ ! -e /etc/runit/3 ] ; then
                  |  # https://github.com/mviereck/x11docker/issues/583
                  |  # Needed more backslashes and close paren after the ps ... pipe
-                 |  trim_to_bar \"|#!/usr/bin/env sh
-                 |                |set -eu
-                 |                |exec 2>&1
-                 |                |echo \\\"Waiting for services to stop...\\\"
-                 |                |sv -w196 force-stop /service/*
-                 |                |sv exit /service/*
-                 |                |# kill any other processes still running in the container
-                 |                |for ORPHAN_PID in \\\$(ps ax -o pid,stat | tr -d ' ' | grep 'Z' | tr -d 'Z'); do
-                 |                |    timeout 5 /bin/sh -c \\\"kill \\\$ORPHAN_PID && wait \\\$ORPHAN_PID || kill -9 \\\$ORPHAN_PID\\\"
-                 |                |done
-                 |                |\" >/etc/runit/3
+                 |  trim_to_mark \"|#!/usr/bin/env sh
+                 |                 |set -eu
+                 |                 |exec 2>&1
+                 |                 |echo \\\"Waiting for services to stop...\\\"
+                 |                 |sv -w196 force-stop /service/*
+                 |                 |sv exit /service/*
+                 |                 |# kill any other processes still running in the container
+                 |                 |for ORPHAN_PID in \\\$(ps ax -o pid,stat | tr -d ' ' | grep 'Z' | tr -d 'Z'); do
+                 |                 |    timeout 5 /bin/sh -c \\\"kill \\\$ORPHAN_PID && wait \\\$ORPHAN_PID || kill -9 \\\$ORPHAN_PID\\\"
+                 |                 |done
+                 |                 |\" >/etc/runit/3
                  |fi
                  |chmod +x /etc/runit/3
                  |
