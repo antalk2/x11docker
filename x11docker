@@ -15016,7 +15016,7 @@ rootrc_create_helperscripts() {
                  |    trim_to_bar \"|#! /bin/sh
                  |                  |# Send messages to x11docker on host.
                  |                  |# To be sourced by other scripts.
-                 |                  |# Provides: note debugnote error
+                 |                  |# Provides: warning() note() verbose() debugnote() error() stdout()
                  |                  |\"
                  |    #
                  |    echo \"$Messagefifofuncs_escaped_1\"
@@ -15026,39 +15026,42 @@ rootrc_create_helperscripts() {
                  |"
     #
     # x11docker-su : run Containerrc as g_Containerusername under /bin/sh
-    trim_to_bar "|
-                 |### x11docker-su
-                 |trim_to_bar \"|#! /bin/sh
-                 |              |# User switch from root in containerrootrc to unprivileged user in containerrc.
-                 |              |# Called e.g. by x11docker-agetty.
-                 |              |
-                 |              |. /usr/local/bin/x11docker-message
-                 |              |debugnote 'Running x11docker-su'
-                 |              |chmod +x $(convertpath share "$Containerrc")
-                 |              |
-                 |              |\" >/usr/local/bin/x11docker-su
-                 |
-                 |"
-    #
-  
-    case "$g_BackendKind" in
-        proot)
-            echo "echo 'exec /bin/sh - $(convertpath share "$Containerrc")' >>/usr/local/bin/x11docker-su"
-            ;;
-        docker|podman|nerdctl)
-            #
-            # su [options] [-] [user [argument...]]
-            # -s, --shell=shell : Run the specified shell
-            # -, -l, --login    : Start the shell as a login shell
-            #                     with an environment similar to a real login
-            #
-            echo "echo \"exec su - -s /bin/sh  \$g_Containerusername $(convertpath share "$Containerrc")\" >>/usr/local/bin/x11docker-su"
-            ;;
-        # host) ;; # BackendKind_host
-    esac
+    {
+        trim_to_bar "|
+                     |### x11docker-su
+                     |trim_to_bar \"|#! /bin/sh
+                     |              |# User switch from root in containerrootrc to unprivileged user in containerrc.
+                     |              |# Called e.g. by x11docker-agetty.
+                     |              |
+                     |              |. /usr/local/bin/x11docker-message
+                     |              |debugnote 'Running x11docker-su'
+                     |              |chmod +x $(convertpath share "$Containerrc")
+                     |              |
+                     |              |\" >/usr/local/bin/x11docker-su
+                     |
+                     |"
+        #
 
-  echo "
-chmod +x /usr/local/bin/x11docker-su
+        case "$g_BackendKind" in
+            proot)
+                echo "echo 'exec /bin/sh - $(convertpath share "$Containerrc")' >>/usr/local/bin/x11docker-su"
+                ;;
+            docker|podman|nerdctl)
+                #
+                # su [options] [-] [user [argument...]]
+                # -s, --shell=shell : Run the specified shell
+                # -, -l, --login    : Start the shell as a login shell
+                #                     with an environment similar to a real login
+                #
+                echo "echo \"exec su - -s /bin/sh  \$g_Containerusername $(convertpath share "$Containerrc")\" >>/usr/local/bin/x11docker-su"
+                ;;
+            # host) ;; # BackendKind_host
+        esac
+
+        trim_to_bar "|
+                     |chmod +x /usr/local/bin/x11docker-su
+                     |"
+    }
 
 ### x11docker-agetty
 echo \"#! /bin/sh
