@@ -15016,11 +15016,15 @@ rootrc_create_helperscripts() {
                  |    trim_to_bar \"|#! /bin/sh
                  |                  |# Send messages to x11docker on host.
                  |                  |# To be sourced by other scripts.
-                 |                  |# Provides: warning() note() verbose() debugnote() error() stdout()
+                 |                  |# Provides: warning() note() verbose()
+                 |                  |#           debugnote() error() stdout()
+                 |                  |
+                 |                  |# Sharefoldercontainer="${Sharefoldercontainer}"
+                 |                  |Messagefile=$(convertpath share "$Messagefifo")
+                 |                  |
                  |                  |\"
                  |    #
                  |    echo \"$Messagefifofuncs_escaped_1\"
-                 |    echo \"Messagefile=$(convertpath share "$Messagefifo")\"
                  |    #
                  |} >/usr/local/bin/x11docker-message
                  |"
@@ -15030,7 +15034,8 @@ rootrc_create_helperscripts() {
         trim_to_bar "|
                      |### x11docker-su
                      |trim_to_bar \"|#! /bin/sh
-                     |              |# User switch from root in containerrootrc to unprivileged user in containerrc.
+                     |              |# User switch from root in containerrootrc
+                     |              |#   to unprivileged user in containerrc.
                      |              |# Called e.g. by x11docker-agetty.
                      |              |
                      |              |. /usr/local/bin/x11docker-message
@@ -15044,7 +15049,9 @@ rootrc_create_helperscripts() {
 
         case "$g_BackendKind" in
             proot)
-                echo "echo 'exec /bin/sh - $(convertpath share "$Containerrc")' >>/usr/local/bin/x11docker-su"
+                trim_to_bar "|echo 'exec /bin/sh - $(convertpath share "$Containerrc")' \\
+                             |      >>/usr/local/bin/x11docker-su
+                             |"
                 ;;
             docker|podman|nerdctl)
                 #
@@ -15053,7 +15060,11 @@ rootrc_create_helperscripts() {
                 # -, -l, --login    : Start the shell as a login shell
                 #                     with an environment similar to a real login
                 #
-                echo "echo \"exec su - -s /bin/sh  \$g_Containerusername $(convertpath share "$Containerrc")\" >>/usr/local/bin/x11docker-su"
+                trim_to_mark "|echo \"exec su - -s /bin/sh  \$g_Containerusername
+                              : $(convertpath share "$Containerrc")\" \\
+                              |     >>/usr/local/bin/x11docker-su
+                              |
+                              |"
                 ;;
             # host) ;; # BackendKind_host
         esac
@@ -15067,7 +15078,7 @@ rootrc_create_helperscripts() {
     {
         trim_to_bar "|
                      |### x11docker-agetty
-                     |trim_to_bar \"|#! /bin/sh
+                     |trim_to_mark \"|#! /bin/sh
                      |              |# Run agetty to get a valid console.
                      |              |# Needed at least for --interactive.
                      |              |# Runs x11docker-su or agetty with login
@@ -15079,7 +15090,7 @@ rootrc_create_helperscripts() {
         #
         case "$g_Initsystem" in
             systemd|openrc|sysvinit|runit)
-                # Continue inner trim_to_bar above
+                # Continue trim_to_mark above
                 trim_to_bar "|              |
                              |              |if [ -e /sbin/agetty ] ; then
                              |              |    exec agetty --autologin \$g_Containerusername console
@@ -15090,7 +15101,8 @@ rootrc_create_helperscripts() {
             *)
                 trim_to_bar "|              |
                              |              |if [ -e /sbin/agetty ] ; then
-                             |              |    exec agetty --autologin \$g_Containerusername -l /usr/local/bin/x11docker-su console
+                             |              |    exec agetty --autologin \$g_Containerusername
+                             |              : -l /usr/local/bin/x11docker-su console
                              |              |fi
                              |              |"
                 echo
@@ -15099,7 +15111,8 @@ rootrc_create_helperscripts() {
 
         trim_to_bar "|              |
                      |              |debugnote 'x11docker-agetty: agetty not found.'
-                     |              |note '/sbin/agetty not found. Startup can fail, --interactive can misbehave.
+                     |              |note '/sbin/agetty not found. Startup can fail,
+                     |              : --interactive can misbehave.
                      |              |  Please install package util-linux in image.'
                      |              |exec /usr/local/bin/x11docker-su
                      |              |\" >/usr/local/bin/x11docker-agetty
@@ -15107,29 +15120,33 @@ rootrc_create_helperscripts() {
                      |chmod +x /usr/local/bin/x11docker-agetty
                      |"
     }
-  
-  trim_to_bar "|
-### x11docker-watch
-echo \"#! /bin/sh
-# Wait for end of x11docker and shut down container.
-# Started in background by x11docker for sysvinit|runit|openrc.
-. /usr/local/bin/x11docker-message
-debugnote 'Running x11docker-watch'
-read Dummy <$(convertpath share "$Timetosaygoodbyefifo")
-echo timetosaygoodbye >>$(convertpath share "$Timetosaygoodbyefifo")
-debugnote 'x11docker-watch: $g_Initsystem shutdown now'
-shutdown 0
-systemctl poweroff
-openrc-shutdown --poweroff 0
-halt
-halt -f
-poweroff
-\" >/usr/local/bin/x11docker-watch
-chmod +x /usr/local/bin/x11docker-watch
 
-###
-"
-  return 0
+    # x11docker-watch
+    trim_to_bar "|
+                 |### x11docker-watch
+                 |trim_to_bar \"|#! /bin/sh
+                 |              |# Wait for end of x11docker and shut down container.
+                 |              |# Started in background by x11docker for sysvinit|runit|openrc.
+                 |              |. /usr/local/bin/x11docker-message
+                 |              |debugnote 'Running x11docker-watch'
+                 |              |read Dummy <$(            convertpath share "$Timetosaygoodbyefifo")
+                 |              |echo timetosaygoodbye >>$(convertpath share "$Timetosaygoodbyefifo")
+                 |              |debugnote 'x11docker-watch: $g_Initsystem shutdown now'
+                 |              |shutdown 0
+                 |              |systemctl poweroff
+                 |              |openrc-shutdown --poweroff 0
+                 |              |halt
+                 |              |halt -f
+                 |              |poweroff
+                 |              |\" >/usr/local/bin/x11docker-watch
+                 |
+                 |chmod +x /usr/local/bin/x11docker-watch
+                 |
+                 |###
+                 |
+                 |"
+    #
+    return 0
 }
 
 rootrc_create_locale() {
