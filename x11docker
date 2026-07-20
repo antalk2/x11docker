@@ -14980,34 +14980,63 @@ create_sshenv() {
     chmod +x "$Sshenvscript"
 }
 
-# code pieces for containerrootrc
+# Group: containerrootrc_group
+# Description: Code pieces for containerrootrc
+#
+
+# Function: rootrc_create_helperscripts
+#
+# Globals:
+#    Messagefifofuncs_escaped
+#    Messagefifo
+#    Containerrc
+#
+# Files:
+#    /usr/local/bin
+#    /usr/local/bin/x11docker-message
+#    $(convertpath share "$Containerrc")
+#    $(convertpath share "$Messagefifo")
+#
+# Used-by: create_containerrootrc()
+#
+# stdout goes to Sharefolder/containerrootrc
+#
 rootrc_create_helperscripts() {
-  echo "
-# Create some helper scripts
-
-mkdir -p /usr/local/bin
-
-### x11docker-message
-echo \"#! /bin/sh
-# Send messages to x11docker on host.
-# To be sourced by other scripts.
-$Messagefifofuncs_escaped
-Messagefile=$(convertpath share "$Messagefifo")
-\" >/usr/local/bin/x11docker-message
-
-### x11docker-su
-echo \"#! /bin/sh
-# User switch from root in containerrootrc to unprivileged user in containerrc.
-# Called e.g. by x11docker-agetty.
-. /usr/local/bin/x11docker-message
-debugnote 'Running x11docker-su'
-chmod +x $(convertpath share "$Containerrc")
-\" >/usr/local/bin/x11docker-su
-"
+  trim_to_bar "|
+               |# Create some helper scripts
+               |
+               |mkdir -p /usr/local/bin
+               |
+               |### x11docker-message
+               |echo \"#! /bin/sh
+               |# Send messages to x11docker on host.
+               |# To be sourced by other scripts.
+               |$Messagefifofuncs_escaped
+               |Messagefile=$(convertpath share "$Messagefifo")
+               |\" >/usr/local/bin/x11docker-message
+               |"
+  #
+  trim_to_bar "|
+               |### x11docker-su
+               |echo \"#! /bin/sh
+               |# User switch from root in containerrootrc to unprivileged user in containerrc.
+               |# Called e.g. by x11docker-agetty.
+               |. /usr/local/bin/x11docker-message
+               |debugnote 'Running x11docker-su'
+               |chmod +x $(convertpath share "$Containerrc")
+               |\" >/usr/local/bin/x11docker-su
+               |
+               |"
+  #
+  
   case "$g_BackendKind" in
-    proot)                        echo "echo 'exec /bin/sh - $(convertpath share "$Containerrc")'                          >>/usr/local/bin/x11docker-su" ;;
-    docker|podman|nerdctl) echo "echo \"exec su - -s /bin/sh  \$g_Containerusername $(convertpath share "$Containerrc")\" >>/usr/local/bin/x11docker-su" ;;
-    # host) ;; # BackendKind_host
+      proot)
+          echo "echo 'exec /bin/sh - $(convertpath share "$Containerrc")'                          >>/usr/local/bin/x11docker-su"
+          ;;
+      docker|podman|nerdctl)
+          echo "echo \"exec su - -s /bin/sh  \$g_Containerusername $(convertpath share "$Containerrc")\" >>/usr/local/bin/x11docker-su"
+          ;;
+      # host) ;; # BackendKind_host
   esac
 
   echo "
