@@ -14822,10 +14822,13 @@ create_cmdrc() {
       #
       trim_to_bar \
           "|
+           |# Wait for the the existence of the file Sharefolder/xhostready
            |while rocknroll; do
-           |  [ -e '$(convertpath share $Sharefolder/xhostready)' ] && break
-           |  sleep 0.1
-           |  verbose 'cmdrc(): Waiting for /x11docker/xhostready'
+           |    if [ -e '$(convertpath share $Sharefolder/xhostready)' ] ; then
+           |        break
+           |    fi
+           |    sleep 0.1
+           |    verbose 'cmdrc(): Waiting for /x11docker/xhostready'
            |done
            |"
       #
