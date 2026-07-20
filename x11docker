@@ -15081,13 +15081,17 @@ rootrc_create_helperscripts() {
             systemd|openrc|sysvinit|runit)
                 # Continue inner trim_to_bar above
                 trim_to_bar "|              |
-                             |              |[ -e /sbin/agetty ] && exec agetty --autologin \$g_Containerusername console
+                             |              |if [ -e /sbin/agetty ] ; then
+                             |              |    exec agetty --autologin \$g_Containerusername console
+                             |              |fi
                              |              |"
                 echo
                 ;;
             *)
                 trim_to_bar "|              |
-                             |              |[ -e /sbin/agetty ] && exec agetty --autologin \$g_Containerusername -l /usr/local/bin/x11docker-su console
+                             |              |if [ -e /sbin/agetty ] ; then
+                             |              |    exec agetty --autologin \$g_Containerusername -l /usr/local/bin/x11docker-su console
+                             |              |fi
                              |              |"
                 echo
                 ;;
