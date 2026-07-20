@@ -15610,8 +15610,10 @@ rootrc_prepare_init_runit() {
                  |                 |sv -w196 force-stop /service/*
                  |                 |sv exit /service/*
                  |                 |# kill any other processes still running in the container
-                 |                 |for ORPHAN_PID in \\\$(ps ax -o pid,stat | tr -d ' ' | grep 'Z' | tr -d 'Z'); do
-                 |                 |    timeout 5 /bin/sh -c \\\"kill \\\$ORPHAN_PID && wait \\\$ORPHAN_PID || kill -9 \\\$ORPHAN_PID\\\"
+                 |                 |for ORPHAN_PID in
+                 |                 : \\\$(ps ax -o pid,stat | tr -d ' ' | grep 'Z' | tr -d 'Z'); do
+                 |                 |    timeout 5 /bin/sh -c
+                 |                 : \\\"kill \\\$ORPHAN_PID && wait \\\$ORPHAN_PID || kill -9 \\\$ORPHAN_PID\\\"
                  |                 |done
                  |                 |\" >/etc/runit/3
                  |fi
