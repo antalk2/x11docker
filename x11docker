@@ -10174,7 +10174,7 @@ create_xcontainercommand() {
             mkfile "$Sharefolder/nvidia_installer"
             {
                 trim_to_bar "|
-                             |$Messagefifofuncs
+                             |$Messagefifofuncs_1
                              |Messagefile=$Messagefifo
                              |Storeinfofile=$Storeinfofile
                              |Timetosaygoodbyefile=$Timetosaygoodbyefile
@@ -10581,7 +10581,7 @@ create_xcontainercommand() {
              |
              |exec >> $Xinitlogfile 2>&1
              |
-             |$Messagefifofuncs
+             |$Messagefifofuncs_1
              |Messagefile=$Messagefifo
              |Storeinfofile=$Storeinfofile
              |Timetosaygoodbyefile=$Timetosaygoodbyefile
@@ -10691,7 +10691,7 @@ create_xinitrc() {
     #
     # Stuff that differs from the main x11docker script:
     #
-    echo "$Messagefifofuncs"
+    echo "$Messagefifofuncs_1"
     #
     case "$Xcontainer_option" in
         yes)
@@ -14071,7 +14071,7 @@ create_containerrootrc() {
     declare -f ws_colon_is_continuation_filter
     declare -f trim_to_mark
     #
-    echo "$Messagefifofuncs"
+    echo "$Messagefifofuncs_1"
 
     trim_to_mark \
         "|
@@ -14471,7 +14471,7 @@ create_containerrc() {
         echo
         #
         trim_to_bar \
-            "|$Messagefifofuncs
+            "|$Messagefifofuncs_1
              |# end_functions
              |
              |Messagefile=$(   convertpath share "$Messagefifo"   )
@@ -14858,7 +14858,7 @@ create_cmdrc() {
         echo
         #
         trim_to_bar \
-            "|$Messagefifofuncs
+            "|$Messagefifofuncs_1
              |# end_functions
              |
              |Messagefile=$(convertpath share "$Messagefifo")
@@ -21022,12 +21022,12 @@ declare_variables() {           # declare global variables
   #
   # ==============================================================
 
-  # Messagefifofuncs: goes to "Generated containerrc:", "Generated cmdrc:",
+  # Messagefifofuncs_1: goes to "Generated containerrc:", "Generated cmdrc:",
   #     "Generated xinitrc"
   #
-  Messagefifofuncs="$(trim_to_bar \
+  Messagefifofuncs_1="$(trim_to_bar \
     '|
-     |# Messagefifofuncs
+     |# Messagefifofuncs_1
      |warning()   {  echo "$*:WARNING"   >>$Messagefile ; }
      |note()      {  echo "$*:NOTE"      >>$Messagefile ; }
      |verbose()   {  echo "$*:VERBOSE"   >>$Messagefile ; }
