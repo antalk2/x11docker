@@ -15063,39 +15063,46 @@ rootrc_create_helperscripts() {
                      |"
     }
 
-  trim_to_bar "|
-               |### x11docker-agetty
-               |echo \"#! /bin/sh
-               |# Run agetty to get a valid console.
-               |# Needed at least for --interactive.
-               |# Runs x11docker-su or agetty with login
-               |# Called at different places depending on init system.
-               |. /usr/local/bin/x11docker-message
-               |debugnote 'Running x11docker-agetty'
-               |"
-  #
-  case "$g_Initsystem" in
-      systemd|openrc|sysvinit|runit)
-      trim_to_bar "|
-                   |[ -e /sbin/agetty ] && exec agetty --autologin \$g_Containerusername console
-                   |"
-      ;;
-      *)
-      trim_to_bar "|
-                   |[ -e /sbin/agetty ] && exec agetty --autologin \$g_Containerusername -l /usr/local/bin/x11docker-su console
-                   |"
-      ;;
-  esac
+    # x11docker-agetty
+    {
+        trim_to_bar "|
+                     |### x11docker-agetty
+                     |trim_to_bar \"|#! /bin/sh
+                     |              |# Run agetty to get a valid console.
+                     |              |# Needed at least for --interactive.
+                     |              |# Runs x11docker-su or agetty with login
+                     |              |# Called at different places depending on init system.
+                     |              |. /usr/local/bin/x11docker-message
+                     |              |debugnote 'Running x11docker-agetty'
+                     |              |"
+        echo
+        #
+        case "$g_Initsystem" in
+            systemd|openrc|sysvinit|runit)
+                # Continue inner trim_to_bar above
+                trim_to_bar "|              |
+                             |              |[ -e /sbin/agetty ] && exec agetty --autologin \$g_Containerusername console
+                             |              |"
+                echo
+                ;;
+            *)
+                trim_to_bar "|              |
+                             |              |[ -e /sbin/agetty ] && exec agetty --autologin \$g_Containerusername -l /usr/local/bin/x11docker-su console
+                             |              |"
+                echo
+                ;;
+        esac
 
-  trim_to_bar "|
-               |debugnote 'x11docker-agetty: agetty not found.'
-               |note '/sbin/agetty not found. Startup can fail, --interactive can misbehave.
-               |  Please install package util-linux in image.'
-               |exec /usr/local/bin/x11docker-su
-               |\" >/usr/local/bin/x11docker-agetty
-               |chmod +x /usr/local/bin/x11docker-agetty
-               |"
-
+        trim_to_bar "|              |
+                     |              |debugnote 'x11docker-agetty: agetty not found.'
+                     |              |note '/sbin/agetty not found. Startup can fail, --interactive can misbehave.
+                     |              |  Please install package util-linux in image.'
+                     |              |exec /usr/local/bin/x11docker-su
+                     |              |\" >/usr/local/bin/x11docker-agetty
+                     |
+                     |chmod +x /usr/local/bin/x11docker-agetty
+                     |"
+    }
   
   trim_to_bar "|
 ### x11docker-watch
