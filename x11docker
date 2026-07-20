@@ -14892,7 +14892,7 @@ create_cmdrc() {
         #
         trim_to_bar "|
                      |export LD_PRELOAD=
-                     |[ -h \"\$Homesoftlink\" ] && rm \$Homesoftlink
+                     |if [ -h \"\$Homesoftlink\" ] ; then rm \$Homesoftlink ; fi
                      |saygoodbye cmdrc
                      |"
         #
