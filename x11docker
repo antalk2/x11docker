@@ -15628,9 +15628,9 @@ rootrc_prepare_init_runit() {
                  |               |exec dbus-daemon --system --nofork --nopidfile
                  |               |' >/etc/sv/dbus/run
                  |
-                 |  echo '#!/bin/sh
-                 |exec dbus-send --system / org.freedesktop.DBus.Peer.Ping > /dev/null 2> /dev/null
-                 |' >/etc/sv/dbus/check
+                 |  trim_to_bar '|#!/bin/sh
+                 |               |exec dbus-send --system / org.freedesktop.DBus.Peer.Ping > /dev/null 2> /dev/null
+                 |               |' >/etc/sv/dbus/check
                  |  chmod +x /etc/sv/dbus/run /etc/sv/dbus/check
                  |}
                  |verbose 'DBus: enabling dbus service'
