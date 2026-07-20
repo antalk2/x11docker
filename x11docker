@@ -11286,9 +11286,12 @@ create_xinitrc() {
             ;;
         *)
             # Checkforopenwindow is a regexp for windows?
-            trim_to_bar "|  if ! xwininfo -root -children        \\
+            trim_to_bar "|  # Checkforopenwindow=$Checkforopenwindow
+                         |  if ! xwininfo -root -children        \\
                          |       | grep -q '$Checkforopenwindow' ;
-                         |  then break
+                         |  then
+                         |      debugnote 'xinitrc: Checkforopenwindow: no windows match \"$Checkforopenwindow\"'
+                         |      break
                          |  fi
                          |"
             ;;
