@@ -14808,8 +14808,8 @@ create_containerrc() {
 #      - waits for it to exit
 #      - Notfies others using: storeinfo_add_kv_sh cmdexitcode=\$?
 #
-#      - Optinally: waitfortheend (if Checkforopenwindow, aka --checkwindow
-#                                  "Run container until all windows are closed")
+#      - Optionally: waitfortheend (if Checkforopenwindow, aka --checkwindow
+#                                   "Run container until all windows are closed")
 #
 #      - saygoodbye cmdrc
 #
@@ -19859,6 +19859,10 @@ declare_variables() {           # declare global variables
   # where window_identifier is looked for using xwininfo, in the window title.
   #
   # Note: It exits if no windows match, so should also match the first window.
+  #
+  # It is passed to grep -q '$Checkforopenwindow', so it can be a BRE.
+  #
+  # https://github.com/mviereck/x11docker/issues/68
   #
   Checkforopenwindow=""
 
