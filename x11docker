@@ -14411,7 +14411,10 @@ create_containerrc() {
              |# Runs as unprivileged user in container.
              |
              |g_Interactive='${g_Interactive}'
-             |[ \"\$g_Interactive\" = 'no' ] && exec >> $(convertpath share "$Containerlogfile") 2>&1
+             |if [ \"\$g_Interactive\" = 'no' ] ; then
+             |    exec >> $(convertpath share "$Containerlogfile") 2>&1
+             |    echo 'containerrc_note: This is from $Containerrc.'
+             |fi
              |"
         #
         echo
@@ -14450,6 +14453,7 @@ create_containerrc() {
              |# Wait for containerrootrc=ready
              |waitforlogentry_sh containerrc \$Storeinfofile containerrootrc=ready '' infinity
              |debugnote 'Running containerrc: Unprivileged user commands in container'
+             |echo 'containerrc_note: after waitforlogentry_sh'
              |
              |verbose \"containerrc: Container system:
              |\$(cat /etc/os-release 2>&1 || true )\"
@@ -14460,6 +14464,8 @@ create_containerrc() {
         case "$g_BackendKind" in
 
             proot)
+                echo
+                echo "# begin g_BackendKind=proot"
                 # set another hostname ### FIXME fails
                 sed "s/$(hostname)/$g_BackendKind-$g_Imagebasename/g" "/etc/hosts" > "$g_Rootfs/etc/hosts"
                 echo "$g_BackendKind-$g_Imagebasename"                             > "$g_Rootfs/etc/hostname"
@@ -14473,9 +14479,13 @@ create_containerrc() {
                 done < <(unset -f rmcr ; env)
                 echo "export PATH='/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/sbin:/usr/sbin'"
                 echo 'export PS1="\u@'"$g_BackendKind"'-'"$g_Imagebasename"':\w\$ "' ### FIXME fails
+                echo "# end g_BackendKind=proot"
+                echo
                 ;;
 
             docker|podman|nerdctl)
+                echo
+                echo "# begin g_BackendKind=(docker|podman|nerdctl)"
                 if [ "$Switchcontaineruserflag" = "yes" ] ; then
                     echo '# Environment variables found in image:'
                     (
@@ -14493,6 +14503,8 @@ create_containerrc() {
                         #
                     )
                 fi
+                echo "# end g_BackendKind=(docker|podman|nerdctl)"
+                echo
                 ;;
             # host) ;; # BackendKind_host
         esac
@@ -14536,8 +14548,12 @@ create_containerrc() {
              |if [ \"\$Containeruserhome\" ] ; then
              |    export HOME=\"\$Containeruserhome\"
              |fi
-             |
+             |"
+
+        trim_to_bar \
+            "|
              |# XDG_RUNTIME_DIR
+             |echo 'containerrc_note: begin XDG_RUNTIME_DIR'
              |
              |Containeruseruid=\$(id -u \$g_Containerusername)
              |export XDG_RUNTIME_DIR=/tmp/XDG_RUNTIME_DIR
@@ -14547,11 +14563,13 @@ create_containerrc() {
              |else
              |  mkdir -p -m700 \$XDG_RUNTIME_DIR
              |fi
+             |echo 'containerrc_note: end   XDG_RUNTIME_DIR'
              |"
         #
 
         # softlinks from shared folders to HOME
         {
+             echo "echo 'containerrc_note: begin softlinks from shared folders to HOME'"
             #
             # Ungrep: part of an ERE pattern filtered from ls -A below.
             #         Filenames matching it do not count when deciding if
@@ -14598,6 +14616,7 @@ create_containerrc() {
                  |fi
                  |"
             #
+            echo "echo 'containerrc_note: end   softlinks from shared folders to HOME'"
         }
 
         echo "export DISPLAY='$Newdisplay' XAUTHORITY=$(convertpath share "$Xclientcookie")"
