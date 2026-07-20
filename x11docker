@@ -15619,12 +15619,14 @@ rootrc_prepare_init_runit() {
                  |fi
                  |chmod +x /etc/runit/3
                  |
-                 |[ -e /etc/sv/dbus ] || {
+                 |if [ ! -e /etc/sv/dbus ] ; then
                  |  mkdir -p /etc/sv/dbus
-                 |  echo '#!/bin/sh
-                 |[ ! -d /run/dbus ] && install -m755 -g 22 -o 22 -d /run/dbus
-                 |exec dbus-daemon --system --nofork --nopidfile
-                 |' >/etc/sv/dbus/run
+                 |  trim_to_bar '|#!/bin/sh
+                 |               |if [ ! -d /run/dbus ] ; then
+                 |               |    install -m755 -g 22 -o 22 -d /run/dbus
+                 |               |fi
+                 |               |exec dbus-daemon --system --nofork --nopidfile
+                 |               |' >/etc/sv/dbus/run
                  |
                  |  echo '#!/bin/sh
                  |exec dbus-send --system / org.freedesktop.DBus.Peer.Ping > /dev/null 2> /dev/null
