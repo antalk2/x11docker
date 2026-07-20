@@ -19842,7 +19842,9 @@ declare_variables() {           # declare global variables
   Autochooseserver="yes"
 
   # Checkforopenwindow : --checkwindow  yes/""/window_identifier
-  # where window_identifier is looked for using xwininfo, in the window title
+  # where window_identifier is looked for using xwininfo, in the window title.
+  #
+  # Note: It exits if no windows match, so should also match the first window.
   #
   Checkforopenwindow=""
 
