@@ -21035,6 +21035,7 @@ declare_variables() {           # declare global variables
      |error()     {  echo "$*:ERROR"     >>$Messagefile ;  exit 64 ; }
      |stdout()    {  echo "$*:STDOUT"    >>$Messagefile ; }' )"
 
+  # MessagefifofuncsX : unused
   MessagefifofuncsX="$(trim_to_bar \
     '|
      |# MessagefifofuncsX
@@ -21054,7 +21055,8 @@ declare_variables() {           # declare global variables
      |debugnote() {  echo \"\$*:DEBUGNOTE\" >>\$Messagefile ; }
      |error()     {  echo \"\$*:ERROR\"     >>\$Messagefile ;  exit 64 ; }
      |stdout()    {  echo \"\$*:STDOUT\"    | sed \"s/\\\$/ /\" >>\$Messagefile ; }' )"
-  
+
+  # Messagefifofuncs_escapedX : unused
   Messagefifofuncs_escapedX="$(trim_to_bar \
     '|
      |# Messagefifofuncs_escapedX
