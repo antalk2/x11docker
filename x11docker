@@ -16088,6 +16088,8 @@ $(tail "$Compositorlogfile")")"
 
   return "${Exitcode:-0}"
 }
+
+# Function: start_xpra
 start_xpra() {                  # options --xpra / --xpra-xwayland: start and watch xpra server and xpra client
   local Xpraserverpid Xpraclientpid Xpraenv
 
@@ -16128,8 +16130,9 @@ $Xpraservercommand"
   # xpra client
   Xpraclientcommand="env $Hostxenv \\
 $Xpraenv $Xpraclientcommand"
-  debugnote "Running xpra client:
-$Xpraclientcommand"
+
+  debugnote "Running Xpraclientcommand:${NEWLINE}$Xpraclientcommand"
+
   echo "x11docker [$(timestamp)]: Starting Xpra client" >> "$Xpraclientlogfile"
   [ "$Xcontainer_option" = "yes" ] && [ "$Xserver" != "--xpra2" ] && [ "$Xserver" != "--xpra2-xwayland" ] && {
     unpriv_xcbackend "$Xcontainerbackend exec $Xcontainername sh -c '$Xpraclientcommand'" >> "$Xpraclientlogfile" 2>&1 &
@@ -16143,7 +16146,11 @@ $Xpraclientcommand"
   Xpraserverpid="$($Myps ax -o pid,args | grep -E "xpra start :$Newdisplaynumber|xpra start-desktop :$Newdisplaynumber" | grep -v grep | awk '{print $1}')"
   storepid "$Xpraserverpid" xpraserver
   Xpraclientpid="$($Myps ax -o pid,args | grep "xpra attach :$Newdisplaynumber" | grep -v grep | awk '{print $1}')"
-  storepid "$Xpraclientpid" xpraclient
+  if [ ! -z "$Xpraclientpid" ] ; then
+      storepid "$Xpraclientpid" xpraclient
+  else
+      debugnote "Xpraclientpid is empty"
+  fi
 
   # catch possible xpra crashes
   while rocknroll; do
@@ -19856,14 +19863,18 @@ declare_variables() {           # declare global variables
   # Autochooseserver : --auto: automatic choice of X server (default)
   Autochooseserver="yes"
 
-  # Checkforopenwindow : --checkwindow  yes/""/window_identifier
-  # where window_identifier is looked for using xwininfo, in the window title.
+  # Checkforopenwindow : --checkwindow  yes/""/window_identifier_BRE
+  # where window_identifier_BRE is looked for using xwininfo, in the window title.
   #
   # Note: It exits if no windows match, so should also match the first window.
   #
   # It is passed to grep -q '$Checkforopenwindow', so it can be a BRE.
   #
   # https://github.com/mviereck/x11docker/issues/68
+  #
+  # FIXME: the commend
+  #    x11docker --debug --verbose --keepcache --checkwindow --keymap=us x11docker/xfce xfce4-terminal
+  # fails to exit (with xpra)
   #
   Checkforopenwindow=""
 
