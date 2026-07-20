@@ -11307,6 +11307,7 @@ create_xinitrc() {
     yes) echo        "read Var <$Timetosaygoodbyefifo"   ;;
     no)  echo        "while rocknroll; do sleep 1; done" ;;
   esac
+  echo  "# end of xinitrc"
 
   return 0
 } # end create_xinitrc
