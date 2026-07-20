@@ -14248,7 +14248,7 @@ create_containerrootrc() {
     
     printf "\n# Switchcontaineruserflag: rootrc_create_helperscripts()\n"
     if [ "$Switchcontaineruserflag" = "yes" ] ; then
-        rootrc_create_helperscripts # create_containerrootrc()
+        rootrc_create_helperscripts # in create_containerrootrc()
     fi
     
     printf "\n# Dbussystem: rootrc_prepare_dbus()\n"
