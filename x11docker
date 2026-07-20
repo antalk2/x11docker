@@ -15506,103 +15506,107 @@ rootrc_prepare_init_openrc() {
     return 0
 } # end rootrc_prepare_init_openrc
 
-
+# Function: rootrc_prepare_init_runit
+#
 rootrc_prepare_init_runit() {
-  echo "
-# --init=runit
+    trim_to_bar "|
+                 |# --init=runit
+                 |
+                 |# create and enable x11docker service containing container command
+                 |mkdir -p /etc/sv/x11docker
+                 |mkdir -p /etc/runit/runsvdir/default
+                 |mkdir -p /etc/runit/1.d
+                 |mkdir -p /service
+                 |
+                 |echo \"#! /bin/sh
+                 |$(declare -f mysleep)
+                 |waitforservice() {
+                 |  Service=\\\$1
+                 |  [ \\\"\\\$(sv check \\\$Service | cut -d: -f1)\\\" = 'ok' ] && {
+                 |    echo \"x11docker: waiting for service \\\$Service ...\"
+                 |    for Count in $(seq -s' ' 20); do
+                 |      [ \\\"\\\$(sv status \\\$Service | cut -d: -f1)\\\" = 'down' ] && mysleep 0.2 || break
+                 |    done
+                 |  }
+                 |}
+                 |# make stderr visible
+                 |exec 2>&1
+                 |# wait for all other services
+                 |echo 'Content of /etc/runit/runsvdir/default:'
+                 |ls -la /etc/runit/runsvdir/default/*
+                 |for Service in /etc/runit/runsvdir/default/* ; do waitforservice \\\$Service ;done
+                 |echo 'Current status of runit services:'
+                 |for Service in /etc/runit/runsvdir/default/* ; do sv status      \\\$Service ;done
+                 |/usr/local/bin/x11docker-agetty
+                 |\" > /etc/sv/x11docker/run
+                 |
+                 |chmod +x /etc/sv/x11docker/run
+                 |
+                 |echo \"#! /bin/sh
+                 |sv down x11docker
+                 |runit-init 0
+                 |init 0
+                 |shutdown -h 0
+                 |halt
+                 |\" > /etc/sv/x11docker/finish
+                 |
+                 |chmod +x /etc/sv/x11docker/finish
+                 |
+                 |ln -s /etc/sv/x11docker /etc/runit/runsvdir/default #void
+                 |ln -s /etc/sv/x11docker /service                    #alpine
+                 |
+                 |[ -e /etc/runit/1 ] || echo '#!/usr/bin/env sh
+                 |set -eu
+                 |chmod 100 /etc/runit/stopit
+                 |/bin/run-parts --exit-on-error /etc/runit/1.d || exit 100
+                 |' >/etc/runit/1
+                 |
+                 |chmod +x /etc/runit/1
+                 |
+                 |[ -e /etc/runit/2 ] || echo '#!/usr/bin/env sh
+                 |set -eu
+                 |runsvdir -P /service \"log: ..................................................................\"
+                 |' >/etc/runit/2
+                 |
+                 |chmod +x /etc/runit/2
+                 |
+                 |[ -e /etc/runit/3 ] || echo \"#!/usr/bin/env sh
+                 |set -eu
+                 |exec 2>&1
+                 |echo \"Waiting for services to stop...\"
+                 |sv -w196 force-stop /service/*
+                 |sv exit /service/*
+                 |# kill any other processes still running in the container
+                 |for ORPHAN_PID in \$(ps ax -o pid,stat | tr -d ' ' | grep 'Z' | tr -d 'Z'; do
+                 |    timeout 5 /bin/sh -c \"kill \$ORPHAN_PID && wait \$ORPHAN_PID || kill -9 \$ORPHAN_PID\"
+                 |done
+                 |\" >/etc/runit/3
+                 |
+                 |chmod +x /etc/runit/3
+                 |
+                 |[ -e /etc/sv/dbus ] || {
+                 |  mkdir -p /etc/sv/dbus
+                 |  echo '#!/bin/sh
+                 |[ ! -d /run/dbus ] && install -m755 -g 22 -o 22 -d /run/dbus
+                 |exec dbus-daemon --system --nofork --nopidfile
+                 |' >/etc/sv/dbus/run
+                 |
+                 |  echo '#!/bin/sh
+                 |exec dbus-send --system / org.freedesktop.DBus.Peer.Ping > /dev/null 2> /dev/null
+                 |' >/etc/sv/dbus/check
+                 |  chmod +x /etc/sv/dbus/run /etc/sv/dbus/check
+                 |}
+                 |verbose 'DBus: enabling dbus service'
+                 |ln -s /etc/sv/dbus  /etc/runit/runsvdir/default  # void
+                 |ln -s /etc/sv/dbus  /service                     # alpine
+                 |
+                 |touch /etc/runit/stopit
+                 |
+                 |"
+    #
+    return 0
+} # end rootrc_prepare_init_runit
 
-# create and enable x11docker service containing container command
-mkdir -p /etc/sv/x11docker
-mkdir -p /etc/runit/runsvdir/default
-mkdir -p /etc/runit/1.d
-mkdir -p /service
-
-echo \"#! /bin/sh
-$(declare -f mysleep)
-waitforservice() {
-  Service=\\\$1
-  [ \\\"\\\$(sv check \\\$Service | cut -d: -f1)\\\" = 'ok' ] && {
-    echo \"x11docker: waiting for service \\\$Service ...\"
-    for Count in $(seq -s' ' 20); do
-      [ \\\"\\\$(sv status \\\$Service | cut -d: -f1)\\\" = 'down' ] && mysleep 0.2 || break
-    done
-  }
-}
-# make stderr visible
-exec 2>&1
-# wait for all other services
-echo 'Content of /etc/runit/runsvdir/default:'
-ls -la /etc/runit/runsvdir/default/*
-for Service in /etc/runit/runsvdir/default/* ; do waitforservice \\\$Service ;done
-echo 'Current status of runit services:'
-for Service in /etc/runit/runsvdir/default/* ; do sv status      \\\$Service ;done
-/usr/local/bin/x11docker-agetty
-\" > /etc/sv/x11docker/run
-
-chmod +x /etc/sv/x11docker/run
-
-echo \"#! /bin/sh
-sv down x11docker
-runit-init 0
-init 0
-shutdown -h 0
-halt
-\" > /etc/sv/x11docker/finish
-
-chmod +x /etc/sv/x11docker/finish
-
-ln -s /etc/sv/x11docker /etc/runit/runsvdir/default #void
-ln -s /etc/sv/x11docker /service                    #alpine
-
-[ -e /etc/runit/1 ] || echo '#!/usr/bin/env sh
-set -eu
-chmod 100 /etc/runit/stopit
-/bin/run-parts --exit-on-error /etc/runit/1.d || exit 100
-' >/etc/runit/1
-
-chmod +x /etc/runit/1
-
-[ -e /etc/runit/2 ] || echo '#!/usr/bin/env sh
-set -eu
-runsvdir -P /service \"log: ..................................................................\"
-' >/etc/runit/2
-
-chmod +x /etc/runit/2
-
-[ -e /etc/runit/3 ] || echo \"#!/usr/bin/env sh
-set -eu
-exec 2>&1
-echo \"Waiting for services to stop...\"
-sv -w196 force-stop /service/*
-sv exit /service/*
-# kill any other processes still running in the container
-for ORPHAN_PID in \$(ps ax -o pid,stat | tr -d ' ' | grep 'Z' | tr -d 'Z'; do
-    timeout 5 /bin/sh -c \"kill \$ORPHAN_PID && wait \$ORPHAN_PID || kill -9 \$ORPHAN_PID\"
-done
-\" >/etc/runit/3
-
-chmod +x /etc/runit/3
-
-[ -e /etc/sv/dbus ] || {
-  mkdir -p /etc/sv/dbus
-  echo '#!/bin/sh
-[ ! -d /run/dbus ] && install -m755 -g 22 -o 22 -d /run/dbus
-exec dbus-daemon --system --nofork --nopidfile
-' >/etc/sv/dbus/run
-
-  echo '#!/bin/sh
-exec dbus-send --system / org.freedesktop.DBus.Peer.Ping > /dev/null 2> /dev/null
-' >/etc/sv/dbus/check
-  chmod +x /etc/sv/dbus/run /etc/sv/dbus/check
-}
-verbose 'DBus: enabling dbus service'
-ln -s /etc/sv/dbus  /etc/runit/runsvdir/default  # void
-ln -s /etc/sv/dbus  /service                     # alpine
-
-touch /etc/runit/stopit
-"
-  return 0
-}
 rootrc_prepare_init_systemd() {
   echo "
 # --init=systemd
