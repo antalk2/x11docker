@@ -11273,11 +11273,14 @@ create_xinitrc() {
             # grep -c, --count
             # We count the windows that have a name (and a window id, 0x....)
             #
-            trim_to_bar "|  if [  \"\$( xwininfo -root -children  \\
+            trim_to_bar "|  # Checkforopenwindow=yes
+                         |  if [  \"\$( xwininfo -root -children  \\
                          |              | grep -v '(has no name)' \\
                          |              | awk '{print \$1}'       \\
                          |              | grep -c ^0x             )\" = '0'  ] ;
-                         |  then break
+                         |  then
+                         |      debugnote 'xinitrc: Checkforopenwindow=yes: no named windows found'
+                         |      break
                          |  fi
                          |"
             ;;
