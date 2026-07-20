@@ -14457,8 +14457,8 @@ create_containerrc() {
         #
         declare -f trim_to_bar_filter
         declare -f trim_to_bar
-        declare -f trim_to_mark
         declare -f ws_colon_is_continuation_filter
+        declare -f trim_to_mark
         #
         echo
         # declare -f error_ttm
@@ -14853,8 +14853,8 @@ create_cmdrc() {
         echo
         declare -f trim_to_bar_filter
         declare -f trim_to_bar
-        declare -f trim_to_mark
         declare -f ws_colon_is_continuation_filter
+        declare -f trim_to_mark
         echo
         #
         trim_to_bar \
