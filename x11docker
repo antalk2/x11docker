@@ -15509,6 +15509,20 @@ rootrc_prepare_init_openrc() {
 # Function: rootrc_prepare_init_runit
 #
 rootrc_prepare_init_runit() {
+    local mysleep_str="$(declare -f mysleep)"
+    #
+    # Problem:
+    # https://github.com/mviereck/x11docker/issues/582
+    # need escaping in echo " echo \" $(declare -f mysleep) \" "
+    #
+    # Dollar and dquote needs escaping against the second trim_to_bar context.
+    # Backslash would also need if it were present.
+    #
+    # Solution:
+    local mysleep_quoted="$( echo "$mysleep_str" | sed -e 's|[$"]|\\\0|g' )"
+    #
+    # Inject the prefix '|              |' from the second line.
+    local mysleep_untrimmed="$( echo "$mysleep_quoted" | sed -e '2,999 s/^/|              |/g' )"
     trim_to_bar "|
                  |# --init=runit
                  |
@@ -15518,27 +15532,41 @@ rootrc_prepare_init_runit() {
                  |mkdir -p /etc/runit/1.d
                  |mkdir -p /service
                  |
-                 |echo \"#! /bin/sh
-                 |$(declare -f mysleep)
-                 |waitforservice() {
-                 |  Service=\\\$1
-                 |  [ \\\"\\\$(sv check \\\$Service | cut -d: -f1)\\\" = 'ok' ] && {
-                 |    echo \"x11docker: waiting for service \\\$Service ...\"
-                 |    for Count in $(seq -s' ' 20); do
-                 |      [ \\\"\\\$(sv status \\\$Service | cut -d: -f1)\\\" = 'down' ] && mysleep 0.2 || break
-                 |    done
-                 |  }
-                 |}
-                 |# make stderr visible
-                 |exec 2>&1
-                 |# wait for all other services
-                 |echo 'Content of /etc/runit/runsvdir/default:'
-                 |ls -la /etc/runit/runsvdir/default/*
-                 |for Service in /etc/runit/runsvdir/default/* ; do waitforservice \\\$Service ;done
-                 |echo 'Current status of runit services:'
-                 |for Service in /etc/runit/runsvdir/default/* ; do sv status      \\\$Service ;done
-                 |/usr/local/bin/x11docker-agetty
-                 |\" > /etc/sv/x11docker/run
+                 |
+                 |trim_to_bar \"|#! /bin/sh
+                 |              |${mysleep_untrimmed}
+                 |              |waitforservice() {
+                 |              |  Service=\\\$1
+                 |              |  if [ \\\"\\\$(sv check \\\$Service | cut -d: -f1)\\\" = 'ok' ] ; then
+                 |              |    echo \"x11docker: waiting for service \\\$Service ...\"
+                 |              |    for Count in $(seq -s' ' 20); do
+                 |              |      if [ \\\"\\\$(sv status \\\$Service | cut -d: -f1)\\\" = 'down' ] ; then
+                 |              |          mysleep 0.2
+                 |              |      else
+                 |              |          break
+                 |              |      fi
+                 |              |    done
+                 |              |  fi
+                 |              |}
+                 |              |# make stderr visible
+                 |              |exec 2>&1
+                 |              |
+                 |              |# wait for all other services
+                 |              |echo 'Content of /etc/runit/runsvdir/default:'
+                 |              |ls -la /etc/runit/runsvdir/default/*
+                 |              |
+                 |              |for Service in /etc/runit/runsvdir/default/* ; do
+                 |              |    waitforservice \\\$Service ;
+                 |              |done
+                 |              |
+                 |              |echo 'Current status of runit services:'
+                 |              |for Service in /etc/runit/runsvdir/default/* ; do
+                 |              |    sv status      \\\$Service ;
+                 |              |done
+                 |              |
+                 |              |/usr/local/bin/x11docker-agetty
+                 |              |\" > /etc/sv/x11docker/run
+                 |
                  |
                  |chmod +x /etc/sv/x11docker/run
                  |
