@@ -14247,10 +14247,14 @@ create_containerrootrc() {
     #
     
     printf "\n# Switchcontaineruserflag: rootrc_create_helperscripts()\n"
-    [ "$Switchcontaineruserflag" = "yes" ] && rootrc_create_helperscripts
+    if [ "$Switchcontaineruserflag" = "yes" ] ; then
+        rootrc_create_helperscripts # create_containerrootrc()
+    fi
     
     printf "\n# Dbussystem: rootrc_prepare_dbus()\n"
-    [ "$Dbussystem" = "yes" ]          && rootrc_prepare_dbus
+    if [ "$Dbussystem" = "yes" ] ; then
+        rootrc_prepare_dbus
+    fi
 
     printf "\n# g_Initsystem: rootrc_prepare_init_{openrc|runit|systemd|sysvinit}()\n"
     case "$g_Initsystem" in
