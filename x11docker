@@ -15245,7 +15245,7 @@ rootrc_create_locale() {
     echo
     echo "# end rootrc_create_locale"
     return 0
-}
+} # end rootrc_create_locale()
 
 rootrc_nvidia_installer() {
   # print code to install NVIDIA driver in container
