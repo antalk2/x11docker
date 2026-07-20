@@ -21025,6 +21025,8 @@ declare_variables() {           # declare global variables
   # Messagefifofuncs_1: goes to "Generated containerrc:", "Generated cmdrc:",
   #     "Generated xinitrc"
   #
+  # Note: trim_to_bar "$Messagefifofuncs_1" is OK, no lines start with a bar.
+  #
   Messagefifofuncs_1="$(trim_to_bar \
     '|
      |# Messagefifofuncs_1
@@ -21033,7 +21035,9 @@ declare_variables() {           # declare global variables
      |verbose()   {  echo "$*:VERBOSE"   >>$Messagefile ; }
      |debugnote() {  echo "$*:DEBUGNOTE" >>$Messagefile ; }
      |error()     {  echo "$*:ERROR"     >>$Messagefile ;  exit 64 ; }
-     |stdout()    {  echo "$*:STDOUT"    >>$Messagefile ; }' )"
+     |stdout()    {  echo "$*:STDOUT"    >>$Messagefile ; }
+     |'
+     )"
 
   # MessagefifofuncsX : unused
   MessagefifofuncsX="$(trim_to_bar \
