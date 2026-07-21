@@ -15928,18 +15928,20 @@ rootrc_setup_user() {
                  |
                  |# Set up container user
                  |"
-    #
-    case "$Containerusershell" in
-        auto)
-            trim_to_mark "|if bash --version >/dev/null 2>&1 ;
-                          |then Containerusershell=/bin/bash
-                          |else Containerusershell=/bin/sh
-                          |fi"
-            ;;
-        *)
-            echo "Containerusershell='$Containerusershell'"
-            ;;
-    esac
+    # Containerusershell
+    {
+        case "$Containerusershell" in
+            auto)
+                trim_to_mark "|if bash --version >/dev/null 2>&1 ;
+                              |then Containerusershell=/bin/bash
+                              |else Containerusershell=/bin/sh
+                             |fi"
+                ;;
+            *)
+                echo "Containerusershell='$Containerusershell'"
+                ;;
+        esac
+    }
 
     trim_to_mark "|
                   |# /etc/passwd
@@ -15995,28 +15997,31 @@ rootrc_setup_user() {
                          |
                          |# allow password
                          |sed -i 's%root:-:%root:x:%' /etc/passwd
+                         |
+                         |chmod 640 /etc/shadow   # can fail depending on available capabilities
                          |"
              ;;
     esac
 
-    trim_to_mark "|
-                  |chmod 640 /etc/shadow   # can fail depending on available capabilities
-                  |
-                  |# sudo configuration
-                  |# Create /etc/sudoers, delete /etc/sudoers.d.
-                  |# Overwrite possible sudo setups in image.
-                  |if [ -e /etc/sudoers.d ] ; then rm -f -v -R /etc/sudoers.d ; fi
-                  |if [ -e /etc/sudoers   ] ; then rm -f -v    /etc/sudoers   ; fi
-                  |trim_to_bar '|# /etc/sudoers created by x11docker
-                  |             |Defaults	env_reset
-                  |             |root ALL=(ALL) ALL
-                  |             |' > /etc/sudoers
-                  |"
-    #
-    case "$Sudouser" in
-        yes)      echo "echo '$g_Containerusername ALL=(ALL) ALL'           >> /etc/sudoers" ;;
-        nopasswd) echo "echo '$g_Containerusername ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers" ;;
-    esac
+    # sudo
+    {
+        trim_to_mark "|
+                      |# sudo configuration
+                      |# Create /etc/sudoers, delete /etc/sudoers.d.
+                      |# Overwrite possible sudo setups in image.
+                      |if [ -e /etc/sudoers.d ] ; then rm -f -v -R /etc/sudoers.d ; fi
+                      |if [ -e /etc/sudoers   ] ; then rm -f -v    /etc/sudoers   ; fi
+                      |trim_to_bar '|# /etc/sudoers created by x11docker
+                      |             |Defaults	env_reset
+                      |             |root ALL=(ALL) ALL
+                      |             |' > /etc/sudoers
+                      |"
+        #
+        case "$Sudouser" in
+            yes)      echo "echo '$g_Containerusername ALL=(ALL) ALL'           >> /etc/sudoers" ;;
+            nopasswd) echo "echo '$g_Containerusername ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers" ;;
+        esac
+    }
 
     # Try to disable possible custom PAM setups that could allow a
     # switch to root in container ### FIXME maybe not foolproof
