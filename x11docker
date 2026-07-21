@@ -15918,6 +15918,9 @@ rootrc_prepare_init_sysvinit() {
 } # end rootrc_prepare_init_sysvinit
 
 # Function: rootrc_setup_user
+#
+# stdout will be part of containerrootrc
+#
 rootrc_setup_user() {
     local Line
 
