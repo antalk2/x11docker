@@ -16032,23 +16032,27 @@ rootrc_setup_user() {
                       |if [ -e /etc/pam.d/sudo ] ; then rm -f -v /etc/pam.d/sudo ; fi
                       |case \"\$Containersystem\" in
                       |  fedora)
-                      |    echo '#%PAM-1.0' > /etc/pam.d/su
-                      |    echo 'auth     sufficient pam_rootok.so'  >> /etc/pam.d/su
-                      |#    echo 'auth     substack system-auth'      >> /etc/pam.d/su
-                      |#    echo 'auth     include postlogin'         >> /etc/pam.d/su
-                      |    echo 'account  sufficient pam_succeed_if.so uid = 0 use_uid quiet'  >> /etc/pam.d/su
-                      |#    echo 'account  include system-auth'       >> /etc/pam.d/su
-                      |#    echo 'password include system-auth'       >> /etc/pam.d/su
-                      |    echo 'session  include system-auth'       >> /etc/pam.d/su
-                      |    echo 'session  include  postlogin'        >> /etc/pam.d/su
-                      |    echo 'session  optional pam_xauth.so'     >> /etc/pam.d/su
-                      |  ;;
+                      |    trim_to_bar '|#%PAM-1.0
+                      |                 |# allow root to switch user without a password
+                      |                 |auth     sufficient pam_rootok.so
+                      |                 |# auth     substack system-auth
+                      |                 |# auth     include postlogin
+                      |                 |account  sufficient pam_succeed_if.so uid = 0 use_uid quiet
+                      |                 |# account  include system-auth
+                      |                 |password include system-auth
+                      |                 |session  include system-auth
+                      |                 |session  include  postlogin
+                      |                 |session  optional pam_xauth.so
+                      |                 |'     > /etc/pam.d/su
+                      |    ;;
                       |  *)
-                      |    echo '#%PAM-1.0' > /etc/pam.d/su
-                      |    echo 'auth sufficient pam_rootok.so' >> /etc/pam.d/su  # allow root to switch user without a password
-                      |    echo '@include common-auth'          >> /etc/pam.d/su
-                      |    echo '@include common-account'       >> /etc/pam.d/su
-                      |    echo '@include common-session'       >> /etc/pam.d/su
+                      |    trim_to_bar '|#%PAM-1.0
+                      |                 |# allow root to switch user without a password
+                      |                 |auth sufficient pam_rootok.so
+                      |                 |@include common-auth
+                      |                 |@include common-account
+                      |                 |@include common-session
+                      |                 |'      > /etc/pam.d/su
                       |  ;;
                       |esac
                       |"
