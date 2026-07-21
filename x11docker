@@ -15971,15 +15971,31 @@ rootrc_setup_user() {
                   |echo \"root:-:0:0:root:/root:\$Containerusershell\" >> /etc/passwd
                   |
                   |# Create password entry for container user in /etc/shadow
-                  |rm -f -v /etc/shadow || warning 'Cannot change /etc/shadow. That may be a security risk.'
-                  |echo \"\$g_Containerusername:\"'$Containeruserpassword'\":17293:0:99999:7:::\" > /etc/shadow
+                  |if ! rm -f -v /etc/shadow ; then
+                  |    warning 'Cannot change /etc/shadow. That may be a security risk.'
+                  |fi
+                  |
+                  |# Containeruserpassword='$Containeruserpassword'
+                  |echo \"\$g_Containerusername:\"'$Containeruserpassword'\":17293:0:99999:7:::\"
+                  : > /etc/shadow
+                  |
                   |chown root:shadow /etc/shadow
                   |"
     #
     case "$Sudouser" in
-        "")  echo "echo 'root:*:17219:0:99999:7:::' >> /etc/shadow" ;;
-        *)   echo "echo 'root:$Containeruserpassword:17219:0:99999:7:::' >> /etc/shadow  # with option --sudouser, set root password 'x11docker'"
-             echo "sed -i 's%root:-:%root:x:%' /etc/passwd                               # allow password"
+        "")
+            trim_to_bar "|# Disable root login
+                         |echo 'root:*:17219:0:99999:7:::' >> /etc/shadow
+                         |"
+            ;;
+
+        *)
+            trim_to_bar "|# with option --sudouser, set root password 'x11docker'
+                         |echo 'root:$Containeruserpassword:17219:0:99999:7:::' >> /etc/shadow
+                         |
+                         |# allow password
+                         |sed -i 's%root:-:%root:x:%' /etc/passwd
+                         |"
              ;;
     esac
 
