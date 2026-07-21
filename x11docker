@@ -16027,33 +16027,33 @@ rootrc_setup_user() {
     # switch to root in container ### FIXME maybe not foolproof
     if [ -z "$Sudouser" ] ; then
         trim_to_mark "|# /etc/pam.d
-                  |# Restrict PAM configuration of su and sudo
-                  |mkdir -p /etc/pam.d
-                  |[ -e /etc/pam.d/sudo ] && rm -f -v /etc/pam.d/sudo
-                  |case \"\$Containersystem\" in
-                  |  fedora)
-                  |    echo '#%PAM-1.0' > /etc/pam.d/su
-                  |    echo 'auth     sufficient pam_rootok.so'  >> /etc/pam.d/su
-                  |#    echo 'auth     substack system-auth'      >> /etc/pam.d/su
-                  |#    echo 'auth     include postlogin'         >> /etc/pam.d/su
-                  |    echo 'account  sufficient pam_succeed_if.so uid = 0 use_uid quiet'  >> /etc/pam.d/su
-                  |#    echo 'account  include system-auth'       >> /etc/pam.d/su
-                  |#    echo 'password include system-auth'       >> /etc/pam.d/su
-                  |    echo 'session  include system-auth'       >> /etc/pam.d/su
-                  |    echo 'session  include  postlogin'        >> /etc/pam.d/su
-                  |    echo 'session  optional pam_xauth.so'     >> /etc/pam.d/su
-                  |  ;;
-                  |  *)
-                  |    echo '#%PAM-1.0' > /etc/pam.d/su
-                  |    echo 'auth sufficient pam_rootok.so' >> /etc/pam.d/su  # allow root to switch user without a password
-                  |    echo '@include common-auth'          >> /etc/pam.d/su
-                  |    echo '@include common-account'       >> /etc/pam.d/su
-                  |    echo '@include common-session'       >> /etc/pam.d/su
-                  |  ;;
-                  |esac
-                  |"
-    #
-  fi
+                      |# Restrict PAM configuration of su and sudo
+                      |mkdir -p /etc/pam.d
+                      |[ -e /etc/pam.d/sudo ] && rm -f -v /etc/pam.d/sudo
+                      |case \"\$Containersystem\" in
+                      |  fedora)
+                      |    echo '#%PAM-1.0' > /etc/pam.d/su
+                      |    echo 'auth     sufficient pam_rootok.so'  >> /etc/pam.d/su
+                      |#    echo 'auth     substack system-auth'      >> /etc/pam.d/su
+                      |#    echo 'auth     include postlogin'         >> /etc/pam.d/su
+                      |    echo 'account  sufficient pam_succeed_if.so uid = 0 use_uid quiet'  >> /etc/pam.d/su
+                      |#    echo 'account  include system-auth'       >> /etc/pam.d/su
+                      |#    echo 'password include system-auth'       >> /etc/pam.d/su
+                      |    echo 'session  include system-auth'       >> /etc/pam.d/su
+                      |    echo 'session  include  postlogin'        >> /etc/pam.d/su
+                      |    echo 'session  optional pam_xauth.so'     >> /etc/pam.d/su
+                      |  ;;
+                      |  *)
+                      |    echo '#%PAM-1.0' > /etc/pam.d/su
+                      |    echo 'auth sufficient pam_rootok.so' >> /etc/pam.d/su  # allow root to switch user without a password
+                      |    echo '@include common-auth'          >> /etc/pam.d/su
+                      |    echo '@include common-account'       >> /etc/pam.d/su
+                      |    echo '@include common-session'       >> /etc/pam.d/su
+                      |  ;;
+                      |esac
+                      |"
+        #
+    fi
 
     trim_to_mark "|# /etc/group /etc/gshadow
                   |sed -i \"s/\$g_Containerusername//g ; s/:,/:/g ; s/,\$//g\" /etc/group   # remove existing entries for user in /etc/group
