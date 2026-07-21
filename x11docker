@@ -16029,7 +16029,7 @@ rootrc_setup_user() {
         trim_to_mark "|# /etc/pam.d
                       |# Restrict PAM configuration of su and sudo
                       |mkdir -p /etc/pam.d
-                      |[ -e /etc/pam.d/sudo ] && rm -f -v /etc/pam.d/sudo
+                      |if [ -e /etc/pam.d/sudo ] ; then rm -f -v /etc/pam.d/sudo ; fi
                       |case \"\$Containersystem\" in
                       |  fedora)
                       |    echo '#%PAM-1.0' > /etc/pam.d/su
