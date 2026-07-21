@@ -15964,7 +15964,9 @@ rootrc_setup_user() {
                   |# Delete root user
                   |# Delete possibly existing user with same uid
                   |sed -i 's%:x:%:-:% ; /:0:0:/d ; /:$Containeruseruid:/d' /etc/passwd
-                  |
+                  |"
+
+    trim_to_mark "|
                   |echo \"\$Containeruserentry\" >> /etc/passwd
                   |echo \"root:-:0:0:root:/root:\$Containerusershell\" >> /etc/passwd
                   |
