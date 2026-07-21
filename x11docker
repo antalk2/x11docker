@@ -14229,7 +14229,7 @@ create_containerrootrc() {
     echo
 
     printf "\n# Createcontaineruser: rootrc_setup_user()\n"
-    if [ "$Createcontaineruser" = "yes" ] l then
+    if [ "$Createcontaineruser" = "yes" ] ; then
        rootrc_setup_user
     fi
   
