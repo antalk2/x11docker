@@ -14229,7 +14229,9 @@ create_containerrootrc() {
     echo
 
     printf "\n# Createcontaineruser: rootrc_setup_user()\n"
-    [ "$Createcontaineruser" = "yes" ] && rootrc_setup_user
+    if [ "$Createcontaineruser" = "yes" ] l then
+       rootrc_setup_user
+    fi
   
     trim_to_bar \
         "|
