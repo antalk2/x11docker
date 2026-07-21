@@ -16026,6 +16026,35 @@ rootrc_setup_user() {
     # Try to disable possible custom PAM setups that could allow a
     # switch to root in container ### FIXME maybe not foolproof
     if [ -z "$Sudouser" ] ; then
+        #
+        # Q: include or @include ?
+        # A: @include is debian-specific.
+        #
+        #    They are different in both syntax and effect.
+        #    https://bugs-devel.debian.org/cgi-bin/bugreport.cgi?bug=474291
+        #
+        # > In a /etc/pam.d file, the syntax of a line is:
+        # >     <type> <control> <module-path> <module-arguments>
+        # >
+        # >   include  is used as a <control>
+        # >   @include is used as a <type>
+        # >
+        # >
+        # > Then the semantic is also different:
+        # >
+        # >   include:
+        # >     include all lines of given <type> from the
+        # >     configuration file specified as
+        # >     an argument to this control.
+        # >
+        # >   @include:
+        # >     parse a given file at the given location of the
+        # >     /etc/pam.d file
+        # >
+        #
+        # Accordingly, debian-based systems have type-specific common-<type> files,
+        # since @include does not filter by <type>.
+        #
         trim_to_mark "|# /etc/pam.d
                       |# Restrict PAM configuration of su and sudo
                       |mkdir -p /etc/pam.d
