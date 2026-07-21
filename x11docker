@@ -15645,144 +15645,164 @@ rootrc_prepare_init_runit() {
     return 0
 } # end rootrc_prepare_init_runit
 
+# Function: rootrc_prepare_init_systemd
+#
 rootrc_prepare_init_systemd() {
-  echo "
-# --init=systemd
+    trim_to_mark "|
+                 |# --init=systemd
+                 |
+                 |# remove failing and annoying services
+                 |Unservicelist='
+                 |apt-daily.service
+                 |apt-daily.timer
+                 |apt-daily-upgrade.service
+                 |apt-daily-upgrade.timer
+                 |bluetooth.service
+                 |cgproxy.service
+                 |deepin-anything-monitor.service
+                 |deepin-sync-daemon.service
+                 |display-manager.service
+                 |fprintd.service
+                 |gdm3.service
+                 |gvfs-udisks2-volume-monitor.service
+                 |hwclock_stop.service
+                 |lastore-daemon.service
+                 |lastore-update-metadata-info.service
+                 |lightdm.service
+                 |NetworkManager.service
+                 |plymouth-quit.service
+                 |plymouth-quit-wait.service
+                 |plymouth-read-write.service
+                 |plymouth-start.service
+                 |rtkit-daemon.service
+                 |sddm.service
+                 |systemd-localed.service
+                 |systemd-hostnamed.service
+                 |tracker-extract.service
+                 |tracker-miner-fs.service
+                 |tracker-store.service
+                 |tracker-writeback.service
+                 |udisks2.service
+                 |upower.service
+                 |'
+                 |
+                 |for Service in \$(find /lib/systemd/system/* /usr/lib/systemd/user/*
+                 : /etc/systemd/system/* /etc/systemd/user/*) ;
+                 : do
+                 |  if echo \"\$Unservicelist\" | grep -q \"\$(basename \$Service)\" ; then
+                 |    debugnote \"--init=systemd: Removing \$Service\"
+                 |    rm \$Service
+                 |  fi
+                 |done
+                 |
+                 |# Fix for Gnome 3
+                 |sed -i 's/ProtectHostname=yes/ProtectHostname=no/'
+                 : /lib/systemd/system/systemd-logind.service
+                 |
+                 |# create systemd units for x11docker
+                 |
+                 |mkdir -p /etc/systemd/system.conf.d
+                 |
+                 |trim_to_mark \"|[Manager]
+                 |               |DefaultEnvironment=
+                 |               :$(while read -r Line;
+                 |               : do echo -n "$Line " ; done < <(store_runoption_dump_env))
+                 |               |\" > /etc/systemd/system.conf.d/x11docker.environment.conf
+                 |
+                 |trim_to_bar \"|[Unit]
+                 |              |Description=x11docker target
+                 |              |Wants=multi-user.target
+                 |              |After=multi-user.target
+                 |              |[Install]
+                 |              |Also=console-getty.service
+                 |              |Also=x11docker-watch.service
+                 |              |Also=x11docker-journal.service
+                 |              |\" > /etc/systemd/system/x11docker.target
+                 |
+                 |trim_to_bar \"|[Unit]
+                 |              |Description=x11docker agetty service
+                 |              |# initiate console
+                 |              |# runs x11docker-agetty->x11docker-su or login->containerrc->cmdrc
+                 |              |Wants=multi-user.target
+                 |              |Wants=x11docker-watch.service
+                 |              |Wants=x11docker-journal.service
+                 |              |Wants=dbus.service
+                 |              |After=systemd-user-sessions.service
+                 |              |After=rc-local.service getty-pre.target
+                 |              |Before=getty.target
+                 |              |[Service]
+                 |              |ExecStart=/usr/local/bin/x11docker-agetty
+                 |              |StandardInput=tty
+                 |              |StandardOutput=tty
+                 |              |Type=idle
+                 |              |UtmpIdentifier=cons
+                 |              |TTYPath=/dev/console
+                 |              |TTYReset=yes
+                 |              |TTYVHangup=yes
+                 |              |KillMode=process
+                 |              |IgnoreSIGPIPE=no
+                 |              |SendSIGHUP=yes
+                 |              |[Install]
+                 |              |WantedBy=x11docker.target
+                 |              |WantedBy=getty.target
+                 |              |WantedBy=multi-user.target
+                 |              |\" > /lib/systemd/system/console-getty.service
+                 |
+                 |trim_to_mark \"|[Unit]
+                 |               |Description=x11docker watch service
+                 |               |# Watches for end of containerrc and initiates shutdown
+                 |               |[Service]
+                 |               |Type=simple
+                 |               |ExecStart=/bin/sh -c
+                 |               : 'while sleep 1; do
+                 |               : systemctl is-active console-getty >/dev/null
+                 |               : || { echo timetosaygoodbye >>$(convertpath share "$Timetosaygoodbyefile")
+                 |               : ; systemctl halt ; }
+                 |               : ; [ -s $(convertpath share "$Timetosaygoodbyefile") ] && systemctl halt
+                 |               : ; done'
+                 |               |[Install]
+                 |               |WantedBy=x11docker.target
+                 |               |\" > /etc/systemd/system/x11docker-watch.service
+                 |
+                 |trim_to_bar \"|[Unit]
+                 |              |Description=x11docker containerrc service
+                 |              |[Service]
+                 |              |Type=simple
+                 |              |ExecStart=sh $(convertpath share "$Containerrc")
+                 |              |[Install]
+                 |              |WantedBy=default.target
+                 |              |\" > /etc/systemd/user/x11docker-containerrc.service
+                 |
+                 |trim_to_mark \"|[Unit]
+                 |               |Description=x11docker journal log service
+                 |               |# get systemd log to transfer it into x11docker.log
+                 |               |[Service]
+                 |               |Type=simple
+                 |               |ExecStart=/bin/sh -c
+                 |               : '/bin/journalctl --follow --no-tail
+                 |               : >> $(convertpath share "$Systemdjournallogfile") 2>&1'
+                 |               |[Install]
+                 |               |WantedBy=x11docker.target
+                 |               |\" > /etc/systemd/system/x11docker-journal.service
+                 |
+                 |# enable x11docker CMD service
+                 |systemctl unmask console-getty.service
+                 |systemctl enable console-getty.service
+                 |systemctl enable x11docker-journal.service
+                 |
+                 |# enable logind service
+                 |systemctl unmask systemd-logind
+                 |systemctl enable systemd-logind
+                 |
+                 |# enable DBus service
+                 |systemctl unmask dbus
+                 |systemctl enable dbus
+                 |"
+    #
+    return 0
+} # end rootrc_prepare_init_systemd()
 
-# remove failing and annoying services
-Unservicelist='
-apt-daily.service
-apt-daily.timer
-apt-daily-upgrade.service
-apt-daily-upgrade.timer
-bluetooth.service
-cgproxy.service
-deepin-anything-monitor.service
-deepin-sync-daemon.service
-display-manager.service
-fprintd.service
-gdm3.service
-gvfs-udisks2-volume-monitor.service
-hwclock_stop.service
-lastore-daemon.service
-lastore-update-metadata-info.service
-lightdm.service
-NetworkManager.service
-plymouth-quit.service
-plymouth-quit-wait.service
-plymouth-read-write.service
-plymouth-start.service
-rtkit-daemon.service
-sddm.service
-systemd-localed.service
-systemd-hostnamed.service
-tracker-extract.service
-tracker-miner-fs.service
-tracker-store.service
-tracker-writeback.service
-udisks2.service
-upower.service
-'
-for Service in \$(find /lib/systemd/system/* /usr/lib/systemd/user/* /etc/systemd/system/* /etc/systemd/user/*) ; do
-  echo \"\$Unservicelist\" | grep -q \"\$(basename \$Service)\" && {
-    debugnote \"--init=systemd: Removing \$Service\"
-    rm \$Service
-  }
-done
 
-# Fix for Gnome 3
-sed -i 's/ProtectHostname=yes/ProtectHostname=no/' /lib/systemd/system/systemd-logind.service
-
-# create systemd units for x11docker
-
-mkdir -p /etc/systemd/system.conf.d
-echo \"[Manager]
-DefaultEnvironment=$(while read -r Line; do echo -n "$Line " ; done < <(store_runoption_dump_env))
-\" > /etc/systemd/system.conf.d/x11docker.environment.conf
-
-echo \"[Unit]
-Description=x11docker target
-Wants=multi-user.target
-After=multi-user.target
-[Install]
-Also=console-getty.service
-Also=x11docker-watch.service
-Also=x11docker-journal.service
-\" > /etc/systemd/system/x11docker.target
-
-echo \"[Unit]
-Description=x11docker agetty service
-# initiate console
-# runs x11docker-agetty->x11docker-su or login->containerrc->cmdrc
-Wants=multi-user.target
-Wants=x11docker-watch.service
-Wants=x11docker-journal.service
-Wants=dbus.service
-After=systemd-user-sessions.service
-After=rc-local.service getty-pre.target
-Before=getty.target
-[Service]
-ExecStart=/usr/local/bin/x11docker-agetty
-StandardInput=tty
-StandardOutput=tty
-Type=idle
-UtmpIdentifier=cons
-TTYPath=/dev/console
-TTYReset=yes
-TTYVHangup=yes
-KillMode=process
-IgnoreSIGPIPE=no
-SendSIGHUP=yes
-[Install]
-WantedBy=x11docker.target
-WantedBy=getty.target
-WantedBy=multi-user.target
-\" > /lib/systemd/system/console-getty.service
-
-echo \"[Unit]
-Description=x11docker watch service
-# Watches for end of containerrc and initiates shutdown
-[Service]
-Type=simple
-ExecStart=/bin/sh -c 'while sleep 1; do systemctl is-active console-getty >/dev/null || { echo timetosaygoodbye >>$(convertpath share "$Timetosaygoodbyefile") ; systemctl halt ; } ; [ -s $(convertpath share "$Timetosaygoodbyefile") ] && systemctl halt ; done'
-[Install]
-WantedBy=x11docker.target
-\" > /etc/systemd/system/x11docker-watch.service
-
-echo \"[Unit]
-Description=x11docker containerrc service
-[Service]
-Type=simple
-ExecStart=sh $(convertpath share "$Containerrc")
-[Install]
-WantedBy=default.target
-\" > /etc/systemd/user/x11docker-containerrc.service
-
-echo \"[Unit]
-Description=x11docker journal log service
-# get systemd log to transfer it into x11docker.log
-[Service]
-Type=simple
-ExecStart=/bin/sh -c '/bin/journalctl --follow --no-tail >> $(convertpath share "$Systemdjournallogfile") 2>&1'
-[Install]
-WantedBy=x11docker.target
-\" > /etc/systemd/system/x11docker-journal.service
-
-# enable x11docker CMD service
-systemctl unmask console-getty.service
-systemctl enable console-getty.service
-systemctl enable x11docker-journal.service
-
-# enable logind service
-systemctl unmask systemd-logind
-systemctl enable systemd-logind
-
-# enable DBus service
-systemctl unmask dbus
-systemctl enable dbus
-"
-  return 0
-}
 rootrc_prepare_init_sysvinit() {
   echo "
 # --init=sysvinit
