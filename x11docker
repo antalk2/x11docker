@@ -16025,7 +16025,7 @@ rootrc_setup_user() {
 
     # Try to disable possible custom PAM setups that could allow a
     # switch to root in container ### FIXME maybe not foolproof
-    [ -z "$Sudouser" ] && {
+    if [ -z "$Sudouser" ] ; then
         trim_to_mark "|# /etc/pam.d
                   |# Restrict PAM configuration of su and sudo
                   |mkdir -p /etc/pam.d
@@ -16053,7 +16053,7 @@ rootrc_setup_user() {
                   |esac
                   |"
     #
-  }
+  fi
 
     trim_to_mark "|# /etc/group /etc/gshadow
                   |sed -i \"s/\$g_Containerusername//g ; s/:,/:/g ; s/,\$//g\" /etc/group   # remove existing entries for user in /etc/group
