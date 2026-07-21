@@ -15919,13 +15919,21 @@ rootrc_prepare_init_sysvinit() {
 rootrc_setup_user() {
     local Line
 
-    trim_to_bar "|
+    trim_to_bar "|# begin rootrc_setup_user
+                 |
                  |# Set up container user
                  |"
     #
     case "$Containerusershell" in
-        auto) echo "bash --version >/dev/null 2>&1 && Containerusershell=/bin/bash || Containerusershell=/bin/sh" ;;
-        *)    echo "Containerusershell='$Containerusershell'" ;;
+        auto)
+            trim_to_mark "|if bash --version >/dev/null 2>&1 ;
+                          |then Containerusershell=/bin/bash
+                          |else Containerusershell=/bin/sh
+                          |fi"
+            ;;
+        *)
+            echo "Containerusershell='$Containerusershell'"
+            ;;
     esac
 
     trim_to_mark "|
@@ -16042,6 +16050,8 @@ rootrc_setup_user() {
                       |"
         #
     done
+    trim_to_bar "|# end rootrc_setup_user
+                 |"
 
     return 0
 }
