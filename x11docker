@@ -15687,7 +15687,16 @@ rootrc_prepare_init_systemd() {
                  |udisks2.service
                  |upower.service
                  |'
-                 |
+                 |"
+
+    # Tricky: we can break the line with trim_to_mark's ':' in
+    #         "\$(find ... )" because "\$(" does not start a new context.
+    #
+    #         But we cannot do the same in "$(while ...)" below, because
+    #         "$(" does start a new context, which implies different parsing rules,
+    #         where the intervening | and : are not part of the string.
+    #
+    trim_to_mark "|
                  |for Service in \$(find /lib/systemd/system/* /usr/lib/systemd/user/*
                  : /etc/systemd/system/* /etc/systemd/user/*) ;
                  : do
@@ -15707,8 +15716,7 @@ rootrc_prepare_init_systemd() {
                  |
                  |trim_to_mark \"|[Manager]
                  |               |DefaultEnvironment=
-                 |               :$(while read -r Line;
-                 |               : do echo -n "$Line " ; done < <(store_runoption_dump_env))
+                 |               :$(while read -r Line; do echo -n "$Line " ; done < <(store_runoption_dump_env))
                  |               |\" > /etc/systemd/system.conf.d/x11docker.environment.conf
                  |
                  |trim_to_bar \"|[Unit]
