@@ -15943,9 +15943,23 @@ rootrc_setup_user() {
 
     trim_to_mark "|
                   |# /etc/passwd
-                  |Containeruserentry=\"\$g_Containerusername:x:$Containeruseruid:$Containerusergid:\$g_Containerusername,,,:\$Containeruserhome:\$Containerusershell\"
-                  |debugnote \"containerrootrc: \$Containeruserentry\"
+                  |Containeruseruid=\"$Containeruseruid\"
+                  |Containerusergid=\"$Containerusergid\"
                   |
+                  |Containeruserentry=
+                  :\"
+                  :\$g_Containerusername
+                  ::x
+                  ::\$Containeruseruid
+                  ::\$Containerusergid
+                  ::\$g_Containerusername,,,
+                  ::\$Containeruserhome
+                  ::\$Containerusershell
+                  :\"
+                  |debugnote \"containerrootrc: \$Containeruserentry\"
+                  |"
+
+    trim_to_mark "|
                   |# Disable possible /etc/shadow passwords for other users
                   |# Delete root user
                   |# Delete possibly existing user with same uid
