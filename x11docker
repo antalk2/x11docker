@@ -15963,7 +15963,7 @@ rootrc_setup_user() {
                   |# Disable possible /etc/shadow passwords for other users
                   |# Delete root user
                   |# Delete possibly existing user with same uid
-                  |sed -i 's%:x:%:-:% ; /:0:0:/d ; /:$Containeruseruid:/d' /etc/passwd
+                  |sed -i 's%:x:%:-:% ; /:0:0:/d ; /:\$Containeruseruid:[0-9]/d' /etc/passwd
                   |"
 
     trim_to_mark "|
