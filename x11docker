@@ -15915,127 +15915,135 @@ rootrc_prepare_init_sysvinit() {
     return 0
 } # end rootrc_prepare_init_sysvinit
 
+# Function: rootrc_setup_user
 rootrc_setup_user() {
-  local Line
+    local Line
 
-  echo "
-# Set up container user
-"
-  case "$Containerusershell" in
-    auto) echo "bash --version >/dev/null 2>&1 && Containerusershell=/bin/bash || Containerusershell=/bin/sh" ;;
-    *)    echo "Containerusershell='$Containerusershell'" ;;
-  esac
+    trim_to_bar "|
+                 |# Set up container user
+                 |"
+    #
+    case "$Containerusershell" in
+        auto) echo "bash --version >/dev/null 2>&1 && Containerusershell=/bin/bash || Containerusershell=/bin/sh" ;;
+        *)    echo "Containerusershell='$Containerusershell'" ;;
+    esac
 
-  echo "
-# /etc/passwd
-Containeruserentry=\"\$g_Containerusername:x:$Containeruseruid:$Containerusergid:\$g_Containerusername,,,:\$Containeruserhome:\$Containerusershell\"
-debugnote \"containerrootrc: \$Containeruserentry\"
+    trim_to_mark "|
+                  |# /etc/passwd
+                  |Containeruserentry=\"\$g_Containerusername:x:$Containeruseruid:$Containerusergid:\$g_Containerusername,,,:\$Containeruserhome:\$Containerusershell\"
+                  |debugnote \"containerrootrc: \$Containeruserentry\"
+                  |
+                  |# Disable possible /etc/shadow passwords for other users
+                  |# Delete root user
+                  |# Delete possibly existing user with same uid
+                  |sed -i 's%:x:%:-:% ; /:0:0:/d ; /:$Containeruseruid:/d' /etc/passwd
+                  |
+                  |echo \"\$Containeruserentry\" >> /etc/passwd
+                  |echo \"root:-:0:0:root:/root:\$Containerusershell\" >> /etc/passwd
+                  |
+                  |# Create password entry for container user in /etc/shadow
+                  |rm -f -v /etc/shadow || warning 'Cannot change /etc/shadow. That may be a security risk.'
+                  |echo \"\$g_Containerusername:\"'$Containeruserpassword'\":17293:0:99999:7:::\" > /etc/shadow
+                  |chown root:shadow /etc/shadow
+                  |"
+    #
+    case "$Sudouser" in
+        "")  echo "echo 'root:*:17219:0:99999:7:::' >> /etc/shadow" ;;
+        *)   echo "echo 'root:$Containeruserpassword:17219:0:99999:7:::' >> /etc/shadow  # with option --sudouser, set root password 'x11docker'"
+             echo "sed -i 's%root:-:%root:x:%' /etc/passwd                               # allow password"
+             ;;
+    esac
 
-# Disable possible /etc/shadow passwords for other users
-# Delete root user
-# Delete possibly existing user with same uid
-sed -i 's%:x:%:-:% ; /:0:0:/d ; /:$Containeruseruid:/d' /etc/passwd
+    trim_to_mark "|
+                  |chmod 640 /etc/shadow   # can fail depending on available capabilities
+                  |
+                  |# sudo configuration
+                  |# Create /etc/sudoers, delete /etc/sudoers.d. Overwrite possible sudo setups in image.
+                  |[ -e /etc/sudoers.d ] && rm -f -v -R /etc/sudoers.d
+                  |[ -e /etc/sudoers ]   && rm -f -v /etc/sudoers
+                  |echo '# /etc/sudoers created by x11docker' > /etc/sudoers
+                  |echo 'Defaults	env_reset'                >> /etc/sudoers
+                  |echo 'root ALL=(ALL) ALL'                 >> /etc/sudoers
+                  |"
+    #
+    case "$Sudouser" in
+        yes)      echo "echo '$g_Containerusername ALL=(ALL) ALL' >> /etc/sudoers" ;;
+        nopasswd) echo "echo '$g_Containerusername ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers" ;;
+    esac
 
-echo \"\$Containeruserentry\" >> /etc/passwd
-echo \"root:-:0:0:root:/root:\$Containerusershell\" >> /etc/passwd
-
-# Create password entry for container user in /etc/shadow
-rm -f -v /etc/shadow || warning 'Cannot change /etc/shadow. That may be a security risk.'
-echo \"\$g_Containerusername:\"'$Containeruserpassword'\":17293:0:99999:7:::\" > /etc/shadow
-chown root:shadow /etc/shadow
-"
-  case "$Sudouser" in
-    "")  echo "echo 'root:*:17219:0:99999:7:::' >> /etc/shadow" ;;
-    *)   echo "echo 'root:$Containeruserpassword:17219:0:99999:7:::' >> /etc/shadow  # with option --sudouser, set root password 'x11docker'"
-         echo "sed -i 's%root:-:%root:x:%' /etc/passwd                               # allow password"
-    ;;
-  esac
-
-  echo "
-chmod 640 /etc/shadow   # can fail depending on available capabilities
-
-# sudo configuration
-# Create /etc/sudoers, delete /etc/sudoers.d. Overwrite possible sudo setups in image.
-[ -e /etc/sudoers.d ] && rm -f -v -R /etc/sudoers.d
-[ -e /etc/sudoers ]   && rm -f -v /etc/sudoers
-echo '# /etc/sudoers created by x11docker' > /etc/sudoers
-echo 'Defaults	env_reset'                >> /etc/sudoers
-echo 'root ALL=(ALL) ALL'                 >> /etc/sudoers
-"
-  case "$Sudouser" in
-    yes)      echo "echo '$g_Containerusername ALL=(ALL) ALL' >> /etc/sudoers" ;;
-    nopasswd) echo "echo '$g_Containerusername ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers" ;;
-  esac
-
-  # try to disable possible custom PAM setups that could allow a switch to root in container ### FIXME maybe not foolproof
-  [ -z "$Sudouser" ] && {
-    echo "# /etc/pam.d
-# Restrict PAM configuration of su and sudo
-mkdir -p /etc/pam.d
-[ -e /etc/pam.d/sudo ] && rm -f -v /etc/pam.d/sudo
-case \"\$Containersystem\" in
-  fedora)
-    echo '#%PAM-1.0' > /etc/pam.d/su
-    echo 'auth     sufficient pam_rootok.so'  >> /etc/pam.d/su
-#    echo 'auth     substack system-auth'      >> /etc/pam.d/su
-#    echo 'auth     include postlogin'         >> /etc/pam.d/su
-    echo 'account  sufficient pam_succeed_if.so uid = 0 use_uid quiet'  >> /etc/pam.d/su
-#    echo 'account  include system-auth'       >> /etc/pam.d/su
-#    echo 'password include system-auth'       >> /etc/pam.d/su
-    echo 'session  include system-auth'       >> /etc/pam.d/su
-    echo 'session  include  postlogin'        >> /etc/pam.d/su
-    echo 'session  optional pam_xauth.so'     >> /etc/pam.d/su
-  ;;
-  *)
-    echo '#%PAM-1.0' > /etc/pam.d/su
-    echo 'auth sufficient pam_rootok.so' >> /etc/pam.d/su  # allow root to switch user without a password
-    echo '@include common-auth'          >> /etc/pam.d/su
-    echo '@include common-account'       >> /etc/pam.d/su
-    echo '@include common-session'       >> /etc/pam.d/su
-  ;;
-esac
-"
+    # try to disable possible custom PAM setups that could allow a
+    # switch to root in container ### FIXME maybe not foolproof
+    [ -z "$Sudouser" ] && {
+        trim_to_mark "|# /etc/pam.d
+                  |# Restrict PAM configuration of su and sudo
+                  |mkdir -p /etc/pam.d
+                  |[ -e /etc/pam.d/sudo ] && rm -f -v /etc/pam.d/sudo
+                  |case \"\$Containersystem\" in
+                  |  fedora)
+                  |    echo '#%PAM-1.0' > /etc/pam.d/su
+                  |    echo 'auth     sufficient pam_rootok.so'  >> /etc/pam.d/su
+                  |#    echo 'auth     substack system-auth'      >> /etc/pam.d/su
+                  |#    echo 'auth     include postlogin'         >> /etc/pam.d/su
+                  |    echo 'account  sufficient pam_succeed_if.so uid = 0 use_uid quiet'  >> /etc/pam.d/su
+                  |#    echo 'account  include system-auth'       >> /etc/pam.d/su
+                  |#    echo 'password include system-auth'       >> /etc/pam.d/su
+                  |    echo 'session  include system-auth'       >> /etc/pam.d/su
+                  |    echo 'session  include  postlogin'        >> /etc/pam.d/su
+                  |    echo 'session  optional pam_xauth.so'     >> /etc/pam.d/su
+                  |  ;;
+                  |  *)
+                  |    echo '#%PAM-1.0' > /etc/pam.d/su
+                  |    echo 'auth sufficient pam_rootok.so' >> /etc/pam.d/su  # allow root to switch user without a password
+                  |    echo '@include common-auth'          >> /etc/pam.d/su
+                  |    echo '@include common-account'       >> /etc/pam.d/su
+                  |    echo '@include common-session'       >> /etc/pam.d/su
+                  |  ;;
+                  |esac
+                  |"
+    #
   }
 
-  echo "# /etc/group /etc/gshadow
-sed -i \"s/\$g_Containerusername//g ; s/:,/:/g ; s/,\$//g\" /etc/group   # remove existing entries for user in /etc/group
-sed -i \"s/\$g_Containerusername//g ; s/:,/:/g ; s/,\$//g\" /etc/gshadow # remove existing entries for user in /etc/gshadow
-"
-  for Line in $Containerusergroups ; do
-    echo "
-Groupname=\"$(cat /etc/group 2>/dev/null | grep "^$Line" | cut -d: -f1)\"
-Groupid=\"$(cat /etc/group   2>/dev/null | grep "^$Line" | cut -d: -f3)\"
-[ \"\$Groupname\" ] || Groupname=\"\$(cat /etc/group | grep \"$Line\" | cut -d: -f1)\"
-[ \"\$Groupid\" ]   || Groupid=\"\$(cat /etc/group | grep \"$Line\" | cut -d: -f3)\"
-[ \"\$Groupname\" ] && {
-  # /etc/group
-  Entry=\"\$(grep \$Groupname /etc/group)\"
-  Entry=\"\$(echo \"\$Entry\" | cut -d: -f3-)\"
-  [ -z \"\$Entry\" ] && Entry=\"\$Groupid:\"
-  Entry=\"\$Groupname:x:\$Entry,\$g_Containerusername\"
-  Entry=\"\$(echo \"\$Entry\" | sed 's/:,/:/g')\"
-  sed -i \"/^\$Groupname:/d\" /etc/group
-  echo \"\$Entry\" >> /etc/group
-  # /etc/gshadow
-  Entry=\"\$(grep \$Groupname /etc/gshadow)\"
-  Entry=\"\$(echo \"\$Entry\" | cut -d: -f4)\"
-  Entry=\"\$Groupname:!::\$Entry,\$g_Containerusername\"
-  Entry=\"\$(echo \"\$Entry\" | sed 's/:,/:/g')\"
-  sed -i \"/^\$Groupname:/d\" /etc/gshadow
-  echo \"\$Entry\" >> /etc/gshadow
-} || {
-  note \"Failed to add container user to group '$Line'.\"
-}
-# Create user group entry (and delete possibly existing same gid)
-sed -i '/:$Containerusergid:/d' /etc/group
-echo \"$Containerusergroup:x:$Containerusergid:\" >> /etc/group
-sed -i '/:$Containerusergid:/d' /etc/gshadow
-echo \"$Containerusergroup:!::\" >> /etc/gshadow
-sed -i -e 's/\(:\).*\(:\)/\1!:\2/' /etc/gshadow # remove possible passwords
-"
-  done
+    trim_to_mark "|# /etc/group /etc/gshadow
+                  |sed -i \"s/\$g_Containerusername//g ; s/:,/:/g ; s/,\$//g\" /etc/group   # remove existing entries for user in /etc/group
+                  |sed -i \"s/\$g_Containerusername//g ; s/:,/:/g ; s/,\$//g\" /etc/gshadow # remove existing entries for user in /etc/gshadow
+                  |"
+    #
+    for Line in $Containerusergroups ; do
+        trim_to_mark "|
+                      |Groupname=\"$(cat /etc/group 2>/dev/null | grep "^$Line" | cut -d: -f1)\"
+                      |Groupid=\"$(cat /etc/group   2>/dev/null | grep "^$Line" | cut -d: -f3)\"
+                      |[ \"\$Groupname\" ] || Groupname=\"\$(cat /etc/group | grep \"$Line\" | cut -d: -f1)\"
+                      |[ \"\$Groupid\" ]   || Groupid=\"\$(cat /etc/group | grep \"$Line\" | cut -d: -f3)\"
+                      |[ \"\$Groupname\" ] && {
+                      |  # /etc/group
+                      |  Entry=\"\$(grep \$Groupname /etc/group)\"
+                      |  Entry=\"\$(echo \"\$Entry\" | cut -d: -f3-)\"
+                      |  [ -z \"\$Entry\" ] && Entry=\"\$Groupid:\"
+                      |  Entry=\"\$Groupname:x:\$Entry,\$g_Containerusername\"
+                      |  Entry=\"\$(echo \"\$Entry\" | sed 's/:,/:/g')\"
+                      |  sed -i \"/^\$Groupname:/d\" /etc/group
+                      |  echo \"\$Entry\" >> /etc/group
+                      |  # /etc/gshadow
+                      |  Entry=\"\$(grep \$Groupname /etc/gshadow)\"
+                      |  Entry=\"\$(echo \"\$Entry\" | cut -d: -f4)\"
+                      |  Entry=\"\$Groupname:!::\$Entry,\$g_Containerusername\"
+                      |  Entry=\"\$(echo \"\$Entry\" | sed 's/:,/:/g')\"
+                      |  sed -i \"/^\$Groupname:/d\" /etc/gshadow
+                      |  echo \"\$Entry\" >> /etc/gshadow
+                      |} || {
+                      |  note \"Failed to add container user to group '$Line'.\"
+                      |}
+                      |# Create user group entry (and delete possibly existing same gid)
+                      |sed -i '/:$Containerusergid:/d' /etc/group
+                      |echo \"$Containerusergroup:x:$Containerusergid:\" >> /etc/group
+                      |sed -i '/:$Containerusergid:/d' /etc/gshadow
+                      |echo \"$Containerusergroup:!::\" >> /etc/gshadow
+                      |sed -i -e 's/\(:\).*\(:\)/\1!:\2/' /etc/gshadow # remove possible passwords
+                      |"
+        #
+    done
 
-  return 0
+    return 0
 }
 rootrc_timezone() {
   echo "
