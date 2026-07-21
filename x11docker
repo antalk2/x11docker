@@ -16018,7 +16018,7 @@ rootrc_setup_user() {
         nopasswd) echo "echo '$g_Containerusername ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers" ;;
     esac
 
-    # try to disable possible custom PAM setups that could allow a
+    # Try to disable possible custom PAM setups that could allow a
     # switch to root in container ### FIXME maybe not foolproof
     [ -z "$Sudouser" ] && {
         trim_to_mark "|# /etc/pam.d
